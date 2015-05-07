@@ -1,6 +1,7 @@
 module Pathogen
 
-using Distributions
+using Distributions, DataFrames
+
 include("Sequence.jl")
 
 end
