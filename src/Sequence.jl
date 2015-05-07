@@ -4,13 +4,11 @@ Justin Angevaare
 May 2015
 """
 
-nucleotide_df=DataFrame(base=["A", "G", "C", "U"], int=[1, 2, 3, 4], bit1=[false, false, true, true], bit2=[false, true, false, true])
-
 function nucleotide_convert(x::ASCIIString)
 """
 Convert a sequence of nucleotide bases into an integer representation
 """
-  sequence = fill(UInt8[0], length(x))
+  sequence = fill(0, length(x))
   for i = 1:length(x)
     if x[i] == 'A' sequence[i] = 1 end
     if x[i] == 'G' sequence[i] = 2 end
@@ -31,5 +29,5 @@ Convert an integer sequence into a nucleotide bases representation
     if x[i] == 3 sequence[i] = "C" end
     if x[i] == 4 sequence[i] = "U" end
   end
-  string(sequence)
+sequence
 end
