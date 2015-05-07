@@ -1,5 +1,6 @@
 module Pathogen
 
-# package code goes here
+using Distributions
+include("Sequence.jl")
 
-end # module
+end
