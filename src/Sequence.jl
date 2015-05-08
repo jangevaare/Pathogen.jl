@@ -20,7 +20,7 @@ end
 
 function nucleotide_revert(x::Vector{Int})
 """
-Convert an integer sequence into a nucleotide bases representation
+Convert an integer sequence into a nucleotide base representation
 """
   sequence = fill("Z", length(x))
   for i = 1:length(x)
