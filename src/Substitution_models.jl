@@ -28,8 +28,14 @@ function K80(θ::Tuple, time)
           [p_2 p_2 p_1 p_0]]
 end
 
-function F81(θ::Tuple, time)
-   """
-  Returns the F81 (Felsenstein, 1980) transition matrix with parameters μ, π_A, π_G, π_T, and π_C, which are the overall substitution rate and the base specific frequencies respectively.
-  http://en.wikipedia.org/wiki/Models_of_DNA_evolution#Most_common_models_of_DNA_evolution
-  """
+# function HKY85(θ::Tuple, time)
+#   """
+#   Returns the HKY85 (Hasegawa, Kishino and Yano 1985) transition matrix with parameters α, β, π_A, π_G, π_C, and π_T, which are the the transition and transversion rate parameters and the base specific frequencies respectively.
+#   """
+#   α    = θ[1]
+#   β    = θ[2]
+#   π_A  = θ[3]
+#   π_G  = θ[4]
+#   π_C  = θ[5]
+#   π_T  = θ[6]
+# end
