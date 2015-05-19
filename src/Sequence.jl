@@ -44,3 +44,13 @@ Generate a nucleotide sequence of length `n`, with specific nucleotide frequenci
   end
   return sequence
 end
+
+function mutate_sequence(sequence::Vector, substitution_matrix::Array)
+  """
+  Mutate a nucleotide sequence based on a specified substitution matrix
+  """
+  for i in 1:length(sequence)
+    sequence[i] = find(rand(Multinomial(1, substitution_matrix[sequence[i],:])))
+  end
+  return sequence
+end
