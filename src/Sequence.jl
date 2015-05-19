@@ -49,8 +49,9 @@ function mutate_sequence(sequence::Vector, substitution_matrix::Array)
   """
   Mutate a nucleotide sequence based on a specified substitution matrix
   """
-  for i in 1:length(sequence)
-    sequence[i] = find(rand(Multinomial(1, substitution_matrix[sequence[i],:])))
+  new_sequence = fill(0, length(sequence))
+  for i in 1:length(new_sequence)
+    new_sequence[i] = find(rand(Multinomial(1, substitution_matrix[sequence[i],:][:])))[1]
   end
-  return sequence
+  return new_sequence
 end
