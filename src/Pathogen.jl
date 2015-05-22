@@ -3,6 +3,8 @@ module Pathogen
 using Distributions, DataFrames
 
 export
+  # Types.jl
+
   # Sequence.jl
   nucleotide_convert,
   nucleotide_revert,
@@ -13,6 +15,7 @@ export
   JC69,
   K80
 
+include("Types.jl")
 include("Sequence.jl")
 include("Substitution_models.jl")
 
