@@ -1,6 +1,6 @@
 function create_population(init_seq::Vector, init_var::Array)
 """
-Initialize an infection database
+Initialize an infection database. `init_seq` is assigned to the "external" infection source. Each row of the `init_array` is assigned to a individual
 """
   # identifier, infection times, infection sources, recovery times, covariate times, sequence times
   events = Array[Array[[0], [NaN],  [NaN],  [NaN],  [NaN], [0]],
