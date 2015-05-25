@@ -4,6 +4,7 @@ using Distributions, DataFrames
 
 export
   # Types.jl
+  population,
 
   # Sequence.jl
   nucleotide_convert,
