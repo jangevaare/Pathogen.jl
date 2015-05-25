@@ -7,7 +7,7 @@ Initialize an infection database. `init_seq` is assigned to the "external" infec
                  Array[[1], [],     [],     [],     [0],   []]]
 
   # covariate history, sequence history
-  history = Array[Array[[[NaN, NaN]],     [init_seq]],
+  history = Array[Array[[[fill(NaN, length(init_var[1,:]))]],     [init_seq]],
                   Array[[[init_var[1,:]]],[]]]
 
   # push individuals to these arrays.
