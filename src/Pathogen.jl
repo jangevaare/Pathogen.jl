@@ -17,7 +17,7 @@ export
   rate_array
 
 include("types.jl")
-include("utilites.jl")
+include("utilities.jl")
 include("substitute.jl")
 include("simulate.jl")
 
