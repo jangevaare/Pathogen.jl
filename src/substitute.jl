@@ -1,3 +1,9 @@
+"""
+substitute.jl - substitution rate matrices
+Justin Angevaare
+May 2015
+"""
+
 function JC69(θ::Tuple)
   """
   Returns the JC69 Q matrix with parameter λ

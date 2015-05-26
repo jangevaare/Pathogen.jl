@@ -1,3 +1,9 @@
+"""
+simulate.jl - pathogen evolution and transmission dynamic simulation tools
+Justin Angevaare
+May 2015
+""""
+
 function create_population(init_seq::Vector, init_var::Array)
 """
 Initialize an infection database. `init_seq` is assigned to the "external" infection source. Each row of the `init_array` is assigned to a individual
