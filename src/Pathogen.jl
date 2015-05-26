@@ -1,6 +1,6 @@
 module Pathogen
 
-using Distributions, DataFrames
+using Distributions, DataFrames, BioSeq
 
 export
   # Types.jl
