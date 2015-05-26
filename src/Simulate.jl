@@ -2,7 +2,7 @@
 simulate.jl - pathogen evolution and transmission dynamic simulation tools
 Justin Angevaare
 May 2015
-""""
+"""
 
 function create_population(init_seq::Vector, init_var::Array)
 """

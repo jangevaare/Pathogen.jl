@@ -3,18 +3,18 @@ module Pathogen
 using Distributions, DataFrames, BioSeq
 
 export
-  # Types.jl
+  # types.jl
   population,
 
-  # Sequence.jl
-  nucleotide_convert,
-  nucleotide_revert,
+  # utilities.jl
   generate_sequence,
-  mutate_sequence,
 
-  # Substitution_models.jl
+  # substitute.jl
   JC69,
-  K80
+
+  # simulate.jl
+  create_population,
+  rate_array
 
 include("types.jl")
 include("utilites.jl")
