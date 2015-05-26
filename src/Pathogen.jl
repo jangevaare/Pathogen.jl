@@ -16,8 +16,9 @@ export
   JC69,
   K80
 
-include("Types.jl")
-include("Sequence.jl")
-include("Substitution_models.jl")
+include("types.jl")
+include("utilites.jl")
+include("substitute.jl")
+include("simulate.jl")
 
 end
