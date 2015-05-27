@@ -15,7 +15,7 @@ Each row of the `init_array` is assigned to an individual
                  Array[[1], [],    [],     [],     [],     [0],   []]]
 
   # covariate history, sequence history
-  history = Array[Array[[[fill(NaN, length(init_var[1,:]))]],     [init_seq]],
+  history = Array[Array[[[fill(NaN, length(init_var[1,:]))]],[init_seq]],
                   Array[[[init_var[1,:]]],[]]]
 
   # push individuals to these arrays.
@@ -28,7 +28,7 @@ Each row of the `init_array` is assigned to an individual
   return population(events, history)
 end
 
-function rate_array(population::population, external_pressure, susceptibility_function::Function, latent_period::Float64, infectious_period::Float64, substitution_matrix::Array)
+function CreateRateArray(population::population, ExternalPressure, SusceptibilityFunction::Function, LatentPeriod::Float64, InfectiousPeriod::Float64, SubstitutionMatrix::Array)
   """
   Generate an array which contains rates (for exponential distribution) for movement from between disease states, and mutation.
   `external_pressure` is a disease exposure rate from outside the described population
@@ -37,5 +37,17 @@ function rate_array(population::population, external_pressure, susceptibility_fu
   `infectious_period` is the average length of time spent by an individual in an infected state (set to 0 if infectious state does not occur)
   `substitution_matrix` is a 4x4 array containing single nucleotide polymorphism substitution rates
   """
-end
+  # Set up an array of zeros with rows for each potential source of exposure, for infection, recovery, and mutation at each base location, and columns for each individual...
+  RateArray = fill(0. (length(population.events)+1+1+length(population.history[1][2][1], length(population.events))))
 
+  # Exposure rate from external source...
+  RateArray[1,2:end] = ExternalPressure
+
+  # External source mutation
+  RateRef = sum(SubstitutionMatrix,1)
+  NucleotideRef = nucleotide2bit("AGCU")
+  for i = 1:length(population.history[1][2][1])
+    RateArray[length(population.events)+1+1+i,1] = RateRef[population.history[1][2][1][i] .== NucleotideRef]
+  end
+  return RateArray
+end

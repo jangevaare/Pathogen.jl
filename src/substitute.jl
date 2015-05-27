@@ -9,10 +9,10 @@ function JC69(θ::Tuple)
   Returns the JC69 Q matrix with parameter λ
   """
   λ = θ[1]
-  return [[NaN λ λ λ]
-          [λ NaN λ λ]
-          [λ λ NaN λ]
-          [λ λ λ NaN]]
+  return [[0 λ λ λ]
+          [λ 0 λ λ]
+          [λ λ 0 λ]
+          [λ λ λ 0]]
 end
 
 # function JC69(θ::Tuple, time)
