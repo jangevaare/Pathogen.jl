@@ -28,7 +28,8 @@ Each row of the `init_array` is assigned to an individual
   return population(events, history)
 end
 
-function CreateRateArray(population::population, ExternalPressure, SusceptibilityFunction::Function, LatentPeriod::Float64, InfectiousPeriod::Float64, SubstitutionMatrix::Array)
+#function CreateRateArray(population::population, ExternalPressure, SusceptibilityFunction::Function, LatentPeriod::Float64, InfectiousPeriod::Float64, SubstitutionMatrix::Array)
+function CreateRateArray(population::population, SusceptibilityFunction::Function, LatencyFunction::Function, RecoveryFunction::Function, SubstitutionMatrix::Array)
   """
   Generate an array which contains rates (for exponential distribution) for movement from between disease states, and mutation.
   `external_pressure` is a disease exposure rate from outside the described population

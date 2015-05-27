@@ -10,3 +10,4 @@ pop = create_population(init_seq, init_var)
 pop.events
 pop.history
 pop.history[1][2][1]
+
