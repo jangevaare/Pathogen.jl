@@ -19,7 +19,7 @@ Each row of the `init_array` is assigned to an individual
                   Array[[[init_var[1,:]]],[]]]
 
   # push individuals to these arrays.
-  for r = 2:shape(init_var,1)
+  for r = 2:size(init_var,1)
     push!(events, Array[[r], [], [], [], [], [0], []])
     push!(history, Array[[[init_var[r,:]]],[]])
   end
