@@ -36,7 +36,7 @@ function CreatePowerLaw(α::Float64, β::Float64, γ::Float64, η::Float64, dist
   @assert(β > 0, "invalid β specification")
   @assert(γ > 0, "invalid γ specification")
   @assert(η > 0, "invalid η specification")
-  @assert(typeof(dist)==distance, "invalid distance specification")
+  #@assert(typeof(dist)==distance, "invalid distance specification")
 
   return function PowerLaw(source::Array, target::Array)
     """
