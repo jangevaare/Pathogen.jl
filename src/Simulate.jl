@@ -42,7 +42,7 @@ function CreateRateArray(population::population, SusceptibilityFunction::Functio
   RateArray = fill(0. (length(population.events)+1+1+length(population.history[1][2][1], length(population.events))))
 
   # Exposure rate from external source...
-  RateArray[1,2:end] = ExternalPressure
+  #RateArray[1,2:end] = ExternalPressure
 
   # External source mutation
   RateRef = sum(SubstitutionMatrix,1)
@@ -52,3 +52,15 @@ function CreateRateArray(population::population, SusceptibilityFunction::Functio
   end
   return RateArray
 end
+
+function PowerLaw(source::Array, target::Array, α::Float64, β::Float64, dist=Euclidean())
+  """
+  This function returns the rate parameter for a `target` individuals from `source` individuals using the power law kernel with parameters α and β. Location must be specified with matching but arbitrary dimensions for each individual; specifically, each individual is represented by a column in an array. Distance by default is Euclidean, but any of the distance calculations in the Distance.jl package may be used
+  """
+  @assert(α > 0, "invalid α specification")
+  @assert(β > 0, "invalid β specification")
+  @assert(typeof(dist)==distance, "invalid distance specification")
+  # `source` individuals as rows and `target` individuals as columns
+  return α*pairwise(dist, source, target).^-β
+end
+
