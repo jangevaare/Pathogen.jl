@@ -28,38 +28,15 @@ Each row of the `init_array` is assigned to an individual
   return population(events, history)
 end
 
-#function CreateRateArray(population::population, ExternalPressure, SusceptibilityFunction::Function, LatentPeriod::Float64, InfectiousPeriod::Float64, SubstitutionMatrix::Array)
-function CreateRateArray(population::population, SusceptibilityFunction::Function, LatencyFunction::Function, RecoveryFunction::Function, SubstitutionMatrix::Array)
+function PowerLaw(source::Array, target::Array, α::Float64, β::Float64, γ::Float64, η::Float64, dist=Euclidean())
   """
-  Generate an array which contains rates (for exponential distribution) for movement from between disease states, and mutation.
-  `external_pressure` is a disease exposure rate from outside the described population
-  `susceptibility_function` is a user defined function which generates a rate for each pair of individuals based on their covariates and infection history
-  `latent_period` is the average length of time spent by an individual in an exposed state (set to 0 if exposed state does not occur)
-  `infectious_period` is the average length of time spent by an individual in an infected state (set to 0 if infectious state does not occur)
-  `substitution_matrix` is a 4x4 array containing single nucleotide polymorphism substitution rates
-  """
-  # Set up an array of zeros with rows for each potential source of exposure, for infection, recovery, and mutation at each base location, and columns for each individual...
-  RateArray = fill(0. (length(population.events)+1+1+length(population.history[1][2][1], length(population.events))))
-
-  # Exposure rate from external source...
-  #RateArray[1,2:end] = ExternalPressure
-
-  # External source mutation
-  RateRef = sum(SubstitutionMatrix,1)
-  NucleotideRef = nucleotide2bit("AGCU")
-  for i = 1:length(population.history[1][2][1])
-    RateArray[length(population.events)+1+1+i,1] = RateRef[population.history[1][2][1][i] .== NucleotideRef]
-  end
-  return RateArray
-end
-
-function PowerLaw(source::Array, target::Array, α::Float64, β::Float64, γ::Float64, η::Float64 dist=Euclidean())
-  """
-  This simple `Susceptibility_Function` returns the rate parameter for a `target` individuals from `source` individuals using the power law kernel with parameters α and β. Location must be specified with matching but arbitrary dimensions for each individual; specifically, each individual is represented by a column in an array. Distance by default is Euclidean, but any of the distance calculations in the Distance.jl package may be used.
+  This simple `SusceptibilityFunction` returns the rate parameter for a `target` individuals from `source` individuals using the power law kernel with parameters α and β. Location must be specified with matching but arbitrary dimensions for each individual; specifically, each individual is represented by a column in an array. Distance by default is Euclidean, but any of the distance calculations in the Distance.jl package may be used.
 
   A zero distance is assigned a rate of γ, and a NaN distance (external source of infection) is assigned a rate of η.
 
-  It's important to note that this function does not check the disease status of any individuals
+  It's important to note that this function does not check the disease status of any individuals.
+
+  This function also serves as a model for any user defined
   """
   @assert(α > 0, "invalid α specification")
   @assert(β > 0, "invalid β specification")
@@ -78,3 +55,23 @@ function PowerLaw(source::Array, target::Array, α::Float64, β::Float64, γ::Fl
   return rates
 end
 
+function CreateRateArray(population::population, SusceptibilityFunction::Function, LatencyFunction::Function, RecoveryFunction::Function, SubstitutionMatrix::Array)
+  """
+  Generate an array which contains rates (for exponential distribution) for movement from between disease states, and mutation.
+  `SusceptibilityFunction` is a function which generates a rate for each pair of target
+  `SubstitutionMatrix` is a 4x4 array containing single nucleotide polymorphism substitution rates
+  """
+  # Set up an array of zeros with rows for each potential source of exposure, for infection, recovery, and mutation at each base location, and columns for each individual...
+  RateArray = fill(0. (length(population.events)+1+1+length(population.history[1][2][1], length(population.events))))
+
+  # Exposure rate from external source...
+  #RateArray[1,2:end] = ExternalPressure
+
+  # External source mutation
+  RateRef = sum(SubstitutionMatrix,1)
+  NucleotideRef = nucleotide2bit("AGCU")
+  for i = 1:length(population.history[1][2][1])
+    RateArray[length(population.events)+1+1+i,1] = RateRef[population.history[1][2][1][i] .== NucleotideRef]
+  end
+  return RateArray
+end
