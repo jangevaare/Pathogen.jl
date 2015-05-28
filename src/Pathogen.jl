@@ -1,20 +1,20 @@
 module Pathogen
 
-using Distributions, DataFrames, BioSeq
+using Distance, Distributions, DataFrames, BioSeq
 
 export
   # types.jl
   population,
 
   # utilities.jl
-  generate_sequence,
+  GenerateSequence,
 
   # substitute.jl
   JC69,
 
   # simulate.jl
-  create_population,
-  rate_array
+  CreatePopulation,
+  RateArray
 
 include("types.jl")
 include("utilities.jl")
