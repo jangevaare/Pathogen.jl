@@ -28,34 +28,41 @@ Each row of the `init_array` is assigned to an individual
   return population(events, history)
 end
 
-function PowerLaw(source::Array, target::Array, α::Float64, β::Float64, γ::Float64, η::Float64, dist=Euclidean())
+function CreatePowerLaw(α::Float64, β::Float64, γ::Float64, η::Float64, dist=Euclidean())
   """
-  This simple `SusceptibilityFunction` returns the rate parameter for a `target` individuals from `source` individuals using the power law kernel with parameters α and β. Location must be specified with matching but arbitrary dimensions for each individual; specifically, each individual is represented by a column in an array. Distance by default is Euclidean, but any of the distance calculations in the Distance.jl package may be used.
-
-  A zero distance is assigned a rate of γ, and a NaN distance (external source of infection) is assigned a rate of η.
-
-  It's important to note that this function does not check the disease status of any individuals.
-
-  This function also serves as a model for any user defined
+  This function creates a full parameterized PowerLaw function
   """
   @assert(α > 0, "invalid α specification")
   @assert(β > 0, "invalid β specification")
   @assert(γ > 0, "invalid γ specification")
   @assert(η > 0, "invalid η specification")
   @assert(typeof(dist)==distance, "invalid distance specification")
-  # `source` individuals as rows and `target` individuals as columns
-  rates = α*pairwise(dist, source, target).^-β
 
-  # assign rate of γ to for a `target` sharing a location with a `source`
-  rates[rates .== 0] = γ
+  return function PowerLaw(source::Array, target::Array)
+    """
+    This simple `SusceptibilityFunction` returns the rate parameter for a `target` individuals from `source` individuals using the power law kernel with parameters α and β. Location must be specified with matching but arbitrary dimensions for each individual; specifically, each individual is represented by a column in an array. Distance by default is Euclidean, but any of the distance calculations in the Distance.jl package may be used.
 
-  # assign rate of γ for external sources of infection
-  rates[rates .== NaN] = η
+    A zero distance is assigned a rate of γ, and a NaN distance (external source of infection) is assigned a rate of η.
 
-  return rates
+    It's important to note that this function does not check the disease status of any individuals.
+
+    This function also serves as a model for any user defined
+    """
+
+    # `source` individuals as rows and `target` individuals as columns
+    rates = α*pairwise(dist, source, target).^-β
+
+    # assign rate of γ to for a `target` sharing a location with a `source`
+    rates[rates .== 0] = γ
+
+    # assign rate of γ for external sources of infection
+    rates[rates .== NaN] = η
+
+    return rates
+  end
 end
 
-function CreateRateArray(population::population, SusceptibilityFunction::Function, LatencyFunction::Function, RecoveryFunction::Function, SubstitutionMatrix::Array)
+function CreateRateArray(population::population, SusceptibilityFunction=PowerLaw, LatencyFunction::Function, RecoveryFunction::Function, SubstitutionMatrix::Array)
   """
   Generate an array which contains rates (for exponential distribution) for movement from between disease states, and mutation.
   `SusceptibilityFunction` is a function which generates a rate for each pair of target
