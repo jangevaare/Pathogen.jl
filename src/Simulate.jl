@@ -19,7 +19,7 @@ Each column of the `init_array` is assigned to an individual
                   Array[[[init_var[:,1]]],[]]]
 
   # push individuals to these arrays.
-  for r = 2:size(init_var,1)
+  for r = 2:size(init_var,2)
     push!(events, Array[[], [], [], [], [0], []])
     push!(history, Array[[[init_var[:,r]]],[]])
   end
@@ -86,8 +86,8 @@ function CreateRateArray(pop::population, SusceptibilityFunction::Function, Late
   end
 
   # External source mutation
-  RateRef = sum(SubstitutionMatrix,2)
-  NucleotideRef = nucleotide2bit("AGCU")
+  RateRef = sum(SubstitutionMatrix,2)[:]
+  NucleotideRef = [nucleotide2bit("A"), nucleotide2bit("G"), nucleotide2bit("C"), nucleotide2bit("U")]
   for i = 1:length(pop.history[1][2][1])
     RateArray[length(pop.events)+1+1+i,1] = RateRef[pop.history[1][2][1][i] .== NucleotideRef]
   end
