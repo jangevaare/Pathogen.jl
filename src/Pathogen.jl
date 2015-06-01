@@ -14,7 +14,9 @@ export
 
   # simulate.jl
   CreatePopulation,
-  RateArray
+  CreatePowerLaw,
+  CreateConstantRate,
+  CreateRateArray
 
 include("types.jl")
 include("utilities.jl")

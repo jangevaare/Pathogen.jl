@@ -30,7 +30,7 @@ end
 
 function CreatePowerLaw(α::Float64, β::Float64, γ::Float64, η::Float64, dist=Euclidean())
   """
-  This function creates a full parameterized PowerLaw function
+  This function creates a full parameterized power law function
   """
   @assert(α > 0, "invalid α specification")
   @assert(β > 0, "invalid β specification")
