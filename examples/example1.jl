@@ -1,7 +1,5 @@
 using Pathogen
 
-JC69((2,))
-
 init_seq = GenerateSequence(10, 0.25, 0.25, 0.25, 0.25)
 init_var = rand((10,2))
 
@@ -15,4 +13,4 @@ PowerLaw = CreatePowerLaw(1., 1., 1., 1.)
 Latency = CreateConstantRate(1.)
 Recovery = CreateConstantRate(1.)
 
-Recovery()
+CreateRateArray(pop, PowerLaw, Latency, Recovery, JC69((2,)))
