@@ -20,7 +20,7 @@ Each row of the `init_array` is assigned to an individual
 
   # push individuals to these arrays.
   for r = 2:size(init_var,1)
-    push!(events, Array[[r], [], [], [], [], [0], []])
+    push!(events, Array[[], [], [], [], [0], []])
     push!(history, Array[[[init_var[r,:]]],[]])
   end
 
@@ -64,11 +64,12 @@ function CreateConstantRate(τ::Float64)
   """
   Creates generic constant rate function
   """
-  return function(individuals::Vector)
+  @assert(τ > 0, "invalid τ specification")
+  return function()
     """
     Provides a constant rate for LatencyFunction or RecoveryFunction
     """
-    return fill(τ, length(individuals))
+    return τ
   end
 end
 
