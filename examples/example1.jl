@@ -14,4 +14,4 @@ Recovery = CreateConstantRate(1.)
 
 #PowerLaw(pop, 2, 4)
 
-CreateRateArray(pop, PowerLaw, Latency, Recovery, JC69((2,)))
+testarray = CreateRateArray(pop, PowerLaw, Latency, Recovery, JC69((2,)))

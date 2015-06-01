@@ -93,3 +93,12 @@ function CreateRateArray(pop::population, SusceptibilityFunction::Function, Late
   end
   return RateArray
 end
+
+function OneStep!(rates::RateArray, pop::population, time::Float)
+  """
+  One event occurs, and appropriate updates are made to the RateArray and Population
+  """
+  increment = rand(Exponential(1/sum(rates.rates)))
+  total = [0, cumsum(rates.rates[:])]
+  event = rates.events[findfirst(total .> rand()*total[end])]
+end
