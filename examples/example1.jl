@@ -12,5 +12,4 @@ pop.history
 pop.history[1][2][1]
 
 PowerLaw = CreatePowerLaw(1., 1., 1., 1.)
-
 PowerLaw(rand((2,10)),rand((2,10)))

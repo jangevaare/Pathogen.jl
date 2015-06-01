@@ -4,15 +4,15 @@ Justin Angevaare
 May 2015
 """
 
-function create_population(init_seq::Nucleotide2bitSeq, init_var::Array)
+function CreatePopulation(init_seq::Nucleotide2bitSeq, init_var::Array)
 """
 Create an infection database.
 `init_seq` is assigned to the "external" infection source.
 Each row of the `init_array` is assigned to an individual
 """
-  # identifier, exposure times, exposure source, infection times, recovery times, covariate times, sequence times
-  events = Array[Array[[0], [NaN], [NaN],  [NaN],  [NaN],  [NaN], [0]],
-                 Array[[1], [],    [],     [],     [],     [0],   []]]
+  # exposure times, exposure source, infection times, recovery times, covariate times, sequence times
+  events = Array[Array[[NaN], [NaN],  [NaN],  [NaN],  [NaN], [0]],
+                 Array[[],    [],     [],     [],     [0],   []]]
 
   # covariate history, sequence history
   history = Array[Array[[[fill(NaN, length(init_var[1,:]))]],[init_seq]],
@@ -36,9 +36,8 @@ function CreatePowerLaw(α::Float64, β::Float64, γ::Float64, η::Float64, dist
   @assert(β > 0, "invalid β specification")
   @assert(γ > 0, "invalid γ specification")
   @assert(η > 0, "invalid η specification")
-  #@assert(typeof(dist)==distance, "invalid distance specification")
 
-  return function PowerLaw(source::Array, target::Array)
+  return function(population::population, source::Vector, target::Vector)
     """
     This simple `SusceptibilityFunction` returns the rate parameter for a `target` individuals from `source` individuals using the power law kernel with parameters α and β. Location must be specified with matching but arbitrary dimensions for each individual; specifically, each individual is represented by a column in an array. Distance by default is Euclidean, but any of the distance calculations in the Distance.jl package may be used.
 
@@ -48,9 +47,8 @@ function CreatePowerLaw(α::Float64, β::Float64, γ::Float64, η::Float64, dist
 
     This function also serves as a model for any user defined
     """
-
     # `source` individuals as rows and `target` individuals as columns
-    rates = α*pairwise(dist, source, target).^-β
+    rates = α*pairwise(dist, population.history[source][1][end], population.history[target][1][end]).^-β
 
     # assign rate of γ to for a `target` sharing a location with a `source`
     rates[rates .== 0] = γ
@@ -62,7 +60,16 @@ function CreatePowerLaw(α::Float64, β::Float64, γ::Float64, η::Float64, dist
   end
 end
 
-function CreateRateArray(population::population, SusceptibilityFunction=PowerLaw, LatencyFunction::Function, RecoveryFunction::Function, SubstitutionMatrix::Array)
+function CreateConstantRate(τ::Float64)
+  """
+  Creates generic constant rate function
+  """
+  return function(individuals::Array)
+    return fill(τ, shape(individuals, 2))
+  end
+end
+
+function CreateRateArray(population::population, SusceptibilityFunction::Function, LatencyFunction::Function, RecoveryFunction::Function, SubstitutionMatrix::Array)
   """
   Generate an array which contains rates (for exponential distribution) for movement from between disease states, and mutation.
   `SusceptibilityFunction` is a function which generates a rate for each pair of target
@@ -72,13 +79,17 @@ function CreateRateArray(population::population, SusceptibilityFunction=PowerLaw
   RateArray = fill(0. (length(population.events)+1+1+length(population.history[1][2][1], length(population.events))))
 
   # Exposure rate from external source...
-  #RateArray[1,2:end] = ExternalPressure
+  for i = 2:shape(RateArray,2)
+    RateArray[1,i] = SusceptibilityFunction(population, 1, i)
+  end
 
   # External source mutation
-  RateRef = sum(SubstitutionMatrix,1)
+  RateRef = sum(SubstitutionMatrix,2)
   NucleotideRef = nucleotide2bit("AGCU")
   for i = 1:length(population.history[1][2][1])
     RateArray[length(population.events)+1+1+i,1] = RateRef[population.history[1][2][1][i] .== NucleotideRef]
   end
   return RateArray
 end
+
+
