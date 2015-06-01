@@ -1,7 +1,7 @@
 using Pathogen
 
 init_seq = GenerateSequence(10, 0.25, 0.25, 0.25, 0.25)
-init_var = rand((10,2))
+init_var = rand((2,10))
 
 pop = CreatePopulation(init_seq, init_var)
 

@@ -8,20 +8,20 @@ function CreatePopulation(init_seq::Nucleotide2bitSeq, init_var::Array)
 """
 Create an infection database.
 `init_seq` is assigned to the "external" infection source.
-Each row of the `init_array` is assigned to an individual
+Each column of the `init_array` is assigned to an individual
 """
   # exposure times, exposure source, infection times, recovery times, covariate times, sequence times
   events = Array[Array[[NaN], [NaN],  [NaN],  [NaN],  [NaN], [0]],
                  Array[[],    [],     [],     [],     [0],   []]]
 
   # covariate history, sequence history
-  history = Array[Array[[[fill(NaN, length(init_var[1,:]))]],[init_seq]],
-                  Array[[[init_var[1,:]]],[]]]
+  history = Array[Array[[[fill(NaN, length(init_var[:,1]))]],[init_seq]],
+                  Array[[[init_var[:,1]]],[]]]
 
   # push individuals to these arrays.
   for r = 2:size(init_var,1)
     push!(events, Array[[], [], [], [], [0], []])
-    push!(history, Array[[[init_var[r,:]]],[]])
+    push!(history, Array[[[init_var[:,r]]],[]])
   end
 
   # save as a population object type
@@ -47,16 +47,14 @@ function CreatePowerLaw(α::Float64, β::Float64, γ::Float64, η::Float64, dist
 
     This function also serves as a model for any user defined
     """
-    # `source` individuals as rows and `target` individuals as columns
-    rate = α*evaluate(dist, pop.history[source][1], pop.history[target][1]).^-β
-
-    # assign rate of γ to for a `target` sharing a location with a `source`
-    rate[rate == 0] = γ
-
-    # assign rate of γ for external sources of infection
-    rate[isnan(rate)] = η
-
-    return rate
+    distance = evaluate(dist, pop.history[source][1], pop.history[target][1])
+    if distance == 0
+      return γ
+    elseif isnan(distance)
+      return η
+    else
+      return α*distance^-β
+    end
   end
 end
 
