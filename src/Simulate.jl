@@ -78,7 +78,7 @@ function CreateRateArray(pop::population, SusceptibilityFunction::Function, Late
   `SubstitutionMatrix` is a 4x4 array containing single nucleotide polymorphism substitution rates
   """
   # Set up an array of zeros with rows for each potential source of exposure, for infection, recovery, and mutation at each base location, and columns for each individual...
-  RateArray = fill(0., (length(pop.events)+1+1+length(pop.history[1][2][1]), length(pop.events)))
+  RateArray = fill(0., (length(pop.events)+1+1+length(pop.history[1][2]), length(pop.events)))
 
   # Exposure rate from external source...
   for i = 2:size(RateArray,2)
@@ -88,8 +88,8 @@ function CreateRateArray(pop::population, SusceptibilityFunction::Function, Late
   # External source mutation
   RateRef = sum(SubstitutionMatrix,2)[:]
   NucleotideRef = nucleotide("AGCU")
-  for i = 1:length(pop.history[1][2][1])
-    RateArray[length(pop.events)+1+1+i,1] = RateRef[findfirst(pop.history[1][2][1][i] .== NucleotideRef)]
+  for i = 1:length(pop.history[1][2])
+    RateArray[length(pop.events)+1+1+i,1] = RateRef[findfirst(pop.history[1][2][i] .== NucleotideRef)]
   end
   return RateArray
 end
