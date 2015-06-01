@@ -89,7 +89,7 @@ function CreateRateArray(pop::population, SusceptibilityFunction::Function, Late
   RateRef = sum(SubstitutionMatrix,2)[:]
   NucleotideRef = [nucleotide2bit("A"), nucleotide2bit("G"), nucleotide2bit("C"), nucleotide2bit("U")]
   for i = 1:length(pop.history[1][2][1])
-    RateArray[length(pop.events)+1+1+i,1] = RateRef[pop.history[1][2][1][i] .== NucleotideRef]
+    RateArray[length(pop.events)+1+1+i,1] = RateRef[findfirst(pop.history[1][2][1][i] .== NucleotideRef)]
   end
   return RateArray
 end
