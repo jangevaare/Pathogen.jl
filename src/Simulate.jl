@@ -37,7 +37,7 @@ function CreatePowerLaw(α::Float64, β::Float64, γ::Float64, η::Float64, dist
   @assert(γ > 0, "invalid γ specification")
   @assert(η > 0, "invalid η specification")
 
-  return function(population::population, source::Vector, target::Vector)
+  return function(population::population, source::Int, target::Int)
     """
     This simple `SusceptibilityFunction` returns the rate parameter for a `target` individuals from `source` individuals using the power law kernel with parameters α and β. Location must be specified with matching but arbitrary dimensions for each individual; specifically, each individual is represented by a column in an array. Distance by default is Euclidean, but any of the distance calculations in the Distance.jl package may be used.
 
@@ -64,8 +64,11 @@ function CreateConstantRate(τ::Float64)
   """
   Creates generic constant rate function
   """
-  return function(individuals::Array)
-    return fill(τ, shape(individuals, 2))
+  return function(individuals::Vector)
+    """
+    Provides a constant rate for LatencyFunction or RecoveryFunction
+    """
+    return fill(τ, length(individuals))
   end
 end
 
@@ -76,7 +79,7 @@ function CreateRateArray(population::population, SusceptibilityFunction::Functio
   `SubstitutionMatrix` is a 4x4 array containing single nucleotide polymorphism substitution rates
   """
   # Set up an array of zeros with rows for each potential source of exposure, for infection, recovery, and mutation at each base location, and columns for each individual...
-  RateArray = fill(0. (length(population.events)+1+1+length(population.history[1][2][1], length(population.events))))
+  RateArray = fill(0., (length(population.events)+1+1+length(population.history[1][2][1]), length(population.events)))
 
   # Exposure rate from external source...
   for i = 2:shape(RateArray,2)
@@ -91,5 +94,3 @@ function CreateRateArray(population::population, SusceptibilityFunction::Functio
   end
   return RateArray
 end
-
-
