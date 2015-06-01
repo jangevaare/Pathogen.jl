@@ -14,5 +14,5 @@ Generate a nucleotide sequence of length `n`, with specific nucleotide frequenci
   for i = 1:n
     sequence[i]=find(rand(Multinomial(1, [π_A, π_G, π_C, π_U])))[1]
   end
-  return nucleotide2bit("AGCU")[sequence]
+  return nucleotide("AGCU"[sequence])
 end

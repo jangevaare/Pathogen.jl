@@ -4,7 +4,7 @@ Justin Angevaare
 May 2015
 """
 
-function CreatePopulation(init_seq::Nucleotide2bitSeq, init_var::Array)
+function CreatePopulation(init_seq::Vector{Nucleotide}, init_var::Array)
 """
 Create an infection database.
 `init_seq` is assigned to the "external" infection source.
@@ -87,7 +87,7 @@ function CreateRateArray(pop::population, SusceptibilityFunction::Function, Late
 
   # External source mutation
   RateRef = sum(SubstitutionMatrix,2)[:]
-  NucleotideRef = [nucleotide2bit("A"), nucleotide2bit("G"), nucleotide2bit("C"), nucleotide2bit("U")]
+  NucleotideRef = nucleotide("AGCU")
   for i = 1:length(pop.history[1][2][1])
     RateArray[length(pop.events)+1+1+i,1] = RateRef[findfirst(pop.history[1][2][1][i] .== NucleotideRef)]
   end
