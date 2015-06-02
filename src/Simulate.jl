@@ -4,11 +4,11 @@ Justin Angevaare
 May 2015
 """
 
-function CreatePopulation(init_seq::Vector{Nucleotide}, init_var::Array)
+function create_population(init_seq::Vector{Nucleotide}, init_var::Array)
 """
 Create an infection database.
 `init_seq` is assigned to the "external" infection source.
-Each column of the `init_array` is assigned to an individual
+Each column of the `init_var` is assigned to an individual
 """
   # exposure times, exposure source, infection times, recovery times, covariate times, sequence times
   events = Array[Array[[NaN], [NaN],  [NaN],  [NaN],  [NaN], [0]],
@@ -25,10 +25,10 @@ Each column of the `init_array` is assigned to an individual
   end
 
   # save as a population object type
-  return population(events, history)
+  return Population(events, history)
 end
 
-function CreatePowerLaw(α::Float64, β::Float64, γ::Float64, η::Float64, dist=Euclidean())
+function create_powerlaw(α::Float64, β::Float64, γ::Float64, η::Float64, dist=Euclidean())
   """
   This function creates a full parameterized power law function
   """
@@ -37,9 +37,9 @@ function CreatePowerLaw(α::Float64, β::Float64, γ::Float64, η::Float64, dist
   @assert(γ > 0, "invalid γ specification")
   @assert(η > 0, "invalid η specification")
 
-  return function(pop::population, source::Int, target::Int)
+  return function(population::Population, source::Int, target::Int)
     """
-    This simple `SusceptibilityFunction` returns the rate parameter for a `target` individuals from `source` individuals using the power law kernel with parameters α and β. Location must be specified with matching but arbitrary dimensions for each individual; specifically, each individual is represented by a column in an array. Distance by default is Euclidean, but any of the distance calculations in the Distance.jl package may be used.
+    This simple `susceptibility_fun` returns the rate parameter for a `target` individuals from `source` individuals using the power law kernel with parameters α and β. Location must be specified with matching but arbitrary dimensions for each individual; specifically, each individual is represented by a column in an array. Distance by default is Euclidean, but any of the distance calculations in the Distance.jl package may be used.
 
     A zero distance is assigned a rate of γ, and a NaN distance (external source of infection) is assigned a rate of η.
 
@@ -47,7 +47,7 @@ function CreatePowerLaw(α::Float64, β::Float64, γ::Float64, η::Float64, dist
 
     This function also serves as a model for any user defined
     """
-    distance = evaluate(dist, pop.history[source][1], pop.history[target][1])
+    distance = evaluate(dist, population.history[source][1], population.history[target][1])
     if distance == 0
       return γ
     elseif isnan(distance)
@@ -58,43 +58,64 @@ function CreatePowerLaw(α::Float64, β::Float64, γ::Float64, η::Float64, dist
   end
 end
 
-function CreateConstantRate(τ::Float64)
+function create_constantrate(τ::Float64)
   """
   Creates generic constant rate function
   """
   @assert(τ > 0, "invalid τ specification")
   return function()
     """
-    Provides a constant rate for LatencyFunction or RecoveryFunction
+    Provides a constant rate for latency_fun or recovery_fun
     """
     return τ
   end
 end
 
-function CreateRateArray(pop::population, SusceptibilityFunction::Function, LatencyFunction::Function, RecoveryFunction::Function, SubstitutionMatrix::Array)
+function create_ratearray(population::Population, susceptibility_fun::Function, substitution_matrix::Array)
   """
   Generate an array which contains rates (for exponential distribution) for movement from between disease states, and mutation.
-  `SusceptibilityFunction` is a function which generates a rate for each pair of target
-  `SubstitutionMatrix` is a 4x4 array containing single nucleotide polymorphism substitution rates
+  `susceptibility_fun` is a function which generates a rate for each pair of target
+  `substitution_matrix` is a 4x4 array containing single nucleotide polymorphism substitution rates
   """
   # Set up an array of zeros with rows for each potential source of exposure, for infection, recovery, and mutation at each base location, and columns for each individual...
-  RateArray = fill(0., (length(pop.events)+1+1+length(pop.history[1][2]), length(pop.events)))
+  rate_array = RateArray(fill(0., (length(population.events)+1+1+length(population.history[1][2]), length(population.events))),
+                         fill((), (length(population.events)+1+1+length(population.history[1][2]), length(population.events))))
 
-  # Exposure rate from external source...
-  for i = 2:size(RateArray,2)
-    RateArray[1,i] = SusceptibilityFunction(pop, 1, i)
+  # Define events
+  for r in 1:size(rate_array.events, 1)
+    for c in 1:size(rate_array.events, 2)
+      if r <= length(population.events)
+        # Exposure event (from susceptible to exposed state)
+        rate_array.events[r,c] = (1,c,r)
+      elseif r == length(population.events)+1
+        # Symptom event (from exposed to infectious state)
+        rate_array.events[r,c] = (2,c)
+      elseif r == length(population.events)+1+1
+        # Recovery event (from infectious to recovered or susceptible* state)
+        rate_array.events[r,c] = (3,c)
+      else
+        # Mutation event
+        rate_array.events[r,c] = (4,c,r-(length(population.events)+1+1))
+      end
+    end
   end
 
-  # External source mutation
-  RateRef = sum(SubstitutionMatrix,2)[:]
-  NucleotideRef = nucleotide("AGCU")
-  for i = 1:length(pop.history[1][2])
-    RateArray[length(pop.events)+1+1+i,1] = RateRef[findfirst(pop.history[1][2][i] .== NucleotideRef)]
+  # External exposure rate
+  for i = 2:size(rate_array.rates,2)
+    rate_array.rates[1,i] = susceptibility_fun(pop, 1, i)
   end
-  return RateArray
+
+  # Mutation of external pathogen
+  rate_ref = sum(substitution_matrix,2)[:]
+  nucleotide_ref = nucleotide("AGCU")
+  for i = 1:length(population.history[1][2])
+    rate_array.rates[length(population.events)+1+1+i,1] = rate_ref[findfirst(population.history[1][2][i] .== nucleotide_ref)]
+  end
+
+  return rate_array
 end
 
-function OneStep!(rates::RateArray, pop::population, time::Float)
+function onestep!(rates::RateArray, pop::Population, time::Float, susceptibility_fun::Function, latency_fun::Function, recovery_fun::Function, substitution_matrix::Array)
   """
   One event occurs, and appropriate updates are made to the RateArray and Population
   """
