@@ -115,11 +115,12 @@ function create_ratearray(population::Population, susceptibility_fun::Function, 
   return rate_array
 end
 
-function onestep!(rates::RateArray, pop::Population, time::Float, susceptibility_fun::Function, latency_fun::Function, recovery_fun::Function, substitution_matrix::Array)
+function onestep!(rate_array::RateArray, population::Population, time::Float, susceptibility_fun::Function, latency_fun::Function, recovery_fun::Function, substitution_matrix::Array)
   """
   One event occurs, and appropriate updates are made to the RateArray and Population
   """
-  increment = rand(Exponential(1/sum(rates.rates)))
-  total = [0, cumsum(rates.rates[:])]
-  event = rates.events[findfirst(total .> rand()*total[end])]
+  increment = rand(Exponential(1/sum(rate_array.rates)))
+  total = [0, cumsum(rate_array.rates[:])]
+  event = rate_array.events[findfirst(total .> rand()*total[end])]
+  return increment+time, event
 end

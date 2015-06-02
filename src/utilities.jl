@@ -4,7 +4,7 @@ Justin Angevaare
 May 2015
 """
 
-function GenerateSequence(n::Int, π_A::Float64, π_G::Float64, π_C::Float64, π_U::Float64)
+function generate_sequence(n::Int, π_A::Float64, π_G::Float64, π_C::Float64, π_U::Float64)
 """
 Generate a nucleotide sequence of length `n`, with specific nucleotide frequencies
 """

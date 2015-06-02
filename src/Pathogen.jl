@@ -7,16 +7,17 @@ export
   population,
 
   # utilities.jl
-  GenerateSequence,
+  generate_sequence,
 
   # substitute.jl
-  JC69,
+  jc69,
 
   # simulate.jl
-  CreatePopulation,
-  CreatePowerLaw,
-  CreateConstantRate,
-  CreateRateArray
+  create_population,
+  create_powerlaw,
+  create_constantrate,
+  create_ratearray,
+  onestep!
 
 include("types.jl")
 include("utilities.jl")
