@@ -63,7 +63,7 @@ function create_constantrate(τ::Float64)
   Creates generic constant rate function
   """
   @assert(τ > 0, "invalid τ specification")
-  return function()
+  return function(population::Population, individual::Int)
     """
     Provides a constant rate for latency_fun or recovery_fun
     """
@@ -121,14 +121,48 @@ function onestep!(rate_array::RateArray, population::Population, time::Float, su
   """
   increment = rand(Exponential(1/sum(rate_array.rates)))
   total = [0, cumsum(rate_array.rates[:])]
-  event = rate_array.events[findfirst(total .> rand()*total[end])]
+  event_index = ind2sub(size(rate_array.rates), findfirst(total .> rand()*total[end]))
+  event = rate_array.events[event_index]
   if event[1] == 1
     # S => E
+    # Clear all individual specific rates
+    rate_array.rates[:,event_index[2]] = 0.
+    # Set latency period rate
+    rate_array.rates[size(rate_array.rates,2)+1, event_index[2]] = latency_fun(population, event_index[2])
+    # Update population - sequence
+    push!(population.history[event[2]][2],population.history[event[3]][2][end])
+    # Update population - exposure time
+    push!(population.events[event[2]][2],time+increment)
+    # Update population - exposure source
+    push!(population.events[event[2]][3],event[3])
+    # Mutation rates
+    rate_ref = sum(substitution_matrix,2)[:]
+    nucleotide_ref = nucleotide("AGCU")
+    for i = 1:length(population.history[event[2]][2])
+      rate_array.rates[size(rate_array.rates,2)+1+1+i, event[2]] = rate_ref[findfirst(population.history[event[2]][2][i] .== nucleotide_ref)]
+    end
+
   ifelse event[1] == 2
     # E => I
+    rate_array.rates[event_index] = 0.
+    rate_array.rates[event_index[1]+1, event_index[2]] = recovery_fun(population, event_index[2])
+    # Update population
+
+    # Update susceptibilities
+    for i in 2:size(rate_array.rates,2)
+      rate_array.rates[event[3],i] = susceptibility_fun(population, event[3], i)
+    end
+
   ifelse event[1] == 3
-    # I => S*
+    # I => R (I => S* in the future)
+    # Clear all individual specific rates
+    rate_array.rates[:,event_index[2]] = 0.
+    # Update susceptibilites
+    rate_array.rates[event[3],:] = 0.
+    # Update population
+
   else
     # Mutation
   end
 end
+
