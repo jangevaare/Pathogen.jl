@@ -122,5 +122,13 @@ function onestep!(rate_array::RateArray, population::Population, time::Float, su
   increment = rand(Exponential(1/sum(rate_array.rates)))
   total = [0, cumsum(rate_array.rates[:])]
   event = rate_array.events[findfirst(total .> rand()*total[end])]
-  return increment+time, event
+  if event[1] == 1
+    # S => E
+  ifelse event[1] == 2
+    # E => I
+  ifelse event[1] == 3
+    # I => S*
+  else
+    # Mutation
+  end
 end
