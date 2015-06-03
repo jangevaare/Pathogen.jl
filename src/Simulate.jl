@@ -11,8 +11,8 @@ Create an infection database.
 Each column of the `init_var` is assigned to an individual
 """
   # exposure times, exposure source, infection times, recovery times, covariate times, sequence times
-  events = Array[Array[[NaN], [NaN],  [NaN],  [NaN],  [NaN], [0]],
-                 Array[[],    [],     [],     [],     [0],   []]]
+  events = Array[Array[[NaN], [NaN],  [NaN],  [NaN],  [NaN], [0.]],
+                 Array[Float[],    Int[],     Float[],     Float[],     [0.],   Float[]]]
 
   # covariate history, sequence history
   history = Array[Array[[[fill(NaN, length(init_var[:,1]))]],[init_seq]],
@@ -20,7 +20,7 @@ Each column of the `init_var` is assigned to an individual
 
   # push individuals to these arrays.
   for r = 2:size(init_var,2)
-    push!(events, Array[[], [], [], [], [0], []])
+    push!(events, Array[Float[],    Int[],     Float[],     Float[],     [0.],   Float[]])
     push!(history, Array[[[init_var[:,r]]],[]])
   end
 
