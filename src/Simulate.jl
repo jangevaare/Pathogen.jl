@@ -123,17 +123,17 @@ function onestep!(rate_array::RateArray, population::Population, time::Float64, 
   event = rate_array.events[event_index]
   if event[1] == 1
     # S => E
-    # Clear all individual specific rates
+    # Update rates - clear all individual specific rates
     rate_array.rates[:,event_index[2]] = 0.
-    # Set latency period rate
+    # Update rates - latency
     rate_array.rates[size(rate_array.rates,2)+1, event_index[2]] = latency_fun(population, event_index[2])
     # Update population - sequence
-    push!(population.history[event[2]][2],population.history[event[3]][2][end])
+    push!(population.history[event[2]][2], population.history[event[3]][2][end])
     # Update population - exposure time
-    push!(population.events[event[2]][2],time+increment)
+    push!(population.events[event[2]][2], time+increment)
     # Update population - exposure source
-    push!(population.events[event[2]][3],event[3])
-    # Mutation rates
+    push!(population.events[event[2]][3], event[3])
+    # Update rates - mutation rates
     rate_ref = sum(substitution_matrix,2)[:]
     nucleotide_ref = nucleotide("AGCU")
     for i = 1:length(population.history[event[2]][2])
@@ -142,13 +142,15 @@ function onestep!(rate_array::RateArray, population::Population, time::Float64, 
 
   elseif event[1] == 2
     # E => I
+    # Update rates - clear latency
     rate_array.rates[event_index] = 0.
+    # Update rates - recovery
     rate_array.rates[event_index[1]+1, event_index[2]] = recovery_fun(population, event_index[2])
-    # Update population
-
-    # Update susceptibilities
+    # Update population - infection time
+    push!(population.events[event[2]][4], time+increment)
+    # Update rates - susceptibilities
     for i in 2:size(rate_array.rates,2)
-      rate_array.rates[event[3],i] = susceptibility_fun(population, event[3], i)
+      rate_array.rates[event[2],i] = susceptibility_fun(population, event[2], i)
     end
 
   elseif event[1] == 3
