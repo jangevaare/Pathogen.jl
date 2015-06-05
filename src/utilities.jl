@@ -12,7 +12,7 @@ Generate a nucleotide sequence of length `n`, with specific nucleotide frequenci
   @assert(all(0 .< [π_A, π_G, π_C, π_U] .< 1), "Each nucleotide frequency must be between 0 and 1")
   sequence = fill(0, n)
   for i = 1:n
-    sequence[i]=find(rand(Multinomial(1, [π_A, π_G, π_C, π_U])))[1]
+    sequence[i]=findfirst(rand(Multinomial(1, [π_A, π_G, π_C, π_U])))
   end
   return nucleotide("AGCU"[sequence])
 end

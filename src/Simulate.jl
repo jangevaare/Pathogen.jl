@@ -127,12 +127,12 @@ function onestep!(rate_array::RateArray, population::Population, time::Float64, 
     rate_array.rates[:,event_index[2]] = 0.
     # Update rates - latency
     rate_array.rates[size(rate_array.rates,2)+1, event_index[2]] = latency_fun(population, event_index[2])
-    # Update population - sequence
-    push!(population.history[event[2]][2], population.history[event[3]][2][end])
     # Update population - exposure time
     push!(population.events[event[2]][2], time+increment)
     # Update population - exposure source
     push!(population.events[event[2]][3], event[3])
+    # Update population - sequence
+    push!(population.history[event[2]][2], population.history[event[3]][2][end])
     # Update rates - mutation rates
     rate_ref = sum(substitution_matrix,2)[:]
     nucleotide_ref = nucleotide("AGCU")
@@ -160,9 +160,18 @@ function onestep!(rate_array::RateArray, population::Population, time::Float64, 
     # Update susceptibilites
     rate_array.rates[event[3],:] = 0.
     # Update population
+    push!(population.events[event[2]][5], time+increment)
 
   else
     # Mutation
+    # Update population - sequence
+    push!(population.history[event[2]][2], population.history[event[2]][2][end])
+    nucleotide_ref = nucleotide("AGCU")
+    nucleotide_mutation = substitution_matrix[:,findfirst(population.history[event[2]][2][end][event[3]] .== nucleotide_ref)]
+    population.history[event[2]][2][end][event[3]] = nucleotide_ref[findfirst(rand(Multinomial(1, nucleotide_mutation/sum(nucleotide_mutation)),1))]
+    # Update rates - mutation rates
+    rate_ref = sum(substitution_matrix,2)[:]
+    rate_array.rates[size(rate_array.rates,2)+1+1+event[3], event[2]] = rate_ref[findfirst(population.history[event[2]][2][end][event[3]] .== nucleotide_ref)]
   end
 end
 
