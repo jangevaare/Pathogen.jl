@@ -11,17 +11,15 @@ Create an infection database.
 Each column of the `init_var` is assigned to an individual
 """
   # exposure times, exposure source, infection times, recovery times, covariate times, sequence times
-  events = Array[Array[[NaN], [NaN],  [NaN],  [NaN],  [NaN], [0.]],
-                 Array[Float[],    Int[],     Float[],     Float[],     [0.],   Float[]]]
+  events = Array[Array[[NaN], [NaN],  [NaN],  [NaN],  [NaN], [0.]]]
 
   # covariate history, sequence history
-  history = Array[Array[[[fill(NaN, length(init_var[:,1]))]],[init_seq]],
-                  Array[[[init_var[:,1]]],[]]]
+  history = Array[Array[[[fill(NaN, length(init_var[:,1]))]],[init_seq]]]
 
   # push individuals to these arrays.
-  for r = 2:size(init_var,2)
-    push!(events, Array[Float[],    Int[],     Float[],     Float[],     [0.],   Float[]])
-    push!(history, Array[[[init_var[:,r]]],[]])
+  for r = 1:size(init_var,2)
+    push!(events, Array[Vector{Float64}[],    Vector{Int64}[],     Vector{Float64}[],     Vector{Float64}[],     [0.],   Vector{Float64}[]])
+    push!(history, Array[[[init_var[:,r]]], Array{Nucleotide}[]])
   end
 
   # save as a population object type
@@ -115,7 +113,7 @@ function create_ratearray(population::Population, susceptibility_fun::Function, 
   return rate_array
 end
 
-function onestep!(rate_array::RateArray, population::Population, time::Float, susceptibility_fun::Function, latency_fun::Function, recovery_fun::Function, substitution_matrix::Array)
+function onestep!(rate_array::RateArray, population::Population, time::Float64, susceptibility_fun::Function, latency_fun::Function, recovery_fun::Function, substitution_matrix::Array)
   """
   One event occurs, and appropriate updates are made to the RateArray and Population
   """
@@ -142,7 +140,7 @@ function onestep!(rate_array::RateArray, population::Population, time::Float, su
       rate_array.rates[size(rate_array.rates,2)+1+1+i, event[2]] = rate_ref[findfirst(population.history[event[2]][2][i] .== nucleotide_ref)]
     end
 
-  ifelse event[1] == 2
+  elseif event[1] == 2
     # E => I
     rate_array.rates[event_index] = 0.
     rate_array.rates[event_index[1]+1, event_index[2]] = recovery_fun(population, event_index[2])
@@ -153,7 +151,7 @@ function onestep!(rate_array::RateArray, population::Population, time::Float, su
       rate_array.rates[event[3],i] = susceptibility_fun(population, event[3], i)
     end
 
-  ifelse event[1] == 3
+  elseif event[1] == 3
     # I => R (I => S* in the future)
     # Clear all individual specific rates
     rate_array.rates[:,event_index[2]] = 0.
