@@ -117,6 +117,7 @@ function create_ratearray(population::Population, susceptibility_fun::Function, 
     rate_array.rates[length(population.events)+1+1+i,1] = rate_ref[findfirst(population.history[1][2][i] .== nucleotide_ref)]
   end
 
+  # Return RateArray
   return rate_array
 end
 
@@ -125,21 +126,22 @@ function onestep!(rate_array::RateArray, population::Population, time::Float64, 
   One event occurs, and appropriate updates are made to the RateArray and Population
   """
   rate_total = [0, cumsum(rate_array.rates[:])]
+
   if isinf(rate_total[end])
     increment = 0.
-    event_index = ind2sub(size(rate_array.rates), findfirst(isinf(rate_total))-1)
-    event = rate_array.events[event_index]
+    event = rate_array.events[findfirst(isinf(rate_total))-1]
+
   else
     increment = rand(Exponential(1/rate_total[end]))
-    event_index = ind2sub(size(rate_array.rates), findfirst(total .> rand()*total[end]))
-    event = rate_array.events[event_index]
+    event = rate_array.events[findfirst(total .> rand()*total[end])]
   end
+
   if event[1] == 1
     # S => E
     # Update rates - clear all individual specific rates
-    rate_array.rates[:,event_index[2]] = 0.
+    rate_array.rates[:,event[2]] = 0.
     # Update rates - latency
-    rate_array.rates[size(rate_array.rates,2)+1, event_index[2]] = latency_fun(population, event_index[2])
+    rate_array.rates[size(rate_array.rates,2)+1, event[2]] = latency_fun(population, event[2])
     # Update population - exposure time
     push!(population.events[event[2]][2], time+increment)
     # Update population - exposure source
@@ -158,9 +160,9 @@ function onestep!(rate_array::RateArray, population::Population, time::Float64, 
   elseif event[1] == 2
     # E => I
     # Update rates - clear latency
-    rate_array.rates[event_index] = 0.
+    rate_array.rates[event[3], event[2]] = 0.
     # Update rates - recovery
-    rate_array.rates[event_index[1]+1, event_index[2]] = recovery_fun(population, event_index[2])
+    rate_array.rates[size(rate_array.rates,2)+2, event[2]] = recovery_fun(population, event[2])
     # Update population - infection time
     push!(population.events[event[2]][4], time+increment)
     # Update rates - susceptibilities
@@ -180,6 +182,7 @@ function onestep!(rate_array::RateArray, population::Population, time::Float64, 
     for i = 1:size(rate_array.rates,2)
       rate_array[i, event[2]] = susceptibility_fun(population, i, event[2])
     end
+
   else
     # Mutation
     # Update population - sequence
