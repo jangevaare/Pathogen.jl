@@ -56,9 +56,9 @@ function create_powerlaw(α::Float64, β::Float64, γ::Float64, η::Float64, dis
         return α*distance^-β
       end
     # Identify an external source and ensure that the target hasn't been previously exposed (SIR model)
-    elseif isnan(population.events[source][1]) && length(population.events[target][1]) == 0
+    elseif isnan(population.events[source][1][1]) && length(population.events[target][1]) == 0
     # Identify an external source and ensure that the target is susceptible (SIS* model)
-    #elseif isnan(population.events[source][1]) && length(population.events[target][1]) == length(population.events[target][4])
+    #elseif isnan(population.events[source][1][1]) && length(population.events[target][1]) == length(population.events[target][4])
       return η
     else
       return 0.
