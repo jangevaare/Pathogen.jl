@@ -89,18 +89,18 @@ function create_ratearray(population::Population, susceptibility_fun::Function, 
   # Define events
   for r in 1:size(rate_array.events, 1)
     for c in 1:size(rate_array.events, 2)
-      if r <= length(population.events)
+      if r <= size(rate_array.events, 2)
         # Exposure event (from susceptible to exposed state)
         rate_array.events[r,c] = (1,c,r)
-      elseif r == length(population.events)+1
+      elseif r == size(rate_array.events, 2)+1
         # Symptom event (from exposed to infectious state)
         rate_array.events[r,c] = (2,c)
-      elseif r == length(population.events)+1+1
+      elseif r == size(rate_array.events, 2)+2
         # Recovery event (from infectious to recovered or susceptible* state)
         rate_array.events[r,c] = (3,c)
       else
         # Mutation event
-        rate_array.events[r,c] = (4,c,r-(length(population.events)+1+1))
+        rate_array.events[r,c] = (4,c,r-size(rate_array.events, 2)-2)
       end
     end
   end

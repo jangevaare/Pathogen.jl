@@ -1,4 +1,4 @@
-using Pathogen, Distributions
+using Pathogen
 
 init_seq = generate_sequence(10, 0.25, 0.25, 0.25, 0.25)
 init_var = rand((2,10))
