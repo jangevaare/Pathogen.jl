@@ -149,7 +149,7 @@ function onestep!(rate_array::RateArray, population::Population, time::Float64, 
     # Update population - exposure source
     push!(population.events[event[2]][2], event[3])
     # Update population - sequence
-    push!(population.history[event[2]][2], population.history[event[3]][2][end])
+    population.history[event[2]][2] = population.history[event[3]][2][:,end]
     # Update population - sequence time
     push!(population.events[event[2]][6], time+increment)
     # Update rates - mutation rates
