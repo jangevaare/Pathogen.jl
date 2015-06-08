@@ -18,7 +18,7 @@ Each column of the `init_var` is assigned to an individual
 
   # push individuals to these arrays.
   for r = 1:size(init_var,2)
-    push!(events, Array[Vector{Float64}[],    Vector{Int64}[],     Vector{Float64}[],     Vector{Float64}[],     [0.],   Vector{Float64}[]])
+    push!(events, Array[Float64[],    Int64[],     Float64[],     Float64[],     [0.],   Float64[]])
     push!(history, Array[[[init_var[:,r]]], Array{Nucleotide}[]])
   end
 
