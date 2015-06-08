@@ -83,8 +83,8 @@ function create_ratearray(population::Population, susceptibility_fun::Function, 
   `substitution_matrix` is a 4x4 array containing single nucleotide polymorphism substitution rates
   """
   # Set up an array of zeros with rows for each potential source of exposure, for infection, recovery, and mutation at each base location, and columns for each individual...
-  rate_array = RateArray(fill(0., (length(population.events)+1+1+length(population.history[1][2]), length(population.events))),
-                         fill((), (length(population.events)+1+1+length(population.history[1][2]), length(population.events))))
+  rate_array = RateArray(fill(0., (length(population.events)+2+length(population.history[1][2]), length(population.events))),
+                         fill((0,0,0), (length(population.events)+2+length(population.history[1][2]), length(population.events))))
 
   # Define events
   for r in 1:size(rate_array.events, 1)

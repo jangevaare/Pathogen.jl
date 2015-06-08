@@ -9,6 +9,4 @@ powerlaw = create_powerlaw(1., 1., 1., 1.)
 latency = create_constantrate(1.)
 recovery = create_constantrate(1.)
 
-ratearray = create_ratearray(pop, powerlaw, latency, recovery, jc69((2,)))
-
-# how to push to empty vector...
+ratearray = create_ratearray(pop, powerlaw, jc69((2,)))
