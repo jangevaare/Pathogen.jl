@@ -128,76 +128,76 @@ function onestep!(rate_array::RateArray, population::Population, time::Float64, 
   """
   One event occurs, and appropriate updates are made to the RateArray and Population
   """
-  rate_total = [0, cumsum(rate_array.rates[:])]
+  rate_total = cumsum(rate_array.rates[:])
 
   if isinf(rate_total[end])
     increment = 0.
-    event = rate_array.events[findfirst(isinf(rate_total))-1]
+    event = rate_array.events[findfirst(isinf(rate_total))]
 
   else
     increment = rand(Exponential(1/rate_total[end]))
     event = rate_array.events[findfirst(rate_total .> rand()*rate_total[end])]
   end
+  return increment, event
+#   if event[1] == 1
+#     # S => E
+#     # Update rates - clear all individual specific rates
+#     rate_array.rates[:,event[2]] = 0.
+#     # Update rates - latency
+#     rate_array.rates[size(rate_array.rates,2)+1, event[2]] = latency_fun(population, event[2])
+#     # Update population - exposure time
+#     push!(population.events[event[2]][2], time+increment)
+#     # Update population - exposure source
+#     push!(population.events[event[2]][3], event[3])
+#     # Update population - sequence
+#     push!(population.history[event[2]][2], population.history[event[3]][2][end])
+#     # Update population - sequence time
+#     push!(population.events[event[2]][6], time+increment)
+#     # Update rates - mutation rates
+#     rate_ref = sum(substitution_matrix,2)[:]
+#     nucleotide_ref = nucleotide("AGCU")
+#     for i = 1:length(population.history[event[2]][2])
+#       rate_array.rates[size(rate_array.rates,2)+1+1+i, event[2]] = rate_ref[findfirst(population.history[event[2]][2][i] .== nucleotide_ref)]
+#     end
 
-  if event[1] == 1
-    # S => E
-    # Update rates - clear all individual specific rates
-    rate_array.rates[:,event[2]] = 0.
-    # Update rates - latency
-    rate_array.rates[size(rate_array.rates,2)+1, event[2]] = latency_fun(population, event[2])
-    # Update population - exposure time
-    push!(population.events[event[2]][2], time+increment)
-    # Update population - exposure source
-    push!(population.events[event[2]][3], event[3])
-    # Update population - sequence
-    push!(population.history[event[2]][2], population.history[event[3]][2][end])
-    # Update population - sequence time
-    push!(population.events[event[2]][6], time+increment)
-    # Update rates - mutation rates
-    rate_ref = sum(substitution_matrix,2)[:]
-    nucleotide_ref = nucleotide("AGCU")
-    for i = 1:length(population.history[event[2]][2])
-      rate_array.rates[size(rate_array.rates,2)+1+1+i, event[2]] = rate_ref[findfirst(population.history[event[2]][2][i] .== nucleotide_ref)]
-    end
+#   elseif event[1] == 2
+#     # E => I
+#     # Update rates - clear latency
+#     rate_array.rates[event[3], event[2]] = 0.
+#     # Update rates - recovery
+#     rate_array.rates[size(rate_array.rates,2)+2, event[2]] = recovery_fun(population, event[2])
+#     # Update population - infection time
+#     push!(population.events[event[2]][4], time+increment)
+#     # Update rates - susceptibilities
+#     for i in 2:size(rate_array.rates,2)
+#       rate_array.rates[event[2],i] = susceptibility_fun(population, event[2], i)
+#     end
 
-  elseif event[1] == 2
-    # E => I
-    # Update rates - clear latency
-    rate_array.rates[event[3], event[2]] = 0.
-    # Update rates - recovery
-    rate_array.rates[size(rate_array.rates,2)+2, event[2]] = recovery_fun(population, event[2])
-    # Update population - infection time
-    push!(population.events[event[2]][4], time+increment)
-    # Update rates - susceptibilities
-    for i in 2:size(rate_array.rates,2)
-      rate_array.rates[event[2],i] = susceptibility_fun(population, event[2], i)
-    end
+#   elseif event[1] == 3
+#     # I => S*
+#     # Update rates - clear all individual specific rates (mutation and recovery)
+#     rate_array.rates[:,event[2]] = 0.
+#     # Update rates - susceptibilites of all other individuals
+#     rate_array.rates[event[2],:] = 0.
+#     # Update population - recovery time
+#     push!(population.events[event[2]][5], time+increment)
+#     # Update susceptibility* (under SIR framework, susceptibilities of 0 will be generated)
+#     for i = 1:size(rate_array.rates,2)
+#       rate_array[i, event[2]] = susceptibility_fun(population, i, event[2])
+#     end
 
-  elseif event[1] == 3
-    # I => S*
-    # Update rates - clear all individual specific rates (mutation and recovery)
-    rate_array.rates[:,event[2]] = 0.
-    # Update rates - susceptibilites of all other individuals
-    rate_array.rates[event[2],:] = 0.
-    # Update population - recovery time
-    push!(population.events[event[2]][5], time+increment)
-    # Update susceptibility* (under SIR framework, susceptibilities of 0 will be generated)
-    for i = 1:size(rate_array.rates,2)
-      rate_array[i, event[2]] = susceptibility_fun(population, i, event[2])
-    end
-
-  else
-    # Mutation
-    # Update population - sequence
-    push!(population.history[event[2]][2], population.history[event[2]][2][end])
-    nucleotide_ref = nucleotide("AGCU")
-    nucleotide_mutation = substitution_matrix[:,findfirst(population.history[event[2]][2][end][event[3]] .== nucleotide_ref)]
-    population.history[event[2]][2][end][event[3]] = nucleotide_ref[findfirst(rand(Multinomial(1, nucleotide_mutation/sum(nucleotide_mutation)),1))]
-    # Update population - sequence time
-    push!(population.events[event[2]][6], time+increment)
-    # Update rates - mutation rates
-    rate_ref = sum(substitution_matrix,2)[:]
-    rate_array.rates[size(rate_array.rates,2)+1+1+event[3], event[2]] = rate_ref[findfirst(population.history[event[2]][2][end][event[3]] .== nucleotide_ref)]
-  end
+#   else
+#     # Mutation
+#     # Update population - sequence
+#     push!(population.history[event[2]][2], population.history[event[2]][2][end])
+#     nucleotide_ref = nucleotide("AGCU")
+#     nucleotide_mutation = substitution_matrix[:,findfirst(population.history[event[2]][2][end][event[3]] .== nucleotide_ref)]
+#     population.history[event[2]][2][end][event[3]] = nucleotide_ref[findfirst(rand(Multinomial(1, nucleotide_mutation/sum(nucleotide_mutation)),1))]
+#     # Update population - sequence time
+#     push!(population.events[event[2]][6], time+increment)
+#     # Update rates - mutation rates
+#     rate_ref = sum(substitution_matrix,2)[:]
+#     rate_array.rates[size(rate_array.rates,2)+1+1+event[3], event[2]] = rate_ref[findfirst(population.history[event[2]][2][end][event[3]] .== nucleotide_ref)]
+#   end
 end
 
