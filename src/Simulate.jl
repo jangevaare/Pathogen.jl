@@ -196,7 +196,7 @@ function onestep!(rate_array::RateArray, population::Population, time::Float64, 
     push!(population.events[event[2]][6], time+increment)
     # Update rates - mutation rates
     rate_ref = sum(substitution_matrix,2)[:]
-    rate_array.rates[size(rate_array.rates,2)+1+1+event[3], event[2]] = rate_ref[findfirst(population.history[event[2]][2][end][event[3]] .== nucleotide_ref)]
+    rate_array.rates[size(rate_array.rates,2)+2+event[3], event[2]] = rate_ref[findfirst(population.history[event[2]][2][:,end][event[3]] .== nucleotide_ref)]
   end
 end
 
