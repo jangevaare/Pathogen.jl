@@ -45,18 +45,20 @@ function create_powerlaw(α::Float64, β::Float64, γ::Float64, η::Float64, dis
 
     This function also serves as a model for any user defined
     """
-    # In SIR framework, a previously exposed individual is never again susceptible
-    if length(population.events[target][2]) > 0
-      return 0
-    else
+    # Ensure source is infectious that target hasn't been previously exposed (SIR model)
+    if length(population.events[source][3]) > length(population.events[source][4]) && length(population.events[target][1]) == 0
+    # Ensure source is infectious that target is susceptible (SIS* model)
+    #if length(population.events[source][3]) > length(population.events[source][4]) && length(population.events[target][1]) == length(population.events[target][4])
       distance = evaluate(dist, population.history[source][1], population.history[target][1])
-      if distance == 0
+      if distance == 0.
         return γ
       elseif isnan(distance)
         return η
       else
         return α*distance^-β
       end
+    else
+      return 0.
     end
   end
 end
@@ -122,10 +124,16 @@ function onestep!(rate_array::RateArray, population::Population, time::Float64, 
   """
   One event occurs, and appropriate updates are made to the RateArray and Population
   """
-  increment = rand(Exponential(1/sum(rate_array.rates)))
-  total = [0, cumsum(rate_array.rates[:])]
-  event_index = ind2sub(size(rate_array.rates), findfirst(total .> rand()*total[end]))
-  event = rate_array.events[event_index]
+  rate_total = [0, cumsum(rate_array.rates[:])]
+  if isinf(rate_total[end])
+    increment = 0.
+    event_index = ind2sub(size(rate_array.rates), findfirst(isinf(rate_total))-1)
+    event = rate_array.events[event_index]
+  else
+    increment = rand(Exponential(1/rate_total[end]))
+    event_index = ind2sub(size(rate_array.rates), findfirst(total .> rand()*total[end]))
+    event = rate_array.events[event_index]
+  end
   if event[1] == 1
     # S => E
     # Update rates - clear all individual specific rates
