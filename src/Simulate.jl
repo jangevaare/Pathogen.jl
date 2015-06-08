@@ -136,7 +136,7 @@ function onestep!(rate_array::RateArray, population::Population, time::Float64, 
 
   else
     increment = rand(Exponential(1/rate_total[end]))
-    event = rate_array.events[findfirst(total .> rand()*rate_total[end])]
+    event = rate_array.events[findfirst(rate_total .> rand()*rate_total[end])]
   end
 
   if event[1] == 1

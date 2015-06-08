@@ -12,3 +12,5 @@ recovery = create_constantrate(1.)
 ratearray = create_ratearray(pop, powerlaw, jc69((2,)))
 ratearray.rates
 ratearray.events
+
+onestep!(ratearray, pop, 0., powerlaw, latency, recovery, jc69((2,)))
