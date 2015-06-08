@@ -188,10 +188,10 @@ function onestep!(rate_array::RateArray, population::Population, time::Float64, 
   else
     # Mutation
     # Update population - sequence
-    push!(population.history[event[2]][2], population.history[event[2]][2][end])
+    population.history[event[2]][2] = hcat(population.history[event[2]][2], population.history[event[2]][2][:,end])
     nucleotide_ref = nucleotide("AGCU")
-    nucleotide_mutation = substitution_matrix[:,findfirst(population.history[event[2]][2][end][event[3]] .== nucleotide_ref)]
-    population.history[event[2]][2][end][event[3]] = nucleotide_ref[findfirst(rand(Multinomial(1, nucleotide_mutation/sum(nucleotide_mutation)),1))]
+    nucleotide_mutation = substitution_matrix[:,findfirst(population.history[event[2]][2][:,end][event[3]] .== nucleotide_ref)]
+    population.history[event[2]][2][:,end][event[3]] = nucleotide_ref[findfirst(rand(Multinomial(1, nucleotide_mutation/sum(nucleotide_mutation)),1))]
     # Update population - sequence time
     push!(population.events[event[2]][6], time+increment)
     # Update rates - mutation rates
