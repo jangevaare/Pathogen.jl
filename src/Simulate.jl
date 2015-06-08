@@ -198,5 +198,6 @@ function onestep!(rate_array::RateArray, population::Population, time::Float64, 
     rate_ref = sum(substitution_matrix,2)[:]
     rate_array.rates[size(rate_array.rates,2)+2+event[3], event[2]] = rate_ref[findfirst(population.history[event[2]][2][:,end][event[3]] .== nucleotide_ref)]
   end
+  return rate_array, population
 end
 
