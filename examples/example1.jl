@@ -10,11 +10,5 @@ latency = create_constantrate(1.)
 recovery = create_constantrate(1.)
 
 ratearray = create_ratearray(pop, powerlaw, jc69((2,)))
-
-
-
 ratearray.rates
 ratearray.events
-
-
-powerlaw(pop, 2, 1)
