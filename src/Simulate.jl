@@ -47,16 +47,19 @@ function create_powerlaw(α::Float64, β::Float64, γ::Float64, η::Float64, dis
     """
     # Ensure source is infectious that target hasn't been previously exposed (SIR model)
     if length(population.events[source][3]) > length(population.events[source][4]) && length(population.events[target][1]) == 0
-    # Ensure source is infectious that target is susceptible (SIS* model)
+    # Ensure source is infectious and that target is susceptible (SIS* model)
     #if length(population.events[source][3]) > length(population.events[source][4]) && length(population.events[target][1]) == length(population.events[target][4])
       distance = evaluate(dist, population.history[source][1], population.history[target][1])
       if distance == 0.
         return γ
-      elseif isnan(distance)
-        return η
       else
         return α*distance^-β
       end
+    # Identify an external source and ensure that the target hasn't been previously exposed (SIR model)
+    elseif isnan(population.events[source][1]) && length(population.events[target][1]) == 0
+    # Identify an external source and ensure that the target is susceptible (SIS* model)
+    #elseif isnan(population.events[source][1]) && length(population.events[target][1]) == length(population.events[target][4])
+      return η
     else
       return 0.
     end
@@ -94,10 +97,10 @@ function create_ratearray(population::Population, susceptibility_fun::Function, 
         rate_array.events[r,c] = (1,c,r)
       elseif r == size(rate_array.events, 2)+1
         # Symptom event (from exposed to infectious state)
-        rate_array.events[r,c] = (2,c)
+        rate_array.events[r,c] = (2,c,0)
       elseif r == size(rate_array.events, 2)+2
         # Recovery event (from infectious to recovered or susceptible* state)
-        rate_array.events[r,c] = (3,c)
+        rate_array.events[r,c] = (3,c,0)
       else
         # Mutation event
         rate_array.events[r,c] = (4,c,r-size(rate_array.events, 2)-2)
@@ -107,7 +110,7 @@ function create_ratearray(population::Population, susceptibility_fun::Function, 
 
   # External exposure rate
   for i = 2:size(rate_array.rates,2)
-    rate_array.rates[1,i] = susceptibility_fun(pop, 1, i)
+    rate_array.rates[1,i] = susceptibility_fun(population, 1, i)
   end
 
   # Mutation of external pathogen
