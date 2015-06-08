@@ -45,13 +45,18 @@ function create_powerlaw(α::Float64, β::Float64, γ::Float64, η::Float64, dis
 
     This function also serves as a model for any user defined
     """
-    distance = evaluate(dist, population.history[source][1], population.history[target][1])
-    if distance == 0
-      return γ
-    elseif isnan(distance)
-      return η
+    # In SIR framework, a previously exposed individual is never again susceptible
+    if length(population.events[target][2]) > 0
+      return 0
     else
-      return α*distance^-β
+      distance = evaluate(dist, population.history[source][1], population.history[target][1])
+      if distance == 0
+        return γ
+      elseif isnan(distance)
+        return η
+      else
+        return α*distance^-β
+      end
     end
   end
 end
@@ -133,6 +138,8 @@ function onestep!(rate_array::RateArray, population::Population, time::Float64, 
     push!(population.events[event[2]][3], event[3])
     # Update population - sequence
     push!(population.history[event[2]][2], population.history[event[3]][2][end])
+    # Update population - sequence time
+    push!(population.events[event[2]][6], time+increment)
     # Update rates - mutation rates
     rate_ref = sum(substitution_matrix,2)[:]
     nucleotide_ref = nucleotide("AGCU")
@@ -154,14 +161,17 @@ function onestep!(rate_array::RateArray, population::Population, time::Float64, 
     end
 
   elseif event[1] == 3
-    # I => R (I => S* in the future)
-    # Clear all individual specific rates
-    rate_array.rates[:,event_index[2]] = 0.
-    # Update susceptibilites
-    rate_array.rates[event[3],:] = 0.
-    # Update population
+    # I => S*
+    # Update rates - clear all individual specific rates (mutation and recovery)
+    rate_array.rates[:,event[2]] = 0.
+    # Update rates - susceptibilites of all other individuals
+    rate_array.rates[event[2],:] = 0.
+    # Update population - recovery time
     push!(population.events[event[2]][5], time+increment)
-
+    # Update susceptibility* (under SIR framework, susceptibilities of 0 will be generated)
+    for i = 1:size(rate_array.rates,2)
+      rate_array[i, event[2]] = susceptibility_fun(population, i, event[2])
+    end
   else
     # Mutation
     # Update population - sequence
@@ -169,6 +179,8 @@ function onestep!(rate_array::RateArray, population::Population, time::Float64, 
     nucleotide_ref = nucleotide("AGCU")
     nucleotide_mutation = substitution_matrix[:,findfirst(population.history[event[2]][2][end][event[3]] .== nucleotide_ref)]
     population.history[event[2]][2][end][event[3]] = nucleotide_ref[findfirst(rand(Multinomial(1, nucleotide_mutation/sum(nucleotide_mutation)),1))]
+    # Update population - sequence time
+    push!(population.events[event[2]][6], time+increment)
     # Update rates - mutation rates
     rate_ref = sum(substitution_matrix,2)[:]
     rate_array.rates[size(rate_array.rates,2)+1+1+event[3], event[2]] = rate_ref[findfirst(population.history[event[2]][2][end][event[3]] .== nucleotide_ref)]
