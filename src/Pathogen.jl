@@ -9,6 +9,7 @@ export
   # utilities.jl
   generate_sequence,
   findstate,
+  plotdata,
 
   # substitute.jl
   jc69,
