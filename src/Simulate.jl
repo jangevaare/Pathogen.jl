@@ -170,9 +170,9 @@ function onestep!(rate_array::RateArray, population::Population, susceptibility_
   elseif event[1] == 2
     # E => I
     # Update rates - clear latency
-    rate_array.rates[event[3], event[2]] = 0.
+    rate_array.rates[size(rate_array.rates, 2)+1, event[2]] = 0.
     # Update rates - recovery
-    rate_array.rates[size(rate_array.rates,2)+2, event[2]] = recovery_fun(population, event[2])
+    rate_array.rates[size(rate_array.rates, 2)+2, event[2]] = recovery_fun(population, event[2])
     # Update population - infection time
     push!(population.events[event[2]][3], population.timeline[1][end])
     # Update rates - susceptibilities
