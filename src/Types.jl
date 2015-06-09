@@ -4,6 +4,7 @@ type Population
   """
   events::Array
   history::Array
+  timeline::Array
 end
 
 type RateArray

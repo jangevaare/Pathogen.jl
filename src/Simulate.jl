@@ -16,6 +16,9 @@ Each column of the `init_var` is assigned to an individual
   # covariate history, sequence history
   history = Array[Array[[[fill(NaN, length(init_var[:,1]))]],[init_seq]]]
 
+  # event time, event type
+  timeline = Array[[0.],[(0,0,0)]]
+
   # push individuals to these arrays.
   for r = 1:size(init_var,2)
     push!(events, Array[Float64[],    Int64[],     Float64[],     Float64[],     [0.],   Float64[]])
@@ -23,7 +26,7 @@ Each column of the `init_var` is assigned to an individual
   end
 
   # save as a population object type
-  return Population(events, history)
+  return Population(events, history, timeline)
 end
 
 function create_powerlaw(α::Float64, β::Float64, γ::Float64, η::Float64, dist=Euclidean())
@@ -124,7 +127,7 @@ function create_ratearray(population::Population, susceptibility_fun::Function, 
   return rate_array
 end
 
-function onestep!(rate_array::RateArray, population::Population, time::Float64, susceptibility_fun::Function, latency_fun::Function, recovery_fun::Function, substitution_matrix::Array)
+function onestep!(rate_array::RateArray, population::Population, susceptibility_fun::Function, latency_fun::Function, recovery_fun::Function, substitution_matrix::Array)
   """
   One event occurs, and appropriate updates are made to the RateArray and Population
   """
@@ -138,6 +141,11 @@ function onestep!(rate_array::RateArray, population::Population, time::Float64, 
     increment = rand(Exponential(1/rate_total[end]))
     event = rate_array.events[findfirst(rate_total .> rand()*rate_total[end])]
   end
+
+  # Update population timeline
+  push!(population.timeline[1], population.timeline[1][end]+increment)
+  push!(population.timeline[2], event)
+
   if event[1] == 1
     # S => E
     # Update rates - clear all individual specific rates
@@ -145,13 +153,13 @@ function onestep!(rate_array::RateArray, population::Population, time::Float64, 
     # Update rates - latency
     rate_array.rates[size(rate_array.rates,2)+1, event[2]] = latency_fun(population, event[2])
     # Update population - exposure time
-    push!(population.events[event[2]][1], time+increment)
+    push!(population.events[event[2]][1], population.timeline[1][end])
     # Update population - exposure source
     push!(population.events[event[2]][2], event[3])
     # Update population - sequence
     population.history[event[2]][2] = population.history[event[3]][2][:,end]
     # Update population - sequence time
-    push!(population.events[event[2]][6], time+increment)
+    push!(population.events[event[2]][6], population.timeline[1][end])
     # Update rates - mutation rates
     rate_ref = sum(substitution_matrix,2)[:]
     nucleotide_ref = nucleotide("AGCU")
@@ -166,7 +174,7 @@ function onestep!(rate_array::RateArray, population::Population, time::Float64, 
     # Update rates - recovery
     rate_array.rates[size(rate_array.rates,2)+2, event[2]] = recovery_fun(population, event[2])
     # Update population - infection time
-    push!(population.events[event[2]][3], time+increment)
+    push!(population.events[event[2]][3], population.timeline[1][end])
     # Update rates - susceptibilities
     for i in 2:size(rate_array.rates,2)
       rate_array.rates[event[2],i] = susceptibility_fun(population, event[2], i)
@@ -179,7 +187,7 @@ function onestep!(rate_array::RateArray, population::Population, time::Float64, 
     # Update rates - susceptibilites of all other individuals
     rate_array.rates[event[2],:] = 0.
     # Update population - recovery time
-    push!(population.events[event[2]][4], time+increment)
+    push!(population.events[event[2]][4], population.timeline[1][end])
     # Update susceptibility* (under SIR framework, susceptibilities of 0 will be generated)
     for i = 1:size(rate_array.rates,2)
       rate_array[i, event[2]] = susceptibility_fun(population, i, event[2])
@@ -193,7 +201,7 @@ function onestep!(rate_array::RateArray, population::Population, time::Float64, 
     nucleotide_mutation = substitution_matrix[:,findfirst(population.history[event[2]][2][:,end][event[3]] .== nucleotide_ref)]
     population.history[event[2]][2][:,end][event[3]] = nucleotide_ref[findfirst(rand(Multinomial(1, nucleotide_mutation/sum(nucleotide_mutation)),1))]
     # Update population - sequence time
-    push!(population.events[event[2]][6], time+increment)
+    push!(population.events[event[2]][6], population.timeline[1][end])
     # Update rates - mutation rates
     rate_ref = sum(substitution_matrix,2)[:]
     rate_array.rates[size(rate_array.rates,2)+2+event[3], event[2]] = rate_ref[findfirst(population.history[event[2]][2][:,end][event[3]] .== nucleotide_ref)]
