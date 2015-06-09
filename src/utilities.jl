@@ -17,18 +17,18 @@ function generate_sequence(n::Int, π_A::Float64, π_G::Float64, π_C::Float64, 
   return nucleotide("AGCU"[sequence])
 end
 
-function find_state(population::Population, individual::Int64, time::Float64)
+function findstate(population::Population, individual::Int64, time::Float64)
   """
   Find the disease state of a specific individual
   """
   # exposure times, exposure source, infection times, recovery times, covariate times, sequence times
-  if length(population.events[individual][1]) == 0
+  if sum(population.events[individual][1] .< time) == 0
     return "S"
-  elseif length(population.events[individual][1]) > length(population.events[individual][2])
+  elseif sum(population.events[individual][1] .< time) > sum(population.events[individual][2] .< time)
     return "E"
-  elseif length(population.events[individual][2]) > length(population.events[individual][3])
+  elseif sum(population.events[individual][2] .< time) > sum(population.events[individual][3] .< time)
     return "I"
-  elseif length(population.events[individual][1]) == length(population.events[individual][4])
+  elseif sum(population.events[individual][1] .< time) == sum(population.events[individual][4] .< time)
     return "S*"
   else
     return "unknown"
