@@ -17,3 +17,5 @@ ratearray.events
 @time while pop.timeline[1][end] < 10.
   onestep!(ratearray, pop, powerlaw, latency, recovery, substitution)
 end
+
+states, routes = plotdata(pop, 2.)

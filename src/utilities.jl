@@ -40,9 +40,14 @@ function plotdata(population, time)
   """
   # covariate history, sequence history
   # exposure times, exposure source, infection times, recovery times, covariate times, sequence times
-  plotdf = DataFrame(id = Int64[], x = Float64[], y = Float64[], state = ASCIIString[])
+  states = DataFrame(id = Int64[], x = Float64[], y = Float64[], state = ASCIIString[])
+  routes = DataFrame(x = Float64[], y = Float64[], age = Float64[])
   for i = 2:length(population.events)
-    push!(plotdf, DataArray(i, population.history[i][1][1,(time .> population.events[5])[end]], population.history[i][1][2,(time .> population.events[5])[end]]), findstate(population, i, time))
+    push!(states, DataArray(i, population.history[i][1][1,(time .> population.events[i][5])[end]], population.history[i][1][2,(time .> population.events[i][5])[end]], findstate(population, i, time)))
+    for j = 1:length(population.events[i][1])
+      push!(routes, DataArray(population.history[i][1][1,(time .> population.events[i][5])[end]], population.history[i][1][2,(time .> population.events[i][5])[end]], time - population.events[i][1][j]))
+      push!(routes, DataArray(population.history[population.events[i][2][j]][1][1,(time .> population.events[population.events[i][2][j]][5])[end]], population.history[population.events[i][2][j]][1][2,(time .> population.events[population.events[i][2][j]][5])[end]], time - population.events[i][1][j]))
+    end
   end
-  return plotdf
+  return states, routes
 end
