@@ -8,6 +8,7 @@ export
 
   # utilities.jl
   generate_sequence,
+  find_state,
 
   # substitute.jl
   jc69,
