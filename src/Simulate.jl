@@ -190,7 +190,7 @@ function onestep!(rate_array::RateArray, population::Population, susceptibility_
     push!(population.events[event[2]][4], population.timeline[1][end])
     # Update susceptibility* (under SIR framework, susceptibilities of 0 will be generated)
     for i = 1:size(rate_array.rates,2)
-      rate_array[i, event[2]] = susceptibility_fun(population, i, event[2])
+      rate_array.rates[i, event[2]] = susceptibility_fun(population, i, event[2])
     end
 
   else
