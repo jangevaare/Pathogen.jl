@@ -38,12 +38,11 @@ function plotdata(population, time)
   """
   Create dataframes with all necessary plotting information
   """
-  # covariate history, sequence history
-  # exposure times, exposure source, infection times, recovery times, covariate times, sequence times
-  states = DataFrame(id = Int64[], x = Float64[], y = Float64[], state = ASCIIString[])
+#   states = DataFrame(x = Float64[], y = Float64[], state = ASCIIString[])
+  states = DataFrame(id = [NA, NA, NA, NA], x = [NA, NA, NA, NA], y = [NA, NA, NA, NA], state = ["S", "E", "I", "S*"])
   routes = DataFrame(x = Float64[], y = Float64[], age = Float64[])
   for i = 2:length(population.events)
-    states = vcat(states, DataFrame(id = i, x = population.history[i][1][1,(time .> population.events[i][5])[end]], y = population.history[i][1][2,(time .> population.events[i][5])[end]], state = findstate(population, i, time)))
+    states = vcat(states, DataFrame(x = population.history[i][1][1,(time .> population.events[i][5])[end]], y = population.history[i][1][2,(time .> population.events[i][5])[end]], state = findstate(population, i, time)))
     for j = 1:length(population.events[i][1])
       source = population.events[i][2][j]
       if source > 1
