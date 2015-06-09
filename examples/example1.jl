@@ -1,7 +1,7 @@
 using Pathogen
 
-init_seq = generate_sequence(500, 0.25, 0.25, 0.25, 0.25)
-init_var = rand((2,100))
+init_seq = generate_sequence(200, 0.25, 0.25, 0.25, 0.25)
+init_var = rand((2,50))
 
 pop = create_population(init_seq, init_var)
 

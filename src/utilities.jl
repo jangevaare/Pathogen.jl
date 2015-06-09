@@ -43,10 +43,10 @@ function plotdata(population, time)
   states = DataFrame(id = Int64[], x = Float64[], y = Float64[], state = ASCIIString[])
   routes = DataFrame(x = Float64[], y = Float64[], age = Float64[])
   for i = 2:length(population.events)
-    push!(states, DataFrame(id = i, x = population.history[i][1][1,(time .> population.events[i][5])[end]], y = population.history[i][1][2,(time .> population.events[i][5])[end]], state = findstate(population, i, time)))
+    states = vcat(states, DataFrame(id = i, x = population.history[i][1][1,(time .> population.events[i][5])[end]], y = population.history[i][1][2,(time .> population.events[i][5])[end]], state = findstate(population, i, time)))
     for j = 1:length(population.events[i][1])
-      push!(routes, DataFrame(x = population.history[i][1][1,(time .> population.events[i][5])[end]], y = population.history[i][1][2,(time .> population.events[i][5])[end]], age = time - population.events[i][1][j]))
-      push!(routes, DataFrame(x = population.history[population.events[i][2][j]][1][1,(time .> population.events[population.events[i][2][j]][5])[end]], y = population.history[population.events[i][2][j]][1][2,(time .> population.events[population.events[i][2][j]][5])[end]], age = time - population.events[i][1][j]))
+      routes = vcat(routes, DataFrame(x = population.history[i][1][1,(time .> population.events[i][5])[end]], y = population.history[i][1][2,(time .> population.events[i][5])[end]], age = time - population.events[i][1][j]))
+      routes = vcat(routes, DataFrame(x = population.history[population.events[i][2][j]][1][1,(time .> population.events[population.events[i][2][j]][5])[end]], y = population.history[population.events[i][2][j]][1][2,(time .> population.events[population.events[i][2][j]][5])[end]], age = time - population.events[i][1][j]))
     end
   end
   return states, routes
