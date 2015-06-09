@@ -1,4 +1,4 @@
-using Pathogen
+using Pathogen, Gadfly
 
 init_seq = generate_sequence(200, 0.25, 0.25, 0.25, 0.25)
 init_var = rand((2,50))
@@ -19,3 +19,5 @@ ratearray.events
 end
 
 states, routes = plotdata(pop, 2.)
+plot(states, x="x", y="y", color="state", Geom.point)
+plot(routes, x="x", y="y", color="age", Geom.line)
