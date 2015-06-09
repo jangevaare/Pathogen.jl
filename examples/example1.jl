@@ -18,6 +18,7 @@ ratearray.events
   onestep!(ratearray, pop, powerlaw, latency, recovery, substitution)
 end
 
-states, routes = plotdata(pop, 2.)
-plot(states, x="x", y="y", color="state", Geom.point)
-plot(routes, x="x", y="y", color="age", Geom.line)
+# Plot it
+states, routes = plotdata(pop, 1.)
+p1 = plot(layer(states, x="x", y="y", color="state", Geom.point),
+          layer(routes, x="x", y="y", group="age", Geom.polygon))

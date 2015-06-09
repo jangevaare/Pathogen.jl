@@ -43,11 +43,12 @@ function plotdata(population, time)
   routes = DataFrame(x = Float64[], y = Float64[], age = Float64[])
   for i = 2:length(population.events)
     states = vcat(states, DataFrame(x = population.history[i][1][1,(time .> population.events[i][5])[end]], y = population.history[i][1][2,(time .> population.events[i][5])[end]], state = findstate(population, i, time)))
-    for j = 1:length(population.events[i][1])
+    for j = 1:sum(population.events[i][1].< time)
       source = population.events[i][2][j]
+      age = time - population.events[i][1][j]
       if source > 1
-        routes = vcat(routes, DataFrame(x = population.history[i][1][1,(time .> population.events[i][5])[end]], y = population.history[i][1][2,(time .> population.events[i][5])[end]], age = time - population.events[i][1][j]))
-        routes = vcat(routes, DataFrame(x = population.history[source][1][1,(time .> population.events[source][5])[end]], y = population.history[source][1][2,(time .> population.events[source][5])[end]], age = time - population.events[i][1][j]))
+        routes = vcat(routes, DataFrame(x = population.history[i][1][1,(time .> population.events[i][5])[end]], y = population.history[i][1][2,(time .> population.events[i][5])[end]], age = "$age"))
+        routes = vcat(routes, DataFrame(x = population.history[source][1][1,(time .> population.events[source][5])[end]], y = population.history[source][1][2,(time .> population.events[source][5])[end]], age = "$age"))
       end
     end
   end
