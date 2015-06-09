@@ -14,6 +14,5 @@ ratearray.rates
 ratearray.events
 
 while pop.timeline[1][end] < 10.
-  onestep!(ratearray, pop, powerlaw, latency, recovery, jc69((2,)))
+  onestep!(ratearray, pop, powerlaw, latency, recovery, jc69((0.5,)))
 end
-
