@@ -46,7 +46,8 @@ function plotdata(population, time)
     states = vcat(states, DataFrame(id = i, x = population.history[i][1][1,(time .> population.events[i][5])[end]], y = population.history[i][1][2,(time .> population.events[i][5])[end]], state = findstate(population, i, time)))
     for j = 1:length(population.events[i][1])
       routes = vcat(routes, DataFrame(x = population.history[i][1][1,(time .> population.events[i][5])[end]], y = population.history[i][1][2,(time .> population.events[i][5])[end]], age = time - population.events[i][1][j]))
-      routes = vcat(routes, DataFrame(x = population.history[population.events[i][2][j]][1][1,(time .> population.events[population.events[i][2][j]][5])[end]], y = population.history[population.events[i][2][j]][1][2,(time .> population.events[population.events[i][2][j]][5])[end]], age = time - population.events[i][1][j]))
+      source = population.events[i][2][j]
+      routes = vcat(routes, DataFrame(x = population.history[source][1][1,(time .> population.events[source][5])[end]], y = population.history[source][1][2,(time .> population.events[source][5])[end]], age = time - population.events[i][1][j]))
     end
   end
   return states, routes
