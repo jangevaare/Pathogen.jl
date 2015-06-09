@@ -18,4 +18,4 @@ ratearray.events
   onestep!(ratearray, pop, powerlaw, latency, recovery, substitution)
 end
 
-findstate(pop, 4, 1.)
+findstate(pop, 4, 9.)

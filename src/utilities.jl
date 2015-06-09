@@ -24,9 +24,9 @@ function findstate(population::Population, individual::Int64, time::Float64)
   # exposure times, exposure source, infection times, recovery times, covariate times, sequence times
   if sum(population.events[individual][1] .< time) == 0
     return "S"
-  elseif sum(population.events[individual][1] .< time) > sum(population.events[individual][2] .< time)
+  elseif sum(population.events[individual][1] .< time) > sum(population.events[individual][3] .< time)
     return "E"
-  elseif sum(population.events[individual][2] .< time) > sum(population.events[individual][3] .< time)
+  elseif sum(population.events[individual][3] .< time) > sum(population.events[individual][4] .< time)
     return "I"
   elseif sum(population.events[individual][1] .< time) == sum(population.events[individual][4] .< time)
     return "S*"
