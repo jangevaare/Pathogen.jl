@@ -1,11 +1,11 @@
-using Pathogen, Gadfly
+using Pathogen, Gadfly, Distributions
 
 init_seq = generate_sequence(200, 0.25, 0.25, 0.25, 0.25)
-init_var = rand((2,50))
+init_var = rand(Uniform(0,25), (2,100))
 
 pop = create_population(init_seq, init_var)
 
-powerlaw = create_powerlaw(1., 1., 1., 0.1)
+powerlaw = create_powerlaw(2., 5., 1., 0.002)
 latency = create_constantrate(1/3.)
 recovery = create_constantrate(1/5.)
 substitution = jc69((0.1,))
@@ -14,17 +14,17 @@ ratearray = create_ratearray(pop, powerlaw, substitution)
 ratearray.rates
 ratearray.events
 
-@time while pop.timeline[1][end] < 10.
+@time while length(pop.timeline[1]) < 30000.
   onestep!(ratearray, pop, powerlaw, latency, recovery, substitution)
 end
 
+images = 1000
 # Plot it
-time = 0
-while time < 10.
-  states, routes = plotdata(pop, time)
+for time = 1:images
+  states, routes = plotdata(pop, (time*pop.timeline[1][end])/images)
   p1 = plot(layer(states, x="x", y="y", color="state", Geom.point),
-            layer(routes, x="x", y="y", group="age", Geom.polygon))
-  draw(PNG(homedir()"/Desktop/plots/infection_%time.png", 15cm, 10cm), p1)
-  time +=1
+            layer(routes, x="x", y="y", group="age", Geom.polygon),
+            Theme(panel_opacity=1., panel_fill=color("white")))
+  draw(PNG(homedir()"/Desktop/plots/infection_$time.png", 15cm, 10cm), p1)
 end
 
