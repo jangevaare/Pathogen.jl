@@ -2,15 +2,13 @@ module Pathogen
 
 using Distances, Distributions, DataFrames, BioSeq, ProgressMeter
 
-import
-  Base.convert
-
 export
   # types.jl
   population,
 
   # utilities.jl
-  generate_sequence,
+  generate_seq,
+  generate_2bitseq,
   findstate,
   plotdata,
   convert,

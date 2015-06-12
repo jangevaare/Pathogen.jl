@@ -3,18 +3,47 @@ utilities.jl - basic utilities for dealing with sequence data
 Justin Angevaare
 May 2015
 """
+import Base.convert
 
-function generate_sequence(n::Int, π_A::Float64, π_G::Float64, π_C::Float64, π_U::Float64)
+function convert(::Type{Int64}, x::Nucleotide2bitSeq)
+  """
+  Add a conversion method to move from Nucleotide to an integer
+  """
+  return sub2ind((2,2), x.b1 .+1, x.b2 .+1)
+end
+
+function convert(::Type{Nucleotide2bitSeq}, x::Vector{Int64})
+  """
+  Add a conversion method to move from an integer to a nucleotide sequence
+  """
+  b1,b2 = ind2sub((2,2), x)
+  if length(x) == 1
+    return Nucleotide2bitSeq(convert(BitArray, [b1 - 1]), convert(BitArray, [b2 - 1]))
+  else
+    return Nucleotide2bitSeq(convert(BitArray, b1 - 1), convert(BitArray, b2 - 1))
+  end
+end
+
+function generate_seq(n::Int, π_A::Float64, π_T::Float64, π_C::Float64, π_G::Float64)
   """
   Generate a nucleotide sequence of length `n`, with specific nucleotide frequencies
   """
-  @assert(sum([π_A, π_G, π_C, π_U]) == 1, "Nucleotide frequencies must sum to 1")
-  @assert(all(0 .< [π_A, π_G, π_C, π_U] .< 1), "Each nucleotide frequency must be between 0 and 1")
+  @assert(sum([π_A, π_T, π_C, π_G]) == 1, "Nucleotide frequencies must sum to 1")
+  @assert(all(0 .< [π_A, π_T, π_C, π_G] .< 1), "Each nucleotide frequency must be between 0 and 1")
   sequence = fill(0, n)
   for i = 1:n
-    sequence[i]=findfirst(rand(Multinomial(1, [π_A, π_G, π_C, π_U])))
+    sequence[i]=findfirst(rand(Multinomial(1, [π_A, π_T, π_C, π_G])))
   end
   return nucleotide("AGCU"[sequence])
+end
+
+function generate_2bitseq(n::Int, π_A::Float64, π_T::Float64, π_C::Float64, π_G::Float64)
+  """
+  Generate a nucleotide sequence of length `n`, with specific nucleotide frequencies
+  """
+  @assert(sum([π_A, π_T, π_C, π_G]) == 1, "Nucleotide frequencies must sum to 1")
+  @assert(all(0 .< [π_A, π_T, π_C, π_G] .< 1), "Each nucleotide frequency must be between 0 and 1")
+  return convert(Nucleotide2bitSeq, findn(rand(Multinomial(1, [π_A, π_T, π_C, π_G]),n))[1])
 end
 
 function findstate(population::Population, individual::Int64, time::Float64)
@@ -69,23 +98,4 @@ function geneticdistance(ancestor::Vector{Nucleotide}, descendent::Vector{Nucleo
   end
   rate_vector .^= -1
   return sum(rate_vector)
-end
-
-function convert(::Type{Int64}, x::Nucleotide2bitSeq)
-  """
-  Add a conversion method to move from Nucleotide to an integer
-  """
-  return sub2ind((2,2), x.b1 .+1, x.b2 .+1)
-end
-
-function convert(::Type{Nucleotide2bitSeq}, x::Int64)
-  """
-  Add a conversion method to move from Nucleotide to an integer
-  """
-  b1,b2 = ind2sub((2,2), x)
-  if length(x) == 1
-    return Nucleotide2bitSeq(convert(BitArray, [b1 - 1]), convert(BitArray, [b2 - 1]))
-  else
-    return Nucleotide2bitSeq(convert(BitArray, b1 - 1), convert(BitArray, b2 - 1))
-  end
 end
