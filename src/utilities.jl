@@ -54,3 +54,19 @@ function plotdata(population, time)
   end
   return states, routes
 end
+
+function geneticdistance(ancestor::Vector{Nucleotide}, descendent::Vector{Nucleotide}, substitution_matrix::Array)
+  """
+  Compute the genetic distance between two nucleotide sequences based on a `substitution_matrix`
+  """
+  @assert(length(ancestor) == length(descendent), "Sequences must be equal in length")
+  nucleotide_ref = nucleotide("AGCU")
+  rate_vector = Float64[]
+  for i = 1:length(ancestor)
+    if ancestor[i] != descendent[i]
+     push!(rate_vector, substitution_matrix[ancestor[i] .== nucleotide_ref, descendent[i] .== nucleotide_ref])
+    end
+  end
+  rate_vector .^= -1
+  return sum(rate_vector)
+end
