@@ -70,3 +70,17 @@ function geneticdistance(ancestor::Vector{Nucleotide}, descendent::Vector{Nucleo
   rate_vector .^= -1
   return sum(rate_vector)
 end
+
+function convert(::Type{Int64}, x::Nucleotide)
+  """
+  Add a conversion method to move from Nucleotide to an integer
+  """
+  return sub2ind((2,2), find(x.b1), find(x.b2))[1]
+end
+
+function convert(::Type{Int64}, x::Vector{Nucleotide})
+  """
+  Add a conversion method to move from Nucleotide to an integer
+  """
+  return sub2ind((2,2), find(x.b1), find(x.b2))
+end
