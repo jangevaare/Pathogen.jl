@@ -103,7 +103,7 @@ function geneticdistance(ancestor::Nucleotide2bitSeq, descendent::Nucleotide2bit
   rate_vector = Float64[]
   for i = 1:length(ancestor)
     if ancestor[i] != descendent[i]
-     push!(rate_vector, substitution_matrix[convert(ancestor[i]), descendent[i]])
+     push!(rate_vector, substitution_matrix[convert(Int64, ancestor[i]), convert(Int64, descendent[i])])
     end
   end
   rate_vector .^= -1
