@@ -71,16 +71,21 @@ function geneticdistance(ancestor::Vector{Nucleotide}, descendent::Vector{Nucleo
   return sum(rate_vector)
 end
 
-function convert(::Type{Int64}, x::Nucleotide)
+function convert(::Type{Int64}, x::Nucleotide2bitSeq)
   """
   Add a conversion method to move from Nucleotide to an integer
   """
-  return sub2ind((2,2), x.b1.+1, x.b2.+1)[1]
+  return sub2ind((2,2), x.b1 .+1, x.b2 .+1)
 end
 
-function convert(::Type{Int64}, x::Vector{Nucleotide})
+function convert(::Type{Nucleotide2bitSeq}, x::Int64)
   """
   Add a conversion method to move from Nucleotide to an integer
   """
-  return sub2ind((2,2), x.b1.+1, x.b2.+1)
+  b1,b2 = ind2sub((2,2), x)
+  if length(x) = 1
+    return Nucleotide2bitSeq(convert(BitArray, [b1 - 1]), convert(BitArray, [b2 - 1]))
+  else
+    return Nucleotide2bitSeq(convert(BitArray, b1 - 1), convert(BitArray, b2 - 1))
+  end
 end

@@ -2,6 +2,9 @@ module Pathogen
 
 using Distances, Distributions, DataFrames, BioSeq, ProgressMeter
 
+import
+  Base.convert
+
 export
   # types.jl
   population,
@@ -10,6 +13,7 @@ export
   generate_sequence,
   findstate,
   plotdata,
+  convert,
 
   # substitute.jl
   jc69,
