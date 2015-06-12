@@ -1,4 +1,4 @@
-using Pathogen, Gadfly, Distributions
+using Pathogen, Gadfly, Distributions, BioSeq
 
 init_seq = generate_sequence(200, 0.25, 0.25, 0.25, 0.25)
 init_var = rand(Uniform(0,25), (2,200))

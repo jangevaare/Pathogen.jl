@@ -83,7 +83,7 @@ function convert(::Type{Nucleotide2bitSeq}, x::Int64)
   Add a conversion method to move from Nucleotide to an integer
   """
   b1,b2 = ind2sub((2,2), x)
-  if length(x) = 1
+  if length(x) == 1
     return Nucleotide2bitSeq(convert(BitArray, [b1 - 1]), convert(BitArray, [b2 - 1]))
   else
     return Nucleotide2bitSeq(convert(BitArray, b1 - 1), convert(BitArray, b2 - 1))
