@@ -109,3 +109,15 @@ function geneticdistance(ancestor::Nucleotide2bitSeq, descendent::Nucleotide2bit
   rate_vector .^= -1
   return sum(rate_vector)
 end
+
+function surveil(ids=Vector{Int64}, population::Population, ν::Float64)
+  """
+  Gather surveillance data on specific individuals in a population, with an exponentially distributed detection lag with rate ν
+  """
+  @assert(0. < proportion <= 1., "Surveiled population proportion must be greater than zero, and less than or equal to one")
+  @assert(0. < ν, "ν, the detection rate parameter must be greater than 0")
+  observations = DataFrame(id=Int64[], event=Int64[], time=Float64)
+  for i = 1:length(ids)
+    population.ids[i]
+  end
+end

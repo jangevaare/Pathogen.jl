@@ -3,6 +3,7 @@ using Pathogen, Gadfly, Distributions, BioSeq
 generate_seq(200, 0.25, 0.25, 0.25, 0.25)
 generate_2bitseq(200, 0.25, 0.25, 0.25, 0.25)
 
+
 init_var = rand(Uniform(0,25), (2,200))
 
 recovery = create_constantrate(1/5.)
