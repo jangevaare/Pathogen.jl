@@ -146,4 +146,5 @@ function surveil(ids=Vector{Int64}, population::Population, ν::Float64)
                                                       covariates = population.history[ids[i]][1][findlast(observationtime .<= population.events[ids[i]][5])]))
     end
   end
+  return symptomatic, nonsymptomatic
 end
