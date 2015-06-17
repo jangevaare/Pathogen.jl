@@ -4,7 +4,7 @@ Justin Angevaare
 May 2015
 """
 
-function create_population(init_seq::Vector{Nucleotide}, init_var::Array)
+function create_population(init_seq::Nucleotide2bitSeq, init_var::Array)
 """
 Create an infection database.
 `init_seq` is assigned to the "external" infection source.
@@ -22,7 +22,7 @@ Each column of the `init_var` is assigned to an individual
   # push individuals to these arrays.
   for r = 1:size(init_var,2)
     push!(events, Array[Float64[],    Int64[],     Float64[],     Float64[],     [0.],   Float64[]])
-    push!(history, Array[[[init_var[:,r]]], Array{Nucleotide}[]])
+    push!(history, Array[[[init_var[:,r]]], Vector{Nucleotide2bitSeq}[]])
   end
 
   # save as a population object type
@@ -118,10 +118,7 @@ function create_ratearray(population::Population, susceptibility_fun::Function, 
 
   # Mutation of external pathogen
   rate_ref = sum(substitution_matrix,2)[:]
-  nucleotide_ref = nucleotide("AGCU")
-  for i = 1:length(population.history[1][2])
-    rate_array.rates[length(population.events)+1+1+i,1] = rate_ref[findfirst(population.history[1][2][i] .== nucleotide_ref)]
-  end
+  rate_array.rates[length(population.events)+3:end,1] = rate_ref[convert(Vector{Int64}, x::population.history[1][2][1])]
 
   # Return RateArray
   return rate_array
@@ -157,15 +154,12 @@ function onestep!(rate_array::RateArray, population::Population, susceptibility_
     # Update population - exposure source
     push!(population.events[event[2]][2], event[3])
     # Update population - sequence
-    population.history[event[2]][2] = population.history[event[3]][2][:,end]
+    population.history[event[2]][2] = [population.history[event[3]][2][end]]
     # Update population - sequence time
     push!(population.events[event[2]][6], population.timeline[1][end])
     # Update rates - mutation rates
     rate_ref = sum(substitution_matrix,2)[:]
-    nucleotide_ref = nucleotide("AGCU")
-    for i = 1:length(population.history[event[2]][2])
-      rate_array.rates[size(rate_array.rates,2)+1+1+i, event[2]] = rate_ref[findfirst(population.history[event[2]][2][i] .== nucleotide_ref)]
-    end
+    rate_array.rates[length(population.events)+3:end, event[2]] = rate_ref[convert(Vector{Int64}, population.history[event[2]][2][1])]
 
   elseif event[1] == 2
     # E => I
@@ -196,10 +190,8 @@ function onestep!(rate_array::RateArray, population::Population, susceptibility_
   else
     # Mutation
     # Update population - sequence
-    population.history[event[2]][2] = hcat(population.history[event[2]][2], population.history[event[2]][2][:,end])
-    nucleotide_ref = nucleotide("AGCU")
-    nucleotide_mutation = substitution_matrix[:,findfirst(population.history[event[2]][2][:,end][event[3]] .== nucleotide_ref)]
-    population.history[event[2]][2][:,end][event[3]] = nucleotide_ref[findfirst(rand(Multinomial(1, nucleotide_mutation/sum(nucleotide_mutation)),1))]
+    population.history[event[2]][2] = push!(population.history[event[2]][2], population.history[event[2]][2][end])
+    population.history[event[2]][2][end][event[3]] = convert(Nucleotide2bitBase, findfirst(rand(Multinomial(1, substitution_matrix[:,convert(Int64, population.history[event[2]][2][end][event[3]])][:]/sum(substitution_matrix[:,convert(Int64, population.history[event[2]][2][end][event[3]])][:])))))
     # Update population - sequence time
     push!(population.events[event[2]][6], population.timeline[1][end])
     # Update rates - mutation rates
