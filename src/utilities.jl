@@ -114,6 +114,7 @@ function surveil(ids=Vector{Int64}, population::Population, ν::Float64)
   """
   Gather surveillance data on specific individuals in a population, with an exponentially distributed detection lag with rate ν
   """
+  @assert(all(2 .<= ids .<= length(population.events)), "Invalid ID provided")
   @assert(0. < proportion <= 1., "Surveiled population proportion must be greater than zero, and less than or equal to one")
   @assert(0. < ν, "ν, the detection rate parameter must be greater than 0")
   symptomatic = DataFrame(id=Int64[],
