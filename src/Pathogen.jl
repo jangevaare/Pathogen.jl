@@ -12,6 +12,7 @@ export
   findstate,
   plotdata,
   convert,
+  surveil,
 
   # substitute.jl
   jc69,

@@ -1,6 +1,5 @@
 using Pathogen, Gadfly, Distributions, BioSeq
 
-generate_seq(200, 0.25, 0.25, 0.25, 0.25)
 generate_2bitseq(200, 0.25, 0.25, 0.25, 0.25)
 
 
