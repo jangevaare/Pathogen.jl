@@ -116,8 +116,34 @@ function surveil(ids=Vector{Int64}, population::Population, ν::Float64)
   """
   @assert(0. < proportion <= 1., "Surveiled population proportion must be greater than zero, and less than or equal to one")
   @assert(0. < ν, "ν, the detection rate parameter must be greater than 0")
-  observations = DataFrame(id=Int64[], event=Int64[], time=Float64)
+  symptomatic = DataFrame(id=Int64[],
+                          time=Float64,
+                          sequence=Nucleotide2bitSeq[],
+                          covariates=Vector{Float64}[])
+  nonsymptomatic = DataFrame(id=Int64[],
+                             time=Float64,
+                             covariates=Vector{Float64}[])
+
+  # exposure times, exposure source, infection times, recovery times, covariate times, sequence times
+  # covariate history, sequence history
   for i = 1:length(ids)
-    population.ids[i]
+    observationtime = 0.
+    nonsymptomatic = vcat(nonsymptomatic, DataFrame(id=ids[i],
+                                                    time = observationtime,
+                                                    covariates = population.history[ids[i]][1][findlast(observationtime .<= population.events[ids[i]][5])]))
+    for j = 1:length(population.events[ids[i]][3])
+      observationtime = population.events[ids[i]][3][j] + rand(Exponential(1/ν))
+      symptomatic = vcat(symptomatic, DataFrame(id=ids[i],
+                                                 time = observationtime,
+                                                 sequence = population.history[ids[i]][2][findlast(observationtime .<= population.events[ids[i]][6])],
+                                                 covariates = population.history[ids[i]][1][findlast(observationtime .<= population.events[ids[i]][5])]))
+    end
+
+    for j = 1:length(population.events[ids[i]][4])
+      observationtime = population.events[ids[i]][4][j] + rand(Exponential(1/ν))
+      nonsymptomatic = vcat(nonsymptomatic, DataFrame(id=ids[i],
+                                                      time = observationtime,
+                                                      covariates = population.history[ids[i]][1][findlast(observationtime .<= population.events[ids[i]][5])]))
+    end
   end
 end
