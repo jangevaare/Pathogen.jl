@@ -11,6 +11,7 @@ recovery = create_constantrate(1/5.)
 substitution = jc69((0.1,))
 
 ratearray = create_ratearray(pop, powerlaw, substitution)
+
 ratearray.rates
 ratearray.events
 
