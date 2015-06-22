@@ -110,7 +110,7 @@ function geneticdistance(ancestor::Nucleotide2bitSeq, descendent::Nucleotide2bit
   return sum(rate_vector)
 end
 
-function surveil(ids=Vector{Int64}, population::Population, ν::Float64)
+function surveil(ids::Vector{Int64}, population::Population, ν::Float64)
   """
   Gather surveillance data on specific individuals in a population, with an exponentially distributed detection lag with rate ν
   """
