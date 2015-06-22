@@ -36,7 +36,7 @@ function convert(::Type{Nucleotide2bitBase}, x::Int64)
   Add a conversion method to move from an integer to a nucleotide base
   """
   b1,b2 = ind2sub((2,2), x)
-  return Nucleotide2bitBase(convert(BitArray, [b1 - 1]), convert(BitArray, [b2 - 1]))
+  return Nucleotide2bitBase(convert(Bool, b1 - 1), convert(Bool, b2 - 1))
 end
 
 function generate_seq(n::Int, π_A::Float64, π_T::Float64, π_C::Float64, π_G::Float64)
