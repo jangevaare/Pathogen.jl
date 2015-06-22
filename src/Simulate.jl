@@ -196,7 +196,7 @@ function onestep!(rate_array::RateArray, population::Population, susceptibility_
     push!(population.events[event[2]][6], population.timeline[1][end])
     # Update rates - mutation rates
     rate_ref = sum(substitution_matrix,2)[:]
-    rate_array.rates[size(rate_array.rates,2)+2+event[3], event[2]] = rate_ref[convert(Int64, population.history[event[2]][2][:,end][event[3]])]
+    rate_array.rates[size(rate_array.rates,2)+2+event[3], event[2]] = rate_ref[convert(Int64, population.history[event[2]][2][end][event[3]])]
   end
   return rate_array, population
 end
