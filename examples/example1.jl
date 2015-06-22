@@ -1,10 +1,12 @@
 using Pathogen, Gadfly, Distributions, BioSeq
 
-generate_2bitseq(200, 0.25, 0.25, 0.25, 0.25)
-
-
+init_seq = generate_2bitseq(200, 0.25, 0.25, 0.25, 0.25)
 init_var = rand(Uniform(0,25), (2,200))
 
+pop = create_population(init_seq, init_var)
+
+powerlaw = create_powerlaw(4., 5., 1., 0.002)
+latency = create_constantrate(1/3.)
 recovery = create_constantrate(1/5.)
 substitution = jc69((0.1,))
 

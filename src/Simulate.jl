@@ -118,7 +118,7 @@ function create_ratearray(population::Population, susceptibility_fun::Function, 
 
   # Mutation of external pathogen
   rate_ref = sum(substitution_matrix,2)[:]
-  rate_array.rates[length(population.events)+3:end,1] = rate_ref[convert(Vector{Int64}, x::population.history[1][2][1])]
+  rate_array.rates[length(population.events)+3:end,1] = rate_ref[convert(Vector{Int64}, population.history[1][2][1])]
 
   # Return RateArray
   return rate_array
