@@ -15,14 +15,6 @@ type RateArray
   events::Array
 end
 
-type Tree
-  """
-  Phylogenetic tree
-  """
-  structure::TreeNode
-  sequences::Vector{Nucleotide2BitSequence}
-end
-
 abstract TreeFeature
 
 type TreeNode <: TreeFeature
@@ -43,5 +35,13 @@ type TreeLeaf <: TreeFeature
   """
   distance::Float64
   id::Int64
+end
+
+type Tree
+  """
+  Phylogenetic tree
+  """
+  structure::TreeNode
+  sequences::Vector{Nucleotide2BitSequence}
 end
 
