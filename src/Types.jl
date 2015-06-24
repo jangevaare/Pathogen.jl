@@ -14,3 +14,34 @@ type RateArray
   rates::Array
   events::Array
 end
+
+type Tree
+  """
+  Phylogenetic tree
+  """
+  structure::TreeNode
+  sequences::Vector{Nucleotide2BitSequence}
+end
+
+abstract TreeFeatures
+
+type TreeNode <: TreeFeatures
+  """
+  Node in a phylogenetic tree
+  `distance` is from ancestral node
+  `branches` are further nodes or leaves (vector of length 2 for bifurcation)
+  """
+  distance::Float64
+  branches::Vector{TreeFeatures}
+end
+
+type TreeLeaf <: TreeFeatures
+  """
+  Leaf in a phylogenetic tree
+  `distance` is from ancenstral node
+  `id` is a single sequence identifier
+  """
+  distance::Float64
+  id::Int64
+end
+
