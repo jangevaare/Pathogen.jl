@@ -42,6 +42,6 @@ type Tree
   Phylogenetic tree
   """
   structure::TreeNode
-  sequences::Vector{Nucleotide2BitSequence}
+  sequences::Vector{Nucleotide2bitSeq}
 end
 
