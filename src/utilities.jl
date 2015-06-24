@@ -100,7 +100,7 @@ function geneticdistance(ancestor::Nucleotide2bitSeq, descendent::Nucleotide2bit
   return sum(rate_vector)
 end
 
-function surveil(ids::Vector{Int64}, population::Population, ν::Float64)
+function surveil(ids::Integer, population::Population, ν::Float64)
   """
   Gather surveillance data on specific individuals in a population, with an exponentially distributed detection lag with rate ν
   """
@@ -120,20 +120,20 @@ function surveil(ids::Vector{Int64}, population::Population, ν::Float64)
     observationtime = 0.
     nonsymptomatic = vcat(nonsymptomatic, DataFrame(id=ids[i],
                                                     time = observationtime,
-                                                    covariates = population.history[ids[i]][1][findlast(observationtime .<= population.events[ids[i]][5])]))
+                                                    covariates = population.history[ids[i]][1][find(observationtime .<= population.events[ids[i]][5])[end]]))
     for j = 1:length(population.events[ids[i]][3])
       observationtime = population.events[ids[i]][3][j] + rand(Exponential(1/ν))
       symptomatic = vcat(symptomatic, DataFrame(id=ids[i],
                                                  time = observationtime,
-                                                 sequence = population.history[ids[i]][2][findlast(observationtime .<= population.events[ids[i]][6])],
-                                                 covariates = population.history[ids[i]][1][findlast(observationtime .<= population.events[ids[i]][5])]))
+                                                 sequence = population.history[ids[i]][2][find(observationtime .<= population.events[ids[i]][6])[end]],
+                                                 covariates = population.history[ids[i]][1][find(observationtime .<= population.events[ids[i]][5])[end]]))
     end
 
     for j = 1:length(population.events[ids[i]][4])
       observationtime = population.events[ids[i]][4][j] + rand(Exponential(1/ν))
       nonsymptomatic = vcat(nonsymptomatic, DataFrame(id=ids[i],
                                                       time = observationtime,
-                                                      covariates = population.history[ids[i]][1][findlast(observationtime .<= population.events[ids[i]][5])]))
+                                                      covariates = population.history[ids[i]][1][find(observationtime .<= population.events[ids[i]][5])[end]]))
     end
   end
   return symptomatic, nonsymptomatic

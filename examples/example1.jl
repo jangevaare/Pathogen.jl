@@ -19,6 +19,8 @@ ratearray.events
   onestep!(ratearray, pop, powerlaw, latency, recovery, substitution)
 end
 
+symptomatic, nonsymptomatic = surveil(2:201, pop, 0.5)
+
 images = 1000
 # Plot it
 for time = 1:images
