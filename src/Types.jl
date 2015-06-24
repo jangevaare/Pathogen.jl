@@ -23,9 +23,9 @@ type Tree
   sequences::Vector{Nucleotide2BitSequence}
 end
 
-abstract TreeFeatures
+abstract TreeFeature
 
-type TreeNode <: TreeFeatures
+type TreeNode <: TreeFeature
   """
   Node in a phylogenetic tree
   `distance` is from ancestral node
@@ -35,7 +35,7 @@ type TreeNode <: TreeFeatures
   branches::Vector{TreeFeatures}
 end
 
-type TreeLeaf <: TreeFeatures
+type TreeLeaf <: TreeFeature
   """
   Leaf in a phylogenetic tree
   `distance` is from ancenstral node
