@@ -45,16 +45,6 @@ function generate_seq(n::Int, π_A::Float64, π_T::Float64, π_C::Float64, π_G:
   """
   @assert(sum([π_A, π_T, π_C, π_G]) == 1, "Nucleotide frequencies must sum to 1")
   @assert(all(0 .< [π_A, π_T, π_C, π_G] .< 1), "Each nucleotide frequency must be between 0 and 1")
-  sequence = fill(0, n)
-  return nucleotide("ATCG"[findn(rand(Multinomial(1, [π_A, π_T, π_C, π_G]),n))[1]])
-end
-
-function generate_2bitseq(n::Int, π_A::Float64, π_T::Float64, π_C::Float64, π_G::Float64)
-  """
-  Generate a nucleotide sequence of length `n`, with specific nucleotide frequencies
-  """
-  @assert(sum([π_A, π_T, π_C, π_G]) == 1, "Nucleotide frequencies must sum to 1")
-  @assert(all(0 .< [π_A, π_T, π_C, π_G] .< 1), "Each nucleotide frequency must be between 0 and 1")
   return convert(Nucleotide2bitSeq, findn(rand(Multinomial(1, [π_A, π_T, π_C, π_G]),n))[1])
 end
 
@@ -75,7 +65,7 @@ function findstate(population::Population, individual::Int64, time::Float64)
   end
 end
 
-function plotdata(population, time)
+function plotdata(population::Population, time::Float64)
   """
   Create dataframes with all necessary plotting information
   """

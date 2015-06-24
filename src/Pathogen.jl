@@ -12,7 +12,6 @@ export
 
   # utilities.jl
   generate_seq,
-  generate_2bitseq,
   findstate,
   plotdata,
   convert,

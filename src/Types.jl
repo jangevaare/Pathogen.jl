@@ -24,7 +24,7 @@ type TreeNode <: TreeFeature
   `branches` are further nodes or leaves (vector of length 2 for bifurcation)
   """
   distance::Float64
-  branches::Vector{TreeFeatures}
+  branches::Vector{TreeFeature}
 end
 
 type TreeLeaf <: TreeFeature
