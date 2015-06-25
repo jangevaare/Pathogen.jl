@@ -28,9 +28,13 @@ export
   create_ratearray,
   onestep!
 
+  # infer.jl
+  branchloglikelihood
+
 include("types.jl")
 include("utilities.jl")
 include("substitute.jl")
 include("simulate.jl")
+include("infer.jl")
 
 end
