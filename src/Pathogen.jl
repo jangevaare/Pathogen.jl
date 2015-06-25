@@ -12,6 +12,7 @@ export
 
   # utilities.jl
   generate_seq,
+  geneticdistance,
   findstate,
   plotdata,
   convert,
