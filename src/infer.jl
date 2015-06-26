@@ -30,9 +30,9 @@ function treedistance(leaf1::Int64, leaf2::Int64, tree::Tree)
   Find the minimumum branch distance between two leaves
   """
   @assert(all(1 .<= [leaf1, leaf2] .<= length(tree.distances)), "Invalid leaves specified")
-  depthlimit = minimum([length(tree.positions[leaf1]), length(tree.positions[leaf1])])
-  nodematch = find(tree.positions[leaf1][1:depthlimit] .== tree.positions[leaf1][1:depthlimit])[end]
-  return sum(tree.distances[leaf1][nodematch:end], tree.distances[leaf1][nodematch:end])
+  depthlimit = minimum([length(tree.positions[leaf1]), length(tree.positions[leaf2])])
+  sharednode = findfirst(tree.positions[leaf1][1:depthlimit] .!= tree.positions[leaf2][1:depthlimit])
+  return sum([tree.distances[leaf1][sharednode:end], tree.distances[leaf2][sharednode:end]])
 end
 
 function seqdistance(seq1::Nucleotide2bitSeq, seq2::Nucleotide2bitSeq, substitution_matrix::Array)
