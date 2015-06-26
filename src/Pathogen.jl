@@ -27,7 +27,9 @@ export
   onestep!,
 
   # infer.jl
-  branchloglikelihood
+  branchloglikelihood,
+  treedistance,
+  seqdistance
 
 include("types.jl")
 include("utilities.jl")

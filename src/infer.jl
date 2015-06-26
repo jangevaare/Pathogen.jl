@@ -25,4 +25,18 @@ function branchloglikelihood(seq1::Nucleotide2bitSeq, seq2::Nucleotide2bitSeq, b
   return ll
 end
 
+function treedistance(leaf1::Int64, leaf2::Int64, tree::Tree)
+  """
+  Find the minimumum branch distance between two leaves
+  """
+  @assert(1 .<= [leaf1, leaf2] .<= length(tree.distances), "Invalid leaves specified")
+  depthlimit = minimum(length(tree.position[leaf1]), length(tree.position[leaf1]))
+  nodematch = find(tree.position[leaf1][1:depthlimit] .== tree.position[leaf1][1:depthlimit])[end]
+  return sum(tree.distances[leaf1][nodematch:end], tree.distances[leaf1][nodematch:end])
+end
 
+function seqdistance(seq1::Nucleotide2bitSeq, seq2::Nucleotide2bitSeq, substitution_matrix::Array)
+  """
+  Find the distance between two sequences as per a specificied substitution rate matrix
+  """
+end

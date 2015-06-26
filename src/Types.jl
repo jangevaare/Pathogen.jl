@@ -19,7 +19,7 @@ type Tree
   """
   Phylogenetic tree
   """
-  sequence::Vector{Nucleotide2bitSeq}
-  position::Vector{Vector{Bool}}
-  distance::Vector{Vector{Float64}}
+  sequences::Vector{Nucleotide2bitSeq}
+  positions::Vector{Vector{Bool}}
+  distances::Vector{Vector{Float64}}
 end
