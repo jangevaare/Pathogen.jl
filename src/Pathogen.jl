@@ -7,6 +7,10 @@ export
   Population,
   RateArray,
   Tree,
+  TreeFeature,
+  TreeLeaf,
+  TreeNode,
+  Tree2,
 
   # utilities.jl
   generate_seq,

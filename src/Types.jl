@@ -23,3 +23,30 @@ type Tree
   positions::Vector{Vector{Bool}}
   distances::Vector{Vector{Float64}}
 end
+
+abstract TreeFeature
+
+type TreeLeaf <: TreeFeature
+  """
+  Leaf in a phylogenetic tree
+  """
+  distance::Float64
+end
+
+type TreeNode <: TreeFeature
+  """
+  Node in a phylogenetic tree
+  """
+  distance::Float64
+  branch1::TreeFeature
+  branch2::TreeFeature
+end
+
+type Tree2
+  """
+  Phylogenetic tree
+  """
+  sequences::Vector{Nucleotide2bitSeq}
+  locations::Vector{Vector{Bool}}
+  branchdistances::TreeFeature
+end
