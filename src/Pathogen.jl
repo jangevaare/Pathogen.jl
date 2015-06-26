@@ -26,7 +26,7 @@ export
   create_powerlaw,
   create_constantrate,
   create_ratearray,
-  onestep!
+  onestep!,
 
   # infer.jl
   branchloglikelihood
