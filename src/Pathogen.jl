@@ -10,6 +10,7 @@ export
   TreeFeature,
   TreeLeaf,
   TreeNode,
+  TreeRoot,
   Tree2,
 
   # utilities.jl

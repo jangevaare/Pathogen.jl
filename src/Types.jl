@@ -42,11 +42,19 @@ type TreeNode <: TreeFeature
   branch2::TreeFeature
 end
 
+type TreeRoot
+  """
+  Root in a phylogenetic tree
+  """
+  branch1::TreeFeature
+  branch2::TreeFeature
+end
+
 type Tree2
   """
   Phylogenetic tree
   """
   sequences::Vector{Nucleotide2bitSeq}
   locations::Vector{Vector{Bool}}
-  branchdistances::TreeFeature
+  branchdistances::TreeRoot
 end
