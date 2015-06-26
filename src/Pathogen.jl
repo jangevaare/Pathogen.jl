@@ -4,11 +4,9 @@ using Distances, Distributions, DataFrames, BioSeq, ProgressMeter
 
 export
   # types.jl
-  population,
+  Population,
+  RateArray,
   Tree,
-#   TreeNode,
-#   TreeLeaf,
-#   TreeFeature,
 
   # utilities.jl
   generate_seq,
