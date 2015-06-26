@@ -6,9 +6,9 @@ export
   # types.jl
   population,
   Tree,
-  TreeNode,
-  TreeLeaf,
-  TreeFeature,
+#   TreeNode,
+#   TreeLeaf,
+#   TreeFeature,
 
   # utilities.jl
   generate_seq,

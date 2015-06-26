@@ -24,3 +24,5 @@ function branchloglikelihood(seq1::Nucleotide2bitSeq, seq2::Nucleotide2bitSeq, b
   end
   return ll
 end
+
+
