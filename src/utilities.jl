@@ -138,3 +138,32 @@ function surveil(ids::Vector{Int64}, population::Population, ν::Float64)
   end
   return symptomatic, nonsymptomatic
 end
+
+function create_tree(sequences::Vector{Nucleotide2bitSeq}, times::Vector{FloatingPoint})
+  """
+  Generate a phylogenetic tree based on sample times and sequences
+  """
+  @assert(length(sequences)==length(times), "There must be one sample time for each sequence")
+  @assert(length(sequences)>2, "There must be at least 3 samples")
+  # root
+  vertices = TreeVertex()
+  # nodes
+  for i = 1:(length(sequences) - 2)
+    push!(vertices, TreeVertex(minimum(times)))
+  end
+  # leaves
+  for i = 1:length(sequences)
+    push!(vertices, TreeVertex(sequences[i], times[i]))
+  end
+  # Create edges
+  edges = Vector{TreeEdge}
+  for i = 1:length(vertices)
+    for j = 1:length(vertices)
+      if vertices[i].out & vertices[j].in
+        push!(edges, TreeEdge(i, j))
+      end
+    end
+  end
+  return Tree(vertices, edges)
+end
+

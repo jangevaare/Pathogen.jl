@@ -17,6 +17,7 @@ export
   plotdata,
   convert,
   surveil,
+  create_tree,
 
   # substitute.jl
   jc69,
