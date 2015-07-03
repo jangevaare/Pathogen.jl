@@ -139,7 +139,7 @@ function surveil(ids::Vector{Int64}, population::Population, ν::Float64)
   return symptomatic, nonsymptomatic
 end
 
-function create_tree(sequences::Vector{Nucleotide2bitSeq}, times::Vector{FloatingPoint})
+function create_tree(sequences::Vector{Nucleotide2bitSeq}, times::Vector{Float64})
   """
   Generate a phylogenetic tree based on sample times and sequences
   """
