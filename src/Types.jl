@@ -1,4 +1,4 @@
-import Base.show
+import Base.display
 
 type Population
   """
@@ -41,21 +41,42 @@ TreeVertex(i::Bool, o::Bool) = TreeVertex(i, o, 0., NaN)
 
 TreeVertex(i::Bool, o::Bool, h::FloatingPoint) = TreeVertex(i, o, h, NaN)
 
-function show(io::IO, object::TreeVertex)
+function display(object::TreeVertex)
   """
   Display for TreeVertex
   """
   if object.in == true
     if object.out == false
-      println("Leaf of phylogenetic tree with height $object.height")
+      println("Leaf @ $(object.height)")
     else
-      println("Node of phylogenetic tree with height $object.height")
+      println("Node @ $(object.height)")
     end
   else
     if object.out == true
-      println("Root of phylogenetic tree")
+      println("Root @ $(object.height)")
     else
-      println("Invalid phylogenetic tree component")
+      error("Invalid TreeVertex")
+    end
+  end
+end
+
+function display(object::Vector{TreeVertex})
+  """
+  Display for TreeVertex
+  """
+  for i = 1:length(object)
+    if object[i].in == true
+      if object[i].out == false
+        print("Leaf ")
+      else
+        print("Node ")
+      end
+    else
+      if object[i].out == true
+        print("Root ")
+      else
+        error("Invalid TreeVertex")
+      end
     end
   end
 end
