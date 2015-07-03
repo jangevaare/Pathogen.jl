@@ -1,4 +1,5 @@
 import Base.display
+import Base.push!
 
 type Population
   """
@@ -27,19 +28,19 @@ type TreeVertex
   """
   in::Bool
   out::Bool
-  height::FloatingPoint
+  height::Float64
   seq
 end
 
 TreeVertex() = TreeVertex(false, true, 0., NaN)
 
-TreeVertex(h::FloatingPoint) = TreeVertex(true, true, h, NaN)
+TreeVertex(h::Float64) = TreeVertex(true, true, h, NaN)
 
-TreeVertex(h::FloatingPoint, s::Nucleotide2bitSeq) = TreeVertex(true, false, h, s)
+TreeVertex(h::Float64, s::Nucleotide2bitSeq) = TreeVertex(true, false, h, s)
 
 TreeVertex(i::Bool, o::Bool) = TreeVertex(i, o, 0., NaN)
 
-TreeVertex(i::Bool, o::Bool, h::FloatingPoint) = TreeVertex(i, o, h, NaN)
+TreeVertex(i::Bool, o::Bool, h::Float64) = TreeVertex(i, o, h, NaN)
 
 function display(object::TreeVertex)
   """
@@ -79,6 +80,10 @@ function display(object::Vector{TreeVertex})
       end
     end
   end
+end
+
+function push!(a::TreeVertex, b::TreeVertex)
+  a = [a, b]
 end
 
 type TreeEdge
