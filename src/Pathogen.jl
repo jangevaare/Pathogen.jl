@@ -1,17 +1,14 @@
 module Pathogen
 
-using Distances, Distributions, DataFrames, BioSeq, ProgressMeter
+using Distances, Graphs, Distributions, DataFrames, BioSeq, ProgressMeter
 
 export
   # types.jl
   Population,
   RateArray,
   Tree,
-  TreeFeature,
-  TreeLeaf,
-  TreeNode,
-  TreeRoot,
-  Tree2,
+  TreeVertex,
+  TreeEdge,
 
   # utilities.jl
   generate_seq,
@@ -33,7 +30,6 @@ export
 
   # infer.jl
   branchloglikelihood,
-  treedistance,
   seqdistance
 
 include("types.jl")

@@ -15,46 +15,47 @@ type RateArray
   events::Array
 end
 
+type TreeVertex
+  """
+  Describes a vertex in a phylogenetic tree directed graph
+  in: in degree == 1
+  out: out degree == 2
+  height: vertex height (time units)
+  seq: nucleotide sequence (if known), NaN otherwise
+  """
+  in::Bool
+  out::Bool
+  height::FloatingPoint
+  seq
+end
+
+TreeVertex(i::Bool, o::Bool) = TreeVertex(i, o, 0., NaN)
+
+TreeVertex(i::Bool, o::Bool, h::FloatingPoint) = TreeVertex(i, o, h, NaN)
+
+TreeVertex(i::Bool, o::Bool, h::FloatingPoint) = TreeVertex(i, o, h, NaN)
+
+TreeVertex() = TreeVertex(false, true, 0., NaN)
+
+TreeVertex(h::FloatingPoint) = TreeVertex(true, true, h, NaN)
+
+TreeVertex(h::FloatingPoint, s::Nucleotide2bitSeq) = TreeVertex(true, false, h, s)
+
+type TreeEdge
+  """
+  Describes an edge in a phylogenetic tree directed graph
+  from: vertex identification
+  to: vertex identification
+  """
+  from::Int64
+  to::Int64
+end
+
 type Tree
   """
-  Phylogenetic tree
+  All possible phylogenetic trees described by a directed graph
   """
-  sequences::Vector{Nucleotide2bitSeq}
-  positions::Vector{Vector{Bool}}
-  distances::Vector{Vector{Float64}}
+  Vertices::Vector{TreeVertex}
+  Edges::Vector{TreeEdge}
 end
 
-abstract TreeFeature
-
-type TreeLeaf <: TreeFeature
-  """
-  Leaf in a phylogenetic tree
-  """
-  distance::Float64
-end
-
-type TreeNode <: TreeFeature
-  """
-  Node in a phylogenetic tree
-  """
-  distance::Float64
-  branch1::TreeFeature
-  branch2::TreeFeature
-end
-
-type TreeRoot
-  """
-  Root in a phylogenetic tree
-  """
-  branch1::TreeFeature
-  branch2::TreeFeature
-end
-
-type Tree2
-  """
-  Phylogenetic tree
-  """
-  sequences::Vector{Nucleotide2bitSeq}
-  locations::Vector{Vector{Bool}}
-  branchdistances::TreeRoot
-end
