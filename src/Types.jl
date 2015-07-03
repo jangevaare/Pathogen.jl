@@ -29,17 +29,15 @@ type TreeVertex
   seq
 end
 
-TreeVertex(i::Bool, o::Bool) = TreeVertex(i, o, 0., NaN)
-
-TreeVertex(i::Bool, o::Bool, h::FloatingPoint) = TreeVertex(i, o, h, NaN)
-
-TreeVertex(i::Bool, o::Bool, h::FloatingPoint) = TreeVertex(i, o, h, NaN)
-
 TreeVertex() = TreeVertex(false, true, 0., NaN)
 
 TreeVertex(h::FloatingPoint) = TreeVertex(true, true, h, NaN)
 
 TreeVertex(h::FloatingPoint, s::Nucleotide2bitSeq) = TreeVertex(true, false, h, s)
+
+TreeVertex(i::Bool, o::Bool) = TreeVertex(i, o, 0., NaN)
+
+TreeVertex(i::Bool, o::Bool, h::FloatingPoint) = TreeVertex(i, o, h, NaN)
 
 type TreeEdge
   """
