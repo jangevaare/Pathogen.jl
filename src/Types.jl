@@ -1,3 +1,5 @@
+import Base.show
+
 type Population
   """
   A specialized type where each individual in a population is characterized by a vector of vectors for event details and by a vector of arrays for event histories
@@ -38,6 +40,25 @@ TreeVertex(h::FloatingPoint, s::Nucleotide2bitSeq) = TreeVertex(true, false, h, 
 TreeVertex(i::Bool, o::Bool) = TreeVertex(i, o, 0., NaN)
 
 TreeVertex(i::Bool, o::Bool, h::FloatingPoint) = TreeVertex(i, o, h, NaN)
+
+function show(io::IO, object::TreeVertex)
+  """
+  Display for TreeVertex
+  """
+  if object.in == true
+    if object.out == false
+      println("Leaf of phylogenetic tree with height $object.height")
+    else
+      println("Node of phylogenetic tree with height $object.height")
+    end
+  else
+    if object.out == true
+      println("Root of phylogenetic tree")
+    else
+      println("Invalid phylogenetic tree component")
+    end
+  end
+end
 
 type TreeEdge
   """
