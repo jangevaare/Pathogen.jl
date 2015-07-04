@@ -32,15 +32,7 @@ type TreeVertex
   seq
 end
 
-TreeVertex() = TreeVertex(false, true, 0., NaN)
-
-TreeVertex(h::Float64) = TreeVertex(true, true, h, NaN)
-
 TreeVertex(h::Float64, s::Nucleotide2bitSeq) = TreeVertex(true, false, h, s)
-
-TreeVertex(i::Bool, o::Bool) = TreeVertex(i, o, 0., NaN)
-
-TreeVertex(i::Bool, o::Bool, h::Float64) = TreeVertex(i, o, h, NaN)
 
 function display(object::TreeVertex)
   """
