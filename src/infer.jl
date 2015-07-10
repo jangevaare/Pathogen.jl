@@ -40,3 +40,22 @@ function seqdistance(seq1::Nucleotide2bitSeq, seq2::Nucleotide2bitSeq, substitut
   Find the distance between two sequences as per a specificied substitution rate matrix
   """
 end
+
+function logprior1
+
+function augment1a(ρ::Float64, ν::Float64)
+  """
+  Augments surveilance data with infectiousness
+
+function loglikelihood1(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64, obs, aug)
+  """
+  α, β: powerlaw exposure kernel parameters
+  η: external pressure rate
+  ρ: infectious rate (1/mean latent period)
+  γ: recovery rate (1/mean infectious period)
+  ν: detection rate (1/mean detection lag)
+  """
+end
+
+function augment1b()
+
