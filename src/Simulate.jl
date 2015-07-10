@@ -29,20 +29,19 @@ Each column of the `init_var` is assigned to an individual
   return Population(events, history, timeline)
 end
 
-function create_powerlaw(α::Float64, β::Float64, γ::Float64, η::Float64, dist=Euclidean())
+function create_powerlaw(α::Float64, β::Float64, η::Float64, dist=Euclidean())
   """
   This function creates a full parameterized power law function
   """
   @assert(α > 0, "invalid α specification")
   @assert(β > 0, "invalid β specification")
-  @assert(γ > 0, "invalid γ specification")
   @assert(η > 0, "invalid η specification")
 
   return function(population::Population, source::Int, target::Int)
     """
     This simple `susceptibility_fun` returns the rate parameter for a `target` individuals from `source` individuals using the power law kernel with parameters α and β. Location must be specified with matching but arbitrary dimensions for each individual; specifically, each individual is represented by a column in an array. Distance by default is Euclidean, but any of the distance calculations in the Distance.jl package may be used.
 
-    A zero distance is assigned a rate of γ, and a NaN distance (external source of infection) is assigned a rate of η.
+    A NaN distance (external source of infection) is assigned a rate of η.
 
     It's important to note that this function does not check the disease status of any individuals.
 
@@ -52,14 +51,9 @@ function create_powerlaw(α::Float64, β::Float64, γ::Float64, η::Float64, dis
     if length(population.events[source][3]) > length(population.events[source][4]) && length(population.events[target][1]) == 0
     # Ensure source is infectious and that target is susceptible (SIS* model)
     #if length(population.events[source][3]) > length(population.events[source][4]) && length(population.events[target][1]) == length(population.events[target][4])
-      distance = evaluate(dist, population.history[source][1], population.history[target][1])
-      if distance == 0.
-        return γ
-      else
-        return α*distance^-β
-      end
+      return α*evaluate(dist, population.history[source][1], population.history[target][1])^-β
     # Identify an external source and ensure that the target hasn't been previously exposed (SIR model)
-    elseif length(population.events[source][1]) > 0 && isnan(population.events[source][1][1]) && length(population.events[target][1]) == 0
+    elseif isnan(population.events[source][1][1]) && length(population.events[target][1]) == 0
     # Identify an external source and ensure that the target is susceptible (SIS* model)
     #elseif isnan(population.events[source][1][1]) && length(population.events[target][1]) == length(population.events[target][4])
       return η
