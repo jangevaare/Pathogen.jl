@@ -46,7 +46,7 @@ function create_logprior1(α_prior::UnivariateDistribution, β_prior::Univariate
   Create a log prior function using specified prior univariate distributions
   α, β: powerlaw exposure kernel parameters
   η: external pressure rate
-  ρ: infectious rate (1/mean latent period)
+  ρ: infectivity rate (1/mean latent period)
   γ: recovery rate (1/mean infectious period)
   ν: detection rate (1/mean detection lag)
   """
@@ -54,25 +54,26 @@ function create_logprior1(α_prior::UnivariateDistribution, β_prior::Univariate
     """
     α, β: powerlaw exposure kernel parameters
     η: external pressure rate
-    ρ: infectious rate (1/mean latent period)
+    ρ: infectivity rate (1/mean latent period)
     γ: recovery rate (1/mean infectious period)
     ν: detection rate (1/mean detection lag)
     """
-    return
+    return logpdf(α_prior, α) + logpdf(β_prior, β) + logpdf(ρ_prior, ρ) + logpdf(γ_prior, γ) + logpdf(η_prior, η) + logpdf(ν_prior, ν)
   end
 end
 
-function augment1(ρ::Float64, ν::Float64)
+function augment1(ρ::Float64, ν::Float64, obs)
   """
   Augments surveilance data with infectiousness
   """
+  returns aug
   end
 
 function loglikelihood1(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64, obs, aug)
   """
   α, β: powerlaw exposure kernel parameters
   η: external pressure rate
-  ρ: infectious rate (1/mean latent period)
+  ρ: infectivity rate (1/mean latent period)
   γ: recovery rate (1/mean infectious period)
   ν: detection rate (1/mean detection lag)
   """
