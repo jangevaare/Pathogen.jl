@@ -66,7 +66,7 @@ function augment1(ρ::Float64, ν::Float64, obs)
   """
   Augments surveilance data with infectiousness
   """
-  returns aug
+  return aug
   end
 
 function loglikelihood1(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64, obs, aug)
@@ -77,5 +77,6 @@ function loglikelihood1(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::
   γ: recovery rate (1/mean infectious period)
   ν: detection rate (1/mean detection lag)
   """
+  return
 end
 
