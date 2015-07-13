@@ -30,7 +30,6 @@ export
   # infer.jl
   SEIR_surveilance,
   SEIR_augmentation,
-  SEIR_logprior,
   SEIR_loglikelihood,
   create_tree,
   seqdistance,

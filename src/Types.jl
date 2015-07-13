@@ -131,4 +131,5 @@ type SEIR_trace
   ν::Vector{Float64}
   aug::Vector{SEIR_augmented}
   sources::Vector{Array{Float64}}
+  logposterior::Vector{Float64}
 end

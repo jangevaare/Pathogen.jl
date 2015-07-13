@@ -53,29 +53,10 @@ function SEIR_augmentation(ρ::Float64, ν::Float64, obs::SEIR_events)
   return SEIR_augmented(infectious_augmented, exposed_augmented, recovered_augmented)
 end
 
-function SEIR_logprior(α_prior::UnivariateDistribution, β_prior::UnivariateDistribution, ρ_prior::UnivariateDistribution, γ_prior::UnivariateDistribution, η_prior::UnivariateDistribution, ν_prior::UnivariateDistribution)
-  """
-  Create a log prior function using specified prior univariate distributions
-  α, β: powerlaw exposure kernel parameters
-  η: external pressure rate
-  ρ: infectivity rate (1/mean latent period)
-  γ: recovery rate (1/mean infectious period)
-  ν: detection rate (1/mean detection lag)
-  """
-  return function(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64)
-    """
-    α, β: powerlaw exposure kernel parameters
-    η: external pressure rate
-    ρ: infectivity rate (1/mean latent period)
-    γ: recovery rate (1/mean infectious period)
-    ν: detection rate (1/mean detection lag)
-    """
-    return logpdf(α_prior, α) + logpdf(β_prior, β) + logpdf(ρ_prior, ρ) + logpdf(γ_prior, γ) + logpdf(η_prior, η) + logpdf(ν_prior, ν)
-  end
-end
-
 function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64, aug::SEIR_augmented, obs::SEIR_events, dist=Euclidean())
   """
+  Calculate the loglikelihood and return a sources array under specified parameters values and observations
+
   α, β: powerlaw exposure kernel parameters
   η: external pressure rate
   ρ: infectivity rate (1/mean latent period)
@@ -86,10 +67,6 @@ function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, 
   sources = fill(0., (1 + length(obs.id), length(obs.id)))
 
   ll = loglikelihood(Exponential(1/γ), (aug.recovered_augmented .- aug.infectious_augmented)[!isnan(aug.recovered_augmented)])
-# DO NOT CONSIDERED LIKELIHOOD OF PURELY AUGMENTED DATA
-#  ll += loglikelihood(Exponential(1/ρ), aug.infectious_augmented .- aug.exposed_augmented)
-#  ll += loglikelihood(Exponential(1/ν), obs.recovered_observed .- aug.recovered_augmented)
-#  ll += loglikelihood(Exponential(1/ν), obs.infectious_observed .- aug.infectious_augmented)
 
   # Create event timing array
   event_times = [aug.exposed_augmented
@@ -148,12 +125,35 @@ function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, 
   return ll, sources
 end
 
-function SEIR_MCMC(n::Int64, init::Tuple, logprior::Function, obs::SEIR_events, dist=Euclidean())
+function SEIR_MCMC(α_prior::UnivariateDistribution, β_prior::UnivariateDistribution, ρ_prior::UnivariateDistribution, γ_prior::UnivariateDistribution, η_prior::UnivariateDistribution, ν_prior::UnivariateDistribution, obs::SEIR_events, dist=Euclidean())
+  """
+  Initiate an SEIR_trace by sampling from specified prior distributions
+
+  α, β: powerlaw exposure kernel parameters
+  η: external pressure rate
+  ρ: infectivity rate (1/mean latent period)
+  γ: recovery rate (1/mean infectious period)
+  ν: detection rate (1/mean detection lag)
+  """
+  logprior function(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64)
+    logpdf(α_prior, α) + logpdf(β_prior, β) + logpdf(ρ_prior, ρ) + logpdf(γ_prior, γ) + logpdf(η_prior, η) + logpdf(ν_prior, ν)
+  end
+  α = rand(α_prior)
+  β = rand(β_prior)
+  ρ = rand(ρ_prior)
+  γ = rand(γ_prior)
+  η = rand(η_prior)
+  ν = rand(ν_prior)
+  aug = SEIR_augmentation(ρ, ν, obs)
+  ll, sources = SEIR_loglikelihood(α, β, ρ, γ, η, ν, aug, obs, dist)
+  logposterior = ll + logprior(α, β, ρ, γ, η, ν)
+end
+
+function SEIR_MCMC(n::Int64, trace::SEIR_trace, logprior::Function, obs::SEIR_events, dist=Euclidean())
   """
   Performs `n` data-augmented metropolis hastings MCMC iterations. Initiates a single chain by sampling from prior distribution
   """
   SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64, aug::SEIR_augmented, obs::SEIR_events, dist=Euclidean())
-
 end
 
 function create_tree(sequences::Vector{Nucleotide2bitSeq}, times::Vector{Float64})
