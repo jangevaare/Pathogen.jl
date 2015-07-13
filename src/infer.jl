@@ -82,9 +82,12 @@ function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, 
   γ: recovery rate (1/mean infectious period)
   ν: detection rate (1/mean detection lag)
   """
+  # Initiate an array with infection source probabilities
+  sources = fill(0., (1 + length(obs.id), length(obs.id)))
+
   ll = loglikelihood(Exponential(1/γ), (aug.recovered_augmented .- aug.infectious_augmented)[!isnan(aug.recovered_augmented)])
 # DO NOT CONSIDERED LIKELIHOOD OF PURELY AUGMENTED DATA
-#  ll = loglikelihood(Exponential(1/ρ), aug.infectious_augmented .- aug.exposed_augmented)
+#  ll += loglikelihood(Exponential(1/ρ), aug.infectious_augmented .- aug.exposed_augmented)
 #  ll += loglikelihood(Exponential(1/ν), obs.recovered_observed .- aug.recovered_augmented)
 #  ll += loglikelihood(Exponential(1/ν), obs.infectious_observed .- aug.infectious_augmented)
 
@@ -110,32 +113,47 @@ function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, 
     ll += loglikelihood(Exponential(1/rate_array_sum), event_times[event_order[i]])
     ll += log(sum(rate_array[:,id[1]])/sum(rate_array))
 
-    # Update rate_array for latent period
+    # Exposure event
     if id[2] == 1
+      # Record disease pressures at time of exposure
+      sources[1:(length(obs.id)+1), id[1]] = rate_array[1:(length(obs.id)+1), id[1]]
+      sources[:, id[1]] = sources[:, id[1]] / sum(sources[:, id[1]])
+      # Update rate array (exposure rates, latent period)
       rate_array[:, id[1]] = 0.
       rate_array[size(rate_array,2) + 1, id[1]] = ρ
     end
 
-    # Update rate_array for infectious period & exposure
+    # Infectiousness event
     if id[2] == 2
-      rate_array[size(rate_array, 2) + 1, id[1]] = 0.
-      rate_array[size(rate_array, 2) + 2, id[1]] = γ
+      # Update rate_array for latent and infectious periods
+      rate_array[1 + size(rate_array, 2) + 1, id[1]] = 0.
+      rate_array[1 + size(rate_array, 2) + 2, id[1]] = γ
+      # Update exposure rates for rest of population
       for j = size(rate_array, 2)
         if j != id[1]
-          rate_array[id[1], j] = α*evaluate(dist, obs.covariates[id[1]], obs.covariates[j])^-β
+          rate_array[id[1] + 1, j] = α*evaluate(dist, obs.covariates[id[1]], obs.covariates[j])^-β
         else
-          rate_array[id[1], j] = 0.
+          rate_array[id[1] + 1, j] = 0.
         end
       end
     end
 
     # Update rate_array for recovery & exposure
     if id[2] == 3
-      rate_array[id[1],:] = 0.
-      rate_array[size(rate_array,2) + 2, id[1]] = 0.
+      rate_array[id[1] + 1,:] = 0.
+      rate_array[1 + size(rate_array,2) + 2, id[1]] = 0.
     end
   end
-  return ll
+  return ll, sources
+end
+
+function SEIR_MCMC(n::Int64, init::Tuple, logprior::Function, obs::SEIR_events, dist=Euclidean())
+  """
+  Performs `n` data-augmented metropolis hastings MCMC iterations. Initiates a single chain by sampling from prior distribution
+  """
+
+  SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64, aug::SEIR_augmented, obs::SEIR_events, dist=Euclidean())
+
 end
 
 function create_tree(sequences::Vector{Nucleotide2bitSeq}, times::Vector{Float64})
