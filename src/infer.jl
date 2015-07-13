@@ -4,11 +4,10 @@ Justin Angevaare
 June 2015
 """
 
-function SEIR_surveilance(ids::Vector{Int64}, population::Population, ν::Float64)
+function SEIR_surveilance(population::Population, ν::Float64)
   """
   Gather surveillance data on specific individuals in a population, with an exponentially distributed detection lag with rate ν
   """
-  @assert(all(2 .<= ids .<= length(population.events)), "Invalid ID provided")
   @assert(0. < ν, "ν, the detection rate parameter must be greater than 0")
   @warning("Movement and covariate changes currently not supported, only initial conditions considered")
   exposed_actual = fill(NaN, length(ids))
@@ -19,25 +18,25 @@ function SEIR_surveilance(ids::Vector{Int64}, population::Population, ν::Float6
   covariates = fill(fill(NaN, length(population.history[ids[1]][1][1])), length(ids))
   seq = fill(NaN, length(ids))
 
-  for i = 1:length(ids)
+  for i = 2:length(population.events)
     # Initial conditions
-    covariates[i] = population.history[ids[i]][1][1]
+    covariates[i] = population.history[i][1][1]
 
     # Exposure time (unobservable)
-    if length(population.events[ids[i]][1]) > 0
-      exposed_actual[i] = population.events[ids[i]][1][1]
+    if length(population.events[i][1]) > 0
+      exposed_actual[i] = population.events[i][1][1]
     end
 
     # Infectious time (observed with latency)
-    if length(population.events[ids[i]][3]) > 0
-      infectious_actual[i] = population.events[ids[i]][3][1]
+    if length(population.events[i][3]) > 0
+      infectious_actual[i] = population.events[i][3][1]
       infectious_observed[i] = infectious_actual[i] + rand(Exponential(1/ν))
-      seq[i] = population.history[ids[i]][2][find(infectious_observed[i] .<= population.events[ids[i]][6])[end]]
+      seq[i] = population.history[i][2][find(infectious_observed[i] .<= population.events[i][6])[end]]
     end
 
     # Removal time (observed with latency)
-    if length(population.events[ids[i]][4]) > 0
-      removed_actual[i] = population.events[ids[i]][4][1]
+    if length(population.events[i][4]) > 0
+      removed_actual[i] = population.events[i][4][1]
       removed_observed[i] = removed_actual[i] + rand(Exponential(1/ν))
     end
   end
@@ -88,6 +87,30 @@ function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, 
 #  ll = loglikelihood(Exponential(1/ρ), aug.infectious_augmented .- aug.exposed_augmented)
 #  ll += loglikelihood(Exponential(1/ν), obs.recovered_observed .- aug.recovered_augmented)
 #  ll += loglikelihood(Exponential(1/ν), obs.infectious_observed .- aug.infectious_augmented)
+
+  # Create event timing array
+  event_times = [aug.exposed_augmented
+                 aug.infectious_augmented
+                 recovered_augmented]
+
+  # Find event order
+  event_order = sortperm(event_times[:])
+
+  # Create empty rate array
+  rate_array = fill(0., (1 + length(obs.id) + 3, length(obs.id)))
+
+  # First row is external pressure rate
+  rate_array[1,] = η
+
+  # First event
+  id = ind2sub(event_order[1], size(event_times))
+  ll += loglikelihood(Exponential(1/rate_array_sum), event_times[event_order[1]])
+  ll += log(sum(rate_array[:,id[1]])/sum(rate_array))
+
+  for i = 2:length(event_order)
+    isnan(event_times[event_order[i]]) && break
+
+  end
   return ll
 end
 
