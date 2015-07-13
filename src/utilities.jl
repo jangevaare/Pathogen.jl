@@ -85,7 +85,7 @@ function plotdata(population::Population, time::Float64)
   return states, routes
 end
 
-function geneticdistance(ancestor::Nucleotide2bitSeq, descendent::Nucleotide2bitSeq, substitution_matrix::Array)
+function seqdistance(ancestor::Nucleotide2bitSeq, descendent::Nucleotide2bitSeq, substitution_matrix::Array)
   """
   Compute the genetic distance between two nucleotide sequences based on a `substitution_matrix`
   """
@@ -100,7 +100,7 @@ function geneticdistance(ancestor::Nucleotide2bitSeq, descendent::Nucleotide2bit
   return sum(rate_vector)
 end
 
-function surveil(ids::Vector{Int64}, population::Population, ν::Float64)
+function seqsurveil(ids::Vector{Int64}, population::Population, ν::Float64)
   """
   Gather surveillance data on specific individuals in a population, with an exponentially distributed detection lag with rate ν
   """
@@ -137,6 +137,45 @@ function surveil(ids::Vector{Int64}, population::Population, ν::Float64)
     end
   end
   return symptomatic, nonsymptomatic
+end
+
+function simplesurveil(ids::Vector{Int64}, population::Population, ν::Float64)
+  """
+  Gather surveillance data on specific individuals in a population, with an exponentially distributed detection lag with rate ν
+  """
+  @assert(all(2 .<= ids .<= length(population.events)), "Invalid ID provided")
+  @assert(0. < ν, "ν, the detection rate parameter must be greater than 0")
+  obs = DataFrame(id = Int64[],
+                  time = Float64[],
+                  symptomatic = Bool[]
+                  covariates = Vector{Float64}[])
+
+  # exposure times, exposure source, infection times, recovery times, covariate times, sequence times
+  # covariate history, sequence history
+  for i = 1:length(ids)
+    obstime = 0.
+    obs = vcat(obs, DataFrame(id = ids[i],
+                              time = obstime,
+                              symptomatic = false,
+                              covariates = population.history[ids[i]][1][find(obstime .<= population.events[ids[i]][5])[end]]))
+
+    for j = 1:length(population.events[ids[i]][3])
+      obstime = population.events[ids[i]][3][j] + rand(Exponential(1/ν))
+      obs = vcat(obs, DataFrame(id = ids[i],
+                                time = obstime,
+                                symptomatic = true,
+                                covariates = population.history[ids[i]][1][find(obstime .<= population.events[ids[i]][5])[end]]))
+    end
+
+    for j = 1:length(population.events[ids[i]][4])
+      obs = population.events[ids[i]][4][j] + rand(Exponential(1/ν))
+      obs = vcat(obs, DataFrame(id=ids[i],
+                                symptomatic = false,
+                                time = obstime,
+                                covariates = population.history[ids[i]][1][find(obstime .<= population.events[ids[i]][5])[end]]))
+    end
+  end
+  return obs
 end
 
 function create_tree(sequences::Vector{Nucleotide2bitSeq}, times::Vector{Float64})

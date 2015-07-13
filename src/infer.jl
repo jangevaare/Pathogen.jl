@@ -35,12 +35,6 @@ function treedistance(leaf1::Int64, leaf2::Int64, tree::Tree)
   return sum([tree.distances[leaf1][sharednode:end], tree.distances[leaf2][sharednode:end]])
 end
 
-function seqdistance(seq1::Nucleotide2bitSeq, seq2::Nucleotide2bitSeq, substitution_matrix::Array)
-  """
-  Find the distance between two sequences as per a specificied substitution rate matrix
-  """
-end
-
 function create_logprior1(α_prior::UnivariateDistribution, β_prior::UnivariateDistribution, ρ_prior::UnivariateDistribution, γ_prior::UnivariateDistribution, η_prior::UnivariateDistribution, ν_prior::UnivariateDistribution)
   """
   Create a log prior function using specified prior univariate distributions
@@ -77,6 +71,8 @@ function loglikelihood1(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::
   γ: recovery rate (1/mean infectious period)
   ν: detection rate (1/mean detection lag)
   """
+  loglikelihood(Exponential(1/ρ), aug.latentperiod[end]) + loglikelihood(Exponential(1/γ), aug.infectiousperiod[end]) + loglikelihood(Exponential(1/ν), aug.detectionlag[end])
   return
+
 end
 

@@ -12,11 +12,12 @@ export
 
   # utilities.jl
   generate_seq,
-  geneticdistance,
+  seqdistance,
   findstate,
   plotdata,
   convert,
-  surveil,
+  seqsurveil,
+  simplesurveil,
   create_tree,
 
   # substitute.jl
@@ -31,7 +32,7 @@ export
 
   # infer.jl
   branchloglikelihood,
-  seqdistance
+  create_logprior1
 
 include("types.jl")
 include("utilities.jl")
