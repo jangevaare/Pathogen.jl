@@ -56,14 +56,17 @@ function create_logprior1(α_prior::UnivariateDistribution, β_prior::Univariate
   end
 end
 
-function augment1(ρ::Float64, ν::Float64, obs)
+function augorg1(ρ::Float64, ν::Float64, obs::DataFrame)
   """
-  Augments surveilance data with infectiousness
+  Augments surveilance data, organizes observations
   """
-  return aug
+  augorg = [obs, DataFrame(detectionlag = rand(Exponential(1/ν), size(obs, 1)))]
+  augorg[:truetime] = augorg[:time] - augorg[:detectionlag]
+
+  return augorg
   end
 
-function loglikelihood1(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64, obs, aug)
+function loglikelihood1(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64, augorg::DataFrame)
   """
   α, β: powerlaw exposure kernel parameters
   η: external pressure rate

@@ -16,8 +16,6 @@ export
   findstate,
   plotdata,
   convert,
-  seqsurveil,
-  simplesurveil,
   create_tree,
 
   # substitute.jl
@@ -31,6 +29,7 @@ export
   onestep!,
 
   # infer.jl
+  SEIR_surveilance
   branchloglikelihood,
   create_logprior1
 

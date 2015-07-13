@@ -178,6 +178,41 @@ function simplesurveil(ids::Vector{Int64}, population::Population, ν::Float64)
   return obs
 end
 
+function SEIR_surveilance(ids::Vector{Int64}, population::Population, ν::Float64)
+  """
+  Gather surveillance data on specific individuals in a population, with an exponentially distributed detection lag with rate ν
+  """
+  @assert(all(2 .<= ids .<= length(population.events)), "Invalid ID provided")
+  @assert(0. < ν, "ν, the detection rate parameter must be greater than 0")
+  @warning("Movement and covariate changes currently not supported, only initial conditions considered")
+  eventtimes = DataFrame(id = ids, exposed = NaN, infectious_actual = NaN, infectious_observed = NaN, removed_actual = NaN, removed_observed = NaN)
+  sampledetails = DataFrame(id = ids, covariates = NaN, seq = NaN)
+
+  for i = 1:length(ids)
+    # Initial conditions
+    sampledetails[:covariates][ids[i]] = population.history[ids[i]][1][1]
+
+    # Exposure time (unobservable)
+    if length(population.events[ids[i]][1]) > 0
+      eventtimes[:exposed][ids[i]] = population.events[ids[i]][1][1]
+    end
+
+    # Infectious time (observed with latency)
+    if length(population.events[ids[i]][3]) > 0
+      eventtimes[:infectious_actual][ids[i]] = population.events[ids[i]][3][1]
+      eventtimes[:infectious_observed][ids[i]] = eventtimes[:infectious_actual][ids[i]] + rand(Exponential(1/ν))
+      sampledetails[:seq][ids[i]] = population.history[ids[i]][2][find(eventtimes[:infectious_observed][ids[i]] .<= population.events[ids[i]][6])[end]]
+    end
+
+    # Removal time (observed with latency)
+    if length(population.events[ids[i]][4]) > 0
+      eventtimes[:removed_actual][ids[i]] = population.events[ids[i]][4][1]
+      eventtimes[:removed_observed][ids[i]] = eventtimes[:removed_actual][ids[i]] + rand(Exponential(1/ν))
+    end
+  end
+  return eventtimes, sampledetails
+end
+
 function create_tree(sequences::Vector{Nucleotide2bitSeq}, times::Vector{Float64})
   """
   Generate a phylogenetic tree based on sample times and sequences
