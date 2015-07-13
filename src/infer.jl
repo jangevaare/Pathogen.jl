@@ -97,19 +97,37 @@ function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, 
   event_order = sortperm(event_times[:])
 
   # Create empty rate array
-  rate_array = fill(0., (1 + length(obs.id) + 3, length(obs.id)))
+  rate_array = fill(0., (1 + length(obs.id) + 2, length(obs.id)))
 
   # First row is external pressure rate
   rate_array[1,] = η
 
-  # First event
   id = ind2sub(event_order[1], size(event_times))
+
+  # First event
   ll += loglikelihood(Exponential(1/rate_array_sum), event_times[event_order[1]])
   ll += log(sum(rate_array[:,id[1]])/sum(rate_array))
 
+  # Update rate_array
+  if id[2] == 1
+    rate_array[:, id[1]] = 0.
+    rate_array[size(rate_array,2) + 1, id[1]] = ρ
+  end
+
+  if id[2] == 2
+    rate_array[size(rate_array,2) + 1, id[1]] = 0.
+    rate_array[size(rate_array,2) + 2, id[1]] = γ
+  end
+
+  if id[2] == 3
+    rate_array[size(rate_array,2) + 2, id[1]] = 0.
+  end
+
+  rate_array[,id]
+
+  # The rest of the events
   for i = 2:length(event_order)
     isnan(event_times[event_order[i]]) && break
-
   end
   return ll
 end
