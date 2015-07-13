@@ -11,32 +11,37 @@ function SEIR_surveilance(ids::Vector{Int64}, population::Population, ν::Float6
   @assert(all(2 .<= ids .<= length(population.events)), "Invalid ID provided")
   @assert(0. < ν, "ν, the detection rate parameter must be greater than 0")
   @warning("Movement and covariate changes currently not supported, only initial conditions considered")
-  eventtimes = DataFrame(id = ids, exposed = NaN, infectious_actual = NaN, infectious_observed = NaN, removed_actual = NaN, removed_observed = NaN)
-  sampledetails = DataFrame(id = ids, covariates = NaN, seq = NaN)
+  exposed = fill(NaN, length(ids))
+  infectious_actual = fill(NaN, length(ids))
+  infectious_observed = fill(NaN, length(ids))
+  removed_actual = fill(NaN, length(ids))
+  removed_observed = fill(NaN, length(ids))
+  covariates = fill(fill(NaN, length(population.history[ids[1]][1][1])), length(ids))
+  seq = fill(NaN, length(ids))
 
   for i = 1:length(ids)
     # Initial conditions
-    sampledetails[:covariates][ids[i]] = population.history[ids[i]][1][1]
+    covariates[i] = population.history[ids[i]][1][1]
 
     # Exposure time (unobservable)
     if length(population.events[ids[i]][1]) > 0
-      eventtimes[:exposed][ids[i]] = population.events[ids[i]][1][1]
+      exposed[i] = population.events[ids[i]][1][1]
     end
 
     # Infectious time (observed with latency)
     if length(population.events[ids[i]][3]) > 0
-      eventtimes[:infectious_actual][ids[i]] = population.events[ids[i]][3][1]
-      eventtimes[:infectious_observed][ids[i]] = eventtimes[:infectious_actual][ids[i]] + rand(Exponential(1/ν))
-      sampledetails[:seq][ids[i]] = population.history[ids[i]][2][find(eventtimes[:infectious_observed][ids[i]] .<= population.events[ids[i]][6])[end]]
+      infectious_actual[i] = population.events[ids[i]][3][1]
+      infectious_observed[i] = infectious_actual[i] + rand(Exponential(1/ν))
+      seq[i] = population.history[ids[i]][2][find(infectious_observed[i] .<= population.events[ids[i]][6])[end]]
     end
 
     # Removal time (observed with latency)
     if length(population.events[ids[i]][4]) > 0
-      eventtimes[:removed_actual][ids[i]] = population.events[ids[i]][4][1]
-      eventtimes[:removed_observed][ids[i]] = eventtimes[:removed_actual][ids[i]] + rand(Exponential(1/ν))
+      removed_actual[i] = population.events[ids[i]][4][1]
+      removed_observed[i] = removed_actual[i] + rand(Exponential(1/ν))
     end
   end
-  return eventtimes, sampledetails
+  return SEIR_events(exposed, infectious_actual, infectious_observed, removed_actual, removed_observed, covariates, seq)
 end
 
 function create_tree(sequences::Vector{Nucleotide2bitSeq}, times::Vector{Float64})

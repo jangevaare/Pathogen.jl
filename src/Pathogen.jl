@@ -9,6 +9,7 @@ export
   Tree,
   TreeVertex,
   TreeEdge,
+  SEIR_events,
 
   # utilities.jl
   findstate,
