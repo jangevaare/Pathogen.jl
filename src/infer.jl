@@ -11,7 +11,7 @@ function SEIR_surveilance(ids::Vector{Int64}, population::Population, ν::Float6
   @assert(all(2 .<= ids .<= length(population.events)), "Invalid ID provided")
   @assert(0. < ν, "ν, the detection rate parameter must be greater than 0")
   @warning("Movement and covariate changes currently not supported, only initial conditions considered")
-  exposed = fill(NaN, length(ids))
+  exposed_actual = fill(NaN, length(ids))
   infectious_actual = fill(NaN, length(ids))
   infectious_observed = fill(NaN, length(ids))
   removed_actual = fill(NaN, length(ids))
@@ -25,7 +25,7 @@ function SEIR_surveilance(ids::Vector{Int64}, population::Population, ν::Float6
 
     # Exposure time (unobservable)
     if length(population.events[ids[i]][1]) > 0
-      exposed[i] = population.events[ids[i]][1][1]
+      exposed_actual[i] = population.events[ids[i]][1][1]
     end
 
     # Infectious time (observed with latency)
@@ -44,9 +44,53 @@ function SEIR_surveilance(ids::Vector{Int64}, population::Population, ν::Float6
   return SEIR_events(exposed, infectious_actual, infectious_observed, removed_actual, removed_observed, covariates, seq)
 end
 
+function SEIR_augmentation(ρ::Float64, ν::Float64, obs::SEIR_events)
+  """
+  Augments surveilance data, organizes observations
+  """
+  infectious_augmented = SEIR_events.infectious_observed - rand(Exponential(1/ν), length(SEIR_events.infectious_observed))
+  exposed_augmented = infectious_augmented - rand(Exponential(1/ρ), length(SEIR_events.infectious_observed))
+  recovered_augmented = SEIR_events.recovered_observed - rand(Exponential(1/ν), length(SEIR_events.recovered_observed))
+  return SEIR_augmented(infectious_augmented, exposed_augmented, recovered_augmented)
+end
+
+function SEIR_logprior(α_prior::UnivariateDistribution, β_prior::UnivariateDistribution, ρ_prior::UnivariateDistribution, γ_prior::UnivariateDistribution, η_prior::UnivariateDistribution, ν_prior::UnivariateDistribution)
+  """
+  Create a log prior function using specified prior univariate distributions
+  α, β: powerlaw exposure kernel parameters
+  η: external pressure rate
+  ρ: infectivity rate (1/mean latent period)
+  γ: recovery rate (1/mean infectious period)
+  ν: detection rate (1/mean detection lag)
+  """
+  return function(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64)
+    """
+    α, β: powerlaw exposure kernel parameters
+    η: external pressure rate
+    ρ: infectivity rate (1/mean latent period)
+    γ: recovery rate (1/mean infectious period)
+    ν: detection rate (1/mean detection lag)
+    """
+    return logpdf(α_prior, α) + logpdf(β_prior, β) + logpdf(ρ_prior, ρ) + logpdf(γ_prior, γ) + logpdf(η_prior, η) + logpdf(ν_prior, ν)
+  end
+end
+
+function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64, obs::SEIR_events)
+  """
+  α, β: powerlaw exposure kernel parameters
+  η: external pressure rate
+  ρ: infectivity rate (1/mean latent period)
+  γ: recovery rate (1/mean infectious period)
+  ν: detection rate (1/mean detection lag)
+  """
+  loglikelihood(Exponential(1/ρ), aug.latentperiod[end]) + loglikelihood(Exponential(1/γ), aug.infectiousperiod[end]) + loglikelihood(Exponential(1/ν), aug.detectionlag[end])
+  return
+end
+
 function create_tree(sequences::Vector{Nucleotide2bitSeq}, times::Vector{Float64})
   """
   Generate a phylogenetic tree based on sample times and sequences
+  To do: update to utilize SEIR_events
   """
   @assert(length(sequences)==length(times), "There must be one sample time for each sequence")
   @assert(length(sequences)>2, "There must be at least 3 samples")
@@ -107,48 +151,3 @@ function branchloglikelihood(seq1::Nucleotide2bitSeq, seq2::Nucleotide2bitSeq, b
   end
   return ll
 end
-
-function create_logprior1(α_prior::UnivariateDistribution, β_prior::UnivariateDistribution, ρ_prior::UnivariateDistribution, γ_prior::UnivariateDistribution, η_prior::UnivariateDistribution, ν_prior::UnivariateDistribution)
-  """
-  Create a log prior function using specified prior univariate distributions
-  α, β: powerlaw exposure kernel parameters
-  η: external pressure rate
-  ρ: infectivity rate (1/mean latent period)
-  γ: recovery rate (1/mean infectious period)
-  ν: detection rate (1/mean detection lag)
-  """
-  return function(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64)
-    """
-    α, β: powerlaw exposure kernel parameters
-    η: external pressure rate
-    ρ: infectivity rate (1/mean latent period)
-    γ: recovery rate (1/mean infectious period)
-    ν: detection rate (1/mean detection lag)
-    """
-    return logpdf(α_prior, α) + logpdf(β_prior, β) + logpdf(ρ_prior, ρ) + logpdf(γ_prior, γ) + logpdf(η_prior, η) + logpdf(ν_prior, ν)
-  end
-end
-
-function augorg1(ρ::Float64, ν::Float64, obs::DataFrame)
-  """
-  Augments surveilance data, organizes observations
-  """
-  augorg = [obs, DataFrame(detectionlag = rand(Exponential(1/ν), size(obs, 1)))]
-  augorg[:truetime] = augorg[:time] - augorg[:detectionlag]
-
-  return augorg
-  end
-
-function loglikelihood1(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64, augorg::DataFrame)
-  """
-  α, β: powerlaw exposure kernel parameters
-  η: external pressure rate
-  ρ: infectivity rate (1/mean latent period)
-  γ: recovery rate (1/mean infectious period)
-  ν: detection rate (1/mean detection lag)
-  """
-  loglikelihood(Exponential(1/ρ), aug.latentperiod[end]) + loglikelihood(Exponential(1/γ), aug.infectiousperiod[end]) + loglikelihood(Exponential(1/ν), aug.detectionlag[end])
-  return
-
-end
-

@@ -101,11 +101,20 @@ type SEIR_events
   Contains observed and actual event times
   """
   ids::Vector{Int64}
-  exposed::Vector{Float64}
+  exposed_actual::Vector{Float64}
   infectious_actual::Vector{Float64}
   infectious_observed::Vector{Float64}
   removed_actual::Vector{Float64}
   removed_observed::Vector{Float64}
   covariates = Vector{Vector{Any}}
   seq = Vector{Any}
+end
+
+type SEIR_augmented
+  """
+  Contains event times from data augmentation
+  """
+  infectious_augmented::Vector{Float64}
+  exposed_augmented::Vector{Float64}
+  recovered_augmented::Vector{Float64}
 end
