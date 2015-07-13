@@ -74,7 +74,7 @@ function SEIR_logprior(α_prior::UnivariateDistribution, β_prior::UnivariateDis
   end
 end
 
-function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64, aug::SEIR_augmented, obs::SEIR_events)
+function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64, aug::SEIR_augmented, obs::SEIR_events, dist=Euclidean())
   """
   α, β: powerlaw exposure kernel parameters
   η: external pressure rate
@@ -102,32 +102,38 @@ function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, 
   # First row is external pressure rate
   rate_array[1,] = η
 
-  id = ind2sub(event_order[1], size(event_times))
-
-  # First event
-  ll += loglikelihood(Exponential(1/rate_array_sum), event_times[event_order[1]])
-  ll += log(sum(rate_array[:,id[1]])/sum(rate_array))
-
-  # Update rate_array
-  if id[2] == 1
-    rate_array[:, id[1]] = 0.
-    rate_array[size(rate_array,2) + 1, id[1]] = ρ
-  end
-
-  if id[2] == 2
-    rate_array[size(rate_array,2) + 1, id[1]] = 0.
-    rate_array[size(rate_array,2) + 2, id[1]] = γ
-  end
-
-  if id[2] == 3
-    rate_array[size(rate_array,2) + 2, id[1]] = 0.
-  end
-
-  rate_array[,id]
-
   # The rest of the events
-  for i = 2:length(event_order)
+  for i = 1:length(event_order)
     isnan(event_times[event_order[i]]) && break
+
+    id = ind2sub(event_order[i], size(event_times))
+    ll += loglikelihood(Exponential(1/rate_array_sum), event_times[event_order[i]])
+    ll += log(sum(rate_array[:,id[1]])/sum(rate_array))
+
+    # Update rate_array for latent period
+    if id[2] == 1
+      rate_array[:, id[1]] = 0.
+      rate_array[size(rate_array,2) + 1, id[1]] = ρ
+    end
+
+    # Update rate_array for infectious period & exposure
+    if id[2] == 2
+      rate_array[size(rate_array, 2) + 1, id[1]] = 0.
+      rate_array[size(rate_array, 2) + 2, id[1]] = γ
+      for j = size(rate_array, 2)
+        if j != id[1]
+          rate_array[id[1], j] = α*evaluate(dist, obs.covariates[id[1]], obs.covariates[j])^-β
+        else
+          rate_array[id[1], j] = 0.
+        end
+      end
+    end
+
+    # Update rate_array for recovery & exposure
+    if id[2] == 3
+      rate_array[id[1],:] = 0.
+      rate_array[size(rate_array,2) + 2, id[1]] = 0.
+    end
   end
   return ll
 end
