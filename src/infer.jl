@@ -147,6 +147,7 @@ function SEIR_MCMC(α_prior::UnivariateDistribution, β_prior::UnivariateDistrib
   aug = SEIR_augmentation(ρ, ν, obs)
   ll, sources = SEIR_loglikelihood(α, β, ρ, γ, η, ν, aug, obs, dist)
   logposterior = ll + logprior(α, β, ρ, γ, η, ν)
+  SEIR_trace([α], [β], [ρ], [γ], [η], [ν], [aug], [sources], [logposterior])
 end
 
 function SEIR_MCMC(n::Int64, trace::SEIR_trace, logprior::Function, obs::SEIR_events, dist=Euclidean())
