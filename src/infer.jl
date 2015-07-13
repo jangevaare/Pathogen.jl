@@ -103,16 +103,6 @@ function branchloglikelihood(seq1::Nucleotide2bitSeq, seq2::Nucleotide2bitSeq, b
   return ll
 end
 
-function treedistance(leaf1::Int64, leaf2::Int64, tree::Tree)
-  """
-  Find the minimumum branch distance between two leaves
-  """
-  @assert(all(1 .<= [leaf1, leaf2] .<= length(tree.distances)), "Invalid leaves specified")
-  depthlimit = minimum([length(tree.positions[leaf1]), length(tree.positions[leaf2])])
-  sharednode = findfirst(tree.positions[leaf1][1:depthlimit] .!= tree.positions[leaf2][1:depthlimit])
-  return sum([tree.distances[leaf1][sharednode:end], tree.distances[leaf2][sharednode:end]])
-end
-
 function create_logprior1(α_prior::UnivariateDistribution, β_prior::UnivariateDistribution, ρ_prior::UnivariateDistribution, γ_prior::UnivariateDistribution, η_prior::UnivariateDistribution, ν_prior::UnivariateDistribution)
   """
   Create a log prior function using specified prior univariate distributions
