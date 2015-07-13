@@ -11,17 +11,15 @@ export
   TreeEdge,
 
   # utilities.jl
-  generate_seq,
-  seqdistance,
   findstate,
   plotdata,
   convert,
-  create_tree,
 
   # substitute.jl
   jc69,
 
   # simulate.jl
+  create_seq,
   create_population,
   create_powerlaw,
   create_constantrate,
@@ -30,6 +28,8 @@ export
 
   # infer.jl
   SEIR_surveilance
+  create_tree,
+  seqdistance,
   branchloglikelihood,
   create_logprior1
 

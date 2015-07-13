@@ -4,6 +4,15 @@ Justin Angevaare
 May 2015
 """
 
+function create_seq(n::Int, π_A::Float64, π_T::Float64, π_C::Float64, π_G::Float64)
+  """
+  Generate a nucleotide sequence of length `n`, with specific nucleotide frequencies
+  """
+  @assert(sum([π_A, π_T, π_C, π_G]) == 1, "Nucleotide frequencies must sum to 1")
+  @assert(all(0 .< [π_A, π_T, π_C, π_G] .< 1), "Each nucleotide frequency must be between 0 and 1")
+  return convert(Nucleotide2bitSeq, findn(rand(Multinomial(1, [π_A, π_T, π_C, π_G]),n))[1])
+end
+
 function create_population(init_seq::Nucleotide2bitSeq, init_var::Array)
 """
 Create an infection database.

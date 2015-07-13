@@ -4,6 +4,84 @@ Justin Angevaare
 June 2015
 """
 
+function SEIR_surveilance(ids::Vector{Int64}, population::Population, ν::Float64)
+  """
+  Gather surveillance data on specific individuals in a population, with an exponentially distributed detection lag with rate ν
+  """
+  @assert(all(2 .<= ids .<= length(population.events)), "Invalid ID provided")
+  @assert(0. < ν, "ν, the detection rate parameter must be greater than 0")
+  @warning("Movement and covariate changes currently not supported, only initial conditions considered")
+  eventtimes = DataFrame(id = ids, exposed = NaN, infectious_actual = NaN, infectious_observed = NaN, removed_actual = NaN, removed_observed = NaN)
+  sampledetails = DataFrame(id = ids, covariates = NaN, seq = NaN)
+
+  for i = 1:length(ids)
+    # Initial conditions
+    sampledetails[:covariates][ids[i]] = population.history[ids[i]][1][1]
+
+    # Exposure time (unobservable)
+    if length(population.events[ids[i]][1]) > 0
+      eventtimes[:exposed][ids[i]] = population.events[ids[i]][1][1]
+    end
+
+    # Infectious time (observed with latency)
+    if length(population.events[ids[i]][3]) > 0
+      eventtimes[:infectious_actual][ids[i]] = population.events[ids[i]][3][1]
+      eventtimes[:infectious_observed][ids[i]] = eventtimes[:infectious_actual][ids[i]] + rand(Exponential(1/ν))
+      sampledetails[:seq][ids[i]] = population.history[ids[i]][2][find(eventtimes[:infectious_observed][ids[i]] .<= population.events[ids[i]][6])[end]]
+    end
+
+    # Removal time (observed with latency)
+    if length(population.events[ids[i]][4]) > 0
+      eventtimes[:removed_actual][ids[i]] = population.events[ids[i]][4][1]
+      eventtimes[:removed_observed][ids[i]] = eventtimes[:removed_actual][ids[i]] + rand(Exponential(1/ν))
+    end
+  end
+  return eventtimes, sampledetails
+end
+
+function create_tree(sequences::Vector{Nucleotide2bitSeq}, times::Vector{Float64})
+  """
+  Generate a phylogenetic tree based on sample times and sequences
+  """
+  @assert(length(sequences)==length(times), "There must be one sample time for each sequence")
+  @assert(length(sequences)>2, "There must be at least 3 samples")
+  # root
+  vertices = TreeVertex()
+  # nodes
+  for i = 1:(length(sequences) - 2)
+    push!(vertices, TreeVertex(minimum(times)))
+  end
+  # leaves
+  for i = 1:length(sequences)
+    push!(vertices, TreeVertex(sequences[i], times[i]))
+  end
+  # Create edges
+  edges = Vector{TreeEdge}
+  for i = 1:length(vertices)
+    for j = 1:length(vertices)
+      if vertices[i].out & vertices[j].in
+        push!(edges, TreeEdge(i, j))
+      end
+    end
+  end
+  return Tree(vertices, edges)
+end
+
+function seqdistance(ancestor::Nucleotide2bitSeq, descendent::Nucleotide2bitSeq, substitution_matrix::Array)
+  """
+  Compute the genetic distance between two nucleotide sequences based on a `substitution_matrix`
+  """
+  @assert(length(ancestor) == length(descendent), "Sequences must be equal in length")
+  rate_vector = Float64[]
+  for i = 1:length(ancestor)
+    if ancestor[i] != descendent[i]
+     push!(rate_vector, substitution_matrix[convert(Int64, ancestor[i]), convert(Int64, descendent[i])])
+    end
+  end
+  rate_vector .^= -1
+  return sum(rate_vector)
+end
+
 function branchloglikelihood(seq1::Nucleotide2bitSeq, seq2::Nucleotide2bitSeq, branchdistance::Float64, substitution_matrix::Array)
   """
   Log likelihood for any two aligned sequences, a specified distance apart on a phylogenetic tree

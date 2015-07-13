@@ -1,6 +1,6 @@
 using Pathogen, Gadfly, Distributions, BioSeq
 
-init_seq = generate_seq(200, 0.25, 0.25, 0.25, 0.25)
+init_seq = create_seq(200, 0.25, 0.25, 0.25, 0.25)
 init_var = rand(Uniform(0,25), (2,200))
 
 pop = create_population(init_seq, init_var)
