@@ -1,5 +1,5 @@
 """
-utilities.jl - basic utilities for dealing with sequence data
+utilities.jl - basic utilities required by Pathogen.jl
 Justin Angevaare
 May 2015
 """
