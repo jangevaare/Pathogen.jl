@@ -138,8 +138,9 @@ function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, 
       end
     end
 
-    # Update rate_array for recovery & exposure
+    # Recovery event
     if id[2] == 3
+      # Update rate_array for recovery & exposure
       rate_array[id[1] + 1,:] = 0.
       rate_array[1 + size(rate_array,2) + 2, id[1]] = 0.
     end
@@ -151,7 +152,6 @@ function SEIR_MCMC(n::Int64, init::Tuple, logprior::Function, obs::SEIR_events, 
   """
   Performs `n` data-augmented metropolis hastings MCMC iterations. Initiates a single chain by sampling from prior distribution
   """
-
   SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64, aug::SEIR_augmented, obs::SEIR_events, dist=Euclidean())
 
 end

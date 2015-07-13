@@ -118,3 +118,17 @@ type SEIR_augmented
   exposed_augmented::Vector{Float64}
   recovered_augmented::Vector{Float64}
 end
+
+type SEIR_trace
+  """
+  Contains an MCMC trace object
+  """
+  α::Vector{Float64}
+  β::Vector{Float64}
+  ρ::Vector{Float64}
+  γ::Vector{Float64}
+  η::Vector{Float64}
+  ν::Vector{Float64}
+  aug::Vector{SEIR_augmented}
+  sources::Vector{Array{Float64}}
+end
