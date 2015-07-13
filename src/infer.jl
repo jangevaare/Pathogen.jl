@@ -125,7 +125,7 @@ function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, 
   return ll, sources
 end
 
-function SEIR_MCMC(α_prior::UnivariateDistribution, β_prior::UnivariateDistribution, ρ_prior::UnivariateDistribution, γ_prior::UnivariateDistribution, η_prior::UnivariateDistribution, ν_prior::UnivariateDistribution, obs::SEIR_events, dist=Euclidean())
+function SEIR_initialize(α_prior::UnivariateDistribution, β_prior::UnivariateDistribution, ρ_prior::UnivariateDistribution, γ_prior::UnivariateDistribution, η_prior::UnivariateDistribution, ν_prior::UnivariateDistribution, obs::SEIR_events, dist=Euclidean())
   """
   Initiate an SEIR_trace by sampling from specified prior distributions
 
@@ -135,7 +135,7 @@ function SEIR_MCMC(α_prior::UnivariateDistribution, β_prior::UnivariateDistrib
   γ: recovery rate (1/mean infectious period)
   ν: detection rate (1/mean detection lag)
   """
-  logprior function(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64)
+  SEIR_logprior function(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64)
     logpdf(α_prior, α) + logpdf(β_prior, β) + logpdf(ρ_prior, ρ) + logpdf(γ_prior, γ) + logpdf(η_prior, η) + logpdf(ν_prior, ν)
   end
   α = rand(α_prior)
@@ -146,14 +146,15 @@ function SEIR_MCMC(α_prior::UnivariateDistribution, β_prior::UnivariateDistrib
   ν = rand(ν_prior)
   aug = SEIR_augmentation(ρ, ν, obs)
   ll, sources = SEIR_loglikelihood(α, β, ρ, γ, η, ν, aug, obs, dist)
-  logposterior = ll + logprior(α, β, ρ, γ, η, ν)
-  SEIR_trace([α], [β], [ρ], [γ], [η], [ν], [aug], [sources], [logposterior])
+  logposterior = ll + SEIR_logprior(α, β, ρ, γ, η, ν)
+  return SEIR_trace([α], [β], [ρ], [γ], [η], [ν], [aug], [sources], [logposterior]), SEIR_logprior
 end
 
 function SEIR_MCMC(n::Int64, trace::SEIR_trace, logprior::Function, obs::SEIR_events, dist=Euclidean())
   """
   Performs `n` data-augmented metropolis hastings MCMC iterations. Initiates a single chain by sampling from prior distribution
   """
+
   SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64, aug::SEIR_augmented, obs::SEIR_events, dist=Euclidean())
 end
 
