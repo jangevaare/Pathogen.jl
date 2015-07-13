@@ -75,7 +75,7 @@ function SEIR_logprior(α_prior::UnivariateDistribution, β_prior::UnivariateDis
   end
 end
 
-function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64, obs::SEIR_events)
+function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64, aug::SEIR_augmented, obs::SEIR_events)
   """
   α, β: powerlaw exposure kernel parameters
   η: external pressure rate
@@ -83,8 +83,12 @@ function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, 
   γ: recovery rate (1/mean infectious period)
   ν: detection rate (1/mean detection lag)
   """
-  loglikelihood(Exponential(1/ρ), aug.latentperiod[end]) + loglikelihood(Exponential(1/γ), aug.infectiousperiod[end]) + loglikelihood(Exponential(1/ν), aug.detectionlag[end])
-  return
+  ll = loglikelihood(Exponential(1/γ), (aug.recovered_augmented .- aug.infectious_augmented)[!isnan(aug.recovered_augmented)])
+# DO NOT CONSIDERED LIKELIHOOD OF PURELY AUGMENTED DATA
+#  ll = loglikelihood(Exponential(1/ρ), aug.infectious_augmented .- aug.exposed_augmented)
+#  ll += loglikelihood(Exponential(1/ν), obs.recovered_observed .- aug.recovered_augmented)
+#  ll += loglikelihood(Exponential(1/ν), obs.infectious_observed .- aug.infectious_augmented)
+  return ll
 end
 
 function create_tree(sequences::Vector{Nucleotide2bitSeq}, times::Vector{Float64})
