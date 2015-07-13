@@ -150,11 +150,26 @@ function SEIR_initialize(α_prior::UnivariateDistribution, β_prior::UnivariateD
   return SEIR_trace([α], [β], [ρ], [γ], [η], [ν], [aug], [sources], [logposterior]), SEIR_logprior
 end
 
-function SEIR_MCMC(n::Int64, trace::SEIR_trace, logprior::Function, obs::SEIR_events, dist=Euclidean())
+function SEIR_MCMC(n::Int64, transition_cov::Array{Float64}, trace::SEIR_trace, logprior::Function, obs::SEIR_events, dist=Euclidean())
   """
   Performs `n` data-augmented metropolis hastings MCMC iterations. Initiates a single chain by sampling from prior distribution
-  """
 
+  α, β: powerlaw exposure kernel parameters
+  η: external pressure rate
+  ρ: infectivity rate (1/mean latent period)
+  γ: recovery rate (1/mean infectious period)
+  ν: detection rate (1/mean detection lag)
+  """
+  @assert(size(transition_cov) == (6,6), "transition_cov must be a 6x6 matrix")
+  proposed_moves = rand(MultivariateNormal(0, transition_cov),n)
+  for i = 1:n
+    α = trace.α[:end] + p
+    β = trace.β[:end] +
+    ρ = trace.ρ[:end] +
+    γ = trace.γ[:end] +
+    η = trace.η[:end] +
+    ν = trace.ν[:end] +
+    end
   SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64, aug::SEIR_augmented, obs::SEIR_events, dist=Euclidean())
 end
 
