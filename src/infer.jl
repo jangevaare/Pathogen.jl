@@ -186,7 +186,7 @@ function SEIR_MCMC(n::Int64, transition_cov::Array{Float64}, trace::SEIR_trace, 
     if logposterior > trace.logposterior[:end]
       accept = true
     else
-      if exp(logposterior - trace.logposterior[:end]) => rand()
+      if exp(logposterior - trace.logposterior[:end]) >= rand()
         accept = true
       else
         accept = false

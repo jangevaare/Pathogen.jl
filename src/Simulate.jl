@@ -50,11 +50,7 @@ function create_powerlaw(α::Float64, β::Float64, η::Float64, dist=Euclidean()
     """
     This simple `susceptibility_fun` returns the rate parameter for a `target` individuals from `source` individuals using the power law kernel with parameters α and β. Location must be specified with matching but arbitrary dimensions for each individual; specifically, each individual is represented by a column in an array. Distance by default is Euclidean, but any of the distance calculations in the Distance.jl package may be used.
 
-    A NaN distance (external source of infection) is assigned a rate of η.
-
-    It's important to note that this function does not check the disease status of any individuals.
-
-    This function also serves as a model for any user defined
+    External source of infection is assigned a rate of η.
     """
     # Ensure source is infectious that target hasn't been previously exposed (SIR model)
     if length(population.events[source][3]) > length(population.events[source][4]) && length(population.events[target][1]) == 0
@@ -62,7 +58,7 @@ function create_powerlaw(α::Float64, β::Float64, η::Float64, dist=Euclidean()
     #if length(population.events[source][3]) > length(population.events[source][4]) && length(population.events[target][1]) == length(population.events[target][4])
       return α*evaluate(dist, population.history[source][1], population.history[target][1])^-β
     # Identify an external source and ensure that the target hasn't been previously exposed (SIR model)
-    elseif isnan(population.events[source][1][1]) && length(population.events[target][1]) == 0
+    elseif length(population.events[source][1]) > 0 && isnan(population.events[source][1][1]) && length(population.events[target][1]) == 0
     # Identify an external source and ensure that the target is susceptible (SIS* model)
     #elseif isnan(population.events[source][1][1]) && length(population.events[target][1]) == length(population.events[target][4])
       return η
