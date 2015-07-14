@@ -1,7 +1,7 @@
 """
-infer.jl - pathogen evolution and transmission dynamic inference tools
+infer.jl
+Pathogen evolution and transmission dynamic inference tools
 Justin Angevaare
-June 2015
 """
 
 function SEIR_surveilance(population::Population, ν::Float64)

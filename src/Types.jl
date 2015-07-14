@@ -1,3 +1,8 @@
+"""
+types.jl
+Justin Angevaare
+"""
+
 import Base.display
 import Base.push!
 

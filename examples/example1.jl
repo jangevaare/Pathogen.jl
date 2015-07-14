@@ -1,3 +1,9 @@
+"""
+Example 1
+SEIR simulation, visualization, and inference
+Justin Angevaare
+"""
+
 using Pathogen, Gadfly, Distributions, BioSeq
 
 init_seq = create_seq(200, 0.25, 0.25, 0.25, 0.25)

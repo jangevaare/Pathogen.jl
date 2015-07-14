@@ -1,8 +1,9 @@
 """
-utilities.jl - basic utilities required by Pathogen.jl
+utilities.jl
+basic utilities required by Pathogen.jl
 Justin Angevaare
-May 2015
 """
+
 import Base.convert
 
 function convert(::Type{Vector{Int64}}, x::Nucleotide2bitSeq)
