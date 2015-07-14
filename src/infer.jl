@@ -140,7 +140,7 @@ function SEIR_initialize(α_prior::UnivariateDistribution,
   γ: recovery rate (1/mean infectious period)
   ν: detection rate (1/mean detection lag)
   """
-  SEIR_logprior function(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64)
+  function SEIR_logprior(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64)
     logpdf(α_prior, α) + logpdf(β_prior, β) + logpdf(ρ_prior, ρ) + logpdf(γ_prior, γ) + logpdf(η_prior, η) + logpdf(ν_prior, ν)
   end
   α = rand(α_prior)
