@@ -14,29 +14,29 @@ function SEIR_surveilance(population::Population, ν::Float64)
   infectious_observed = fill(NaN, length(population.events)-1)
   removed_actual = fill(NaN, length(population.events)-1)
   removed_observed = fill(NaN, length(population.events)-1)
-  covariates = fill(fill(NaN, length(population.history[2][1][1])), length(population.events)-1)
+  covariates = fill(fill(NaN, length(population.history[2][1][1])),  length(population.events)-1)
   seq = fill(NaN, length(population.events)-1)
 
   for i = 2:length(population.events)
     # Initial conditions
-    covariates[i] = population.history[i][1][1]
+    covariates[i-1] = population.history[i][1][1]
 
     # Exposure time (unobservable)
     if length(population.events[i][1]) > 0
-      exposed_actual[i] = population.events[i][1][1]
+      exposed_actual[i-1] = population.events[i][1][1]
     end
 
     # Infectious time (observed with latency)
     if length(population.events[i][3]) > 0
-      infectious_actual[i] = population.events[i][3][1]
-      infectious_observed[i] = infectious_actual[i] + rand(Exponential(1/ν))
-      seq[i] = population.history[i][2][find(infectious_observed[i] .<= population.events[i][6])[end]]
+      infectious_actual[i-1] = population.events[i][3][1]
+      infectious_observed[i-1] = infectious_actual[i-1] + rand(Exponential(1/ν))
+      seq[i-1] = population.history[i][2][find(infectious_observed[i] .<= population.events[i][6])[end]]
     end
 
     # Removal time (observed with latency)
     if length(population.events[i][4]) > 0
-      removed_actual[i] = population.events[i][4][1]
-      removed_observed[i] = removed_actual[i] + rand(Exponential(1/ν))
+      removed_actual[i-1] = population.events[i][4][1]
+      removed_observed[i-1] = removed_actual[i-1] + rand(Exponential(1/ν))
     end
   end
   return SEIR_events(exposed, infectious_actual, infectious_observed, removed_actual, removed_observed, covariates, seq)
