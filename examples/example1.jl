@@ -25,10 +25,6 @@ ratearray.events
   onestep!(ratearray, pop, powerlaw, latency, recovery, substitution)
 end
 
-using Distances
-evaluate(Euclidean(), [1,1], [2,2])
-
-
 # Simulation visualization
 images = 1000
 for time = 1:images

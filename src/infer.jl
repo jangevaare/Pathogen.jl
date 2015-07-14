@@ -9,12 +9,12 @@ function SEIR_surveilance(population::Population, ν::Float64)
   Gather surveillance data on specific individuals in a population, with an exponentially distributed detection lag with rate ν
   """
   @assert(0. < ν, "ν, the detection rate parameter must be greater than 0")
-  exposed_actual = fill(NaN, length(ids))
-  infectious_actual = fill(NaN, length(ids))
-  infectious_observed = fill(NaN, length(ids))
-  removed_actual = fill(NaN, length(ids))
-  removed_observed = fill(NaN, length(ids))
-  covariates = fill(fill(NaN, length(population.history[ids[1]][1][1])), length(ids))
+  exposed_actual = fill(NaN, length(population.events)-1)
+  infectious_actual = fill(NaN, length(population.events)-1)
+  infectious_observed = fill(NaN, length(population.events)-1)
+  removed_actual = fill(NaN, length(population.events)-1)
+  removed_observed = fill(NaN, length(population.events)-1)
+  covariates = fill(fill(NaN, length(population.history[2][1][1])), length(population.events)-1)
   seq = fill(NaN, length(ids))
 
   for i = 2:length(population.events)

@@ -38,7 +38,7 @@ Each column of the `init_var` is assigned to an individual
   return Population(events, history, timeline)
 end
 
-function create_powerlaw(α::Float64, β::Float64, η::Float64, dist=Euclidean())
+function create_powerlaw(α::Float64, β::Float64, η::Float64, dist=Euclidean()::Metric)
   """
   This function creates a full parameterized power law function
   """
@@ -58,7 +58,7 @@ function create_powerlaw(α::Float64, β::Float64, η::Float64, dist=Euclidean()
     #if length(population.events[source][3]) > length(population.events[source][4]) && length(population.events[target][1]) == length(population.events[target][4])
       return α*evaluate(dist, population.history[source][1], population.history[target][1])^-β
     # Identify an external source and ensure that the target hasn't been previously exposed (SIR model)
-    elseif isnan(population.events[source][1][1]) && length(population.events[target][1]) == 0
+    elseif length(population.events[source][1]) > 0 && isnan(population.events[source][1][1]) && length(population.events[target][1]) == 0
     # Identify an external source and ensure that the target is susceptible (SIS* model)
     #elseif isnan(population.events[source][1][1]) && length(population.events[target][1]) == length(population.events[target][4])
       return η
