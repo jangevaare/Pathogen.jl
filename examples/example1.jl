@@ -11,7 +11,7 @@ init_var = rand(Uniform(0,25), (2,200))
 
 pop = create_population(init_seq, init_var)
 
-powerlaw = create_powerlaw(4., 5., 1., 0.002)
+powerlaw = create_powerlaw(4., 5., 0.002)
 latency = create_constantrate(1/3.)
 recovery = create_constantrate(1/5.)
 substitution = jc69((0.1,))
@@ -24,6 +24,10 @@ ratearray.events
 @time while length(pop.timeline[1]) < 30000.
   onestep!(ratearray, pop, powerlaw, latency, recovery, substitution)
 end
+
+using Distances
+evaluate(Euclidean(), [1,1], [2,2])
+
 
 # Simulation visualization
 images = 1000
