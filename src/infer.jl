@@ -9,7 +9,6 @@ function SEIR_surveilance(population::Population, ν::Float64)
   Gather surveillance data on specific individuals in a population, with an exponentially distributed detection lag with rate ν
   """
   @assert(0. < ν, "ν, the detection rate parameter must be greater than 0")
-  @warning("Movement and covariate changes currently not supported, only initial conditions considered")
   exposed_actual = fill(NaN, length(ids))
   infectious_actual = fill(NaN, length(ids))
   infectious_observed = fill(NaN, length(ids))
