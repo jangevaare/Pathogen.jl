@@ -10,6 +10,8 @@ export
   TreeVertex,
   TreeEdge,
   SEIR_events,
+  SEIR_augmented,
+  SEIR_trace,
 
   # utilities.jl
   findstate,
@@ -31,10 +33,11 @@ export
   SEIR_surveilance,
   SEIR_augmentation,
   SEIR_loglikelihood,
+  SEIR_initialize,
+  SEIR_MCMC,
   create_tree,
   seqdistance,
-  branchloglikelihood,
-  create_logprior1
+  branchloglikelihood
 
 include("types.jl")
 include("utilities.jl")

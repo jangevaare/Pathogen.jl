@@ -19,10 +19,8 @@ ratearray.events
   onestep!(ratearray, pop, powerlaw, latency, recovery, substitution)
 end
 
-symptomatic, nonsymptomatic = surveil([2,3], pop, 0.5)
-
+# Simulation visualization
 images = 1000
-# Plot it
 for time = 1:images
   states, routes = plotdata(pop, (time*pop.timeline[1][end])/images)
   p1 = plot(layer(states, x="x", y="y", color="state", Geom.point),
@@ -33,3 +31,9 @@ for time = 1:images
   filenumber *= prod(fill("0", 5-length(filenumber)))
   draw(PNG(homedir()"/Desktop/plots/infection_$filenumber.png", 15cm, 10cm), p1)
 end
+
+# Inference
+obs = SEIR_surveilance(pop, 2.)
+trace, logprior = SEIR_initialize(Gamma(2.,2.), Gamma(2.,2.), Gamma(0.5,1.), Gamma(2.,2.), Gamma(2.,2.), Gamma(2.,2.))
+SEIR_MCMC(1000, diagm([1.,1.,1.,1.,1.,1.]), trace, logprior, obs)
+
