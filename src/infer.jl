@@ -15,7 +15,7 @@ function SEIR_surveilance(population::Population, ν::Float64)
   removed_actual = fill(NaN, length(population.events)-1)
   removed_observed = fill(NaN, length(population.events)-1)
   covariates = fill(fill(NaN, length(population.history[2][1][1])), length(population.events)-1)
-  seq = fill(NaN, length(ids))
+  seq = fill(NaN, length(population.events)-1)
 
   for i = 2:length(population.events)
     # Initial conditions
