@@ -1,6 +1,6 @@
 module Pathogen
 
-using Distances, Graphs, Distributions, DataFrames, BioSeq, ProgressMeter
+using Distances, Graphs, Distributions, DataFrames, BioSeq, ProgressMeter, PDMats
 
 export
   # types.jl
