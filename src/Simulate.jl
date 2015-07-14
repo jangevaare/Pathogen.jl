@@ -23,7 +23,7 @@ Each column of the `init_var` is assigned to an individual
   events = Array[Array[[NaN], [NaN],  [NaN],  [NaN],  [NaN], [0.]]]
 
   # covariate history, sequence history
-  history = Array[Array[[[fill(NaN, length(init_var[:,1]))]],[init_seq]]]
+  history = Array[Array[Array[fill(NaN, length(init_var[:,1]))],[init_seq]]]
 
   # event time, event type
   timeline = Array[[0.],[(0,0,0)]]
@@ -31,7 +31,7 @@ Each column of the `init_var` is assigned to an individual
   # push individuals to these arrays.
   for r = 1:size(init_var,2)
     push!(events, Array[Float64[],    Int64[],     Float64[],     Float64[],     [0.],   Float64[]])
-    push!(history, Array[[[init_var[:,r]]], Vector{Nucleotide2bitSeq}[]])
+    push!(history, Array[Array[init_var[:,r]], Vector{Nucleotide2bitSeq}[]])
   end
 
   # save as a population object type
@@ -56,7 +56,7 @@ function create_powerlaw(α::Float64, β::Float64, η::Float64, dist=Euclidean()
     if length(population.events[source][3]) > length(population.events[source][4]) && length(population.events[target][1]) == 0
     # Ensure source is infectious and that target is susceptible (SIS* model)
     #if length(population.events[source][3]) > length(population.events[source][4]) && length(population.events[target][1]) == length(population.events[target][4])
-      return α*evaluate(dist, population.history[source][1], population.history[target][1])^-β
+      return α*evaluate(dist, population.history[source][1][1], population.history[target][1][1])^-β
     # Identify an external source and ensure that the target hasn't been previously exposed (SIR model)
     elseif length(population.events[source][1]) > 0 && isnan(population.events[source][1][1]) && length(population.events[target][1]) == 0
     # Identify an external source and ensure that the target is susceptible (SIS* model)
