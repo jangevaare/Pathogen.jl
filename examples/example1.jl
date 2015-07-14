@@ -4,7 +4,7 @@ SEIR simulation, visualization, and inference
 Justin Angevaare
 """
 
-using Pathogen, Gadfly, Distributions, BioSeq
+using Pathogen, Gadfly, Distributions
 
 init_seq = create_seq(200, 0.25, 0.25, 0.25, 0.25)
 init_var = rand(Uniform(0,25), (2,200))
