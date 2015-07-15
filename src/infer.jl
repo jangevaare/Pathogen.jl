@@ -168,25 +168,25 @@ function SEIR_MCMC(n::Int64, transition_cov::Array{Float64}, trace::SEIR_trace, 
   @assert(size(transition_cov) == (6,6), "transition_cov must be a 6x6 matrix")
   proposed_moves = rand(MvNormal(PDMat(transition_cov)),n)
   for i = 1:n
-    aug = SEIR_augmentation(trace.ρ[:end] + proposed_moves[3,i], trace.ν[:end] + proposed_moves[6,i], obs)
-    ll, sources = SEIR_loglikelihood(trace.α[:end] + proposed_moves[1,i],
-                                     trace.β[:end] + proposed_moves[2,i],
-                                     trace.ρ[:end] + proposed_moves[3,i],
-                                     trace.γ[:end] + proposed_moves[4,i],
-                                     trace.η[:end] + proposed_moves[5,i],
-                                     trace.ν[:end] + proposed_moves[6,i],
+    aug = SEIR_augmentation(trace.ρ[end] + proposed_moves[3,i], trace.ν[end] + proposed_moves[6,i], obs)
+    ll, sources = SEIR_loglikelihood(trace.α[end] + proposed_moves[1,i],
+                                     trace.β[end] + proposed_moves[2,i],
+                                     trace.ρ[end] + proposed_moves[3,i],
+                                     trace.γ[end] + proposed_moves[4,i],
+                                     trace.η[end] + proposed_moves[5,i],
+                                     trace.ν[end] + proposed_moves[6,i],
                                      aug, obs, dist)
-    logposterior = ll + SEIR_logprior(trace.α[:end] + proposed_moves[1,i],
-                                      trace.β[:end] + proposed_moves[2,i],
-                                      trace.ρ[:end] + proposed_moves[3,i],
-                                      trace.γ[:end] + proposed_moves[4,i],
-                                      trace.η[:end] + proposed_moves[5,i],
-                                      trace.ν[:end] + proposed_moves[6,i])
+    logposterior = ll + SEIR_logprior(trace.α[end] + proposed_moves[1,i],
+                                      trace.β[end] + proposed_moves[2,i],
+                                      trace.ρ[end] + proposed_moves[3,i],
+                                      trace.γ[end] + proposed_moves[4,i],
+                                      trace.η[end] + proposed_moves[5,i],
+                                      trace.ν[end] + proposed_moves[6,i])
 
-    if logposterior > trace.logposterior[:end]
+    if logposterior > trace.logposterior[end]
       accept = true
     else
-      if exp(logposterior - trace.logposterior[:end]) >= rand()
+      if exp(logposterior - trace.logposterior[end]) >= rand()
         accept = true
       else
         accept = false
@@ -194,25 +194,25 @@ function SEIR_MCMC(n::Int64, transition_cov::Array{Float64}, trace::SEIR_trace, 
     end
 
     if accept
-      push!(trace.α, trace.α[:end] + proposed_moves[1,i])
-      push!(trace.β, trace.β[:end] + proposed_moves[2,i])
-      push!(trace.α, trace.ρ[:end] + proposed_moves[3,i])
-      push!(trace.γ, trace.γ[:end] + proposed_moves[4,i])
-      push!(trace.η, trace.η[:end] + proposed_moves[5,i])
-      push!(trace.ν, trace.ν[:end] + proposed_moves[6,i])
+      push!(trace.α, trace.α[end] + proposed_moves[1,i])
+      push!(trace.β, trace.β[end] + proposed_moves[2,i])
+      push!(trace.α, trace.ρ[end] + proposed_moves[3,i])
+      push!(trace.γ, trace.γ[end] + proposed_moves[4,i])
+      push!(trace.η, trace.η[end] + proposed_moves[5,i])
+      push!(trace.ν, trace.ν[end] + proposed_moves[6,i])
       push!(trace.aug, aug)
       push!(trace.sources, sources)
       push!(trace.logposterior, logposterior)
     else
-      push!(trace.α, trace.α[:end])
-      push!(trace.β, trace.β[:end])
-      push!(trace.α, trace.ρ[:end])
-      push!(trace.γ, trace.γ[:end])
-      push!(trace.η, trace.η[:end])
-      push!(trace.ν, trace.ν[:end])
-      push!(trace.aug, trace.aug[:end])
-      push!(trace.sources, trace.sources[:end])
-      push!(trace.logposterior, trace.logposterior[:end])
+      push!(trace.α, trace.α[end])
+      push!(trace.β, trace.β[end])
+      push!(trace.α, trace.ρ[end])
+      push!(trace.γ, trace.γ[end])
+      push!(trace.η, trace.η[end])
+      push!(trace.ν, trace.ν[end])
+      push!(trace.aug, trace.aug[end])
+      push!(trace.sources, trace.sources[end])
+      push!(trace.logposterior, trace.logposterior[end])
     end
   end
   return trace
