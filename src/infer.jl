@@ -30,7 +30,7 @@ function SEIR_surveilance(population::Population, ν::Float64)
     if length(population.events[i][3]) > 0
       infectious_actual[i-1] = population.events[i][3][1]
       infectious_observed[i-1] = infectious_actual[i-1] + rand(Exponential(1/ν))
-      seq[i-1] = population.history[i][2][find(infectious_observed[i-1] .<= population.events[i][6])[end]]
+      seq[i-1] = population.history[i][2][find(infectious_observed[i-1] .>= population.events[i][6])[end]]
     end
 
     # Removal time (observed with latency)
