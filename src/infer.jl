@@ -39,7 +39,7 @@ function SEIR_surveilance(population::Population, ν::Float64)
       removed_observed[i-1] = removed_actual[i-1] + rand(Exponential(1/ν))
     end
   end
-  return SEIR_events(exposed, infectious_actual, infectious_observed, removed_actual, removed_observed, covariates, seq)
+  return SEIR_events(exposed_actual, infectious_actual, infectious_observed, removed_actual, removed_observed, covariates, seq)
 end
 
 function SEIR_augmentation(ρ::Float64, ν::Float64, obs::SEIR_events)
