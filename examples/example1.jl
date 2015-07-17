@@ -26,17 +26,17 @@ ratearray.events
 end
 
 # Simulation visualization
-images = 1000
-for time = 1:images
-  states, routes = plotdata(pop, (time*pop.timeline[1][end])/images)
-  p1 = plot(layer(states, x="x", y="y", color="state", Geom.point),
-            layer(routes, x="x", y="y", group="age", Geom.polygon),
-            Theme(panel_opacity=1., panel_fill=color("white"), default_color=color("black"), background_color=color("white")))
-  filenumber = time/images
-  filenumber = prod(split("$filenumber", ".", 2))
-  filenumber *= prod(fill("0", 5-length(filenumber)))
-  draw(PNG(homedir()"/Desktop/plots/infection_$filenumber.png", 15cm, 10cm), p1)
-end
+# images = 1000
+# for time = 1:images
+#   states, routes = plotdata(pop, (time*pop.timeline[1][end])/images)
+#   p1 = plot(layer(states, x="x", y="y", color="state", Geom.point),
+#             layer(routes, x="x", y="y", group="age", Geom.polygon),
+#             Theme(panel_opacity=1., panel_fill=color("white"), default_color=color("black"), background_color=color("white")))
+#   filenumber = time/images
+#   filenumber = prod(split("$filenumber", ".", 2))
+#   filenumber *= prod(fill("0", 5-length(filenumber)))
+#   draw(PNG(homedir()"/Desktop/plots/infection_$filenumber.png", 15cm, 10cm), p1)
+# end
 
 # Inference
 obs = SEIR_surveilance(pop, 2.)
