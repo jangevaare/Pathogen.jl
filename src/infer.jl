@@ -124,13 +124,7 @@ function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, 
   return ll, sources
 end
 
-function SEIR_initialize(α_prior::UnivariateDistribution,
-                         β_prior::UnivariateDistribution,
-                         ρ_prior::UnivariateDistribution,
-                         γ_prior::UnivariateDistribution,
-                         η_prior::UnivariateDistribution,
-                         ν_prior::UnivariateDistribution,
-                         obs::SEIR_events, dist=Euclidean())
+function SEIR_initialize{T<:UnivariateDistribution}(α_prior::T, β_prior::T, ρ_prior::T, γ_prior::T, η_prior::T, ν_prior::T, obs::SEIR_events, dist=Euclidean())
   """
   Initiate an SEIR_trace by sampling from specified prior distributions
 
