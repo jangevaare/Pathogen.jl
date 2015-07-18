@@ -46,9 +46,9 @@ function SEIR_augmentation(ρ::Float64, ν::Float64, obs::SEIR_events)
   """
   Augments surveilance data, organizes observations
   """
-  infectious_augmented = SEIR_events.infectious_observed - rand(Exponential(1/ν), length(SEIR_events.infectious_observed))
-  exposed_augmented = infectious_augmented - rand(Exponential(1/ρ), length(SEIR_events.infectious_observed))
-  recovered_augmented = SEIR_events.recovered_observed - rand(Exponential(1/ν), length(SEIR_events.recovered_observed))
+  infectious_augmented = obs.infectious_observed - rand(Exponential(1/ν), length(obs.infectious_observed))
+  exposed_augmented = infectious_augmented - rand(Exponential(1/ρ), length(obs.infectious_observed))
+  recovered_augmented = obs.recovered_observed - rand(Exponential(1/ν), length(obs.recovered_observed))
   return SEIR_augmented(infectious_augmented, exposed_augmented, recovered_augmented)
 end
 
@@ -134,7 +134,7 @@ function SEIR_initialize{T<:UnivariateDistribution}(α_prior::T, β_prior::T, ρ
   γ: recovery rate (1/mean infectious period)
   ν: detection rate (1/mean detection lag)
   """
-  function SEIR_logprior(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64)
+  SEIR_logprior = function(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64)
     logpdf(α_prior, α) + logpdf(β_prior, β) + logpdf(ρ_prior, ρ) + logpdf(γ_prior, γ) + logpdf(η_prior, η) + logpdf(ν_prior, ν)
   end
   α = rand(α_prior)

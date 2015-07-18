@@ -41,5 +41,5 @@ end
 # Inference
 obs = SEIR_surveilance(pop, 2.)
 
-trace, logprior = SEIR_initialize(Gamma(2.,2.), Gamma(2.,2.), Gamma(0.5,1.), Gamma(2.,2.), Gamma(2.,2.), Gamma(2.,2.))
+trace, logprior = SEIR_initialize(Gamma(2.,2.), Gamma(2.,2.), Gamma(0.5,1.), Gamma(2.,2.), Gamma(2.,2.), Gamma(2.,2.), obs)
 SEIR_MCMC(1000, diagm([1.,1.,1.,1.,1.,1.]), trace, logprior, obs)
