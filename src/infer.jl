@@ -63,7 +63,7 @@ function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, 
   ν: detection rate (1/mean detection lag)
   """
   # Initiate an array with infection source probabilities
-  sources = fill(0., (1 + length(obs.id), length(obs.id)))
+  sources = fill(0., (1 + length(obs.covariates), length(obs.covariates)))
 
   ll = loglikelihood(Exponential(1/γ), (aug.removed_augmented .- aug.infectious_augmented)[!isnan(aug.removed_augmented)])
 
@@ -76,7 +76,7 @@ function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, 
   event_order = sortperm(event_times[:])
 
   # Create empty rate array
-  rate_array = fill(0., (1 + length(obs.id) + 2, length(obs.id)))
+  rate_array = fill(0., (1 + length(obs.covariates) + 2, length(obs.covariates)))
 
   # First row is external pressure rate
   rate_array[1,] = η
@@ -92,7 +92,7 @@ function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, 
     # Exposure event
     if id[2] == 1
       # Record disease pressures at time of exposure
-      sources[1:(length(obs.id)+1), id[1]] = rate_array[1:(length(obs.id)+1), id[1]]
+      sources[1:(length(obs.covariates)+1), id[1]] = rate_array[1:(length(obs.covariates)+1), id[1]]
       sources[:, id[1]] = sources[:, id[1]] / sum(sources[:, id[1]])
       # Update rate array (exposure rates, latent period)
       rate_array[:, id[1]] = 0.
