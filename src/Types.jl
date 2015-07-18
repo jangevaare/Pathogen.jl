@@ -120,7 +120,7 @@ type SEIR_augmented
   """
   infectious_augmented::Vector{Float64}
   exposed_augmented::Vector{Float64}
-  recovered_augmented::Vector{Float64}
+  removed_augmented::Vector{Float64}
 end
 
 type SEIR_trace

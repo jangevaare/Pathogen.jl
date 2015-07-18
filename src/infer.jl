@@ -48,8 +48,8 @@ function SEIR_augmentation(ρ::Float64, ν::Float64, obs::SEIR_events)
   """
   infectious_augmented = obs.infectious_observed - rand(Exponential(1/ν), length(obs.infectious_observed))
   exposed_augmented = infectious_augmented - rand(Exponential(1/ρ), length(obs.infectious_observed))
-  recovered_augmented = obs.recovered_observed - rand(Exponential(1/ν), length(obs.recovered_observed))
-  return SEIR_augmented(infectious_augmented, exposed_augmented, recovered_augmented)
+  removed_augmented = obs.removed_observed - rand(Exponential(1/ν), length(obs.removed_observed))
+  return SEIR_augmented(infectious_augmented, exposed_augmented, removed_augmented)
 end
 
 function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64, aug::SEIR_augmented, obs::SEIR_events, dist=Euclidean())
@@ -65,12 +65,12 @@ function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, 
   # Initiate an array with infection source probabilities
   sources = fill(0., (1 + length(obs.id), length(obs.id)))
 
-  ll = loglikelihood(Exponential(1/γ), (aug.recovered_augmented .- aug.infectious_augmented)[!isnan(aug.recovered_augmented)])
+  ll = loglikelihood(Exponential(1/γ), (aug.removed_augmented .- aug.infectious_augmented)[!isnan(aug.removed_augmented)])
 
   # Create event timing array
   event_times = [aug.exposed_augmented
                  aug.infectious_augmented
-                 recovered_augmented]
+                 removed_augmented]
 
   # Find event order
   event_order = sortperm(event_times[:])
