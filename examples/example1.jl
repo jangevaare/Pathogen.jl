@@ -46,7 +46,3 @@ priors = SEIR_priors(Gamma(2.,2.), Gamma(2.,2.), Gamma(0.5,1.), Gamma(2.,2.), Ga
 trace = SEIR_initialize(priors, obs)
 
 SEIR_MCMC(1000, diagm([1.,1.,1.,1.,1.,1.]), trace, priors, obs)
-
-# aug = SEIR_augmentation(2., 0.2, obs)
-# loglikelihood(Exponential(2.), (aug.removed_augmented .- aug.infectious_augmented)[!isnan(aug.removed_augmented)])
-# loglikelihood(Exponential(2.), [])

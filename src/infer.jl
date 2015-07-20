@@ -52,7 +52,7 @@ function SEIR_augmentation(ρ::Float64, ν::Float64, obs::SEIR_events)
   return SEIR_augmented(infectious_augmented, exposed_augmented, removed_augmented)
 end
 
-function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64, aug::SEIR_augmented, obs::SEIR_events, dist=Euclidean())
+function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64, aug::SEIR_augmented, obs::SEIR_events, dist::Metric)
   """
   Calculate the loglikelihood and return a sources array under specified parameters values and observations
 
