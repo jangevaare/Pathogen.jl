@@ -124,7 +124,14 @@ function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, 
   return ll, sources
 end
 
-function SEIR_initialize{T<:UnivariateDistribution}(α_prior::T, β_prior::T, ρ_prior::T, γ_prior::T, η_prior::T, ν_prior::T, obs::SEIR_events, dist=Euclidean())
+function SEIR_logprior(priors::SEIR_priors, α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64)
+  """
+  Calculate the logprior from prior distributions defined in `SEIR_priors` and specific parameter values
+  """
+  return loglikelihood(priors.α, α) + loglikelihood(priors.β, β) + loglikelihood(priors.ρ, ρ) + loglikelihood(priors.γ, γ) + loglikelihood(priors.η, η) + loglikelihood(priors.ν, ν)
+end
+
+function SEIR_initialize(priors::SEIR_priors, obs::SEIR_events, dist=Euclidean())
   """
   Initiate an SEIR_trace by sampling from specified prior distributions
 
@@ -134,22 +141,19 @@ function SEIR_initialize{T<:UnivariateDistribution}(α_prior::T, β_prior::T, ρ
   γ: recovery rate (1/mean infectious period)
   ν: detection rate (1/mean detection lag)
   """
-  SEIR_logprior = function(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64)
-    logpdf(α_prior, α) + logpdf(β_prior, β) + logpdf(ρ_prior, ρ) + logpdf(γ_prior, γ) + logpdf(η_prior, η) + logpdf(ν_prior, ν)
-  end
-  α = rand(α_prior)
-  β = rand(β_prior)
-  ρ = rand(ρ_prior)
-  γ = rand(γ_prior)
-  η = rand(η_prior)
-  ν = rand(ν_prior)
+  α = rand(priors.α)
+  β = rand(priors.β)
+  ρ = rand(priors.ρ)
+  γ = rand(priors.γ)
+  η = rand(priors.η)
+  ν = rand(priors.ν)
   aug = SEIR_augmentation(ρ, ν, obs)
   ll, sources = SEIR_loglikelihood(α, β, ρ, γ, η, ν, aug, obs, dist)
-  logposterior = ll + SEIR_logprior(α, β, ρ, γ, η, ν)
-  return SEIR_trace([α], [β], [ρ], [γ], [η], [ν], [aug], [sources], [logposterior]), SEIR_logprior
+  logposterior = ll + SEIR_logprior(priors, α, β, ρ, γ, η, ν)
+  return SEIR_trace([α], [β], [ρ], [γ], [η], [ν], [aug], [sources], [logposterior])
 end
 
-function SEIR_MCMC(n::Int64, transition_cov::Array{Float64}, trace::SEIR_trace, logprior::Function, obs::SEIR_events, dist=Euclidean())
+function SEIR_MCMC(n::Int64, transition_cov::Array{Float64}, trace::SEIR_trace, priors::SEIR_priors, obs::SEIR_events, dist=Euclidean())
   """
   Performs `n` data-augmented metropolis hastings MCMC iterations. Initiates a single chain by sampling from prior distribution
 
@@ -170,14 +174,17 @@ function SEIR_MCMC(n::Int64, transition_cov::Array{Float64}, trace::SEIR_trace, 
                                      trace.η[end] + proposed_moves[5,i],
                                      trace.ν[end] + proposed_moves[6,i],
                                      aug, obs, dist)
-    logposterior = ll + SEIR_logprior(trace.α[end] + proposed_moves[1,i],
+    logposterior = ll + SEIR_logprior(priors,
+                                      trace.α[end] + proposed_moves[1,i],
                                       trace.β[end] + proposed_moves[2,i],
                                       trace.ρ[end] + proposed_moves[3,i],
                                       trace.γ[end] + proposed_moves[4,i],
                                       trace.η[end] + proposed_moves[5,i],
                                       trace.ν[end] + proposed_moves[6,i])
 
-    if logposterior > trace.logposterior[end]
+    if logposterior == -Inf
+      accept = false
+    elseif logposterior > trace.logposterior[end]
       accept = true
     else
       if exp(logposterior - trace.logposterior[end]) >= rand()

@@ -101,6 +101,18 @@ type Tree
   Edges::Vector{TreeEdge}
 end
 
+type SEIR_priors{T<:UnivariateDistribution}
+  """
+  Prior distributions for SEIR model inference
+  """
+  α::T
+  β::T
+  ρ::T
+  γ::T
+  η::T
+  ν::T
+end
+
 type SEIR_events
   """
   Contains observed and actual event times

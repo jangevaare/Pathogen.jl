@@ -9,6 +9,7 @@ export
   Tree,
   TreeVertex,
   TreeEdge,
+  SEIR_priors,
   SEIR_events,
   SEIR_augmented,
   SEIR_trace,
