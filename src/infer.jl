@@ -46,9 +46,14 @@ function SEIR_augmentation(ρ::Float64, ν::Float64, obs::SEIR_events)
   """
   Augments surveilance data, organizes observations
   """
-  infectious_augmented = obs.infectious_observed - rand(Exponential(1/ν), length(obs.infectious_observed))
-  exposed_augmented = infectious_augmented - rand(Exponential(1/ρ), length(obs.infectious_observed))
-  removed_augmented = obs.removed_observed - rand(Exponential(1/ν), length(obs.removed_observed))
+  infectious_augmented = obs.infectious_observed .- rand(Exponential(1/ν), length(obs.infectious_observed))
+  exposed_augmented = infectious_augmented .- rand(Exponential(1/ρ), length(obs.infectious_observed))
+  removed_augmented = fill(NaN, length(obs.removed_observed))
+  for i = 1:length(obs.removed_observed)
+    if !isnan(obs.removed_observed[i])
+      removed_augmented[i] = obs.removed_observed[i] - rand(Truncated(Exponential(1/ν), -Inf, obs.removed_observed[i] - obs.infectious_observed[i]))
+    end
+  end
   return SEIR_augmented(infectious_augmented, exposed_augmented, removed_augmented)
 end
 
@@ -141,7 +146,7 @@ function SEIR_initialize(priors::SEIR_priors, obs::SEIR_events, dist=Euclidean()
   """
   logposterior = -Inf
   loopcount = 1
-  while loopcount <= 100 && logposterior == -Inf
+  while loopcount <= 1000 && logposterior == -Inf
     α = rand(priors.α)
     β = rand(priors.β)
     ρ = rand(priors.ρ)
@@ -154,6 +159,8 @@ function SEIR_initialize(priors::SEIR_priors, obs::SEIR_events, dist=Euclidean()
     loopcount += 1
     if logposterior > -Inf
       return SEIR_trace([α], [β], [ρ], [γ], [η], [ν], [aug], Array[sources], [logposterior])
+    elseif loopcount == 1000
+      print("Max initialization attempts reached")
     end
   end
 end

@@ -41,10 +41,16 @@ end
 # Inference
 obs = SEIR_surveilance(pop, 2.)
 
-priors = SEIR_priors(Gamma(2.,2.), Gamma(2.,2.), Gamma(0.5,1.), Gamma(2.,2.), Gamma(2.,2.), Gamma(2.,2.))
+"""
+α, β: powerlaw exposure kernel parameters
+η: external pressure rate
+ρ: infectivity rate (1/mean latent period)
+γ: recovery rate (1/mean infectious period)
+ν: detection rate (1/mean detection lag)
+"""
+
+priors = SEIR_priors(Gamma(8.,2.), Gamma(10.,2.), Gamma(0.5,10.), Gamma(1.,3.), Gamma(1.,5.), Gamma(2.,1.))
 
 trace = SEIR_initialize(priors, obs)
-
-trace
 
 SEIR_MCMC(1000, diagm([1.,1.,1.,1.,1.,1.]), trace, priors, obs)
