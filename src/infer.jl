@@ -152,8 +152,10 @@ function SEIR_initialize(priors::SEIR_priors, obs::SEIR_events, dist=Euclidean()
     ll, sources = SEIR_loglikelihood(α, β, ρ, γ, η, ν, aug, obs, dist)
     logposterior = ll + SEIR_logprior(priors, α, β, ρ, γ, η, ν)
     loopcount += 1
+    if logposterior > -Inf
+      return SEIR_trace([α], [β], [ρ], [γ], [η], [ν], [aug], Array[sources], [logposterior])
+    end
   end
-  return SEIR_trace([α], [β], [ρ], [γ], [η], [ν], [aug], Array[sources], [logposterior])
 end
 
 function SEIR_MCMC(n::Int64, transition_cov::Array{Float64}, trace::SEIR_trace, priors::SEIR_priors, obs::SEIR_events, dist=Euclidean())
