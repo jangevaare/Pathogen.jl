@@ -71,7 +71,7 @@ function SEIR_augmentation(ρ::Float64, ν::Float64, obs::SEIR_observed)
   return SEIR_augmented(exposed_augmented, infectious_augmented, removed_augmented)
 end
 
-function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64, aug::SEIR_augmented, obs::SEIR_observed, dist::Metric)
+function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64, aug::SEIR_augmented, obs::SEIR_observed, dist::Metric, debug=false::Bool)
   """
   Calculate the loglikelihood and return a sources array under specified parameters values and observations
 
@@ -85,6 +85,10 @@ function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, 
   sources = fill(0., (1 + length(obs.covariates), length(obs.covariates)))
 
   ll = loglikelihood(Exponential(1/γ), (aug.removed .- aug.infectious)[!isnan(aug.removed)])
+
+  if debug && ll == -Inf
+    print("Infectious period caused loglikelihood to go to -Inf")
+  end
 
   # Create event timing array
   event_times = [aug.exposed aug.infectious aug.removed]
@@ -103,6 +107,17 @@ function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, 
     isnan(event_times[event_order[i]]) && break
     rate_array_sum = sum(rate_array)
     id = ind2sub(size(event_times), event_order[i])
+
+    # Provide loop position when loglikelihood goes to -Inf if desired
+    if debug && ll == -Inf
+      print("$(i-1) th event caused loglikelihood to go to -Inf")
+    end
+
+    # Prevent needless calculation
+    if ll == -Inf
+      break
+    end
+
     ll += logpdf(Exponential(1/rate_array_sum), event_times[event_order[i]])
     ll += log(sum(rate_array[:,id[1]])/rate_array_sum)
 
@@ -165,7 +180,7 @@ function SEIR_initialize(priors::SEIR_priors, obs::SEIR_observed, dist=Euclidean
   η = rand(priors.η)
   ν = rand(priors.ν)
   aug = SEIR_augmentation(ρ, ν, obs)
-  ll, sources = SEIR_loglikelihood(α, β, ρ, γ, η, ν, aug, obs, dist)
+  ll, sources = SEIR_loglikelihood(α, β, ρ, γ, η, ν, aug, obs, dist, true)
   logposterior = ll + SEIR_logprior(priors, α, β, ρ, γ, η, ν)
   return SEIR_trace([α], [β], [ρ], [γ], [η], [ν], [aug], Array[sources], [logposterior])
 end
