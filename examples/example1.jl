@@ -39,7 +39,7 @@ end
 # end
 
 # Inference
-obs = SEIR_surveilance(pop, 2.)
+actual, obs = SEIR_surveilance(pop, 2.)
 
 """
 α, β: powerlaw exposure kernel parameters
@@ -52,5 +52,11 @@ obs = SEIR_surveilance(pop, 2.)
 priors = SEIR_priors(Gamma(8.,2.), Gamma(10.,2.), Gamma(0.5,10.), Gamma(1.,3.), Gamma(1.,5.), Gamma(2.,1.))
 
 trace = SEIR_initialize(priors, obs)
+
+aug = SEIR_augmentation(1/3, 2., obs)
+
+[aug.exposed aug.infectious aug.removed]
+
+trace.logposterior
 
 SEIR_MCMC(1000, diagm([1.,1.,1.,1.,1.,1.]), trace, priors, obs)

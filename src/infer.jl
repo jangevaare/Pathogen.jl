@@ -100,7 +100,7 @@ function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, 
   rate_array = fill(0., (1 + length(obs.covariates) + 2, length(obs.covariates)))
 
   # First row is external pressure rate
-  rate_array[1,] = η
+  rate_array[1,:] = η
 
   # The rest of the events
   for i = 1:length(event_order)
@@ -113,6 +113,8 @@ function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, 
       ll += logpdf(Exponential(1/rate_array_sum), event_times[event_order[i]] - event_times[event_order[i-1]])
     end
     ll += log(sum(rate_array[:,id[1]])/rate_array_sum)
+
+
 
     # Exposure event
     if id[2] == 1
@@ -161,6 +163,7 @@ function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, 
     if ll == -Inf
       break
     end
+
   end
   return ll, sources
 end
