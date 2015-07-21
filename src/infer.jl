@@ -65,7 +65,7 @@ function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, 
   # Initiate an array with infection source probabilities
   sources = fill(0., (1 + length(obs.covariates), length(obs.covariates)))
 
-  ll = 0. #loglikelihood(Exponential(1/γ), (aug.removed_augmented .- aug.infectious_augmented)[!isnan(aug.removed_augmented)])
+  ll = loglikelihood(Exponential(1/γ), (aug.removed_augmented .- aug.infectious_augmented)[!isnan(aug.removed_augmented)])
 
   # Create event timing array
   event_times = [aug.exposed_augmented aug.infectious_augmented aug.removed_augmented]
@@ -82,10 +82,10 @@ function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, 
   # The rest of the events
   for i = 1:length(event_order)
     isnan(event_times[event_order[i]]) && break
-
-    id = sub2ind(event_order[i], size(event_times))
+    rate_array_sum = sum(rate_array)
+    id = ind2sub(size(event_times), event_order[i])
     ll += loglikelihood(Exponential(1/rate_array_sum), event_times[event_order[i]])
-    ll += log(sum(rate_array[:,id[1]])/sum(rate_array))
+    ll += log(sum(rate_array[:,id[1]])/rate_array_sum)
 
     # Exposure event
     if id[2] == 1
