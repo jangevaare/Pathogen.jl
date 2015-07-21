@@ -53,6 +53,4 @@ priors = SEIR_priors(Gamma(8.,2.), Gamma(10.,2.), Gamma(0.5,10.), Gamma(1.,3.), 
 
 trace = SEIR_initialize(priors, obs)
 
-trace.logposterior
-
 SEIR_MCMC(10, diagm([1.,1.,1.,1.,1.,1.]), trace, priors, obs)
