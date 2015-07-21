@@ -52,19 +52,23 @@ function SEIR_surveilance(population::Population, ν::Float64)
   return SEIR_actual(exposed_actual, infectious_actual, removed_actual, covariates_actual, seq_actual), SEIR_observed(infectious_observed, removed_observed, covariates_observed, seq_observed)
 end
 
-function SEIR_augmentation(ρ::Float64, ν::Float64, obs::SEIR_observations)
+function SEIR_augmentation(ρ::Float64, ν::Float64, obs::SEIR_observed)
   """
   Augments surveilance data, organizes observations
   """
-  infectious_augmented = obs.infectious_observed .- rand(Exponential(1/ν), length(obs.infectious_observed))
-  exposed_augmented = infectious_augmented .- rand(Exponential(1/ρ), length(obs.infectious_observed))
-  removed_augmented = fill(NaN, length(obs.removed_observed))
-  for i = 1:length(obs.removed_observed)
-    if !isnan(obs.removed_observed[i])
-      removed_augmented[i] = obs.removed_observed[i] - rand(Truncated(Exponential(1/ν), -Inf, obs.removed_observed[i] - obs.infectious_observed[i]))
+  exposed_augmented = fill(NaN, length(obs.infectious))
+  infectious_augmented = fill(NaN, length(obs.infectious))
+  removed_augmented = fill(NaN, length(obs.removed))
+  for i = 1:length(obs.infectious)
+    if !isnan(obs.infectious[i])
+      infectious_augmented[i] = obs.infectious[i] - rand(Exponential(1/ν))
+      exposed_augmented[i] = infectious_augmented[i] - rand(Exponential(1/ρ))
+      if !isnan(obs.removed[i])
+        removed_augmented[i] = obs.removed[i] - rand(Truncated(Exponential(1/ν), -Inf, obs.removed[i] - obs.infectious[i]))
+      end
     end
   end
-  return SEIR_augmented(infectious_augmented, exposed_augmented, removed_augmented)
+  return SEIR_augmented(exposed_augmented, infectious_augmented, removed_augmented)
 end
 
 function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64, aug::SEIR_augmented, obs::SEIR_events, dist::Metric)
