@@ -113,15 +113,21 @@ type SEIR_priors{T<:UnivariateDistribution}
   ν::T
 end
 
-type SEIR_events
+type SEIR_actuality
   """
-  Contains observed and actual event times
+  Contains actual event times
   """
-  exposed_actual::Vector{Float64}
-  infectious_actual::Vector{Float64}
-  infectious_observed::Vector{Float64}
-  removed_actual::Vector{Float64}
-  removed_observed::Vector{Float64}
+  exposed::Vector{Float64}
+  infectious::Vector{Float64}
+  removed::Vector{Float64}
+end
+
+type SEIR_observed
+  """
+  Contains observed event times and information
+  """
+  infectious::Vector{Float64}
+  removed::Vector{Float64}
   covariates::Vector{Vector{Float64}}
   seq::Vector{Any}
 end
@@ -130,9 +136,9 @@ type SEIR_augmented
   """
   Contains event times from data augmentation
   """
-  infectious_augmented::Vector{Float64}
-  exposed_augmented::Vector{Float64}
-  removed_augmented::Vector{Float64}
+  infectious::Vector{Float64}
+  exposed::Vector{Float64}
+  removed::Vector{Float64}
 end
 
 type SEIR_trace
