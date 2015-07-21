@@ -9,9 +9,10 @@ export
   Tree,
   TreeVertex,
   TreeEdge,
-  SEIR_priors,
-  SEIR_events,
+  SEIR_actual,
+  SEIR_observed,
   SEIR_augmented,
+  SEIR_priors,
   SEIR_trace,
 
   # utilities.jl

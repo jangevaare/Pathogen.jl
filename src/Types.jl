@@ -101,25 +101,15 @@ type Tree
   Edges::Vector{TreeEdge}
 end
 
-type SEIR_priors{T<:UnivariateDistribution}
-  """
-  Prior distributions for SEIR model inference
-  """
-  α::T
-  β::T
-  ρ::T
-  γ::T
-  η::T
-  ν::T
-end
-
-type SEIR_actuality
+type SEIR_actual
   """
   Contains actual event times
   """
   exposed::Vector{Float64}
   infectious::Vector{Float64}
   removed::Vector{Float64}
+  covariates::Vector{Vector{Float64}}
+  seq::Vector{Any}
 end
 
 type SEIR_observed
@@ -136,9 +126,21 @@ type SEIR_augmented
   """
   Contains event times from data augmentation
   """
-  infectious::Vector{Float64}
   exposed::Vector{Float64}
+  infectious::Vector{Float64}
   removed::Vector{Float64}
+end
+
+type SEIR_priors{T<:UnivariateDistribution}
+  """
+  Prior distributions for SEIR model inference
+  """
+  α::T
+  β::T
+  ρ::T
+  γ::T
+  η::T
+  ν::T
 end
 
 type SEIR_trace
