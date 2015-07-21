@@ -107,17 +107,6 @@ function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, 
     isnan(event_times[event_order[i]]) && break
     rate_array_sum = sum(rate_array)
     id = ind2sub(size(event_times), event_order[i])
-
-    # Provide loop position when loglikelihood goes to -Inf if desired
-    if debug && ll == -Inf
-      print("$(i-1) th event caused loglikelihood to go to -Inf")
-    end
-
-    # Prevent needless calculation
-    if ll == -Inf
-      break
-    end
-
     ll += logpdf(Exponential(1/rate_array_sum), event_times[event_order[i]])
     ll += log(sum(rate_array[:,id[1]])/rate_array_sum)
 
@@ -152,6 +141,23 @@ function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, 
       rate_array[id[1] + 1,:] = 0.
       rate_array[1 + size(rate_array,2) + 2, id[1]] = 0.
     end
+
+    # Provide loop position when loglikelihood goes to -Inf if desired
+    if debug && ll == -Inf
+      if id[2] == 1
+        print("Event $i (exposure of individual $(id[1])) caused loglikelihood to go to -Inf")
+      elseif id[2] == 2
+        print("Event $i (infection of individual $(id[1])) caused loglikelihood to go to -Inf")
+      elseif id[2] == 3
+        print("Event $i (recovery of individual $(id[1])) caused loglikelihood to go to -Inf")
+      end
+    end
+
+    # Prevent needless calculation
+    if ll == -Inf
+      break
+    end
+
   end
   return ll, sources
 end
