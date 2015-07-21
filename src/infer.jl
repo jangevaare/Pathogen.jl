@@ -150,14 +150,13 @@ function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, 
         print("Event $i (infection of individual $(id[1])) caused loglikelihood to go to -Inf")
       elseif id[2] == 3
         print("Event $i (recovery of individual $(id[1])) caused loglikelihood to go to -Inf")
-      end8
+      end
     end
 
     # Prevent needless calculation
     if ll == -Inf
       break
     end
-
   end
   return ll, sources
 end
