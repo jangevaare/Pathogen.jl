@@ -71,7 +71,7 @@ function SEIR_augmentation(ρ::Float64, ν::Float64, obs::SEIR_observed)
   return SEIR_augmented(exposed_augmented, infectious_augmented, removed_augmented)
 end
 
-function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64, aug::SEIR_augmented, obs::SEIR_events, dist::Metric)
+function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64, aug::SEIR_augmented, obs::SEIR_observed, dist::Metric)
   """
   Calculate the loglikelihood and return a sources array under specified parameters values and observations
 
@@ -84,10 +84,10 @@ function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, 
   # Initiate an array with infection source probabilities
   sources = fill(0., (1 + length(obs.covariates), length(obs.covariates)))
 
-  ll = loglikelihood(Exponential(1/γ), (aug.removed_augmented .- aug.infectious_augmented)[!isnan(aug.removed_augmented)])
+  ll = loglikelihood(Exponential(1/γ), (aug.removed .- aug.infectious)[!isnan(aug.removed)])
 
   # Create event timing array
-  event_times = [aug.exposed_augmented aug.infectious_augmented aug.removed_augmented]
+  event_times = [aug.exposed aug.infectious aug.removed]
 
   # Find event order
   event_order = sortperm(event_times[:])
@@ -148,7 +148,7 @@ function SEIR_logprior(priors::SEIR_priors, α::Float64, β::Float64, ρ::Float6
   return logpdf(priors.α, α) + logpdf(priors.β, β) + logpdf(priors.ρ, ρ) + logpdf(priors.γ, γ) + logpdf(priors.η, η) + logpdf(priors.ν, ν)
 end
 
-function SEIR_initialize(priors::SEIR_priors, obs::SEIR_events, dist=Euclidean())
+function SEIR_initialize(priors::SEIR_priors, obs::SEIR_observed, dist=Euclidean())
   """
   Initiate an SEIR_trace by sampling from specified prior distributions
 
@@ -170,7 +170,7 @@ function SEIR_initialize(priors::SEIR_priors, obs::SEIR_events, dist=Euclidean()
   return SEIR_trace([α], [β], [ρ], [γ], [η], [ν], [aug], Array[sources], [logposterior])
 end
 
-function SEIR_MCMC(n::Int64, transition_cov::Array{Float64}, trace::SEIR_trace, priors::SEIR_priors, obs::SEIR_events, dist=Euclidean())
+function SEIR_MCMC(n::Int64, transition_cov::Array{Float64}, trace::SEIR_trace, priors::SEIR_priors, obs::SEIR_observed, dist=Euclidean())
   """
   Performs `n` data-augmented metropolis hastings MCMC iterations. Initiates a single chain by sampling from prior distribution
 
