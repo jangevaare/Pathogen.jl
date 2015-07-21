@@ -140,7 +140,8 @@ function SEIR_initialize(priors::SEIR_priors, obs::SEIR_events, dist=Euclidean()
   ν: detection rate (1/mean detection lag)
   """
   logposterior = -Inf
-  while logposterior == -Inf
+  loopcount = 1
+  while loopcount <= 100 && logposterior == -Inf
     α = rand(priors.α)
     β = rand(priors.β)
     ρ = rand(priors.ρ)
@@ -150,6 +151,7 @@ function SEIR_initialize(priors::SEIR_priors, obs::SEIR_events, dist=Euclidean()
     aug = SEIR_augmentation(ρ, ν, obs)
     ll, sources = SEIR_loglikelihood(α, β, ρ, γ, η, ν, aug, obs, dist)
     logposterior = ll + SEIR_logprior(priors, α, β, ρ, γ, η, ν)
+    loopcount += 1
   end
   return SEIR_trace([α], [β], [ρ], [γ], [η], [ν], [aug], Array[sources], [logposterior])
 end

@@ -45,4 +45,6 @@ priors = SEIR_priors(Gamma(2.,2.), Gamma(2.,2.), Gamma(0.5,1.), Gamma(2.,2.), Ga
 
 trace = SEIR_initialize(priors, obs)
 
+trace
+
 SEIR_MCMC(1000, diagm([1.,1.,1.,1.,1.,1.]), trace, priors, obs)
