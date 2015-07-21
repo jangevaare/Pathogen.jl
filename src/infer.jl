@@ -211,30 +211,40 @@ function SEIR_MCMC(n::Int64, transition_cov::Array{Float64}, trace::SEIR_trace, 
   proposed_moves = rand(MvNormal(PDMat(transition_cov)),n)
   for i = 1:n
     aug = SEIR_augmentation(trace.ρ[end] + proposed_moves[3,i], trace.ν[end] + proposed_moves[6,i], obs)
-    ll, sources = SEIR_loglikelihood(trace.α[end] + proposed_moves[1,i],
-                                     trace.β[end] + proposed_moves[2,i],
-                                     trace.ρ[end] + proposed_moves[3,i],
-                                     trace.γ[end] + proposed_moves[4,i],
-                                     trace.η[end] + proposed_moves[5,i],
-                                     trace.ν[end] + proposed_moves[6,i],
-                                     aug, obs, dist)
-    logposterior = ll + SEIR_logprior(priors,
-                                      trace.α[end] + proposed_moves[1,i],
-                                      trace.β[end] + proposed_moves[2,i],
-                                      trace.ρ[end] + proposed_moves[3,i],
-                                      trace.γ[end] + proposed_moves[4,i],
-                                      trace.η[end] + proposed_moves[5,i],
-                                      trace.ν[end] + proposed_moves[6,i])
-
-    if logposterior == -Inf
+    if all([trace.α[end] + proposed_moves[1,i],
+            trace.β[end] + proposed_moves[2,i],
+            trace.ρ[end] + proposed_moves[3,i],
+            trace.γ[end] + proposed_moves[4,i],
+            trace.η[end] + proposed_moves[5,i],
+            trace.ν[end] + proposed_moves[6,i]] .> 0)
       accept = false
-    elseif logposterior > trace.logposterior[end]
-      accept = true
     else
-      if exp(logposterior - trace.logposterior[end]) >= rand()
+      ll, sources = SEIR_loglikelihood(trace.α[end] + proposed_moves[1,i],
+                                       trace.β[end] + proposed_moves[2,i],
+                                       trace.ρ[end] + proposed_moves[3,i],
+                                       trace.γ[end] + proposed_moves[4,i],
+                                       trace.η[end] + proposed_moves[5,i],
+                                       trace.ν[end] + proposed_moves[6,i],
+                                       aug, obs, dist)
+
+      logposterior = ll + SEIR_logprior(priors,
+                                        trace.α[end] + proposed_moves[1,i],
+                                        trace.β[end] + proposed_moves[2,i],
+                                        trace.ρ[end] + proposed_moves[3,i],
+                                        trace.γ[end] + proposed_moves[4,i],
+                                        trace.η[end] + proposed_moves[5,i],
+                                        trace.ν[end] + proposed_moves[6,i])
+
+      if logposterior == -Inf
+        accept = false
+      elseif logposterior > trace.logposterior[end]
         accept = true
       else
-        accept = false
+        if exp(logposterior - trace.logposterior[end]) >= rand()
+          accept = true
+        else
+          accept = false
+        end
       end
     end
 

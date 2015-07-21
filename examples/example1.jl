@@ -53,10 +53,6 @@ priors = SEIR_priors(Gamma(8.,2.), Gamma(10.,2.), Gamma(0.5,10.), Gamma(1.,3.), 
 
 trace = SEIR_initialize(priors, obs)
 
-aug = SEIR_augmentation(1/3, 2., obs)
-
-[aug.exposed aug.infectious aug.removed]
-
 trace.logposterior
 
-SEIR_MCMC(1000, diagm([1.,1.,1.,1.,1.,1.]), trace, priors, obs)
+SEIR_MCMC(10, diagm([1.,1.,1.,1.,1.,1.]), trace, priors, obs)
