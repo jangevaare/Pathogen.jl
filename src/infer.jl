@@ -84,7 +84,7 @@ function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, 
     isnan(event_times[event_order[i]]) && break
     rate_array_sum = sum(rate_array)
     id = ind2sub(size(event_times), event_order[i])
-    ll += loglikelihood(Exponential(1/rate_array_sum), event_times[event_order[i]])
+    ll += logpdf(Exponential(1/rate_array_sum), event_times[event_order[i]])
     ll += log(sum(rate_array[:,id[1]])/rate_array_sum)
 
     # Exposure event
@@ -126,7 +126,7 @@ function SEIR_logprior(priors::SEIR_priors, α::Float64, β::Float64, ρ::Float6
   """
   Calculate the logprior from prior distributions defined in `SEIR_priors` and specific parameter values
   """
-  return loglikelihood(priors.α, α) + loglikelihood(priors.β, β) + loglikelihood(priors.ρ, ρ) + loglikelihood(priors.γ, γ) + loglikelihood(priors.η, η) + loglikelihood(priors.ν, ν)
+  return logpdf(priors.α, α) + logpdf(priors.β, β) + logpdf(priors.ρ, ρ) + logpdf(priors.γ, γ) + logpdf(priors.η, η) + logpdf(priors.ν, ν)
 end
 
 function SEIR_initialize(priors::SEIR_priors, obs::SEIR_events, dist=Euclidean())
@@ -148,7 +148,7 @@ function SEIR_initialize(priors::SEIR_priors, obs::SEIR_events, dist=Euclidean()
   aug = SEIR_augmentation(ρ, ν, obs)
   ll, sources = SEIR_loglikelihood(α, β, ρ, γ, η, ν, aug, obs, dist)
   logposterior = ll + SEIR_logprior(priors, α, β, ρ, γ, η, ν)
-  return SEIR_trace([α], [β], [ρ], [γ], [η], [ν], [aug], [sources], [logposterior])
+  return SEIR_trace([α], [β], [ρ], [γ], [η], [ν], [aug], Vector[sources], [logposterior])
 end
 
 function SEIR_MCMC(n::Int64, transition_cov::Array{Float64}, trace::SEIR_trace, priors::SEIR_priors, obs::SEIR_events, dist=Euclidean())
