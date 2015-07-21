@@ -139,15 +139,18 @@ function SEIR_initialize(priors::SEIR_priors, obs::SEIR_events, dist=Euclidean()
   γ: recovery rate (1/mean infectious period)
   ν: detection rate (1/mean detection lag)
   """
-  α = rand(priors.α)
-  β = rand(priors.β)
-  ρ = rand(priors.ρ)
-  γ = rand(priors.γ)
-  η = rand(priors.η)
-  ν = rand(priors.ν)
-  aug = SEIR_augmentation(ρ, ν, obs)
-  ll, sources = SEIR_loglikelihood(α, β, ρ, γ, η, ν, aug, obs, dist)
-  logposterior = ll + SEIR_logprior(priors, α, β, ρ, γ, η, ν)
+  logposterior = -Inf
+  while logposterior == -Inf
+    α = rand(priors.α)
+    β = rand(priors.β)
+    ρ = rand(priors.ρ)
+    γ = rand(priors.γ)
+    η = rand(priors.η)
+    ν = rand(priors.ν)
+    aug = SEIR_augmentation(ρ, ν, obs)
+    ll, sources = SEIR_loglikelihood(α, β, ρ, γ, η, ν, aug, obs, dist)
+    logposterior = ll + SEIR_logprior(priors, α, β, ρ, γ, η, ν)
+  end
   return SEIR_trace([α], [β], [ρ], [γ], [η], [ν], [aug], Array[sources], [logposterior])
 end
 
