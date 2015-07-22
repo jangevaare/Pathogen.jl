@@ -194,7 +194,7 @@ function SEIR_initialize(priors::SEIR_priors, obs::SEIR_observed, dist=Euclidean
   count = 1
 
   # Retry initialization until non-negative infinity loglikelihood
-  while ll = -Inf && count < 1000
+  while ll == -Inf && count < 1000
     count += 1
     α = rand(priors.α)
     β = rand(priors.β)
