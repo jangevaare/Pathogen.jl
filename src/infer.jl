@@ -207,11 +207,11 @@ function SEIR_initialize(priors::SEIR_priors, obs::SEIR_observed, dist=Euclidean
   end
 
   if count < 1000
-    print("Successfully initialization on attempt $count")
+    print("Successfully initialized on attempt $count")
     logposterior = ll + SEIR_logprior(priors, α, β, ρ, γ, η, ν)
     return SEIR_trace([α], [β], [ρ], [γ], [η], [ν], [aug], Array[sources], [logposterior])
   else
-    print("Failed to initialize $count attempts")
+    print("Failed to initialize after $count attempts")
   end
 end
 
