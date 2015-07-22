@@ -208,12 +208,12 @@ function SEIR_MCMC(n::Int64, transition_cov::Array{Float64}, trace::SEIR_trace, 
   @assert(size(transition_cov) == (6,6), "transition_cov must be a 6x6 matrix")
   proposed_moves = rand(MvNormal(PDMat(transition_cov)),n)
   for i = 1:n
-    if all([trace.α[end] + proposed_moves[1,i],
+    if any([trace.α[end] + proposed_moves[1,i],
             trace.β[end] + proposed_moves[2,i],
             trace.ρ[end] + proposed_moves[3,i],
             trace.γ[end] + proposed_moves[4,i],
             trace.η[end] + proposed_moves[5,i],
-            trace.ν[end] + proposed_moves[6,i]] .> 0.)
+            trace.ν[end] + proposed_moves[6,i]] .< 0.)
       accept = false
     else
       aug = SEIR_augmentation(trace.ρ[end] + proposed_moves[3,i], trace.ν[end] + proposed_moves[6,i], obs)
