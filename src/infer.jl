@@ -107,14 +107,12 @@ function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, 
     isnan(event_times[event_order[i]]) && break
     rate_array_sum = sum(rate_array)
     id = ind2sub(size(event_times), event_order[i])
-    if i == 1
-      ll += logpdf(Exponential(1/rate_array_sum), event_times[event_order[i]])
-    else
+
+    # Don't consider likelilihood of first event
+    if i > 1
       ll += logpdf(Exponential(1/rate_array_sum), event_times[event_order[i]] - event_times[event_order[i-1]])
     end
     ll += log(sum(rate_array[:,id[1]])/rate_array_sum)
-
-
 
     # Exposure event
     if id[2] == 1
