@@ -190,9 +190,29 @@ function SEIR_initialize(priors::SEIR_priors, obs::SEIR_observed, dist=Euclidean
   η = rand(priors.η)
   ν = rand(priors.ν)
   aug = SEIR_augmentation(ρ, ν, obs)
-  ll, sources = SEIR_loglikelihood(α, β, ρ, γ, η, ν, aug, obs, dist, true)
-  logposterior = ll + SEIR_logprior(priors, α, β, ρ, γ, η, ν)
-  return SEIR_trace([α], [β], [ρ], [γ], [η], [ν], [aug], Array[sources], [logposterior])
+  ll, sources = SEIR_loglikelihood(α, β, ρ, γ, η, ν, aug, obs, dist)
+  count = 1
+
+  # Retry initialization until non-negative infinity loglikelihood
+  while ll = -Inf && count < 1000
+    count += 1
+    α = rand(priors.α)
+    β = rand(priors.β)
+    ρ = rand(priors.ρ)
+    γ = rand(priors.γ)
+    η = rand(priors.η)
+    ν = rand(priors.ν)
+    aug = SEIR_augmentation(ρ, ν, obs)
+    ll, sources = SEIR_loglikelihood(α, β, ρ, γ, η, ν, aug, obs, dist)
+  end
+
+  if count < 1000
+    print("Successfully initialization on attempt $count")
+    logposterior = ll + SEIR_logprior(priors, α, β, ρ, γ, η, ν)
+    return SEIR_trace([α], [β], [ρ], [γ], [η], [ν], [aug], Array[sources], [logposterior])
+  else
+    print("Failed to initialize $count attempts")
+  end
 end
 
 function SEIR_MCMC(n::Int64, transition_cov::Array{Float64}, trace::SEIR_trace, priors::SEIR_priors, obs::SEIR_observed, dist=Euclidean())
@@ -215,7 +235,7 @@ function SEIR_MCMC(n::Int64, transition_cov::Array{Float64}, trace::SEIR_trace, 
     end
 
     # Augment the data
-    aug = SEIR_augmentation(trace.ρ[end] + proposed_moves[3,i], trace.ν[end] + proposed_moves[6,i], obs)
+    aug = SEIR_augmentation(proposal[3], proposal[6], obs)
 
     # Loglikelihood calculation and source probability array
     ll, sources = SEIR_loglikelihood(proposal[1], proposal[2], proposal[3], proposal[4], proposal[5], proposal[6], aug, obs, dist)
