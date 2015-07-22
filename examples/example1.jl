@@ -53,4 +53,12 @@ priors = SEIR_priors(Gamma(8.,2.), Gamma(10.,2.), Gamma(0.5,10.), Gamma(1.,3.), 
 
 trace = SEIR_initialize(priors, obs)
 
-SEIR_MCMC(10, diagm([1.,1.,1.,1.,1.,1.]), trace, priors, obs)
+@time SEIR_MCMC(100000, diagm([1.,1.,1.,1.,1.,1.]), trace, priors, obs)
+
+for i = 1:50
+  opt_cov = cov([trace.α trace.β trace.ρ trace.γ trace.η trace.ν])*(2.38^2)/6.
+  SEIR_MCMC(10000, opt_cov, trace, priors, obs)
+end
+
+plot(x=1:length(trace.logposterior), y=trace.logposterior,  Geom.line)
+
