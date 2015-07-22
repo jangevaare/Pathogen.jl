@@ -4,7 +4,7 @@ SEIR simulation, visualization, and inference
 Justin Angevaare
 """
 
-using Pathogen, Gadfly, Distributions
+using Pathogen, Gadfly, DataFrames, Distributions
 
 init_seq = create_seq(200, 0.25, 0.25, 0.25, 0.25)
 init_var = rand(Uniform(0,25), (2,200))
@@ -54,11 +54,12 @@ priors = SEIR_priors(Uniform(0,10), Uniform(0,10), Uniform(0,0.1), Uniform(0,1),
 
 trace = SEIR_initialize(priors, obs)
 
-@time SEIR_MCMC(25000, diagm([1.,1.,1.,1.,1.,1.]), trace, priors, obs)
+@time SEIR_MCMC(100000, diagm([0.5, 0.5, 0.5, 0.5, 0.5, 0.5]), trace, priors, obs)
 
 for i = 1:19
   opt_cov = cov([trace.α trace.β trace.ρ trace.γ trace.η trace.ν])*(2.38^2)/6.
   SEIR_MCMC(25000, opt_cov, trace, priors, obs)
 end
 
-plot(x=1:length(trace.logposterior), y=trace.logposterior,  Geom.line)
+plotdf = DataFrame(iteration = rep(1:length(trace.α),6), value = [trace.α, trace.β, trace.ρ, trace.γ, trace.η, trace.ν], parameter = [rep("α",length(trace.α)),rep("β",length(trace.α)),rep("η",length(trace.α)),rep("ρ",length(trace.α)),rep("γ",length(trace.α)),rep("ν",length(trace.α))])
+plot(plotdf, x="iteration", y="value", color="parameter", Geom.line)
