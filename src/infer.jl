@@ -247,7 +247,7 @@ function SEIR_MCMC(n::Int64, transition_cov::Array{Float64}, trace::SEIR_trace, 
     if accept
       push!(trace.α, trace.α[end] + proposed_moves[1,i])
       push!(trace.β, trace.β[end] + proposed_moves[2,i])
-      push!(trace.α, trace.ρ[end] + proposed_moves[3,i])
+      push!(trace.ρ, trace.ρ[end] + proposed_moves[3,i])
       push!(trace.γ, trace.γ[end] + proposed_moves[4,i])
       push!(trace.η, trace.η[end] + proposed_moves[5,i])
       push!(trace.ν, trace.ν[end] + proposed_moves[6,i])
@@ -257,7 +257,7 @@ function SEIR_MCMC(n::Int64, transition_cov::Array{Float64}, trace::SEIR_trace, 
     else
       push!(trace.α, trace.α[end])
       push!(trace.β, trace.β[end])
-      push!(trace.α, trace.ρ[end])
+      push!(trace.ρ, trace.ρ[end])
       push!(trace.γ, trace.γ[end])
       push!(trace.η, trace.η[end])
       push!(trace.ν, trace.ν[end])
