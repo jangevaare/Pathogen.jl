@@ -49,7 +49,8 @@ actual, obs = SEIR_surveilance(pop, 2.)
 ν: detection rate (1/mean detection lag)
 """
 
-priors = SEIR_priors(Gamma(8.,2.), Gamma(10.,2.), Gamma(0.5,10.), Gamma(1.,3.), Gamma(1.,5.), Gamma(2.,1.))
+#priors = SEIR_priors(Gamma(8.,2.), Gamma(10.,2.), Gamma(0.5,10.), Gamma(1.,3.), Gamma(1.,5.), Gamma(2.,1.))
+priors = SEIR_priors(Uniform(0,10), Uniform(0,10), Uniform(0,0.1), Uniform(0,1), Uniform(0,1), Uniform(0,5))
 
 trace = SEIR_initialize(priors, obs)
 
