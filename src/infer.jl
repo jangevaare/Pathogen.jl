@@ -73,7 +73,7 @@ end
 
 function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64, aug::SEIR_augmented, obs::SEIR_observed, dist::Metric, debug=false::Bool)
   """
-  Calculate the loglikelihood and return a sources array under specified parameters values and observations
+  Calculate the loglikelihood and return an exposure network array under specified parameters values and observations
 
   α, β: powerlaw exposure kernel parameters
   η: external pressure rate
@@ -208,7 +208,7 @@ function SEIR_initialize(priors::SEIR_priors, obs::SEIR_observed, dist=Euclidean
   if count < 1000
     print("Successfully initialized on attempt $count")
     logposterior = ll + SEIR_logprior(priors, α, β, ρ, γ, η, ν)
-    return SEIR_trace([α], [β], [ρ], [γ], [η], [ν], [aug], Array[sources], [logposterior])
+    return SEIR_trace([α], [β], [ρ], [γ], [η], [ν], [aug], Array[network], [logposterior])
   else
     print("Failed to initialize after $count attempts")
   end
@@ -236,7 +236,7 @@ function SEIR_MCMC(n::Int64, transition_cov::Array{Float64}, trace::SEIR_trace, 
     # Augment the data
     aug = SEIR_augmentation(proposal[3], proposal[6], obs)
 
-    # Loglikelihood calculation and source probability array
+    # Loglikelihood calculation and exposure network array
     ll, network = SEIR_loglikelihood(proposal[1], proposal[2], proposal[3], proposal[4], proposal[5], proposal[6], aug, obs, dist)
 
     # Add logprior for logposterior
