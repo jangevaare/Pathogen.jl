@@ -129,7 +129,6 @@ type SEIR_augmented
   exposed::Vector{Float64}
   infectious::Vector{Float64}
   removed::Vector{Float64}
-  sources::Vector{Float64}
 end
 
 type SEIR_priors{T<:UnivariateDistribution}
@@ -155,5 +154,6 @@ type SEIR_trace
   η::Vector{Float64}
   ν::Vector{Float64}
   aug::Vector{SEIR_augmented}
+  network::Vector{Vector{Float64}}
   logposterior::Vector{Float64}
 end
