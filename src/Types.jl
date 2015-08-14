@@ -154,6 +154,6 @@ type SEIR_trace
   η::Vector{Float64}
   ν::Vector{Float64}
   aug::Vector{SEIR_augmented}
-  network::Vector{Array{Float64}}
+  network::Vector{Array{Bool}}
   logposterior::Vector{Float64}
 end
