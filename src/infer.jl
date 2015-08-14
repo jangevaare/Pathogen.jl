@@ -81,7 +81,7 @@ function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, 
   γ: recovery rate (1/mean infectious period)
   ν: detection rate (1/mean detection lag)
   """
-  # Initiate an array with infection source probabilities
+  # Initiate an exposure network
   network = fill(false, (1 + length(obs.covariates), length(obs.covariates)))
 
   ll = loglikelihood(Exponential(1/γ), (aug.removed .- aug.infectious)[!isnan(aug.removed)])
@@ -117,7 +117,7 @@ function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, 
     # Exposure event
     if id[2] == 1
       # Generate a exposure source based on disease pressures at time of exposure
-      sources[1:(length(obs.covariates)+1), id[1]] = rand(Multinomial(1, rate_array[1:(length(obs.covariates)+1), id[1]]./sum(rate_array[1:(length(obs.covariates)+1), id[1]])))
+      network[1:(length(obs.covariates)+1), id[1]] = rand(Multinomial(1, rate_array[1:(length(obs.covariates)+1), id[1]]./sum(rate_array[1:(length(obs.covariates)+1), id[1]])))
       # Update rate array (exposure rates, latent period)
       rate_array[:, id[1]] = 0.
       rate_array[size(rate_array,2) + 1, id[1]] = ρ
@@ -162,7 +162,7 @@ function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, 
     end
 
   end
-  return ll, sources
+  return ll, network
 end
 
 function SEIR_logprior(priors::SEIR_priors, α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64)
@@ -189,7 +189,7 @@ function SEIR_initialize(priors::SEIR_priors, obs::SEIR_observed, dist=Euclidean
   η = rand(priors.η)
   ν = rand(priors.ν)
   aug = SEIR_augmentation(ρ, ν, obs)
-  ll, sources = SEIR_loglikelihood(α, β, ρ, γ, η, ν, aug, obs, dist)
+  ll, network = SEIR_loglikelihood(α, β, ρ, γ, η, ν, aug, obs, dist)
   count = 1
 
   # Retry initialization until non-negative infinity loglikelihood
@@ -202,7 +202,7 @@ function SEIR_initialize(priors::SEIR_priors, obs::SEIR_observed, dist=Euclidean
     η = rand(priors.η)
     ν = rand(priors.ν)
     aug = SEIR_augmentation(ρ, ν, obs)
-    ll, sources = SEIR_loglikelihood(α, β, ρ, γ, η, ν, aug, obs, dist)
+    ll, network = SEIR_loglikelihood(α, β, ρ, γ, η, ν, aug, obs, dist)
   end
 
   if count < 1000
@@ -237,44 +237,47 @@ function SEIR_MCMC(n::Int64, transition_cov::Array{Float64}, trace::SEIR_trace, 
     aug = SEIR_augmentation(proposal[3], proposal[6], obs)
 
     # Loglikelihood calculation and source probability array
-    ll, sources = SEIR_loglikelihood(proposal[1], proposal[2], proposal[3], proposal[4], proposal[5], proposal[6], aug, obs, dist)
+    ll, network = SEIR_loglikelihood(proposal[1], proposal[2], proposal[3], proposal[4], proposal[5], proposal[6], aug, obs, dist)
 
     # Add logprior for logposterior
     logposterior = ll + SEIR_logprior(priors, proposal[1], proposal[2], proposal[3], proposal[4], proposal[5], proposal[6])
 
     # Accept/reject based on logposterior
     if logposterior == -Inf
-      accept = false
+      reject = true
     elseif logposterior > trace.logposterior[end]
-      accept = true
+      reject = false
     elseif exp(logposterior - trace.logposterior[end]) >= rand()
-      accept = true
+      reject = false
     else
-      accept = false
+      reject = true
     end
 
-    if accept
-      push!(trace.α, proposal[1])
-      push!(trace.β, proposal[2])
-      push!(trace.ρ, proposal[3])
-      push!(trace.γ, proposal[4])
-      push!(trace.η, proposal[5])
-      push!(trace.ν, proposal[6])
-      push!(trace.aug, aug)
-      push!(trace.sources, sources)
-      push!(trace.logposterior, logposterior)
-    else
-      push!(trace.α, trace.α[end])
-      push!(trace.β, trace.β[end])
-      push!(trace.ρ, trace.ρ[end])
-      push!(trace.γ, trace.γ[end])
-      push!(trace.η, trace.η[end])
-      push!(trace.ν, trace.ν[end])
-      push!(trace.aug, trace.aug[end])
-      push!(trace.sources, trace.sources[end])
-      push!(trace.logposterior, trace.logposterior[end])
+    # Re-augment data (and recalculate log posterior) if proposal is rejected...
+    if reject
+      proposal[1] = trace.α[end]
+      proposal[2] = trace.β[end]
+      proposal[3] = trace.ρ[end]
+      proposal[4] = trace.γ[end]
+      proposal[5] = trace.η[end]
+      proposal[6] = trace.ν[end]
+      aug = SEIR_augmentation(proposal[3], proposal[6], obs)
+      ll, network = SEIR_loglikelihood(proposal[1], proposal[2], proposal[3], proposal[4], proposal[5], proposal[6], aug, obs, dist)
+      logposterior = ll + SEIR_logprior(priors, proposal[1], proposal[2], proposal[3], proposal[4], proposal[5], proposal[6])
     end
+
+    # Update chain
+    push!(trace.α, proposal[1])
+    push!(trace.β, proposal[2])
+    push!(trace.ρ, proposal[3])
+    push!(trace.γ, proposal[4])
+    push!(trace.η, proposal[5])
+    push!(trace.ν, proposal[6])
+    push!(trace.aug, aug)
+    push!(trace.network, network)
+    push!(trace.logposterior, logposterior)
   end
+
   return trace
 end
 
