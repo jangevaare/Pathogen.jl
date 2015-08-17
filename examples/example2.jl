@@ -8,7 +8,6 @@ using Pathogen, Gadfly, DataFrames, Distributions
 
 cd("example2")
 
-
 # Simulate
 init_seq = create_seq(500, 0.25, 0.25, 0.25, 0.25)
 init_var = rand(Uniform(0,25), (2,500))
@@ -70,15 +69,58 @@ opt_cov = cov([trace.α trace.β trace.ρ trace.γ trace.η trace.ν])*(2.38^2)/
 # Joint trace plots (last 100k iterations)
 plotdf = DataFrame(iteration = rep(1:100000,6), value = [trace.α[end-99999:end], trace.β[end-99999:end], trace.η[end-99999:end], trace.ρ[end-99999:end], trace.γ[end-99999:end], trace.ν[end-99999:end]], parameter = [rep("α",100000),rep("β",100000),rep("η",100000),rep("ρ",100000),rep("γ",100000),rep("ν",100000)])
 
-draw(PNG("SEIR_traceplot.png", 6inch, 3inch), plot(plotdf, x="iteration", y="value", color="parameter", Geom.line, Theme(panel_opacity=1., panel_fill=color("white"), background_color=color("white"))))
+draw(PNG("SEIR_traceplot.png", 20cm, 15cm),
+     plot(plotdf,
+          x="iteration",
+          y="value",
+          color="parameter",
+          Geom.line,
+          Theme(panel_opacity=1.,
+                panel_fill=color("white"),
+                background_color=color("white"))))
 
 # Posterior distribution histograms (last 100k iterations)
-draw(PNG("SEIR_alpha_hist.png", 6inch, 3inch), plot(x=trace.α[end-99999:end], Geom.histogram, Theme(panel_opacity=1., panel_fill=color("white"), background_color=color("white"))))
-draw(PNG("SEIR_beta_hist.png", 6inch, 3inch), plot(x=trace.β[end-99999:end], Geom.histogram, Theme(panel_opacity=1., panel_fill=color("white"), background_color=color("white"))))
-draw(PNG("SEIR_eta_hist.png", 6inch, 3inch), plot(x=trace.η[end-99999:end], Geom.histogram, Theme(panel_opacity=1., panel_fill=color("white"), background_color=color("white"))))
-draw(PNG("SEIR_rho_hist.png", 6inch, 3inch), plot(x=trace.ρ[end-99999:end], Geom.histogram, Theme(panel_opacity=1., panel_fill=color("white"), background_color=color("white"))))
-draw(PNG("SEIR_gamma_hist.png", 6inch, 3inch), plot(x=trace.γ[end-99999:end], Geom.histogram, Theme(panel_opacity=1., panel_fill=color("white"), background_color=color("white"))))
-draw(PNG("SEIR_nu_hist.png", 6inch, 3inch), plot(x=trace.ν[end-99999:end], Geom.histogram, Theme(panel_opacity=1., panel_fill=color("white"), background_color=color("white"))))
+draw(PNG("SEIR_alpha_hist.png", 20cm, 15cm),
+     plot(x=trace.α[end-99999:end],
+          Geom.histogram,
+          Theme(panel_opacity=1.,
+                panel_fill=color("white"),
+                background_color=color("white"))))
+
+draw(PNG("SEIR_beta_hist.png", 20cm, 15cm),
+     plot(x=trace.β[end-99999:end],
+          Geom.histogram,
+          Theme(panel_opacity=1.,
+                panel_fill=color("white"),
+                background_color=color("white"))))
+
+draw(PNG("SEIR_eta_hist.png", 20cm, 15cm),
+     plot(x=trace.η[end-99999:end],
+          Geom.histogram,
+          Theme(panel_opacity=1.,
+                panel_fill=color("white"),
+                background_color=color("white"))))
+
+draw(PNG("SEIR_rho_hist.png", 20cm, 15cm),
+     plot(x=trace.ρ[end-99999:end],
+          Geom.histogram,
+          Theme(panel_opacity=1.,
+                panel_fill=color("white"),
+                background_color=color("white"))))
+
+draw(PNG("SEIR_gamma_hist.png", 20cm, 15cm),
+     plot(x=trace.γ[end-99999:end],
+          Geom.histogram,
+          Theme(panel_opacity=1.,
+                panel_fill=color("white"),
+                background_color=color("white"))))
+
+draw(PNG("SEIR_nu_hist.png", 20cm, 15cm),
+     plot(x=trace.ν[end-99999:end],
+          Geom.histogram,
+          Theme(panel_opacity=1.,
+                panel_fill=color("white"),
+                background_color=color("white"))))
 
 # Of those infected, what is the posterior probability of being exposed from external source (last 100k iterations)
 network_posterior = mean(trace.network[end-100000:end])
@@ -86,19 +128,20 @@ network_posterior = mean(trace.network[end-100000:end])
 y, x, z = findnz(network_posterior)
 df = DataFrame(x=x, y=y, z=z)
 
-plot(df,
-     x="x",
-     y="y",
-     color="z",
-     Scale.color_continuous(minvalue=0, maxvalue=1),
-     Scale.x_continuous,
-     Scale.y_continuous,
-     Geom.rectbin,
-     Stat.identity,
-     Guide.xlabel(nothing),
-     Guide.ylabel(nothing),
-     Guide.colorkey("Posterior probability of exposure source"),
-     Theme(panel_opacity=1.,
-           panel_fill=color("white"),
-           background_color=color("white"),
-           key_position = :none))
+draw(PNG("SEIR_exposure_network.png", 20cm, 20cm),
+     plot(df,
+          x="x",
+          y="y",
+          color="z",
+          Scale.color_continuous(minvalue=0, maxvalue=1),
+          Scale.x_continuous,
+          Scale.y_continuous,
+          Geom.rectbin,
+          Stat.identity,
+          Guide.xlabel(nothing),
+          Guide.ylabel(nothing),
+          Guide.colorkey("Posterior probability of exposure source"),
+          Theme(panel_opacity=1.,
+                panel_fill=color("white"),
+                background_color=color("white"),
+                key_position = :none)))
