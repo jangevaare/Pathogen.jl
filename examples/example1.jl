@@ -6,7 +6,7 @@ Justin Angevaare
 
 using Pathogen, Gadfly, DataFrames, Distributions
 
-cd("example2")
+cd("Desktop/example1")
 
 # Simulate
 init_seq = create_seq(200, 0.25, 0.25, 0.25, 0.25)
@@ -20,9 +20,6 @@ recovery = create_constantrate(1/5.)
 substitution = jc69((0.1,))
 
 ratearray = create_ratearray(pop, powerlaw, substitution)
-
-ratearray.rates
-ratearray.events
 
 @time while length(pop.timeline[1]) < 30000.
   onestep!(ratearray, pop, powerlaw, latency, recovery, substitution)
