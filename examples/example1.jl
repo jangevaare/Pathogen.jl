@@ -83,4 +83,24 @@ draw(PNG("SEIR_nu_hist.png", 6inch, 3inch), plot(x=trace.ν[end-99999:end], Geom
 # plot(x=trace.ν[end-99999:end], Geom.histogram)
 
 # Is every individual infected from the external source?
-mean(trace.network[end-1000:end])[1,!isnan(obs.infectious)]
+network_posterior = mean(trace.network[end-100000:end])
+
+y, x, z = findnz(network_posterior)
+df = DataFrame(x=x, y=y, z=z)
+
+plot(df,
+     x="x",
+     y="y",
+     color="z",
+     Scale.color_continuous(minvalue=0, maxvalue=1),
+     Scale.x_continuous,
+     Scale.y_continuous,
+     Geom.rectbin,
+     Stat.identity,
+     Guide.xlabel(nothing),
+     Guide.ylabel(nothing),
+     Guide.colorkey("Posterior probability of exposure source"),
+     Theme(panel_opacity=1.,
+           panel_fill=color("white"),
+           background_color=color("white"),
+           key_position = :none))
