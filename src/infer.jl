@@ -189,7 +189,7 @@ function SEIR_initialize(priors::SEIR_priors, obs::SEIR_observed, dist=Euclidean
   γ = rand(priors.γ)
   ν = rand(priors.ν)
   aug = SEIR_augmentation(ρ, ν, obs)
-  ll, network = SEIR_loglikelihood(α, β, ρ, γ, η, ν, aug, obs, dist)
+  ll, network = SEIR_loglikelihood(α, β, η, ρ, γ, ν, aug, obs, dist)
   count = 1
 
   # Retry initialization until non-negative infinity loglikelihood
@@ -202,12 +202,12 @@ function SEIR_initialize(priors::SEIR_priors, obs::SEIR_observed, dist=Euclidean
     γ = rand(priors.γ)
     ν = rand(priors.ν)
     aug = SEIR_augmentation(ρ, ν, obs)
-    ll, network = SEIR_loglikelihood(α, β, ρ, γ, η, ν, aug, obs, dist)
+    ll, network = SEIR_loglikelihood(α, β, η, ρ, γ, ν, aug, obs, dist)
   end
 
   if count < 1000
     print("Successfully initialized on attempt $count")
-    logposterior = ll + SEIR_logprior(priors, α, β, ρ, γ, η, ν)
+    logposterior = ll + SEIR_logprior(priors, α, β, η, ρ, γ, ν)
     return SEIR_trace([α], [β], [η], [ρ], [γ], [ν], [aug], Array[network], [logposterior])
   else
     print("Failed to initialize after $count attempts")
@@ -270,9 +270,9 @@ function SEIR_MCMC(n::Int64, transition_cov::Array{Float64}, trace::SEIR_trace, 
     # Update chain
     push!(trace.α, proposal[1])
     push!(trace.β, proposal[2])
-    push!(trace.ρ, proposal[3])
-    push!(trace.γ, proposal[4])
-    push!(trace.η, proposal[5])
+    push!(trace.η, proposal[3])
+    push!(trace.ρ, proposal[4])
+    push!(trace.γ, proposal[5])
     push!(trace.ν, proposal[6])
     push!(trace.aug, aug)
     push!(trace.network, network)

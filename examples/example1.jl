@@ -53,7 +53,7 @@ priors = SEIR_priors(Uniform(0,10), Uniform(0,10), Uniform(0,0.01), Uniform(0,1)
 
 trace = SEIR_initialize(priors, obs)
 
-@time SEIR_MCMC(100000, diagm([0.5, 0.5, 0.5, 0.5, 0.5, 0.5]), trace, priors, obs)
+@time SEIR_MCMC(200000, diagm([0.5, 0.5, 0.5, 0.5, 0.5, 0.5]), trace, priors, obs)
 
 for i = 1:16
   opt_cov = cov([trace.α trace.β trace.ρ trace.γ trace.η trace.ν])*(2.38^2)/6.
