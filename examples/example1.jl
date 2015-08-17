@@ -75,13 +75,6 @@ draw(PNG("SEIR_rho_hist.png", 6inch, 3inch), plot(x=trace.ρ[end-99999:end], Geo
 draw(PNG("SEIR_gamma_hist.png", 6inch, 3inch), plot(x=trace.γ[end-99999:end], Geom.histogram))
 draw(PNG("SEIR_nu_hist.png", 6inch, 3inch), plot(x=trace.ν[end-99999:end], Geom.histogram))
 
-# plot(x=trace.α[end-99999:end], Geom.histogram)
-# plot(x=trace.β[end-99999:end], Geom.histogram)
-# plot(x=trace.η[end-99999:end], Geom.histogram)
-# plot(x=trace.ρ[end-99999:end], Geom.histogram)
-# plot(x=trace.γ[end-99999:end], Geom.histogram)
-# plot(x=trace.ν[end-99999:end], Geom.histogram)
-
 # Is every individual infected from the external source?
 network_posterior = mean(trace.network[end-100000:end])
 
