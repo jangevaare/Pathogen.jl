@@ -56,10 +56,18 @@ trace = SEIR_initialize(priors, obs)
 
 @time SEIR_MCMC(100000, diagm([0.5, 0.5, 0.5, 0.5, 0.5, 0.5]), trace, priors, obs)
 
-for i = 1:19
+for i = 1:16
   opt_cov = cov([trace.α trace.β trace.ρ trace.γ trace.η trace.ν])*(2.38^2)/6.
   SEIR_MCMC(25000, opt_cov, trace, priors, obs)
 end
 
-plotdf = DataFrame(iteration = rep(1:length(trace.α),6), value = [trace.α, trace.β, trace.ρ, trace.γ, trace.η, trace.ν], parameter = [rep("α",length(trace.α)),rep("β",length(trace.α)),rep("η",length(trace.α)),rep("ρ",length(trace.α)),rep("γ",length(trace.α)),rep("ν",length(trace.α))])
+# Joint trace plots (last 100k iterations)
+plotdf = DataFrame(iteration = rep(1:100000,6), value = [trace.α[end-99999:end], trace.β[end-99999:end], trace.ρ[end-99999:end], trace.γ[end-99999:end], trace.η[end-99999:end], trace.ν[end-99999:end]], parameter = [rep("α",100000),rep("β",100000),rep("η",100000),rep("ρ",100000),rep("γ",100000),rep("ν",100000)])
 plot(plotdf, x="iteration", y="value", color="parameter", Geom.line)
+
+# Histograms (last 100k iterations)
+plot(x=trace.α[end-99999:end], Geom.histogram)
+plot(x=trace.β[end-99999:end], Geom.histogram)
+plot(x=trace.ρ[end-99999:end], Geom.histogram)
+plot(x=trace.γ[end-99999:end], Geom.histogram)
+plot(x=trace.η[end-99999:end], Geom.histogram)
