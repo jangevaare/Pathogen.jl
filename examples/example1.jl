@@ -53,7 +53,7 @@ priors = SEIR_priors(Uniform(0,10), Uniform(0,10), Uniform(0,0.01), Uniform(0,1)
 
 trace = SEIR_initialize(priors, obs)
 
-@time SEIR_MCMC(200000, diagm([0.5, 0.5, 0.5, 0.5, 0.5, 0.5]), trace, priors, obs)
+@time SEIR_MCMC(100000, diagm([0.5, 0.5, 0.5, 0.5, 0.5, 0.5]), trace, priors, obs)
 
 for i = 1:16
   opt_cov = cov([trace.α trace.β trace.ρ trace.γ trace.η trace.ν])*(2.38^2)/6.
@@ -62,15 +62,25 @@ end
 
 # Joint trace plots (last 100k iterations)
 plotdf = DataFrame(iteration = rep(1:100000,6), value = [trace.α[end-99999:end], trace.β[end-99999:end], trace.η[end-99999:end], trace.ρ[end-99999:end], trace.γ[end-99999:end], trace.ν[end-99999:end]], parameter = [rep("α",100000),rep("β",100000),rep("η",100000),rep("ρ",100000),rep("γ",100000),rep("ν",100000)])
-plot(plotdf, x="iteration", y="value", color="parameter", Geom.line)
+
+cd("Desktop")
+
+draw(PNG("SEIR_traceplot.png", 6inch, 3inch), plot(plotdf, x="iteration", y="value", color="parameter", Geom.line))
 
 # Histograms (last 100k iterations)
-plot(x=trace.α[end-99999:end], Geom.histogram)
-plot(x=trace.β[end-99999:end], Geom.histogram)
-plot(x=trace.η[end-99999:end], Geom.histogram)
-plot(x=trace.ρ[end-99999:end], Geom.histogram)
-plot(x=trace.γ[end-99999:end], Geom.histogram)
-plot(x=trace.ν[end-99999:end], Geom.histogram)
+draw(PNG("SEIR_alpha_hist.png", 6inch, 3inch), plot(x=trace.α[end-99999:end], Geom.histogram))
+draw(PNG("SEIR_beta_hist.png", 6inch, 3inch), plot(x=trace.β[end-99999:end], Geom.histogram))
+draw(PNG("SEIR_eta_hist.png", 6inch, 3inch), plot(x=trace.η[end-99999:end], Geom.histogram))
+draw(PNG("SEIR_rho_hist.png", 6inch, 3inch), plot(x=trace.ρ[end-99999:end], Geom.histogram))
+draw(PNG("SEIR_gamma_hist.png", 6inch, 3inch), plot(x=trace.γ[end-99999:end], Geom.histogram))
+draw(PNG("SEIR_nu_hist.png", 6inch, 3inch), plot(x=trace.ν[end-99999:end], Geom.histogram))
+
+# plot(x=trace.α[end-99999:end], Geom.histogram)
+# plot(x=trace.β[end-99999:end], Geom.histogram)
+# plot(x=trace.η[end-99999:end], Geom.histogram)
+# plot(x=trace.ρ[end-99999:end], Geom.histogram)
+# plot(x=trace.γ[end-99999:end], Geom.histogram)
+# plot(x=trace.ν[end-99999:end], Geom.histogram)
 
 # Is every individual infected from the external source?
 mean(trace.network[end-1000:end])[1,!isnan(obs.infectious)]
