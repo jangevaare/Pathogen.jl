@@ -71,7 +71,7 @@ function SEIR_augmentation(ρ::Float64, ν::Float64, obs::SEIR_observed)
   return SEIR_augmented(exposed_augmented, infectious_augmented, removed_augmented)
 end
 
-function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64, aug::SEIR_augmented, obs::SEIR_observed, dist::Metric, debug=false::Bool)
+function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, γ::Float64, ν::Float64, aug::SEIR_augmented, obs::SEIR_observed, dist::Metric, debug=false::Bool)
   """
   Calculate the loglikelihood and return an exposure network array under specified parameters values and observations
 
@@ -108,11 +108,11 @@ function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, 
     rate_array_sum = sum(rate_array)
     id = ind2sub(size(event_times), event_order[i])
 
-    # Don't consider likelilihood of first event
+    # Don't consider likelilihood contribution of first event
     if i > 1
       ll += logpdf(Exponential(1/rate_array_sum), event_times[event_order[i]] - event_times[event_order[i-1]])
+      ll += log(sum(rate_array[:,id[1]])/rate_array_sum)
     end
-    ll += log(sum(rate_array[:,id[1]])/rate_array_sum)
 
     # Exposure event
     if id[2] == 1
@@ -165,16 +165,16 @@ function SEIR_loglikelihood(α::Float64, β::Float64, ρ::Float64, γ::Float64, 
   return ll, network
 end
 
-function SEIR_logprior(priors::SEIR_priors, α::Float64, β::Float64, ρ::Float64, γ::Float64, η::Float64, ν::Float64)
+function SEIR_logprior(priors::SEIR_priors, α::Float64, β::Float64, η::Float64, ρ::Float64, γ::Float64, ν::Float64)
   """
   Calculate the logprior from prior distributions defined in `SEIR_priors` and specific parameter values
   """
-  return logpdf(priors.α, α) + logpdf(priors.β, β) + logpdf(priors.ρ, ρ) + logpdf(priors.γ, γ) + logpdf(priors.η, η) + logpdf(priors.ν, ν)
+  return logpdf(priors.α, α) + logpdf(priors.β, β) + logpdf(priors.η, η) + logpdf(priors.ρ, ρ) + logpdf(priors.γ, γ)  + logpdf(priors.ν, ν)
 end
 
 function SEIR_initialize(priors::SEIR_priors, obs::SEIR_observed, dist=Euclidean())
   """
-  Initiate an SEIR_trace by sampling from specified prior distributions
+  Initiate an SEIR_trace object by sampling from specified prior distributions
 
   α, β: powerlaw exposure kernel parameters
   η: external pressure rate
@@ -184,9 +184,9 @@ function SEIR_initialize(priors::SEIR_priors, obs::SEIR_observed, dist=Euclidean
   """
   α = rand(priors.α)
   β = rand(priors.β)
+  η = rand(priors.η)
   ρ = rand(priors.ρ)
   γ = rand(priors.γ)
-  η = rand(priors.η)
   ν = rand(priors.ν)
   aug = SEIR_augmentation(ρ, ν, obs)
   ll, network = SEIR_loglikelihood(α, β, ρ, γ, η, ν, aug, obs, dist)
@@ -197,9 +197,9 @@ function SEIR_initialize(priors::SEIR_priors, obs::SEIR_observed, dist=Euclidean
     count += 1
     α = rand(priors.α)
     β = rand(priors.β)
+    η = rand(priors.η)
     ρ = rand(priors.ρ)
     γ = rand(priors.γ)
-    η = rand(priors.η)
     ν = rand(priors.ν)
     aug = SEIR_augmentation(ρ, ν, obs)
     ll, network = SEIR_loglikelihood(α, β, ρ, γ, η, ν, aug, obs, dist)
@@ -208,7 +208,7 @@ function SEIR_initialize(priors::SEIR_priors, obs::SEIR_observed, dist=Euclidean
   if count < 1000
     print("Successfully initialized on attempt $count")
     logposterior = ll + SEIR_logprior(priors, α, β, ρ, γ, η, ν)
-    return SEIR_trace([α], [β], [ρ], [γ], [η], [ν], [aug], Array[network], [logposterior])
+    return SEIR_trace([α], [β], [η], [ρ], [γ], [ν], [aug], Array[network], [logposterior])
   else
     print("Failed to initialize after $count attempts")
   end
@@ -228,13 +228,13 @@ function SEIR_MCMC(n::Int64, transition_cov::Array{Float64}, trace::SEIR_trace, 
   for i = 1:n
 
     # Only generate valid proposals
-    proposal = [trace.α[end], trace.β[end], trace.ρ[end], trace.γ[end], trace.η[end], trace.ν[end]] .+ rand(MvNormal(transition_cov))
+    proposal = [trace.α[end], trace.β[end], trace.η[end], trace.ρ[end], trace.γ[end], trace.ν[end]] .+ rand(MvNormal(transition_cov))
     while any(proposal .< 0.)
-      proposal = [trace.α[end], trace.β[end], trace.ρ[end], trace.γ[end], trace.η[end], trace.ν[end]] .+ rand(MvNormal(transition_cov))
+      proposal = [trace.α[end], trace.β[end], trace.η[end], trace.ρ[end], trace.γ[end], trace.ν[end]] .+ rand(MvNormal(transition_cov))
     end
 
     # Augment the data
-    aug = SEIR_augmentation(proposal[3], proposal[6], obs)
+    aug = SEIR_augmentation(proposal[4], proposal[6], obs)
 
     # Loglikelihood calculation and exposure network array
     ll, network = SEIR_loglikelihood(proposal[1], proposal[2], proposal[3], proposal[4], proposal[5], proposal[6], aug, obs, dist)
@@ -257,11 +257,12 @@ function SEIR_MCMC(n::Int64, transition_cov::Array{Float64}, trace::SEIR_trace, 
     if reject
       proposal[1] = trace.α[end]
       proposal[2] = trace.β[end]
-      proposal[3] = trace.ρ[end]
-      proposal[4] = trace.γ[end]
-      proposal[5] = trace.η[end]
+      proposal[3] = trace.η[end]
+      proposal[4] = trace.ρ[end]
+      proposal[5] = trace.γ[end]
       proposal[6] = trace.ν[end]
-      aug = SEIR_augmentation(proposal[3], proposal[6], obs)
+
+      aug = SEIR_augmentation(proposal[4], proposal[6], obs)
       ll, network = SEIR_loglikelihood(proposal[1], proposal[2], proposal[3], proposal[4], proposal[5], proposal[6], aug, obs, dist)
       logposterior = ll + SEIR_logprior(priors, proposal[1], proposal[2], proposal[3], proposal[4], proposal[5], proposal[6])
     end

@@ -49,8 +49,7 @@ actual, obs = SEIR_surveilance(pop, 2.)
 ν: detection rate (1/mean detection lag)
 """
 
-#priors = SEIR_priors(Gamma(8.,2.), Gamma(10.,2.), Gamma(0.5,10.), Gamma(1.,3.), Gamma(1.,5.), Gamma(2.,1.))
-priors = SEIR_priors(Uniform(0,10), Uniform(0,10), Uniform(0,0.1), Uniform(0,1), Uniform(0,1), Uniform(0,5))
+priors = SEIR_priors(Uniform(0,10), Uniform(0,10), Uniform(0,0.01), Uniform(0,1), Uniform(0,1), Uniform(0.5,3))
 
 trace = SEIR_initialize(priors, obs)
 
@@ -62,12 +61,16 @@ for i = 1:16
 end
 
 # Joint trace plots (last 100k iterations)
-plotdf = DataFrame(iteration = rep(1:100000,6), value = [trace.α[end-99999:end], trace.β[end-99999:end], trace.ρ[end-99999:end], trace.γ[end-99999:end], trace.η[end-99999:end], trace.ν[end-99999:end]], parameter = [rep("α",100000),rep("β",100000),rep("η",100000),rep("ρ",100000),rep("γ",100000),rep("ν",100000)])
+plotdf = DataFrame(iteration = rep(1:100000,6), value = [trace.α[end-99999:end], trace.β[end-99999:end], trace.η[end-99999:end], trace.ρ[end-99999:end], trace.γ[end-99999:end], trace.ν[end-99999:end]], parameter = [rep("α",100000),rep("β",100000),rep("η",100000),rep("ρ",100000),rep("γ",100000),rep("ν",100000)])
 plot(plotdf, x="iteration", y="value", color="parameter", Geom.line)
 
 # Histograms (last 100k iterations)
 plot(x=trace.α[end-99999:end], Geom.histogram)
 plot(x=trace.β[end-99999:end], Geom.histogram)
+plot(x=trace.η[end-99999:end], Geom.histogram)
 plot(x=trace.ρ[end-99999:end], Geom.histogram)
 plot(x=trace.γ[end-99999:end], Geom.histogram)
-plot(x=trace.η[end-99999:end], Geom.histogram)
+plot(x=trace.ν[end-99999:end], Geom.histogram)
+
+# Is every individual infected from the external source?
+mean(trace.network[end-1000:end])[1,!isnan(obs.infectious)]

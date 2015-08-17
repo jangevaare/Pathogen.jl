@@ -137,9 +137,9 @@ type SEIR_priors{T<:UnivariateDistribution}
   """
   α::T
   β::T
+  η::T
   ρ::T
   γ::T
-  η::T
   ν::T
 end
 
@@ -149,9 +149,9 @@ type SEIR_trace
   """
   α::Vector{Float64}
   β::Vector{Float64}
+  η::Vector{Float64}
   ρ::Vector{Float64}
   γ::Vector{Float64}
-  η::Vector{Float64}
   ν::Vector{Float64}
   aug::Vector{SEIR_augmented}
   network::Vector{Array{Bool}}
