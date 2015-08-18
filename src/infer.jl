@@ -8,7 +8,6 @@ function SEIR_surveilance(population::Population, ν::Float64)
   """
   Gather surveillance data on specific individuals in a population, with an exponentially distributed detection lag with rate ν
   """
-  @assert(0. < ν, "ν, the detection rate parameter must be greater than 0")
   exposed_actual = fill(NaN, length(population.events)-1)
   infectious_actual = fill(NaN, length(population.events)-1)
   infectious_observed = fill(NaN, length(population.events)-1)
@@ -33,7 +32,12 @@ function SEIR_surveilance(population::Population, ν::Float64)
     if length(population.events[i][3]) > 0
       infectious_actual[i-1] = population.events[i][3][1]
       seq_actual[i-1] = population.history[i][2][find(infectious_actual[i-1] .>= population.events[i][6])[end]]
-      infectious_observed[i-1] = infectious_actual[i-1] + rand(Exponential(1/ν))
+      if 0 < ν < Inf
+        infectious_observed[i-1] = infectious_actual[i-1] + rand(Exponential(1/ν))
+      elseif ν == Inf
+        infectious_observed[i-1] = infectious_actual[i-1]
+      end
+
       if length(population.events[i][4]) > 0 && infectious_observed[i-1] >= population.events[i][4][1]
         infectious_observed[i-1] = NaN
       else
@@ -45,7 +49,11 @@ function SEIR_surveilance(population::Population, ν::Float64)
     if length(population.events[i][4]) > 0
       removed_actual[i-1] = population.events[i][4][1]
       if !isnan(infectious_observed[i-1])
-        removed_observed[i-1] = removed_actual[i-1] + rand(Exponential(1/ν))
+        if 0 < ν < Inf
+          removed_observed[i-1] = removed_actual[i-1] + rand(Exponential(1/ν))
+        elseif ν == Inf
+          removed_observed[i-1] = removed_actual[i-1]
+        end
       end
     end
   end
