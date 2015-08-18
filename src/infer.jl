@@ -32,7 +32,7 @@ function SEIR_surveilance(population::Population, ν::Float64)
     if length(population.events[i][3]) > 0
       infectious_actual[i-1] = population.events[i][3][1]
       seq_actual[i-1] = population.history[i][2][find(infectious_actual[i-1] .>= population.events[i][6])[end]]
-      if 0 < ν < Inf
+      if ν < Inf
         infectious_observed[i-1] = infectious_actual[i-1] + rand(Exponential(1/ν))
       elseif ν == Inf
         infectious_observed[i-1] = infectious_actual[i-1]
@@ -49,7 +49,7 @@ function SEIR_surveilance(population::Population, ν::Float64)
     if length(population.events[i][4]) > 0
       removed_actual[i-1] = population.events[i][4][1]
       if !isnan(infectious_observed[i-1])
-        if 0 < ν < Inf
+        if ν < Inf
           removed_observed[i-1] = removed_actual[i-1] + rand(Exponential(1/ν))
         elseif ν == Inf
           removed_observed[i-1] = removed_actual[i-1]
@@ -69,10 +69,18 @@ function SEIR_augmentation(ρ::Float64, ν::Float64, obs::SEIR_observed)
   removed_augmented = fill(NaN, length(obs.removed))
   for i = 1:length(obs.infectious)
     if !isnan(obs.infectious[i])
-      infectious_augmented[i] = obs.infectious[i] - rand(Exponential(1/ν))
+      if ν < Inf
+        infectious_augmented[i] = obs.infectious[i] - rand(Exponential(1/ν))
+      elseif ν == Inf
+        infectious_augmented[i] = obs.infectious[i]
+      end
       exposed_augmented[i] = infectious_augmented[i] - rand(Exponential(1/ρ))
       if !isnan(obs.removed[i])
-        removed_augmented[i] = obs.removed[i] - rand(Truncated(Exponential(1/ν), -Inf, obs.removed[i] - obs.infectious[i]))
+        if ν < Inf
+          removed_augmented[i] = obs.removed[i] - rand(Truncated(Exponential(1/ν), -Inf, obs.removed[i] - obs.infectious[i]))
+        elseif ν == Inf
+          removed_augmented[i] = obs.removed[i]
+        end
       end
     end
   end
