@@ -225,7 +225,15 @@ function SEIR_MCMC(n::Int64, transition_cov::Array{Float64}, trace::SEIR_trace, 
   ν: detection rate (1/mean detection lag)
   """
   @assert(size(transition_cov) == (6,6), "transition_cov must be a 6x6 matrix")
+
   for i = 1:n
+
+    # Create and incremenet progress bar
+    if i == 1
+      progressbar = Progress(n, 5, "Iteration $i of $n", 30)
+    else
+      next!(progressbar)
+    end
 
     # Only generate valid proposals
     proposal = [trace.α[end], trace.β[end], trace.η[end], trace.ρ[end], trace.γ[end], trace.ν[end]] .+ rand(MvNormal(transition_cov))
