@@ -51,16 +51,16 @@ priors = SEIR_priors(Uniform(0,10), Uniform(0,10), Uniform(0,0.01), Uniform(0,1)
 
 trace = SEIR_initialize(priors, obs)
 
-@time SEIR_MCMC(100000, diagm([0.5, 0.5, 0.5, 0.5, 0.5, 0.5]), trace, priors, obs)
+SEIR_MCMC(100000, diagm([0.5, 0.5, 0.5, 0.5, 0.5, 0.5]), trace, priors, obs)
 
-# Tune the transition kernel's covariance matrix over 200k iterations
-for i = 1:10
+# Tune the transition kernel's covariance matrix over 100k iterations
+for i = 1:100
   opt_cov = cov([trace.α trace.β trace.ρ trace.γ trace.η trace.ν])*(2.38^2)/6.
-  SEIR_MCMC(10000, opt_cov, trace, priors, obs)
+  SEIR_MCMC(1000, opt_cov, trace, priors, obs)
 end
 
 opt_cov = cov([trace.α trace.β trace.ρ trace.γ trace.η trace.ν])*(2.38^2)/6.
-@time SEIR_MCMC(100000, opt_cov, trace, priors, obs)
+SEIR_MCMC(100000, opt_cov, trace, priors, obs)
 
 # Inference visualization
 # Joint trace plots (last 100k iterations)
