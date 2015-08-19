@@ -37,7 +37,18 @@ for time = 1:images
   filenumber *= prod(fill("0", 5-length(filenumber)))
   draw(PNG("SEIR_simulation_$filenumber.png", 15cm, 10cm), p1)
 end
-run(`convert -delay 6 -loop 0 SEIR_simulation_0*.png animated_6ms.gif`)
+
+# Assemble into animation
+run(`convert -delay 6 -loop 0 SEIR_simulation_*.png animated_6ms.gif`)
+
+# Remove frames
+for time = 1:images
+  filenumber = time/images
+  filenumber = prod(split("$filenumber", ".", 2))
+  filenumber *= prod(fill("0", 5-length(filenumber)))
+  rm("SEIR_simulation_$filenumber.png")
+end
+
 
 # Inference
 # α, β: powerlaw exposure kernel parameters
