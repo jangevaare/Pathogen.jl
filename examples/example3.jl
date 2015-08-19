@@ -38,7 +38,7 @@ for time = 1:images
   draw(PNG("SEIR_simulation_$filenumber.png", 15cm, 10cm), p1)
 end
 # Assemble into animation
-run(`convert -delay 6 -loop 0 SEIR_simulation_*.png animated_6ms.gif`)
+run(`convert -delay 6 -loop 0 SEIR_simulation_*.png SEIR_animation.gif`)
 
 # Remove frames
 for time = 1:images
