@@ -52,12 +52,6 @@ priors = SEIR_priors(Uniform(0,10), Uniform(0,10), Uniform(0,0.01), Uniform(0,1)
 
 trace = SEIR_initialize(priors, obs)
 
-logpdf(Uniform(0,Inf), Inf)
-
-rand(priors.ν)
-
-trace.logposterior
-
 SEIR_MCMC(100000, diagm([0.5, 0.5, 0.5, 0.5, 0.5, 0.5]), trace, priors, obs)
 
 # Tune the transition kernel's covariance matrix over 100k iterations
