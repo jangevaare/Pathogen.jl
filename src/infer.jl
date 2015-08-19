@@ -185,7 +185,11 @@ function SEIR_logprior(priors::SEIR_priors, α::Float64, β::Float64, η::Float6
   """
   Calculate the logprior from prior distributions defined in `SEIR_priors` and specific parameter values
   """
-  return logpdf(priors.α, α) + logpdf(priors.β, β) + logpdf(priors.η, η) + logpdf(priors.ρ, ρ) + logpdf(priors.γ, γ)  + logpdf(priors.ν, ν)
+  if ν < Inf
+    return logpdf(priors.α, α) + logpdf(priors.β, β) + logpdf(priors.η, η) + logpdf(priors.ρ, ρ) + logpdf(priors.γ, γ)  + logpdf(priors.ν, ν)
+  elseif ν == Inf
+    return logpdf(priors.α, α) + logpdf(priors.β, β) + logpdf(priors.η, η) + logpdf(priors.ρ, ρ) + logpdf(priors.γ, γ)
+  end
 end
 
 function SEIR_initialize(priors::SEIR_priors, obs::SEIR_observed, dist=Euclidean())
