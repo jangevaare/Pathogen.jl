@@ -37,6 +37,7 @@ for time = 1:images
   filenumber *= prod(fill("0", 5-length(filenumber)))
   draw(PNG("SEIR_simulation_$filenumber.png", 15cm, 10cm), p1)
 end
+run(`convert -delay 6 -loop 0 SEIR_simulation_0*.png animated_6ms.gif`)
 
 # Inference
 # α, β: powerlaw exposure kernel parameters
@@ -51,6 +52,12 @@ priors = SEIR_priors(Uniform(0,10), Uniform(0,10), Uniform(0,0.01), Uniform(0,1)
 
 trace = SEIR_initialize(priors, obs)
 
+logpdf(Uniform(0,Inf), Inf)
+
+rand(priors.ν)
+
+trace.logposterior
+
 SEIR_MCMC(100000, diagm([0.5, 0.5, 0.5, 0.5, 0.5, 0.5]), trace, priors, obs)
 
 # Tune the transition kernel's covariance matrix over 100k iterations
@@ -61,6 +68,9 @@ end
 
 opt_cov = cov([trace.α trace.β trace.ρ trace.γ trace.η trace.ν])*(2.38^2)/6.
 SEIR_MCMC(100000, opt_cov, trace, priors, obs)
+
+
+plot(x=1:100000, y=trace.logposterior, Geom.line)
 
 # Inference visualization
 # Joint trace plots (last 100k iterations)
