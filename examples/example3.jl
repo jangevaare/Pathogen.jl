@@ -37,8 +37,9 @@ for time = 1:images
   filenumber *= prod(fill("0", 5-length(filenumber)))
   draw(PNG("SEIR_simulation_$filenumber.png", 15cm, 10cm), p1)
 end
+
 # Assemble into animation
-run(`convert -delay 6 -loop 0 SEIR_simulation_*.png SEIR_animation.gif`)
+run(`convert -delay 6 -loop 0 -layers optimize SEIR_simulation_*.png SEIR_animation.gif`)
 
 # Remove frames
 for time = 1:images
@@ -61,7 +62,6 @@ priors = SEIR_priors(Uniform(0,10), Uniform(0,10), Uniform(0,0.01), Uniform(0,1)
 
 trace = SEIR_initialize(priors, obs)
 
-SEIR_logprior(priors, 1., 2., 0.05, 0.5, 0.5, Inf)
 SEIR_MCMC(100000, diagm([0.5, 0.5, 0.5, 0.5, 0.5, 0.5]), trace, priors, obs)
 
 # Tune the transition kernel's covariance matrix over 100k iterations
