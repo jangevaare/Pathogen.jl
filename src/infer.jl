@@ -246,9 +246,9 @@ function SEIR_MCMC(n::Int64, transition_cov::Array{Float64}, trace::SEIR_trace, 
 
     # Create and incremenet progress bar
     if i == 1
-      progressbar = Progress(n, 5, "Iteration $i of $n", 30)
+      progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 30)
     else
-      next!(progressbar)
+      update!(progressbar, i)
     end
 
     # Only generate valid proposals
