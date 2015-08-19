@@ -35,6 +35,7 @@ export
   SEIR_surveilance,
   SEIR_augmentation,
   SEIR_loglikelihood,
+  SEIR_logprior,
   SEIR_initialize,
   SEIR_MCMC,
   create_tree,

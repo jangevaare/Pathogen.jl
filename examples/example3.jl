@@ -63,7 +63,6 @@ end
 opt_cov = cov([trace.α trace.β trace.ρ trace.γ trace.η trace.ν])*(2.38^2)/6.
 SEIR_MCMC(100000, opt_cov, trace, priors, obs)
 
-
 plot(x=1:100000, y=trace.logposterior, Geom.line)
 
 # Inference visualization
