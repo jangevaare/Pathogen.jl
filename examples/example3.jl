@@ -135,7 +135,7 @@ draw(PNG("SEIR_gamma_hist.png", 20cm, 15cm),
                 background_color=color("white"))))
 
 # Of those infected, what is the posterior probability of being exposed from external source (last 100k iterations)
-network_posterior = mean(trace.network[end-1000:end])
+network_posterior = mean(trace.network[end-100000:end])
 
 y, x, z = findnz(network_posterior)
 df = DataFrame(x=x, y=y, z=z)
