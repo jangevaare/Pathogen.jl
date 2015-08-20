@@ -25,30 +25,6 @@ ratearray = create_ratearray(pop, powerlaw, substitution)
   onestep!(ratearray, pop, powerlaw, latency, recovery, substitution)
 end
 
-# Simulation visualization
-images = 1000
-for time = 1:images
-  states, routes = plotdata(pop, (time*pop.timeline[1][end])/images)
-  p1 = plot(layer(states, x="x", y="y", color="state", Geom.point),
-            layer(routes, x="x", y="y", group="age", Geom.polygon),
-            Theme(panel_opacity=1., panel_fill=color("white"), default_color=color("black"), background_color=color("white")))
-  filenumber = time/images
-  filenumber = prod(split("$filenumber", ".", 2))
-  filenumber *= prod(fill("0", 5-length(filenumber)))
-  draw(PNG("SEIR_simulation_$filenumber.png", 15cm, 10cm), p1)
-end
-
-# Assemble into animation
-run(`convert -delay 6 -loop 0 -layers optimize SEIR_simulation_*.png SEIR_animation.gif`)
-
-# Remove frames
-for time = 1:images
-  filenumber = time/images
-  filenumber = prod(split("$filenumber", ".", 2))
-  filenumber *= prod(fill("0", 5-length(filenumber)))
-  rm("SEIR_simulation_$filenumber.png")
-end
-
 # Inference
 # α, β: powerlaw exposure kernel parameters
 # η: external pressure rate
@@ -74,6 +50,30 @@ end
 opt_cov = diagm([0.,0.,0.,0.,0.,1.])
 opt_cov[1:5,1:5] = cov([trace.α trace.β trace.ρ trace.γ trace.η])*(2.38^2)/5.
 SEIR_MCMC(100000, opt_cov, trace, priors, obs)
+
+# Simulation visualization
+images = 1000
+for time = 1:images
+  states, routes = plotdata(pop, (time*pop.timeline[1][end])/images)
+  p1 = plot(layer(states, x="x", y="y", color="state", Geom.point),
+            layer(routes, x="x", y="y", group="age", Geom.polygon),
+            Theme(panel_opacity=1., panel_fill=color("white"), default_color=color("black"), background_color=color("white")))
+  filenumber = time/images
+  filenumber = prod(split("$filenumber", ".", 2))
+  filenumber *= prod(fill("0", 5-length(filenumber)))
+  draw(PNG("SEIR_simulation_$filenumber.png", 15cm, 10cm), p1)
+end
+
+# Assemble into animation
+run(`convert -delay 6 -loop 0 -layers optimize SEIR_simulation_*.png SEIR_animation.gif`)
+
+# Remove frames
+for time = 1:images
+  filenumber = time/images
+  filenumber = prod(split("$filenumber", ".", 2))
+  filenumber *= prod(fill("0", 5-length(filenumber)))
+  rm("SEIR_simulation_$filenumber.png")
+end
 
 # Inference visualization
 # Joint trace plots (last 100k iterations)
