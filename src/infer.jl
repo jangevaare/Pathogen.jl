@@ -136,7 +136,7 @@ function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, 
       network[:, id[1]] = rand(Multinomial(1, rate_array[1:(length(obs.covariates)+1), id[1]]./sum(rate_array[1:(length(obs.covariates)+1), id[1]])))
       # Update rate array (exposure rates, latent period)
       rate_array[:, id[1]] = 0.
-      rate_array[size(rate_array,2) + 1, id[1]] = ρ
+      rate_array[1 + size(rate_array, 2) + 1, id[1]] = ρ
 
     # Infectiousness event
     elseif id[2] == 2
@@ -147,15 +147,15 @@ function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, 
       for j = 1:size(rate_array, 2)
         if j != id[1] && rate_array[1, j] != 0.
           rate_array[id[1] + 1, j] = α*evaluate(dist, obs.covariates[id[1]], obs.covariates[j])^-β
-        else
-          rate_array[id[1] + 1, j] = 0.
+#         else
+#           rate_array[id[1] + 1, j] = 0.
         end
       end
 
     # Removal event
     elseif id[2] == 3
-      # Update rate_array for recovery & exposure
-      rate_array[id[1] + 1,:] = 0.
+      # Update rate_array for exposure & removal
+      rate_array[id[1] + 1, :] = 0.
       rate_array[1 + size(rate_array,2) + 2, id[1]] = 0.
     end
 
@@ -190,7 +190,7 @@ function SEIR_logprior(priors::SEIR_priors, α::Float64, β::Float64, η::Float6
   end
 end
 
-function SEIR_initialize(priors::SEIR_priors, obs::SEIR_observed, dist=Euclidean())
+function SEIR_initialize(priors::SEIR_priors, obs::SEIR_observed, limit=1000::Int, debug=false::Bool, dist=Euclidean())
   """
   Initiate an SEIR_trace object by sampling from specified prior distributions
 
@@ -207,11 +207,11 @@ function SEIR_initialize(priors::SEIR_priors, obs::SEIR_observed, dist=Euclidean
   γ = rand(priors.γ)
   ν = rand(priors.ν)
   aug = SEIR_augmentation(ρ, ν, obs)
-  ll, network = SEIR_loglikelihood(α, β, η, ρ, γ, ν, aug, obs, dist)
+  ll, network = SEIR_loglikelihood(α, β, η, ρ, γ, ν, aug, obs, dist, debug)
   count = 1
 
   # Retry initialization until non-negative infinity loglikelihood
-  while ll == -Inf && count < 1000
+  while ll == -Inf && count < limit
     count += 1
     α = rand(priors.α)
     β = rand(priors.β)
@@ -223,7 +223,7 @@ function SEIR_initialize(priors::SEIR_priors, obs::SEIR_observed, dist=Euclidean
     ll, network = SEIR_loglikelihood(α, β, η, ρ, γ, ν, aug, obs, dist)
   end
 
-  if count < 1000
+  if count < limit
     print("Successfully initialized on attempt $count")
     logposterior = ll + SEIR_logprior(priors, α, β, η, ρ, γ, ν)
     return SEIR_trace([α], [β], [η], [ρ], [γ], [ν], [aug], Array[network], [logposterior])
