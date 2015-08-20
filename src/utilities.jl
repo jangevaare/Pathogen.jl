@@ -57,6 +57,23 @@ function findstate(population::Population, individual::Int64, time::Float64)
   end
 end
 
+function findstate(trace::SEIR_trace, iteration::Int64, individual::Int64, time::Float64)
+  """
+  Find the disease state of a specific individual
+  """
+  if isnan(trace.aug[iteration].exposed[individual]) || trace.aug[iteration].exposed[individual] > time
+    return "S"
+  elseif trace.aug[iteration].exposed[individual] < time && isnan(trace.aug[iteration].infectious[individual]) || trace.aug[iteration].infectious[individual] > time
+    return "E"
+  elseif trace.aug[iteration].infectious[individual] < time && isnan(trace.aug[iteration].removed[individual]) || trace.aug[iteration].removed[individual] > time
+    return "I"
+  elseif trace.aug[iteration].removed[individual] < time
+    return "R"
+  else
+    return "unknown"
+  end
+end
+
 function plotdata(population::Population, time::Float64)
   """
   Create dataframes with all necessary plotting information
@@ -71,6 +88,26 @@ function plotdata(population::Population, time::Float64)
       if source > 1
         routes = vcat(routes, DataFrame(x = population.history[i][1][find(time .> population.events[i][5])[end]][1], y = population.history[i][1][find(time .> population.events[i][5])[end]][2], age = "$age"))
         routes = vcat(routes, DataFrame(x = population.history[source][1][find(time .> population.events[source][5])[end]][1], y = population.history[source][1][find(time .> population.events[source][5])[end]][2], age = "$age"))
+      end
+    end
+  end
+  return states, routes
+end
+
+function plotdata(obs::SEIR_observed, trace::SEIR_trace, iteration::Int64, time::Float64)
+  """
+  Create dataframes with all necessary plotting information
+  """
+  states = DataFrame(id = fill(NaN,4), x = fill(NaN,4), y = fill(NaN,4), state = ["S", "E", "I", "R"])
+  routes = DataFrame(x = Float64[], y = Float64[], age = Float64[])
+  for i = 1:length(obs.exposed)
+    states = vcat(states, DataFrame(x = obs.covariates[i][1], y = obs.covariates[i][2], state = findstate(trace::SEIR_trace, iteration, i, time)))
+    if states[:state] != "S"
+      source = findfirst(trace.network[iteration][:,i])
+      age = time - trace.aug[iteration].exposed[i]
+        if source > 1
+        routes = vcat(routes, DataFrame(x = obs.covariates[i][1], y = obs.covariates[i][2], age = "$age"))
+        routes = vcat(routes, DataFrame(x = obs.covariates[source][1], y = obs.covariates[source][2], age = "$age"))
       end
     end
   end
