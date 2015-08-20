@@ -133,29 +133,27 @@ function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, 
     # Exposure event
     if id[2] == 1
       # Generate a exposure source based on disease pressures at time of exposure
-      network[1:(length(obs.covariates)+1), id[1]] = rand(Multinomial(1, rate_array[1:(length(obs.covariates)+1), id[1]]./sum(rate_array[1:(length(obs.covariates)+1), id[1]])))
+      network[:, id[1]] = rand(Multinomial(1, rate_array[1:(length(obs.covariates)+1), id[1]]./sum(rate_array[1:(length(obs.covariates)+1), id[1]])))
       # Update rate array (exposure rates, latent period)
       rate_array[:, id[1]] = 0.
       rate_array[size(rate_array,2) + 1, id[1]] = ρ
-    end
 
     # Infectiousness event
-    if id[2] == 2
+    elseif id[2] == 2
       # Update rate_array for latent and infectious periods
       rate_array[1 + size(rate_array, 2) + 1, id[1]] = 0.
       rate_array[1 + size(rate_array, 2) + 2, id[1]] = γ
-      # Update exposure rates for rest of population
-      for j = size(rate_array, 2)
-        if j != id[1]
+      # Update exposure rates for rest of susceptible population
+      for j = 1:size(rate_array, 2)
+        if j != id[1] && rate_array[1, j] != 0.
           rate_array[id[1] + 1, j] = α*evaluate(dist, obs.covariates[id[1]], obs.covariates[j])^-β
         else
           rate_array[id[1] + 1, j] = 0.
         end
       end
-    end
 
-    # Recovery event
-    if id[2] == 3
+    # Removal event
+    elseif id[2] == 3
       # Update rate_array for recovery & exposure
       rate_array[id[1] + 1,:] = 0.
       rate_array[1 + size(rate_array,2) + 2, id[1]] = 0.
@@ -168,7 +166,7 @@ function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, 
       elseif id[2] == 2
         print("Event $i (infection of individual $(id[1])) caused loglikelihood to go to -Inf")
       elseif id[2] == 3
-        print("Event $i (recovery of individual $(id[1])) caused loglikelihood to go to -Inf")
+        print("Event $i (removal of individual $(id[1])) caused loglikelihood to go to -Inf")
       end
     end
 

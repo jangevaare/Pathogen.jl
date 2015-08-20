@@ -14,10 +14,10 @@ init_var = rand(Uniform(0,25), (2,200))
 
 pop = create_population(init_seq, init_var)
 
-powerlaw = create_powerlaw(4., 5., 0.002)
+powerlaw = create_powerlaw(4., 5., 0.001)
 latency = create_constantrate(1/3.)
 recovery = create_constantrate(1/5.)
-substitution = jc69((0.1,))
+substitution = jc69((0.01,))
 
 ratearray = create_ratearray(pop, powerlaw, substitution)
 
@@ -77,7 +77,7 @@ SEIR_MCMC(100000, opt_cov, trace, priors, obs)
 
 # Inference visualization
 # Joint trace plots (last 100k iterations)
-plotdf = DataFrame(iteration = rep(1:100000,6), value = [trace.α[end-99999:end], trace.β[end-99999:end], trace.η[end-99999:end], trace.ρ[end-99999:end], trace.γ[end-99999:end]], parameter = [rep("α",100000),rep("β",100000),rep("η",100000),rep("ρ",100000),rep("γ",100000)])
+plotdf = DataFrame(iteration = rep(1:100000,5), value = [trace.α[end-99999:end], trace.β[end-99999:end], trace.η[end-99999:end], trace.ρ[end-99999:end], trace.γ[end-99999:end]], parameter = [rep("α",100000),rep("β",100000),rep("η",100000),rep("ρ",100000),rep("γ",100000)])
 
 draw(PNG("SEIR_traceplot.png", 20cm, 15cm),
      plot(plotdf,
