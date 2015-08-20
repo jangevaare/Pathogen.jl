@@ -66,14 +66,14 @@ SEIR_MCMC(100000, diagm([0.5, 0.5, 0.5, 0.5, 0.5, 0.5]), trace, priors, obs)
 
 # Tune the transition kernel's covariance matrix over 100k iterations
 for i = 1:100
-  opt_cov = cov([trace.α trace.β trace.ρ trace.γ trace.η trace.ν])*(2.38^2)/6.
+  opt_cov = diagm([0.,0.,0.,0.,0.,1.])
+  opt_cov[1:5,1:5] = cov([trace.α trace.β trace.ρ trace.γ trace.η])*(2.38^2)/5.
   SEIR_MCMC(1000, opt_cov, trace, priors, obs)
 end
 
-opt_cov = cov([trace.α trace.β trace.ρ trace.γ trace.η trace.ν])*(2.38^2)/6.
+opt_cov = diagm([0.,0.,0.,0.,0.,1.])
+opt_cov[1:5,1:5] = cov([trace.α trace.β trace.ρ trace.γ trace.η])*(2.38^2)/5.
 SEIR_MCMC(100000, opt_cov, trace, priors, obs)
-
-plot(x=1:100000, y=trace.logposterior, Geom.line)
 
 # Inference visualization
 # Joint trace plots (last 100k iterations)
@@ -84,6 +84,15 @@ draw(PNG("SEIR_traceplot.png", 20cm, 15cm),
           x="iteration",
           y="value",
           color="parameter",
+          Geom.line,
+          Theme(panel_opacity=1.,
+                panel_fill=color("white"),
+                background_color=color("white"))))
+
+# logposterior plot (last 100k iterations)
+draw(PNG("SEIR_logposterior.png", 20cm, 15cm),
+     plot(x=1:100000,
+          y=trace.logposterior[end-99999:end]
           Geom.line,
           Theme(panel_opacity=1.,
                 panel_fill=color("white"),

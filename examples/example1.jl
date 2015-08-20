@@ -88,6 +88,15 @@ draw(PNG("SEIR_traceplot.png", 20cm, 15cm),
                 panel_fill=color("white"),
                 background_color=color("white"))))
 
+# logposterior plot (last 100k iterations)
+draw(PNG("SEIR_logposterior.png", 20cm, 15cm),
+     plot(x=1:100000,
+          y=trace.logposterior[end-99999:end]
+          Geom.line,
+          Theme(panel_opacity=1.,
+                panel_fill=color("white"),
+                background_color=color("white"))))
+
 # Posterior distribution histograms (last 100k iterations)
 draw(PNG("SEIR_alpha_hist.png", 20cm, 15cm),
      plot(x=trace.α[end-99999:end],
