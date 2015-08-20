@@ -58,7 +58,7 @@ end
 
 actual, obs = SEIR_surveilance(pop, Inf)
 
-priors = SEIR_priors(Uniform(0,10), Uniform(0,10), Uniform(0,0.01), Uniform(0,1), Uniform(0,1), Uniform(0,Inf))
+priors = SEIR_priors(Uniform(0,10), Uniform(0,10), Uniform(0,0.005), Uniform(0,1), Uniform(0,1), Uniform(0,Inf))
 
 trace = SEIR_initialize(priors, obs)
 
@@ -77,7 +77,7 @@ SEIR_MCMC(100000, opt_cov, trace, priors, obs)
 
 # Inference visualization
 # Joint trace plots (last 100k iterations)
-plotdf = DataFrame(iteration = rep(1:100000,6), value = [trace.α[end-99999:end], trace.β[end-99999:end], trace.η[end-99999:end], trace.ρ[end-99999:end], trace.γ[end-99999:end], trace.ν[end-99999:end]], parameter = [rep("α",100000),rep("β",100000),rep("η",100000),rep("ρ",100000),rep("γ",100000),rep("ν",100000)])
+plotdf = DataFrame(iteration = rep(1:100000,6), value = [trace.α[end-99999:end], trace.β[end-99999:end], trace.η[end-99999:end], trace.ρ[end-99999:end], trace.γ[end-99999:end]], parameter = [rep("α",100000),rep("β",100000),rep("η",100000),rep("ρ",100000),rep("γ",100000)])
 
 draw(PNG("SEIR_traceplot.png", 20cm, 15cm),
      plot(plotdf,
@@ -92,7 +92,7 @@ draw(PNG("SEIR_traceplot.png", 20cm, 15cm),
 # logposterior plot (last 100k iterations)
 draw(PNG("SEIR_logposterior.png", 20cm, 15cm),
      plot(x=1:100000,
-          y=trace.logposterior[end-99999:end]
+          y=trace.logposterior[end-99999:end],
           Geom.line,
           Theme(panel_opacity=1.,
                 panel_fill=color("white"),
@@ -134,15 +134,8 @@ draw(PNG("SEIR_gamma_hist.png", 20cm, 15cm),
                 panel_fill=color("white"),
                 background_color=color("white"))))
 
-draw(PNG("SEIR_nu_hist.png", 20cm, 15cm),
-     plot(x=trace.ν[end-99999:end],
-          Geom.histogram,
-          Theme(panel_opacity=1.,
-                panel_fill=color("white"),
-                background_color=color("white"))))
-
 # Of those infected, what is the posterior probability of being exposed from external source (last 100k iterations)
-network_posterior = mean(trace.network[end-100000:end])
+network_posterior = mean(trace.network[end-1000:end])
 
 y, x, z = findnz(network_posterior)
 df = DataFrame(x=x, y=y, z=z)

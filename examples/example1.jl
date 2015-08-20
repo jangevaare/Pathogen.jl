@@ -59,7 +59,7 @@ end
 
 actual, obs = SEIR_surveilance(pop, 2.)
 
-priors = SEIR_priors(Uniform(0,10), Uniform(0,10), Uniform(0,0.01), Uniform(0,1), Uniform(0,1), Uniform(0.5,3))
+priors = SEIR_priors(Uniform(0,10), Uniform(0,10), Uniform(0,0.005), Uniform(0,1), Uniform(0,1), Uniform(1,3))
 
 trace = SEIR_initialize(priors, obs)
 
@@ -91,7 +91,7 @@ draw(PNG("SEIR_traceplot.png", 20cm, 15cm),
 # logposterior plot (last 100k iterations)
 draw(PNG("SEIR_logposterior.png", 20cm, 15cm),
      plot(x=1:100000,
-          y=trace.logposterior[end-99999:end]
+          y=trace.logposterior[end-99999:end],
           Geom.line,
           Theme(panel_opacity=1.,
                 panel_fill=color("white"),
