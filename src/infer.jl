@@ -232,7 +232,7 @@ function SEIR_initialize(priors::SEIR_priors, obs::SEIR_observed, limit=1000::In
   end
 end
 
-function SEIR_MCMC(n::Int64, transition_cov::Array{Float64}, trace::SEIR_trace, priors::SEIR_priors, obs::SEIR_observed, dist=Euclidean())
+function SEIR_MCMC(n::Int64, transition_cov::Array{Float64}, trace::SEIR_trace, priors::SEIR_priors, obs::SEIR_observed, progress=true::Bool, dist=Euclidean())
   """
   Performs `n` data-augmented metropolis hastings MCMC iterations. Initiates a single chain by sampling from prior distribution
 
@@ -247,10 +247,12 @@ function SEIR_MCMC(n::Int64, transition_cov::Array{Float64}, trace::SEIR_trace, 
   for i = 1:n
 
     # Create and incremenet progress bar
-    if i == 1
-      progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 30)
-    else
-      next!(progressbar)
+    if progress
+      if i == 1
+        progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 30)
+      else
+        next!(progressbar)
+      end
     end
 
     # Only generate valid proposals

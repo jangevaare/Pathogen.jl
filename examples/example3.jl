@@ -40,11 +40,23 @@ trace = SEIR_initialize(priors, obs)
 
 SEIR_MCMC(100000, diagm([0.5, 0.5, 0.5, 0.5, 0.5, 0.5]), trace, priors, obs)
 
-# Tune the transition kernel's covariance matrix over 100k iterations
-for i = 1:100
+# Tune the transition kernel's covariance matrix over 200k iterations
+n=200
+for i = 1:n
+
+  # Progress bar
+  if i == 1
+    progressbar = Progress(n, 5, "Performing $n tuning MCMC stages...", 30)
+  else
+    next!(progressbar)
+  end
+
+  # Tune transition matrix
   opt_cov = diagm([0.,0.,0.,0.,0.,1.])
   opt_cov[1:5,1:5] = cov([trace.α trace.β trace.ρ trace.γ trace.η])*(2.38^2)/5.
-  SEIR_MCMC(1000, opt_cov, trace, priors, obs)
+
+  # Perform 1000 MCMC iterations
+  SEIR_MCMC(1000, opt_cov, trace, priors, obs, false)
 end
 
 opt_cov = diagm([0.,0.,0.,0.,0.,1.])

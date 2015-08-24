@@ -14,14 +14,14 @@ init_var = rand(Uniform(0,25), (2,200))
 
 pop = create_population(init_seq, init_var)
 
-powerlaw = create_powerlaw(4., 5., 0.002)
+powerlaw = create_powerlaw(4., 5., 0.001)
 latency = create_constantrate(1/3.)
 recovery = create_constantrate(1/5.)
 substitution = jc69((0.1,))
 
 ratearray = create_ratearray(pop, powerlaw, substitution)
 
-@time while length(pop.timeline[1]) < 30000.
+@time while length(pop.timeline[1]) < 20000.
   onestep!(ratearray, pop, powerlaw, latency, recovery, substitution)
 end
 
@@ -34,16 +34,28 @@ end
 
 actual, obs = SEIR_surveilance(pop, 2.)
 
-priors = SEIR_priors(Uniform(0,10), Uniform(0,10), Uniform(0,0.005), Uniform(0,1), Uniform(0,1), Uniform(1,3))
+priors = SEIR_priors(Uniform(0,10), Uniform(0,10), Uniform(0,0.01), Uniform(0,1), Uniform(0,1), Uniform(1,3))
 
 trace = SEIR_initialize(priors, obs)
 
 SEIR_MCMC(100000, diagm([0.5, 0.5, 0.5, 0.5, 0.5, 0.5]), trace, priors, obs)
 
-# Tune the transition kernel's covariance matrix over 100k iterations
-for i = 1:100
+# Tune the transition kernel's covariance matrix over 200k iterations
+n=200
+for i = 1:n
+
+  # Progress bar
+  if i == 1
+    progressbar = Progress(n, 5, "Performing $n tuning MCMC stages...", 30)
+  else
+    next!(progressbar)
+  end
+
+  # Tune transition matrix
   opt_cov = cov([trace.α trace.β trace.ρ trace.γ trace.η trace.ν])*(2.38^2)/6.
-  SEIR_MCMC(1000, opt_cov, trace, priors, obs)
+
+  # Perform 1000 MCMC iterations
+  SEIR_MCMC(1000, opt_cov, trace, priors, obs, false)
 end
 
 opt_cov = cov([trace.α trace.β trace.ρ trace.γ trace.η trace.ν])*(2.38^2)/6.
@@ -63,7 +75,7 @@ for time = 1:images
 end
 
 # Assemble into animation
-run(`convert -delay 6 -loop 0 -layers optimize SEIR_simulation_*.png SEIR_animation.gif`)
+run(`convert -delay 5 -loop 0 -layers optimize SEIR_simulation_*.png SEIR_animation.gif`)
 
 # Remove frames
 for time = 1:images
