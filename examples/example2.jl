@@ -4,7 +4,7 @@ SEIR simulation, visualization, and inference
 Justin Angevaare
 """
 
-using Pathogen, Gadfly, DataFrames, Distributions
+using Pathogen, Gadfly, DataFrames, Distributions, ProgressMeter
 
 cd("Desktop/example2")
 
@@ -40,8 +40,8 @@ trace = SEIR_initialize(priors, obs)
 
 SEIR_MCMC(100000, diagm([0.5, 0.5, 0.5, 0.5, 0.5, 0.5]), trace, priors, obs)
 
-# Tune the transition kernel's covariance matrix over 200k iterations
-n=200
+# Tune the transition kernel's covariance matrix over 300k iterations
+n = 300
 for i = 1:n
 
   # Progress bar
