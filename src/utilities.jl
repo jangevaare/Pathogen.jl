@@ -5,6 +5,7 @@ Justin Angevaare
 """
 
 import Base.convert
+import Base.maximum
 
 function convert(::Type{Vector{Int64}}, x::Nucleotide2bitSeq)
   """
@@ -112,4 +113,11 @@ function plotdata(obs::SEIR_observed, trace::SEIR_trace, iteration::Int64, time:
     end
   end
   return states, routes
+end
+
+function maximum(aug::SEIR_augmented)
+  """
+  Find maximum augmented event time
+  """
+  return maximum([aug.exposed aug.infectious aug.removed])
 end

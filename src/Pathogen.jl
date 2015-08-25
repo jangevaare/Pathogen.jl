@@ -19,6 +19,7 @@ export
   findstate,
   plotdata,
   convert,
+  maximum,
 
   # substitute.jl
   jc69,
