@@ -20,7 +20,7 @@ export
   convert,
   maximum,
 
-  # substitute.jl
+  # mutate.jl
   jc69,
 
   # simulate.jl
@@ -44,7 +44,7 @@ export
 
 include("types.jl")
 include("utilities.jl")
-include("substitute.jl")
+include("mutate.jl")
 include("simulate.jl")
 include("infer.jl")
 
