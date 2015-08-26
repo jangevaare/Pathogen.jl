@@ -1,7 +1,5 @@
 """
-simulate.jl - pathogen evolution and transmission dynamic simulation tools
-Justin Angevaare
-May 2015
+simulate.jl
 """
 
 function create_seq(n::Int, π_A::Float64, π_T::Float64, π_C::Float64, π_G::Float64)

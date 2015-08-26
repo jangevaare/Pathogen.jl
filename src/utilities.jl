@@ -1,7 +1,5 @@
 """
 utilities.jl
-basic utilities required by Pathogen.jl
-Justin Angevaare
 """
 
 import Base.convert

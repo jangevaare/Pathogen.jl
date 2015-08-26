@@ -1,6 +1,5 @@
 """
 types.jl
-Justin Angevaare
 """
 
 import Base.display
