@@ -52,7 +52,9 @@ type SEIR_augmented
   removed::Vector{Float64}
 end
 
-type SEIR_priors{T<:UnivariateDistribution}
+abstract Priors
+
+type SEIR_priors{T<:UnivariateDistribution} <: Priors
   """
   Prior distributions for SEIR model inference
   """
@@ -64,7 +66,7 @@ type SEIR_priors{T<:UnivariateDistribution}
   ν::T
 end
 
-type PhyloSEIR_priors{T<:UnivariateDistribution}
+type PhyloSEIR_priors{T<:UnivariateDistribution} <: Priors
   """
   Prior distributions for SEIR model inference
   """
@@ -77,7 +79,9 @@ type PhyloSEIR_priors{T<:UnivariateDistribution}
   mutation::Tuple{T}
 end
 
-type SEIR_trace
+abstract Trace
+
+type SEIR_trace <: Trace
   """
   Contains an MCMC trace object
   """
@@ -92,7 +96,7 @@ type SEIR_trace
   logposterior::Vector{Float64}
 end
 
-type PhyloSEIR_trace
+type PhyloSEIR_trace <: Trace
   """
   Contains an MCMC trace object
   """

@@ -38,9 +38,8 @@ export
   SEIR_logprior,
   SEIR_initialize,
   SEIR_MCMC,
-  create_tree,
-  seqdistance,
-  branchloglikelihood
+  seq_distances,
+  seq_loglikelihood
 
 include("types.jl")
 include("utilities.jl")

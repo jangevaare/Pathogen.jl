@@ -308,56 +308,50 @@ function SEIR_MCMC(n::Int64, transition_cov::Array{Float64}, trace::SEIR_trace, 
   return trace
 end
 
-function create_tree(sequences::Vector{Nucleotide2bitSeq}, times::Vector{Float64})
+function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, network::Array)
   """
-  Generate a phylogenetic tree based on sample times and sequences
-  To do: update to utilize SEIR_events
+  For a given transmission network, find the time between the pathogen sequences between every individuals i and j
   """
-  @assert(length(sequences)==length(times), "There must be one sample time for each sequence")
-  @assert(length(sequences)>2, "There must be at least 3 samples")
-  # root
-  vertices = TreeVertex()
-  # nodes
-  for i = 1:(length(sequences) - 2)
-    push!(vertices, TreeVertex(minimum(times)))
+  infected = find(!isnan(obs.infectious[i]))
+  pathway = infected[1]
+  while pathway[end] != 0
+    push!(pathway, findfirst(network[:,pathway[end]])-1)
   end
-  # leaves
-  for i = 1:length(sequences)
-    push!(vertices, TreeVertex(sequences[i], times[i]))
+  pathways = Vector[pathway]
+
+  for i = 2:length(infected)
+    pathway = infected[i]
+    while pathway[end] != 0
+      push!(pathway, findfirst(network[:,pathway[end]])-1)
+    end
+    push!(pathways, pathway)
   end
-  # Create edges
-  edges = Vector{TreeEdge}
-  for i = 1:length(vertices)
-    for j = 1:length(vertices)
-      if vertices[i].out & vertices[j].in
-        push!(edges, TreeEdge(i, j))
+
+  seq_dist = fill(0., (size(network)[2], size(network)[2]))
+  for i = length(infected)
+    for j = 1:i
+
+      k = 1
+      while pathways[infected[i]][end - k] == pathways[infected[j]][end - k]
+        k += 1
       end
+
+      seq_dist[i,j] += obs.infectious[pathways[infected[i]][1]] - aug.exposed[pathways[infected[i]][end - k]]
+      seq_dist[i,j] += obs.infectious[pathways[infected[j]][1]] - aug.exposed[pathways[infected[j]][end - k]]
+      seq_dist[i,j] += abs(aug.exposed[pathways[infected[j]][end - k]] - aug.exposed[pathways[infected[i]][end - k]])
+
     end
   end
-  return Tree(vertices, edges)
+
+  return seq_dist += transpose(seq_dist)
 end
 
-function seqdistance(ancestor::Nucleotide2bitSeq, descendent::Nucleotide2bitSeq, substitution_matrix::Array)
+function seq_loglikelihood(seq1::Nucleotide2bitSeq, seq2::Nucleotide2bitSeq, branchdistance::Float64, substitution_matrix::Array)
   """
-  Compute the genetic distance between two nucleotide sequences based on a `substitution_matrix`
-  """
-  @assert(length(ancestor) == length(descendent), "Sequences must be equal in length")
-  rate_vector = Float64[]
-  for i = 1:length(ancestor)
-    if ancestor[i] != descendent[i]
-     push!(rate_vector, substitution_matrix[convert(Int64, ancestor[i]), convert(Int64, descendent[i])])
-    end
-  end
-  rate_vector .^= -1
-  return sum(rate_vector)
-end
-
-function branchloglikelihood(seq1::Nucleotide2bitSeq, seq2::Nucleotide2bitSeq, branchdistance::Float64, substitution_matrix::Array)
-  """
-  Log likelihood for any two aligned sequences, a specified distance apart on a phylogenetic tree
+  Log likelihood for any two aligned sequences, a specified time apart on a transmission network
   """
   @assert(length(seq1) == length(seq2), "Sequences not aligned")
-  ll = 0
+  ll = 0.
   for i = 1:length(seq1)
     base1 = convert(Int64, seq1[i])
     for base2 = 1:4
