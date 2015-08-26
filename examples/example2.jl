@@ -21,7 +21,10 @@ substitution = jc69((0.1,))
 
 ratearray = create_ratearray(pop, powerlaw, substitution)
 
-@time while length(pop.timeline[1]) < 100000.
+n = 50000
+progressbar = Progress(n, 5, "Simulating $n events...", 30)
+@time while length(pop.timeline[1]) < n
+  next!(progressbar)
   onestep!(ratearray, pop, powerlaw, latency, recovery, substitution)
 end
 
@@ -61,21 +64,29 @@ end
 opt_cov = cov([trace.α trace.β trace.ρ trace.γ trace.η trace.ν])*(2.38^2)/6.
 SEIR_MCMC(100000, opt_cov, trace, priors, obs)
 
-# Simulation visualization
-images = 1000
+# Simulation/Maximum posteriori visualization
+images = 500
+max_tracelp=findfirst(trace.logposterior.==maximum(trace.logposterior))
+
 for time = 1:images
-  states, routes = plotdata(pop, (time*pop.timeline[1][end])/images)
+  states, routes = plotdata(pop, (time*maximum([maximum(trace.aug[max_tracelp]), pop.timeline[1][end]])/images))
   p1 = plot(layer(states, x="x", y="y", color="state", Geom.point),
             layer(routes, x="x", y="y", group="age", Geom.polygon),
             Theme(panel_opacity=1., panel_fill=color("white"), default_color=color("black"), background_color=color("white")))
+
+  states, routes = plotdata(obs, trace, max_tracelp, (time*maximum([maximum(trace.aug[max_tracelp]), pop.timeline[1][end]])/images))
+  p2 = plot(layer(states, x="x", y="y", color="state", Geom.point),
+            layer(routes, x="x", y="y", group="age", Geom.polygon),
+            Theme(panel_opacity=1., panel_fill=color("white"), default_color=color("black"), background_color=color("white")))
+
   filenumber = time/images
   filenumber = prod(split("$filenumber", ".", 2))
   filenumber *= prod(fill("0", 5-length(filenumber)))
-  draw(PNG("SEIR_simulation_$filenumber.png", 15cm, 10cm), p1)
+  draw(PNG("SEIR_simulation_$filenumber.png", 15cm, 20cm), vstack(p1,p2))
 end
 
 # Assemble into animation
-run(`convert -delay 6 -loop 0 -layers optimize SEIR_simulation_*.png SEIR_animation.gif`)
+run(`convert -delay 10 -loop 0 -layers optimize SEIR_simulation_*.png SEIR_animation_combined.gif`)
 
 # Remove frames
 for time = 1:images

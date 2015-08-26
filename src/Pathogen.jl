@@ -6,14 +6,13 @@ export
   # types.jl
   Population,
   RateArray,
-  Tree,
-  TreeVertex,
-  TreeEdge,
   SEIR_actual,
   SEIR_observed,
   SEIR_augmented,
   SEIR_priors,
   SEIR_trace,
+  PhyloSEIR_priors,
+  PhyloSEIR_trace,
 
   # utilities.jl
   findstate,

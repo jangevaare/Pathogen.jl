@@ -23,84 +23,6 @@ type RateArray
   events::Array
 end
 
-type TreeVertex
-  """
-  Describes a vertex in a phylogenetic tree directed graph
-  in: in degree == 1
-  out: out degree == 2
-  height: vertex height (time units)
-  seq: nucleotide sequence (if known), NaN otherwise
-  """
-  in::Bool
-  out::Bool
-  height::Float64
-  seq
-end
-
-TreeVertex(h::Float64, s::Nucleotide2bitSeq) = TreeVertex(true, false, h, s)
-
-function display(object::TreeVertex)
-  """
-  Display for TreeVertex
-  """
-  if object.in == true
-    if object.out == false
-      println("Leaf @ $(object.height)")
-    else
-      println("Node @ $(object.height)")
-    end
-  else
-    if object.out == true
-      println("Root @ $(object.height)")
-    else
-      error("Invalid TreeVertex")
-    end
-  end
-end
-
-function display(object::Vector{TreeVertex})
-  """
-  Display for TreeVertex
-  """
-  for i = 1:length(object)
-    if object[i].in == true
-      if object[i].out == false
-        print("Leaf ")
-      else
-        print("Node ")
-      end
-    else
-      if object[i].out == true
-        print("Root ")
-      else
-        error("Invalid TreeVertex")
-      end
-    end
-  end
-end
-
-function push!(a::TreeVertex, b::TreeVertex)
-  a = [a, b]
-end
-
-type TreeEdge
-  """
-  Describes an edge in a phylogenetic tree directed graph
-  from: vertex identification
-  to: vertex identification
-  """
-  from::Int64
-  to::Int64
-end
-
-type Tree
-  """
-  All possible phylogenetic trees described by a directed graph
-  """
-  Vertices::Vector{TreeVertex}
-  Edges::Vector{TreeEdge}
-end
-
 type SEIR_actual
   """
   Contains actual event times
@@ -143,6 +65,19 @@ type SEIR_priors{T<:UnivariateDistribution}
   ν::T
 end
 
+type PhyloSEIR_priors{T<:UnivariateDistribution}
+  """
+  Prior distributions for SEIR model inference
+  """
+  α::T
+  β::T
+  η::T
+  ρ::T
+  γ::T
+  ν::T
+  mutation::Tuple{T}
+end
+
 type SEIR_trace
   """
   Contains an MCMC trace object
@@ -153,6 +88,22 @@ type SEIR_trace
   ρ::Vector{Float64}
   γ::Vector{Float64}
   ν::Vector{Float64}
+  aug::Vector{SEIR_augmented}
+  network::Vector{Array{Bool}}
+  logposterior::Vector{Float64}
+end
+
+type PhyloSEIR_trace
+  """
+  Contains an MCMC trace object
+  """
+  α::Vector{Float64}
+  β::Vector{Float64}
+  η::Vector{Float64}
+  ρ::Vector{Float64}
+  γ::Vector{Float64}
+  ν::Vector{Float64}
+  mutation::Array{Float64}
   aug::Vector{SEIR_augmented}
   network::Vector{Array{Bool}}
   logposterior::Vector{Float64}
