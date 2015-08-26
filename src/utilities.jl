@@ -101,7 +101,7 @@ function plotdata(obs::SEIR_observed, trace::SEIR_trace, iteration::Int64, time:
   """
   states = DataFrame(id = fill(NaN,4), x = fill(NaN,4), y = fill(NaN,4), state = ["S", "E", "I", "R"])
   routes = DataFrame(x = Float64[], y = Float64[], age = Float64[])
-  for i = 1:length(obs.exposed)
+  for i = 1:length(obs.infectious)
     states = vcat(states, DataFrame(x = obs.covariates[i][1], y = obs.covariates[i][2], state = findstate(trace::SEIR_trace, iteration, i, time)))
     if states[:state] != "S"
       source = findfirst(trace.network[iteration][:,i])
