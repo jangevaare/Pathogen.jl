@@ -9,19 +9,19 @@ using Pathogen, Gadfly, DataFrames, Distributions, ProgressMeter
 cd("Desktop/example2")
 
 # Simulate
-init_seq = create_seq(500, 0.25, 0.25, 0.25, 0.25)
-init_var = rand(Uniform(0,25), (2,500))
+init_seq = create_seq(400, 0.25, 0.25, 0.25, 0.25)
+init_var = rand(Uniform(0,25), (2,400))
 
 pop = create_population(init_seq, init_var)
 
 powerlaw = create_powerlaw(3., 5., 0.001)
 latency = create_constantrate(1/3.)
 recovery = create_constantrate(1/5.)
-substitution = jc69((0.1,))
+substitution = jc69((0.01,))
 
 ratearray = create_ratearray(pop, powerlaw, substitution)
 
-n = 50000
+n = 30000
 progressbar = Progress(n, 5, "Simulating $n events...", 30)
 @time while length(pop.timeline[1]) < n
   next!(progressbar)

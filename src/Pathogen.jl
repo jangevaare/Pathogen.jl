@@ -9,6 +9,8 @@ export
   SEIR_actual,
   SEIR_observed,
   SEIR_augmented,
+  Trace,
+  Priors,
   SEIR_priors,
   SEIR_trace,
   PhyloSEIR_priors,
