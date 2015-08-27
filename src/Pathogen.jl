@@ -34,7 +34,7 @@ export
   onestep!,
 
   # infer.jl
-  SEIR_surveilance,
+  surveil,
   SEIR_augmentation,
   SEIR_loglikelihood,
   SEIR_logprior,

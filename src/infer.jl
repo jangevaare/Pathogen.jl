@@ -2,7 +2,7 @@
 infer.jl
 """
 
-function SEIR_surveilance(population::Population, ν::Float64)
+function surveil(population::Population, ν::Float64)
   """
   Gather surveillance data on specific individuals in a population, with an exponentially distributed detection lag with rate ν
   """
