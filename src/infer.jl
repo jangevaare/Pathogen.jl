@@ -380,3 +380,35 @@ function network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmented, network:
   end
   return ll
 end
+
+function logprior(priors::SEIR_priors, α::Float64, β::Float64, η::Float64, ρ::Float64, γ::Float64, ν::Float64)
+  """
+  Calculate the logprior from prior distributions defined in `SEIR_priors` and specific parameter values
+  """
+  lprior = 0
+  lprior += logpdf(priors.α, α)
+  lprior += logpdf(priors.β, β)
+  lprior += logpdf(priors.η, η)
+  lprior += logpdf(priors.ρ, ρ)
+  lprior += logpdf(priors.γ, γ)
+  if ν < Inf
+    lprior += logpdf(priors.ν, ν)
+  end
+  return lprior
+end
+
+function logprior(priors::PhyloSEIR_priors, α::Float64, β::Float64, η::Float64, ρ::Float64, γ::Float64, ν::Float64, mutation::Tuple(Float64))
+  """
+  Calculate the logprior from prior distributions defined in `SEIR_priors` and specific parameter values
+  """
+  lprior = 0.
+  lprior += logpdf(priors.α, α)
+  lprior += logpdf(priors.β, β)
+  lprior += logpdf(priors.η, η)
+  lprior += logpdf(priors.ρ, ρ)
+  lprior += logpdf(priors.γ, γ)
+  if ν < Inf
+    lprior += logpdf(priors.ν, ν)
+  end
+  return lprior
+end
