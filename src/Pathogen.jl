@@ -35,7 +35,7 @@ export
 
   # infer.jl
   surveil,
-  SEIR_augmentation,
+  augment,
   SEIR_loglikelihood,
   SEIR_logprior,
   SEIR_initialize,

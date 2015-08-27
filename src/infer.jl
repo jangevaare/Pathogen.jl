@@ -58,7 +58,7 @@ function surveil(population::Population, ν::Float64)
   return SEIR_actual(exposed_actual, infectious_actual, removed_actual, covariates_actual, seq_actual), SEIR_observed(infectious_observed, removed_observed, covariates_observed, seq_observed)
 end
 
-function SEIR_augmentation(ρ::Float64, ν::Float64, obs::SEIR_observed)
+function augment(ρ::Float64, ν::Float64, obs::SEIR_observed)
   """
   Augments surveilance data, organizes observations
   """
