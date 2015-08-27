@@ -312,7 +312,7 @@ function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, network::Array)
   """
   For a given transmission network, find the time between the pathogen sequences between every individuals i and j
   """
-  infected = find(!isnan(obs.infectious[i]))
+  infected = find(!isnan(obs.seq[i]))
   pathway = infected[1]
   while pathway[end] != 0
     push!(pathway, findfirst(network[:,pathway[end]])-1)
@@ -327,7 +327,7 @@ function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, network::Array)
     push!(pathways, pathway)
   end
 
-  seq_dist = fill(0., (size(network)[2], size(network)[2]))
+  seq_dist = fill(0., (size(network, 2), size(network, 2)))
   for i = length(infected)
     for j = 1:i
 
@@ -348,7 +348,7 @@ end
 
 function seq_loglikelihood(seq1::Nucleotide2bitSeq, seq2::Nucleotide2bitSeq, branchdistance::Float64, substitution_matrix::Array)
   """
-  Log likelihood for any two aligned sequences, a specified time apart on a transmission network
+  Loglikelihood for any two aligned sequences, a specified time apart on a transmission network
   """
   @assert(length(seq1) == length(seq2), "Sequences not aligned")
   ll = 0.
@@ -362,6 +362,20 @@ function seq_loglikelihood(seq1::Nucleotide2bitSeq, seq2::Nucleotide2bitSeq, bra
       else
         ll += substitution_matrix[base1, base2] .* branchdistance
       end
+    end
+  end
+  return ll
+end
+
+function network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmented, network::Array, substitution_matrix::Array)
+  """
+  Loglikelihood for an entire transmission network
+  """
+  ll = 0.
+  seq_dist = seq_distances(obs, aug, network)
+  for i = 1:size(seq_dist, 1)
+    for j = 1:i
+       ll += seq_loglikelihood(obs.seq[i], obs.seq[j], seq_dist[i,j], substitution_matrix)
     end
   end
   return ll

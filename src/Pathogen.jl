@@ -41,7 +41,8 @@ export
   SEIR_initialize,
   SEIR_MCMC,
   seq_distances,
-  seq_loglikelihood
+  seq_loglikelihood,
+  network_loglikelihood
 
 include("types.jl")
 include("utilities.jl")
