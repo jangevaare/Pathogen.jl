@@ -76,8 +76,8 @@ type PhyloSEIR_priors{T<:UnivariateDistribution} <: Priors
   ρ::T
   γ::T
   ν::T
-  mutation
-end
+  mutation::Tuple
+ends
 
 abstract Trace
 
