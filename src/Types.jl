@@ -53,8 +53,9 @@ type SEIR_augmented
 end
 
 abstract Priors
+abstract Mutation_priors <: Priors
 
-type SEIR_priors{T<:UnivariateDistribution} <: Priors
+type ILM_priors{T<:UnivariateDistribution} <: Priors
   """
   Prior distributions for SEIR model inference
   """
@@ -66,22 +67,17 @@ type SEIR_priors{T<:UnivariateDistribution} <: Priors
   ν::T
 end
 
-type PhyloSEIR_priors{T<:UnivariateDistribution} <: Priors
+type JC69_priors{T<:UnivariateDistribution} <: Mutation_priors
   """
-  Prior distributions for SEIR model inference
+  Prior distributions for JC69 model inference
   """
-  α::T
-  β::T
-  η::T
-  ρ::T
-  γ::T
-  ν::T
-  mutation::Tuple
-ends
+  λ::T
+end
 
 abstract Trace
+abstract Mutation_trace <: Trace
 
-type SEIR_trace <: Trace
+type ILM_trace <: Trace
   """
   Contains an MCMC trace object
   """
@@ -96,18 +92,9 @@ type SEIR_trace <: Trace
   logposterior::Vector{Float64}
 end
 
-type PhyloSEIR_trace <: Trace
+type JC69_trace <: Mutation_trace
   """
-  Contains an MCMC trace object
+  Contains an MCMC trace object for JC69 model parameters
   """
-  α::Vector{Float64}
-  β::Vector{Float64}
-  η::Vector{Float64}
-  ρ::Vector{Float64}
-  γ::Vector{Float64}
-  ν::Vector{Float64}
-  mutation::Array{Float64}
-  aug::Vector{SEIR_augmented}
-  network::Vector{Array{Bool}}
-  logposterior::Vector{Float64}
+  λ::Vector{Float64}
 end
