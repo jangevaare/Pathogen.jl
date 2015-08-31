@@ -272,6 +272,56 @@ function surveil(population::Population, ν::Float64)
   return SEIR_actual(exposed_actual, infectious_actual, removed_actual, covariates_actual, seq_actual), SEIR_observed(infectious_observed, removed_observed, covariates_observed, seq_observed)
 end
 
+surveil(population::Population) = surveil(population, Inf)
+
+# function surveil(population::Population)
+#   """
+#   Gather surveillance data on specific individuals in a population, with zero detection lag
+#   """
+#   exposed_actual = fill(NaN, length(population.events)-1)
+#   infectious_actual = fill(NaN, length(population.events)-1)
+#   infectious_observed = fill(NaN, length(population.events)-1)
+#   removed_actual = fill(NaN, length(population.events)-1)
+#   removed_observed = fill(NaN, length(population.events)-1)
+#   covariates_actual = fill(fill(NaN, length(population.history[2][1][1])),  length(population.events)-1)
+#   covariates_observed = fill(fill(NaN, length(population.history[2][1][1])),  length(population.events)-1)
+#   seq_actual = convert(Vector{Any}, fill(NaN, length(population.events)-1))
+#   seq_observed = convert(Vector{Any}, fill(NaN, length(population.events)-1))
+
+#   for i = 2:length(population.events)
+#     # Initial conditions (assumed to be constant and observed without error)
+#     covariates_actual[i-1] = population.history[i][1][1]
+#     covariates_observed[i-1] = population.history[i][1][1]
+
+#     # Exposure time (unobservable)
+#     if length(population.events[i][1]) > 0
+#       exposed_actual[i-1] = population.events[i][1][1]
+#     end
+
+#     # Infectious time (observed with latency)
+#     if length(population.events[i][3]) > 0
+#       infectious_actual[i-1] = population.events[i][3][1]
+#       seq_actual[i-1] = population.history[i][2][find(infectious_actual[i-1] .>= population.events[i][6])[end]]
+#       infectious_observed[i-1] = infectious_actual[i-1]
+
+#       if length(population.events[i][4]) > 0 && infectious_observed[i-1] >= population.events[i][4][1]
+#         infectious_observed[i-1] = NaN
+#       else
+#         seq_observed[i-1] = population.history[i][2][find(infectious_observed[i-1] .>= population.events[i][6])[end]]
+#       end
+#     end
+
+#     # Removal time (observed with latency)
+#     if length(population.events[i][4]) > 0
+#       removed_actual[i-1] = population.events[i][4][1]
+#       if !isnan(infectious_observed[i-1])
+#         removed_observed[i-1] = removed_actual[i-1]
+#       end
+#     end
+#   end
+#   return SEIR_actual(exposed_actual, infectious_actual, removed_actual, covariates_actual, seq_actual), SEIR_observed(infectious_observed, removed_observed, covariates_observed, seq_observed)
+# end
+
 function augment(ρ::Float64, ν::Float64, obs::SEIR_observed)
   """
   Augments surveilance data, organizes observations
@@ -299,20 +349,28 @@ function augment(ρ::Float64, ν::Float64, obs::SEIR_observed)
   return SEIR_augmented(exposed_augmented, infectious_augmented, removed_augmented)
 end
 
-function ILM_logprior(priors::Priors, α::Float64, β::Float64, η::Float64, ρ::Float64, γ::Float64)
-  """
-  Calculate the logprior from prior distributions defined in `SEIR_priors` and specified parameter values
-  """
-  lprior = 0.
-  lprior += logpdf(priors.α, α)
-  lprior += logpdf(priors.β, β)
-  lprior += logpdf(priors.η, η)
-  lprior += logpdf(priors.ρ, ρ)
-  lprior += logpdf(priors.γ, γ)
-  return lprior
-end
+augment(ρ::Float64, obs::SEIR_observed) = augment(ρ, Inf, obs)
 
-function ILM_logprior(priors::Priors, α::Float64, β::Float64, η::Float64, ρ::Float64, γ::Float64, ν::Float64)
+# function augment(ρ::Float64, obs::SEIR_observed)
+#   """
+#   Augments surveilance data, organizes observations
+#   """
+#   exposed_augmented = fill(NaN, length(obs.infectious))
+#   infectious_augmented = fill(NaN, length(obs.infectious))
+#   removed_augmented = fill(NaN, length(obs.removed))
+#   for i = 1:length(obs.infectious)
+#     if !isnan(obs.infectious[i])
+#       infectious_augmented[i] = obs.infectious[i]
+#       exposed_augmented[i] = infectious_augmented[i] - rand(Exponential(1/ρ))
+#       if !isnan(obs.removed[i])
+#         removed_augmented[i] = obs.removed[i]
+#       end
+#     end
+#   end
+#   return SEIR_augmented(exposed_augmented, infectious_augmented, removed_augmented)
+# end
+
+function ILM_logprior(priors::ILM_priors, α::Float64, β::Float64, η::Float64, ρ::Float64, γ::Float64)
   """
   Calculate the logprior from prior distributions defined in `SEIR_priors` and specified parameter values
   """
@@ -322,7 +380,6 @@ function ILM_logprior(priors::Priors, α::Float64, β::Float64, η::Float64, ρ:
   lprior += logpdf(priors.η, η)
   lprior += logpdf(priors.ρ, ρ)
   lprior += logpdf(priors.γ, γ)
-  lprior += logpdf(priors.ν, ν)
   return lprior
 end
 
@@ -410,7 +467,7 @@ function network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmented, network:
   return ll
 end
 
-function initialize(priors::ILM_priors, mutation:Mutation_priors, obs::SEIR_observed, limit=1000::Int, debug=false::Bool, dist=Euclidean())
+function initialize(priors::ILM_priors, mutation::Mutation_priors, obs::SEIR_observed, limit=1000::Int, debug=false::Bool, dist=Euclidean())
   """
   Initiate an Trace object by sampling from specified prior distributions
   """
