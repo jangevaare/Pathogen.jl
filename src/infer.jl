@@ -326,7 +326,7 @@ function ILM_logprior(priors::Priors, α::Float64, β::Float64, η::Float64, ρ:
   return lprior
 end
 
-function mutation_logprior(priors::Priors, mutation::Tuple{Float64})
+function mutation_logprior(priors::Mutation_priors, mutation::Tuple{Float64})
   """
   Calculate the logprior from prior distributions defined in `SEIR_priors` and specific parameter values
   """
@@ -410,7 +410,7 @@ function network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmented, network:
   return ll
 end
 
-function initialize(priors::Priors, obs::SEIR_observed, limit=1000::Int, debug=false::Bool, dist=Euclidean())
+function initialize(priors::ILM_priors, mutation:Mutation_priors, obs::SEIR_observed, limit=1000::Int, debug=false::Bool, dist=Euclidean())
   """
   Initiate an Trace object by sampling from specified prior distributions
   """
@@ -449,13 +449,21 @@ function initialize(priors::Priors, obs::SEIR_observed, limit=1000::Int, debug=f
     end
   end
     aug = augment(ρ, ν, obs)
-    ll, network = ILM_loglikelihood(α, β, η, ρ, γ, ν, aug, obs, dist)
+    if length(Priors.mutation) == 0
+      ll, network = ILM_loglikelihood(α, β, η, ρ, γ, ν, aug, obs, dist)
+    elseif length(Priors.mutation) > 0
+      ll, network = ILM_loglikelihood(α, β, η, ρ, γ, ν, aug, obs, dist)
+    end
   end
 
   if count < limit
     print("Successfully initialized on attempt $count")
-    logposterior = ll + SEIR_logprior(priors, α, β, η, ρ, γ, ν)
-    return SEIR_trace([α], [β], [η], [ρ], [γ], [ν], [aug], Array[network], [logposterior])
+    if length(Priors.mutation) == 0
+      lp = ll + ILM_logprior(priors, α, β, η, ρ, γ, ν)
+      return SEIR_trace([α], [β], [η], [ρ], [γ], [ν], [aug], Array[network], [lp])
+    elseif length(Priors.mutation) > 0
+
+
   else
     print("Failed to initialize after $count attempts")
   end

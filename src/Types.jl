@@ -53,17 +53,25 @@ type SEIR_augmented
 end
 
 abstract Priors
+abstract ILM_priors <: Priors
+abstract Detection_priors <: Priors
 abstract Mutation_priors <: Priors
 
-type ILM_priors{T<:UnivariateDistribution} <: Priors
+type SEIR_priors{T<:UnivariateDistribution} <: ILM_priors
   """
-  Prior distributions for SEIR model inference
+  Prior distributions for ILM model inference
   """
   α::T
   β::T
   η::T
   ρ::T
   γ::T
+end
+
+type Lag_priors{T<:UnivariateDistribution} <: Detection_priors
+  """
+  Prior distributions for a simple detection rate
+  """
   ν::T
 end
 
@@ -75,6 +83,8 @@ type JC69_priors{T<:UnivariateDistribution} <: Mutation_priors
 end
 
 abstract Trace
+abstract ILM_trace <: Trace
+abstract Detection_trace <: Trace
 abstract Mutation_trace <: Trace
 
 type ILM_trace <: Trace
@@ -90,6 +100,13 @@ type ILM_trace <: Trace
   aug::Vector{SEIR_augmented}
   network::Vector{Array{Bool}}
   logposterior::Vector{Float64}
+end
+
+type Lag_trace <: Detection_trace
+  """
+  Contains an MCMC trace object for detection rate
+  """
+  ν::T
 end
 
 type JC69_trace <: Mutation_trace
