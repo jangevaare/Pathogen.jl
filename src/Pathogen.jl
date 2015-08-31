@@ -9,12 +9,22 @@ export
   SEIR_actual,
   SEIR_observed,
   SEIR_augmented,
-  Trace,
+
   Priors,
-  SEIR_priors,
-  SEIR_trace,
-  PhyloSEIR_priors,
-  PhyloSEIR_trace,
+    ILM_priors
+      SEIR_priors,
+    Detection_priors,
+      Lag_priors,
+    Mutation_priors,
+      JC69_priors
+
+  Trace,
+    SEIR_trace,
+      ILM_trace,
+    Detection_trace,
+      Lag_trace,
+    Mutation_trace,
+      JC69_trace,
 
   # utilities.jl
   findstate,
