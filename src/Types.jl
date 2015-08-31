@@ -87,7 +87,7 @@ abstract ILM_trace <: Trace
 abstract Detection_trace <: Trace
 abstract Mutation_trace <: Trace
 
-type ILM_trace <: Trace
+type SEIR_trace <: Trace
   """
   Contains an MCMC trace object
   """
@@ -96,7 +96,6 @@ type ILM_trace <: Trace
   η::Vector{Float64}
   ρ::Vector{Float64}
   γ::Vector{Float64}
-  ν::Vector{Float64}
   aug::Vector{SEIR_augmented}
   network::Vector{Array{Bool}}
   logposterior::Vector{Float64}
@@ -106,7 +105,7 @@ type Lag_trace <: Detection_trace
   """
   Contains an MCMC trace object for detection rate
   """
-  ν::T
+  ν::Vector{Float64}
 end
 
 type JC69_trace <: Mutation_trace
