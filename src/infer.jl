@@ -316,7 +316,18 @@ function ILM_logprior(priors::ILM_priors, α::Float64, β::Float64, η::Float64,
   return lprior
 end
 
-function mutation_logprior(priors::Mutation_priors, mutation::Tuple{Float64})
+function mutation_logprior(priors::Mutation_priors, mutation::Vector{Float64})
+  """
+  Calculate the logprior from prior distributions defined in `SEIR_priors` and specific parameter values
+  """
+  lprior = 0.
+  for i = 1:length(mutation)
+    lprior += logpdf(priors.mutation[i], mutation[i])
+  end
+  return lprior
+end
+
+function detection_logprior(priors::Detection_priors, mutation::Vector{Float64})
   """
   Calculate the logprior from prior distributions defined in `SEIR_priors` and specific parameter values
   """
@@ -400,7 +411,7 @@ function network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmented, network:
   return ll
 end
 
-function initialize(priors::ILM_priors, mutation::Mutation_priors, obs::SEIR_observed, limit=1000::Int, debug=false::Bool, dist=Euclidean())
+function initialize(ilm::ILM_priors, mutation::Mutation_priors, detection::Detection_priors, obs::SEIR_observed, limit=1000::Int, debug=false::Bool, dist=Euclidean())
   """
   Initiate an Trace object by sampling from specified prior distributions
   """
