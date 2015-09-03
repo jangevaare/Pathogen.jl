@@ -46,11 +46,8 @@ export
   # infer.jl
   surveil,
   augment,
-  ILM_logprior,
-  mutation_logprior,
-  detection_logprior,
+  logprior,
   SEIR_loglikelihood,
-  SEIR_logprior,
   SEIR_initialize,
   SEIR_MCMC,
   seq_distances,
