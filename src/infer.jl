@@ -316,24 +316,24 @@ function ILM_logprior(priors::ILM_priors, α::Float64, β::Float64, η::Float64,
   return lprior
 end
 
-function mutation_logprior(priors::Mutation_priors, mutation::Vector{Float64})
+function mutation_logprior(priors::Mutation_priors, mutation_params::Vector{Float64})
   """
   Calculate the logprior from prior distributions defined in `SEIR_priors` and specific parameter values
   """
   lprior = 0.
-  for i = 1:length(mutation)
-    lprior += logpdf(priors.mutation[i], mutation[i])
+  for i = 1:length(mutation_params)
+    lprior += logpdf(priors[i], mutation_params[i])
   end
   return lprior
 end
 
-function detection_logprior(priors::Detection_priors, mutation::Vector{Float64})
+function detection_logprior(priors::Detection_priors, detection_params::Vector{Float64})
   """
   Calculate the logprior from prior distributions defined in `SEIR_priors` and specific parameter values
   """
   lprior = 0.
-  for i = 1:length(mutation)
-    lprior += logpdf(priors.mutation[i], mutation[i])
+  for i = 1:length(detection_params)
+    lprior += logpdf(priors[i], detection_params[i])
   end
   return lprior
 end
