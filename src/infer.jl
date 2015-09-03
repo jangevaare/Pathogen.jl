@@ -303,37 +303,13 @@ end
 
 augment(ρ::Float64, obs::SEIR_observed) = augment(ρ, Inf, obs)
 
-function ILM_logprior(priors::ILM_priors, α::Float64, β::Float64, η::Float64, ρ::Float64, γ::Float64)
+function logprior(priors::Priors, params::Vector{Float64})
   """
-  Calculate the logprior from prior distributions defined in `SEIR_priors` and specified parameter values
-  """
-  lprior = 0.
-  lprior += logpdf(priors.α, α)
-  lprior += logpdf(priors.β, β)
-  lprior += logpdf(priors.η, η)
-  lprior += logpdf(priors.ρ, ρ)
-  lprior += logpdf(priors.γ, γ)
-  return lprior
-end
-
-function mutation_logprior(priors::Mutation_priors, mutation_params::Vector{Float64})
-  """
-  Calculate the logprior from prior distributions defined in `SEIR_priors` and specific parameter values
+  Calculate the logprior from prior distributions
   """
   lprior = 0.
-  for i = 1:length(mutation_params)
-    lprior += logpdf(priors[i], mutation_params[i])
-  end
-  return lprior
-end
-
-function detection_logprior(priors::Detection_priors, detection_params::Vector{Float64})
-  """
-  Calculate the logprior from prior distributions defined in `SEIR_priors` and specific parameter values
-  """
-  lprior = 0.
-  for i = 1:length(detection_params)
-    lprior += logpdf(priors[i], detection_params[i])
+  for i = 1:length(params)
+    lprior += logpdf(priors.(names(priors)[i]), mutation_params[i])
   end
   return lprior
 end
