@@ -11,7 +11,7 @@ export
   SEIR_augmented,
 
   Priors,
-    ILM_priors
+    ILM_priors,
       SEIR_priors,
     Detection_priors,
       Lag_priors,
@@ -51,7 +51,7 @@ export
   seq_distances,
   seq_loglikelihood,
   network_loglikelihood
-  ILM_loglikelihood,
+  SEIR_loglikelihood,
   initialize,
   MCMC
 
