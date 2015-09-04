@@ -398,61 +398,85 @@ function network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmented, network:
   return ll
 end
 
-function initialize(ilm::ILM_priors, mutation::Mutation_priors, detection::Detection_priors, obs::SEIR_observed, limit=1000::Int, debug=false::Bool, dist=Euclidean())
+function initialize(ilm_priors::ILM_priors, mutation_priors::JC69_priors, detection_priors::Lag_priors, obs::SEIR_observed, limit=500::Int, debug=false::Bool, dist=Euclidean())
   """
   Initiate an Trace object by sampling from specified prior distributions
   """
-  ilm_params =
-  α = rand(priors.α)
-  β = rand(priors.β)
-  η = rand(priors.η)
-  ρ = rand(priors.ρ)
-  γ = rand(priors.γ)
-  ν = rand(priors.ν)
-  for i = 1:length(priors.mutation)
-    if i == 1
-      mutation = rand(priors.mutation[i])
-    else
-      push!(mutation, rand(priors.mutation[i]))
-    end
-  end
-
-  aug = augment(ρ, ν, obs)
-  ll, network = ILM_loglikelihood(α, β, η, ρ, γ, ν, aug, obs, dist, debug)
+  ilm_params = randprior(ilm_priors)
+  mutation_params = randprior(mutation_priors)
+  detection_params = randprior(detection_priors)
+  aug = augment(ilm_params[4], detection_params[1], obs)
+  ll, network = ILM_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], detection_params[1], aug, obs, dist, debug)
   count = 1
 
   # Retry initialization until non-negative infinity loglikelihood
   while ll == -Inf && count < limit
     count += 1
-      α = rand(priors.α)
-  β = rand(priors.β)
-  η = rand(priors.η)
-  ρ = rand(priors.ρ)
-  γ = rand(priors.γ)
-  ν = rand(priors.ν)
-  for i = 1:length(Priors.mutation)
-    if i == 1
-      mutation = rand(priors.mutation[i])
-    else
-      push!(mutation, rand(priors.mutation[i]))
-    end
-  end
-    aug = augment(ρ, ν, obs)
-    if length(Priors.mutation) == 0
-      ll, network = ILM_loglikelihood(α, β, η, ρ, γ, ν, aug, obs, dist)
-    elseif length(Priors.mutation) > 0
-      ll, network = ILM_loglikelihood(α, β, η, ρ, γ, ν, aug, obs, dist)
-    end
+    ilm_params = randprior(ilm_priors)
+    mutation_params = randprior(mutation_priors)
+    detection_params = randprior(detection_priors)
+    aug = augment(ilm_params[4], detection_params[1], obs)
+    ll, network = ILM_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], detection_params[1], aug, obs, dist, debug)
   end
 
   if count < limit
     print("Successfully initialized on attempt $count")
-    if length(Priors.mutation) == 0
-      lp = ll + ILM_logprior(priors, α, β, η, ρ, γ, ν)
-      return SEIR_trace([α], [β], [η], [ρ], [γ], [ν], [aug], Array[network], [lp])
-    elseif length(Priors.mutation) > 0
+    lp = ll + logprior(ilm_priors, ilm_params) + logprior(mutation_priors, mutation_params) + logprior(detection_priors, detection_params)
+      return ILM_trace([ilm_params[1]], [ilm_params[2]], [ilm_params[3]], [ilm_params[4]], [ilm_params[5]], [aug], Array[network], [lp]), Lag_trace([detection_params[1]]), JC69_trace([mutation_params[1]])
+  else
+    print("Failed to initialize after $count attempts")
+  end
+end
 
+function initialize(ilm_priors::ILM_priors, detection_priors::Lag_priors, obs::SEIR_observed, limit=500::Int, debug=false::Bool, dist=Euclidean())
+  """
+  Initiate an Trace object by sampling from specified prior distributions
+  """
+  ilm_params = randprior(ilm_priors)
+  detection_params = randprior(detection_priors)
+  aug = augment(ilm_params[4], detection_params[1], obs)
+  ll, network = ILM_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], detection_params[1], aug, obs, dist, debug)
+  count = 1
 
+  # Retry initialization until non-negative infinity loglikelihood
+  while ll == -Inf && count < limit
+    count += 1
+    ilm_params = randprior(ilm_priors)
+    detection_params = randprior(detection_priors)
+    aug = augment(ilm_params[4], detection_params[1], obs)
+    ll, network = ILM_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], detection_params[1], aug, obs, dist, debug)
+  end
+
+  if count < limit
+    print("Successfully initialized on attempt $count")
+    lp = ll + logprior(ilm_priors, ilm_params) + logprior(detection_priors, detection_params)
+      return ILM_trace([ilm_params[1]], [ilm_params[2]], [ilm_params[3]], [ilm_params[4]], [ilm_params[5]], [aug], Array[network], [lp]), Lag_trace([detection_params[1]])
+  else
+    print("Failed to initialize after $count attempts")
+  end
+end
+
+function initialize(ilm_priors::ILM_priors, obs::SEIR_observed, limit=500::Int, debug=false::Bool, dist=Euclidean())
+  """
+  Initiate an Trace object by sampling from specified prior distributions
+  """
+  ilm_params = randprior(ilm_priors)
+  aug = augment(ilm_params[4], detection_params[1], obs)
+  ll, network = ILM_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, dist, debug)
+  count = 1
+
+  # Retry initialization until non-negative infinity loglikelihood
+  while ll == -Inf && count < limit
+    count += 1
+    ilm_params = randprior(ilm_priors)
+    aug = augment(ilm_params[4], obs)
+    ll, network = ILM_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, dist, debug)
+  end
+
+  if count < limit
+    print("Successfully initialized on attempt $count")
+    lp = ll + logprior(ilm_priors, ilm_params)
+      return ILM_trace([ilm_params[1]], [ilm_params[2]], [ilm_params[3]], [ilm_params[4]], [ilm_params[5]], [aug], Array[network], [lp])
   else
     print("Failed to initialize after $count attempts")
   end
