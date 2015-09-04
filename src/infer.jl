@@ -393,17 +393,21 @@ function initialize(ilm_priors::ILM_priors, obs::SEIR_observed, limit=500::Int, 
   end
 end
 
-function SEIR_MCMC(n::Int64, transition_cov::Array{Float64}, trace::SEIR_trace, priors::SEIR_priors, obs::SEIR_observed, progress=true::Bool, dist=Euclidean())
+function SEIR_MCMC(n::Int64,
+                   transition_cov::Array{Float64},
+                   ilm_trace::ILM_trace,
+                   detection_trace::Lag_trace,
+                   mutation_trace::JC69_trace,
+                   ilm_priors::ILM_priors,
+                   detection_priors::Lag_priors,
+                   mutation_priors::JC69_priors,
+                   obs::SEIR_observed,
+                   progress=true::Bool,
+                   dist=Euclidean())
   """
-  Performs `n` data-augmented metropolis hastings MCMC iterations. Initiates a single chain by sampling from prior distribution
-
-  α, β: powerlaw exposure kernel parameters
-  η: external pressure rate
-  ρ: infectivity rate (1/mean latent period)
-  γ: recovery rate (1/mean infectious period)
-  ν: detection rate (1/mean detection lag)
+  Performs `n` data-augmented metropolis hastings within Gibbs MCMC iterations. Initiates a single chain by sampling from prior distribution
   """
-  @assert(size(transition_cov) == (6,6), "transition_cov must be a 6x6 matrix")
+  @assert(size(transition_cov) == (7,7), "transition_cov must be a 7x7 matrix")
 
   for i = 1:n
 
