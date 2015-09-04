@@ -2,7 +2,7 @@
 mutate.jl
 """
 
-function jc69(θ::Tuple)
+function jc69(θ::Vector{Float64})
   """
   Returns the JC69 Q matrix with parameter λ
   """
