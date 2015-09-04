@@ -94,48 +94,6 @@ function ILM_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, �
   return ll, network
 end
 
-function SEIR_initialize(priors::SEIR_priors, obs::SEIR_observed, limit=1000::Int, debug=false::Bool, dist=Euclidean())
-  """
-  Initiate an SEIR_trace object by sampling from specified prior distributions
-
-  α, β: powerlaw exposure kernel parameters
-  η: external pressure rate
-  ρ: infectivity rate (1/mean latent period)
-  γ: recovery rate (1/mean infectious period)
-  ν: detection rate (1/mean detection lag)
-  """
-  α = rand(priors.α)
-  β = rand(priors.β)
-  η = rand(priors.η)
-  ρ = rand(priors.ρ)
-  γ = rand(priors.γ)
-  ν = rand(priors.ν)
-  aug = SEIR_augmentation(ρ, ν, obs)
-  ll, network = SEIR_loglikelihood(α, β, η, ρ, γ, ν, aug, obs, dist, debug)
-  count = 1
-
-  # Retry initialization until non-negative infinity loglikelihood
-  while ll == -Inf && count < limit
-    count += 1
-    α = rand(priors.α)
-    β = rand(priors.β)
-    η = rand(priors.η)
-    ρ = rand(priors.ρ)
-    γ = rand(priors.γ)
-    ν = rand(priors.ν)
-    aug = SEIR_augmentation(ρ, ν, obs)
-    ll, network = SEIR_loglikelihood(α, β, η, ρ, γ, ν, aug, obs, dist)
-  end
-
-  if count < limit
-    print("Successfully initialized on attempt $count")
-    logposterior = ll + SEIR_logprior(priors, α, β, η, ρ, γ, ν)
-    return SEIR_trace([α], [β], [η], [ρ], [γ], [ν], [aug], Array[network], [logposterior])
-  else
-    print("Failed to initialize after $count attempts")
-  end
-end
-
 function SEIR_MCMC(n::Int64, transition_cov::Array{Float64}, trace::SEIR_trace, priors::SEIR_priors, obs::SEIR_observed, progress=true::Bool, dist=Euclidean())
   """
   Performs `n` data-augmented metropolis hastings MCMC iterations. Initiates a single chain by sampling from prior distribution
