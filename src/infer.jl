@@ -314,6 +314,17 @@ function logprior(priors::Priors, params::Vector{Float64})
   return lprior
 end
 
+function randprior(priors::Priors)
+  """
+  Randomly generate a parameter vector from specified priors
+  """
+  params = rand(priors.(names(priors)[1]))
+  for i = 2:length(names(priors))
+    push!(params, rand(priors.(names(priors)[i])))
+  end
+  return params
+end
+
 function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, network::Array)
   """
   For a given transmission network, find the time between the pathogen sequences between every individuals i and j
@@ -391,6 +402,7 @@ function initialize(ilm::ILM_priors, mutation::Mutation_priors, detection::Detec
   """
   Initiate an Trace object by sampling from specified prior distributions
   """
+  ilm_params =
   α = rand(priors.α)
   β = rand(priors.β)
   η = rand(priors.η)

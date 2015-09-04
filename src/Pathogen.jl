@@ -47,6 +47,7 @@ export
   surveil,
   augment,
   logprior,
+  rand_prior,
   SEIR_loglikelihood,
   SEIR_initialize,
   SEIR_MCMC,
