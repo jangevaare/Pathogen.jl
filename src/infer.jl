@@ -393,7 +393,7 @@ function initialize(ilm_priors::ILM_priors, obs::SEIR_observed, limit=500::Int, 
   end
 end
 
-function SEIR_MCMC(n::Int64,
+function MCMC(n::Int64,
                    transition_cov::Array{Float64},
                    ilm_trace::ILM_trace,
                    detection_trace::Lag_trace,
@@ -448,41 +448,48 @@ function SEIR_MCMC(n::Int64,
     lp += logprior(mutation_priors, mutation_proposal)
 
     # Accept/reject based on logposterior
-    if logposterior == -Inf
+    if lp == -Inf
       reject = true
-    elseif logposterior > trace.logposterior[end]
+    elseif lp > ilm_trace.logposterior[end]
       reject = false
-    elseif exp(logposterior - trace.logposterior[end]) >= rand()
+    elseif exp(lp - trace.logposterior[end]) >= rand()
       reject = false
     else
       reject = true
     end
 
-    # Re-augment data (and recalculate log posterior) if proposal is rejected...
     if reject
-      proposal[1] = trace.α[end]
-      proposal[2] = trace.β[end]
-      proposal[3] = trace.η[end]
-      proposal[4] = trace.ρ[end]
-      proposal[5] = trace.γ[end]
-      proposal[6] = trace.ν[end]
+      ilm_proposal[1] = ilm_trace.α[end]
+      ilm_proposal[2] = ilm_trace.β[end]
+      ilm_proposal[3] = ilm_trace.η[end]
+      ilm_proposal[4] = ilm_trace.ρ[end]
+      ilm_proposal[5] = ilm_trace.γ[end]
+      detection_proposal[1] = detection_trace.ν[end]
+      mutation_proposal[1] = mutation_trace.λ[end]
 
-      aug = SEIR_augmentation(proposal[4], proposal[6], obs)
-      ll, network = SEIR_loglikelihood(proposal[1], proposal[2], proposal[3], proposal[4], proposal[5], proposal[6], aug, obs, dist)
-      logposterior = ll + SEIR_logprior(priors, proposal[1], proposal[2], proposal[3], proposal[4], proposal[5], proposal[6])
+      # Re-augment data (and recalculate log posterior) if proposal is rejected...
+      aug = augment(ilm_proposal[4], detection_proposal[1], obs)
+      lp, network = ILM_loglikelihood(ilm_proposal[1], ilm_proposal[2], ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], aug, obs, dist)
+      lp += network_loglikelihood(obs, aug, network, jc69([mutation_params[1]]))
+      lp += logprior(ilm_priors, ilm_proposal)
+      lp += logprior(detection_priors, detection_proposal)
+      lp += logprior(mutation_priors, mutation_proposal)
     end
 
-    # Update chain
-    push!(trace.α, proposal[1])
-    push!(trace.β, proposal[2])
-    push!(trace.η, proposal[3])
-    push!(trace.ρ, proposal[4])
-    push!(trace.γ, proposal[5])
-    push!(trace.ν, proposal[6])
-    push!(trace.aug, aug)
-    push!(trace.network, network)
-    push!(trace.logposterior, logposterior)
+    # Update trace objects
+    push!(ilm_trace.α, ilm_proposal[1])
+    push!(ilm_trace.β, ilm_proposal[2])
+    push!(ilm_trace.η, ilm_proposal[3])
+    push!(ilm_trace.ρ, ilm_proposal[4])
+    push!(ilm_trace.γ, ilm_proposal[5])
+    push!(ilm_trace.aug, aug)
+    push!(ilm_trace.network, network)
+    push!(ilm_trace.logposterior, logposterior)
+
+    push!(detection_trace.ν, detection_proposal[1])
+
+    push!(mutation_trace.λ, mutation_proposal[1])
   end
 
-  return trace
+  return ilm_trace, detection_trace, mutation_trace
 end

@@ -53,7 +53,7 @@ export
   network_loglikelihood
   ILM_loglikelihood,
   initialize,
-  SEIR_MCMC
+  MCMC
 
 include("types.jl")
 include("utilities.jl")
