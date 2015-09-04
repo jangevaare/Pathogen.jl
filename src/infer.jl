@@ -421,19 +421,31 @@ function SEIR_MCMC(n::Int64,
     end
 
     # Only generate valid proposals
-    proposal = [trace.α[end], trace.β[end], trace.η[end], trace.ρ[end], trace.γ[end], trace.ν[end]] .+ rand(MvNormal(transition_cov))
-    while any(proposal .< 0.)
-      proposal = [trace.α[end], trace.β[end], trace.η[end], trace.ρ[end], trace.γ[end], trace.ν[end]] .+ rand(MvNormal(transition_cov))
+    step = rand(MvNormal(transition_cov))
+    ilm_proposal = [ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.ρ[end], ilm_trace.γ[end]] .+ step[1:5]
+    detection_proposal = [detection_trace.ν[end]] .+ step[6]
+    mutation_proposal = [mutation_trace.λ[end]] .+ step[7]
+
+    while any([any(ilm_proposal .< 0.), any(detection_proposal .< 0.), any(mutation_proposal .< 0.)])
+      step = rand(MvNormal(transition_cov))
+      ilm_proposal = [ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.ρ[end], ilm_trace.γ[end]] .+ step[1:5]
+      detection_proposal = [detection_trace.ν[end]] .+ step[6]
+      mutation_proposal = [mutation_trace.λ[end]] .+ step[7]
     end
 
     # Augment the data
-    aug = SEIR_augmentation(proposal[4], proposal[6], obs)
+    aug = augment(ilm_proposal[4], detection_proposal[1], obs)
 
-    # Loglikelihood calculation and exposure network array
-    ll, network = SEIR_loglikelihood(proposal[1], proposal[2], proposal[3], proposal[4], proposal[5], proposal[6], aug, obs, dist)
+    # ILM loglikelihood component
+    lp, network = ILM_loglikelihood(ilm_proposal[1], ilm_proposal[2], ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], aug, obs, dist)
 
-    # Add logprior for logposterior
-    logposterior = ll + SEIR_logprior(priors, proposal[1], proposal[2], proposal[3], proposal[4], proposal[5], proposal[6])
+    # Network loglikelihood
+    lp += network_loglikelihood(obs, aug, network, jc69([mutation_params[1]]))
+
+    # Add logpriors
+    lp += logprior(ilm_priors, ilm_proposal)
+    lp += logprior(detection_priors, detection_proposal)
+    lp += logprior(mutation_priors, mutation_proposal)
 
     # Accept/reject based on logposterior
     if logposterior == -Inf
