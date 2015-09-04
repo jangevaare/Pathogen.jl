@@ -32,13 +32,13 @@ end
 # γ: recovery rate (1/mean infectious period)
 # ν: detection rate (1/mean detection lag)
 
-actual, obs = SEIR_surveilance(pop, 2.)
+actual, obs = surveil(pop, 2.)
 
-priors = SEIR_priors(Uniform(0,10), Uniform(0,10), Uniform(0,0.01), Uniform(0,1), Uniform(0,1), Uniform(1,3))
+ilm_priors = ILM_priors(Uniform(0,10), Uniform(0,10), Uniform(0,0.01), Uniform(0,1), Uniform(0,1), Uniform(1,3))
+detection_priors = Detection_priors(Uniform(1,3))
+mutation_priors = Mutation_priors(Uniform(0,0.1))
 
-trace = SEIR_initialize(priors, obs)
-
-SEIR_MCMC(100000, diagm([0.5, 0.5, 0.5, 0.5, 0.5, 0.5]), trace, priors, obs)
+SEIR_MCMC(100000, diagm([0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]), ilm_priors, detection_priors, mutation_priors, obs)
 
 # Tune the transition kernel's covariance matrix over 300k iterations
 n = 300
