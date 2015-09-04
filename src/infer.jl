@@ -104,7 +104,7 @@ function randprior(priors::Priors)
   """
   Randomly generate a parameter vector from specified priors
   """
-  params = rand(priors.(names(priors)[1]))
+  params = [rand(priors.(names(priors)[1]))]
   for i = 2:length(names(priors))
     push!(params, rand(priors.(names(priors)[i])))
   end
