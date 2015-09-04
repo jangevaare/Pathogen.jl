@@ -16,7 +16,7 @@ export
     Detection_priors,
       Lag_priors,
     Mutation_priors,
-      JC69_priors
+      JC69_priors,
 
   Trace,
     SEIR_trace,
