@@ -48,12 +48,12 @@ export
   augment,
   logprior,
   rand_prior,
-  SEIR_loglikelihood,
-  SEIR_initialize,
-  SEIR_MCMC,
   seq_distances,
   seq_loglikelihood,
   network_loglikelihood
+  ILM_loglikelihood,
+  initialize,
+  SEIR_MCMC
 
 include("types.jl")
 include("utilities.jl")
