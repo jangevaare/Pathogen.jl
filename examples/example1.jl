@@ -17,7 +17,7 @@ pop = create_population(init_seq, init_var)
 powerlaw = create_powerlaw(4., 5., 0.001)
 latency = create_constantrate(1/3.)
 recovery = create_constantrate(1/5.)
-substitution = jc69((0.1,))
+substitution = jc69([0.05])
 
 ratearray = create_ratearray(pop, powerlaw, substitution)
 
@@ -38,7 +38,7 @@ ilm_priors = ILM_priors(Uniform(0,10), Uniform(0,10), Uniform(0,0.01), Uniform(0
 detection_priors = Detection_priors(Uniform(1,3))
 mutation_priors = Mutation_priors(Uniform(0,0.1))
 
-SEIR_MCMC(100000, diagm([0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]), ilm_priors, detection_priors, mutation_priors, obs)
+ilm_trace, detection_trace, mutation_trace = SEIR_MCMC(100000, diagm([0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]), ilm_priors, detection_priors, mutation_priors, obs)
 
 # Tune the transition kernel's covariance matrix over 300k iterations
 n = 300
@@ -52,26 +52,26 @@ for i = 1:n
   end
 
   # Tune transition matrix
-  opt_cov = cov([trace.α trace.β trace.ρ trace.γ trace.η trace.ν])*(2.38^2)/6.
+  opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.ρ ilm_trace.γ ilm_trace.η detection_trace.ν mutation_trace.λ])*(2.38^2)/7.
 
   # Perform 1000 MCMC iterations
   SEIR_MCMC(1000, opt_cov, trace, priors, obs, false)
 end
 
-opt_cov = cov([trace.α trace.β trace.ρ trace.γ trace.η trace.ν])*(2.38^2)/6.
+opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.ρ ilm_trace.γ ilm_trace.η detection_trace.ν mutation_trace.λ])*(2.38^2)/7.
 SEIR_MCMC(100000, opt_cov, trace, priors, obs)
 
 # Simulation/Maximum posteriori visualization
 images = 500
-max_tracelp=findfirst(trace.logposterior.==maximum(trace.logposterior))
+max_tracelp=findfirst(ilm_trace.logposterior.==maximum(ilm_trace.logposterior))
 
 for time = 1:images
-  states, routes = plotdata(pop, (time*maximum([maximum(trace.aug[max_tracelp]), pop.timeline[1][end]])/images))
+  states, routes = plotdata(pop, (time*maximum([maximum(ilm_trace.aug[max_tracelp]), pop.timeline[1][end]])/images))
   p1 = plot(layer(states, x="x", y="y", color="state", Geom.point),
             layer(routes, x="x", y="y", group="age", Geom.polygon),
             Theme(panel_opacity=1., panel_fill=color("white"), default_color=color("black"), background_color=color("white")))
 
-  states, routes = plotdata(obs, trace, max_tracelp, (time*maximum([maximum(trace.aug[max_tracelp]), pop.timeline[1][end]])/images))
+  states, routes = plotdata(obs, trace, max_tracelp, (time*maximum([maximum(ilm_trace.aug[max_tracelp]), pop.timeline[1][end]])/images))
   p2 = plot(layer(states, x="x", y="y", color="state", Geom.point),
             layer(routes, x="x", y="y", group="age", Geom.polygon),
             Theme(panel_opacity=1., panel_fill=color("white"), default_color=color("black"), background_color=color("white")))
@@ -95,7 +95,7 @@ end
 
 # Inference visualization
 # Joint trace plots (last 100k iterations)
-plotdf = DataFrame(iteration = rep(1:100000,6), value = [trace.α[end-99999:end], trace.β[end-99999:end], trace.η[end-99999:end], trace.ρ[end-99999:end], trace.γ[end-99999:end], trace.ν[end-99999:end]], parameter = [rep("α",100000),rep("β",100000),rep("η",100000),rep("ρ",100000),rep("γ",100000),rep("ν",100000)])
+plotdf = DataFrame(iteration = rep(1:100000,7), value = [ilm_trace.α[end-99999:end], ilm_trace.β[end-99999:end], ilm_trace.η[end-99999:end], ilm_trace.ρ[end-99999:end], ilm_trace.γ[end-99999:end], detection_trace.ν[end-99999:end], mutation_trace.λ[end-99999:end]], parameter = [rep("α",100000),rep("β",100000),rep("η",100000),rep("ρ",100000),rep("γ",100000),rep("ν",100000),rep("λ",100000)])
 
 draw(PNG("SEIR_traceplot.png", 20cm, 15cm),
      plot(plotdf,
@@ -118,42 +118,49 @@ draw(PNG("SEIR_logposterior.png", 20cm, 15cm),
 
 # Posterior distribution histograms (last 100k iterations)
 draw(PNG("SEIR_alpha_hist.png", 20cm, 15cm),
-     plot(x=trace.α[end-99999:end],
+     plot(x=ilm_trace.α[end-99999:end],
           Geom.histogram,
           Theme(panel_opacity=1.,
                 panel_fill=color("white"),
                 background_color=color("white"))))
 
 draw(PNG("SEIR_beta_hist.png", 20cm, 15cm),
-     plot(x=trace.β[end-99999:end],
+     plot(x=ilm_trace.β[end-99999:end],
           Geom.histogram,
           Theme(panel_opacity=1.,
                 panel_fill=color("white"),
                 background_color=color("white"))))
 
 draw(PNG("SEIR_eta_hist.png", 20cm, 15cm),
-     plot(x=trace.η[end-99999:end],
+     plot(x=ilm_trace.η[end-99999:end],
           Geom.histogram,
           Theme(panel_opacity=1.,
                 panel_fill=color("white"),
                 background_color=color("white"))))
 
 draw(PNG("SEIR_rho_hist.png", 20cm, 15cm),
-     plot(x=trace.ρ[end-99999:end],
+     plot(x=ilm_trace.ρ[end-99999:end],
           Geom.histogram,
           Theme(panel_opacity=1.,
                 panel_fill=color("white"),
                 background_color=color("white"))))
 
 draw(PNG("SEIR_gamma_hist.png", 20cm, 15cm),
-     plot(x=trace.γ[end-99999:end],
+     plot(x=ilm_trace.γ[end-99999:end],
           Geom.histogram,
           Theme(panel_opacity=1.,
                 panel_fill=color("white"),
                 background_color=color("white"))))
 
 draw(PNG("SEIR_nu_hist.png", 20cm, 15cm),
-     plot(x=trace.ν[end-99999:end],
+     plot(x=detection_trace.ν[end-99999:end],
+          Geom.histogram,
+          Theme(panel_opacity=1.,
+                panel_fill=color("white"),
+                background_color=color("white"))))
+
+draw(PNG("SEIR_lambda_hist.png", 20cm, 15cm),
+     plot(x=mutation_trace.λ[end-99999:end],
           Geom.histogram,
           Theme(panel_opacity=1.,
                 panel_fill=color("white"),
