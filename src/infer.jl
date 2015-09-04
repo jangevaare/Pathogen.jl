@@ -2,178 +2,6 @@
 infer.jl
 """
 
-function ILM_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, γ::Float64, ν::Float64, aug::SEIR_augmented, obs::SEIR_observed, dist::Metric, debug=false::Bool)
-  """
-  Calculate the loglikelihood and return an exposure network array under specified parameters values and observations
-
-  α, β: powerlaw exposure kernel parameters
-  η: external pressure rate
-  ρ: infectivity rate (1/mean latent period)
-  γ: recovery rate (1/mean infectious period)
-  ν: detection rate (1/mean detection lag)
-  """
-  # Initiate an exposure network
-  network = fill(false, (1 + length(obs.covariates), length(obs.covariates)))
-
-  ll = loglikelihood(Exponential(1/γ), (aug.removed .- aug.infectious)[!isnan(aug.removed)])
-
-  if debug && ll == -Inf
-    print("Infectious period caused loglikelihood to go to -Inf")
-  end
-
-  # Create event timing array
-  event_times = [aug.exposed aug.infectious aug.removed]
-
-  # Find event order
-  event_order = sortperm(event_times[:])
-
-  # Create empty rate array
-  rate_array = fill(0., (1 + length(obs.covariates) + 2, length(obs.covariates)))
-
-  # First row is external pressure rate
-  rate_array[1,:] = η
-
-  # The rest of the events
-  for i = 1:length(event_order)
-    isnan(event_times[event_order[i]]) && break
-    rate_array_sum = sum(rate_array)
-    id = ind2sub(size(event_times), event_order[i])
-
-    # Don't consider likelilihood contribution of first event
-    if i > 1
-      ll += logpdf(Exponential(1/rate_array_sum), event_times[event_order[i]] - event_times[event_order[i-1]])
-      ll += log(sum(rate_array[:,id[1]])/rate_array_sum)
-    end
-
-    # Exposure event
-    if id[2] == 1
-      # Generate a exposure source based on disease pressures at time of exposure
-      network[:, id[1]] = rand(Multinomial(1, rate_array[1:(length(obs.covariates)+1), id[1]]./sum(rate_array[1:(length(obs.covariates)+1), id[1]])))
-      # Update rate array (exposure rates, latent period)
-      rate_array[:, id[1]] = 0.
-      rate_array[1 + size(rate_array, 2) + 1, id[1]] = ρ
-
-    # Infectiousness event
-    elseif id[2] == 2
-      # Update rate_array for latent and infectious periods
-      rate_array[1 + size(rate_array, 2) + 1, id[1]] = 0.
-      rate_array[1 + size(rate_array, 2) + 2, id[1]] = γ
-      # Update exposure rates for rest of susceptible population
-      for j = 1:size(rate_array, 2)
-        if j != id[1] && rate_array[1, j] != 0.
-          rate_array[id[1] + 1, j] = α*evaluate(dist, obs.covariates[id[1]], obs.covariates[j])^-β
-#         else
-#           rate_array[id[1] + 1, j] = 0.
-        end
-      end
-
-    # Removal event
-    elseif id[2] == 3
-      # Update rate_array for exposure & removal
-      rate_array[id[1] + 1, :] = 0.
-      rate_array[1 + size(rate_array,2) + 2, id[1]] = 0.
-    end
-
-    # Provide loop position when loglikelihood goes to -Inf if desired
-    if debug && ll == -Inf
-      if id[2] == 1
-        print("Event $i (exposure of individual $(id[1])) caused loglikelihood to go to -Inf")
-      elseif id[2] == 2
-        print("Event $i (infection of individual $(id[1])) caused loglikelihood to go to -Inf")
-      elseif id[2] == 3
-        print("Event $i (removal of individual $(id[1])) caused loglikelihood to go to -Inf")
-      end
-    end
-
-    # Prevent needless calculation
-    if ll == -Inf
-      break
-    end
-
-  end
-  return ll, network
-end
-
-function SEIR_MCMC(n::Int64, transition_cov::Array{Float64}, trace::SEIR_trace, priors::SEIR_priors, obs::SEIR_observed, progress=true::Bool, dist=Euclidean())
-  """
-  Performs `n` data-augmented metropolis hastings MCMC iterations. Initiates a single chain by sampling from prior distribution
-
-  α, β: powerlaw exposure kernel parameters
-  η: external pressure rate
-  ρ: infectivity rate (1/mean latent period)
-  γ: recovery rate (1/mean infectious period)
-  ν: detection rate (1/mean detection lag)
-  """
-  @assert(size(transition_cov) == (6,6), "transition_cov must be a 6x6 matrix")
-
-  for i = 1:n
-
-    # Create and incremenet progress bar
-    if progress
-      if i == 1
-        progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 30)
-      else
-        next!(progressbar)
-      end
-    end
-
-    # Only generate valid proposals
-    proposal = [trace.α[end], trace.β[end], trace.η[end], trace.ρ[end], trace.γ[end], trace.ν[end]] .+ rand(MvNormal(transition_cov))
-    while any(proposal .< 0.)
-      proposal = [trace.α[end], trace.β[end], trace.η[end], trace.ρ[end], trace.γ[end], trace.ν[end]] .+ rand(MvNormal(transition_cov))
-    end
-
-    # Augment the data
-    aug = SEIR_augmentation(proposal[4], proposal[6], obs)
-
-    # Loglikelihood calculation and exposure network array
-    ll, network = SEIR_loglikelihood(proposal[1], proposal[2], proposal[3], proposal[4], proposal[5], proposal[6], aug, obs, dist)
-
-    # Add logprior for logposterior
-    logposterior = ll + SEIR_logprior(priors, proposal[1], proposal[2], proposal[3], proposal[4], proposal[5], proposal[6])
-
-    # Accept/reject based on logposterior
-    if logposterior == -Inf
-      reject = true
-    elseif logposterior > trace.logposterior[end]
-      reject = false
-    elseif exp(logposterior - trace.logposterior[end]) >= rand()
-      reject = false
-    else
-      reject = true
-    end
-
-    # Re-augment data (and recalculate log posterior) if proposal is rejected...
-    if reject
-      proposal[1] = trace.α[end]
-      proposal[2] = trace.β[end]
-      proposal[3] = trace.η[end]
-      proposal[4] = trace.ρ[end]
-      proposal[5] = trace.γ[end]
-      proposal[6] = trace.ν[end]
-
-      aug = SEIR_augmentation(proposal[4], proposal[6], obs)
-      ll, network = SEIR_loglikelihood(proposal[1], proposal[2], proposal[3], proposal[4], proposal[5], proposal[6], aug, obs, dist)
-      logposterior = ll + SEIR_logprior(priors, proposal[1], proposal[2], proposal[3], proposal[4], proposal[5], proposal[6])
-    end
-
-    # Update chain
-    push!(trace.α, proposal[1])
-    push!(trace.β, proposal[2])
-    push!(trace.η, proposal[3])
-    push!(trace.ρ, proposal[4])
-    push!(trace.γ, proposal[5])
-    push!(trace.ν, proposal[6])
-    push!(trace.aug, aug)
-    push!(trace.network, network)
-    push!(trace.logposterior, logposterior)
-  end
-
-  return trace
-end
-
-#### New stuff
-
 function surveil(population::Population, ν::Float64)
   """
   Gather surveillance data on specific individuals in a population, with an exponentially distributed detection lag with rate ν
@@ -356,6 +184,99 @@ function network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmented, network:
   return ll
 end
 
+
+function ILM_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, γ::Float64, ν::Float64, aug::SEIR_augmented, obs::SEIR_observed, dist::Metric, debug=false::Bool)
+  """
+  Calculate the loglikelihood and return an exposure network array under specified parameters values and observations
+
+  α, β: powerlaw exposure kernel parameters
+  η: external pressure rate
+  ρ: infectivity rate (1/mean latent period)
+  γ: recovery rate (1/mean infectious period)
+  ν: detection rate (1/mean detection lag)
+  """
+  # Initiate an exposure network
+  network = fill(false, (1 + length(obs.covariates), length(obs.covariates)))
+
+  ll = loglikelihood(Exponential(1/γ), (aug.removed .- aug.infectious)[!isnan(aug.removed)])
+
+  if debug && ll == -Inf
+    print("Infectious period caused loglikelihood to go to -Inf")
+  end
+
+  # Create event timing array
+  event_times = [aug.exposed aug.infectious aug.removed]
+
+  # Find event order
+  event_order = sortperm(event_times[:])
+
+  # Create empty rate array
+  rate_array = fill(0., (1 + length(obs.covariates) + 2, length(obs.covariates)))
+
+  # First row is external pressure rate
+  rate_array[1,:] = η
+
+  # The rest of the events
+  for i = 1:length(event_order)
+    isnan(event_times[event_order[i]]) && break
+    rate_array_sum = sum(rate_array)
+    id = ind2sub(size(event_times), event_order[i])
+
+    # Don't consider likelilihood contribution of first event
+    if i > 1
+      ll += logpdf(Exponential(1/rate_array_sum), event_times[event_order[i]] - event_times[event_order[i-1]])
+      ll += log(sum(rate_array[:,id[1]])/rate_array_sum)
+    end
+
+    # Exposure event
+    if id[2] == 1
+      # Generate a exposure source based on disease pressures at time of exposure
+      network[:, id[1]] = rand(Multinomial(1, rate_array[1:(length(obs.covariates)+1), id[1]]./sum(rate_array[1:(length(obs.covariates)+1), id[1]])))
+      # Update rate array (exposure rates, latent period)
+      rate_array[:, id[1]] = 0.
+      rate_array[1 + size(rate_array, 2) + 1, id[1]] = ρ
+
+    # Infectiousness event
+    elseif id[2] == 2
+      # Update rate_array for latent and infectious periods
+      rate_array[1 + size(rate_array, 2) + 1, id[1]] = 0.
+      rate_array[1 + size(rate_array, 2) + 2, id[1]] = γ
+      # Update exposure rates for rest of susceptible population
+      for j = 1:size(rate_array, 2)
+        if j != id[1] && rate_array[1, j] != 0.
+          rate_array[id[1] + 1, j] = α*evaluate(dist, obs.covariates[id[1]], obs.covariates[j])^-β
+#         else
+#           rate_array[id[1] + 1, j] = 0.
+        end
+      end
+
+    # Removal event
+    elseif id[2] == 3
+      # Update rate_array for exposure & removal
+      rate_array[id[1] + 1, :] = 0.
+      rate_array[1 + size(rate_array,2) + 2, id[1]] = 0.
+    end
+
+    # Provide loop position when loglikelihood goes to -Inf if desired
+    if debug && ll == -Inf
+      if id[2] == 1
+        print("Event $i (exposure of individual $(id[1])) caused loglikelihood to go to -Inf")
+      elseif id[2] == 2
+        print("Event $i (infection of individual $(id[1])) caused loglikelihood to go to -Inf")
+      elseif id[2] == 3
+        print("Event $i (removal of individual $(id[1])) caused loglikelihood to go to -Inf")
+      end
+    end
+
+    # Prevent needless calculation
+    if ll == -Inf
+      break
+    end
+
+  end
+  return ll, network
+end
+
 function initialize(ilm_priors::ILM_priors, mutation_priors::JC69_priors, detection_priors::Lag_priors, obs::SEIR_observed, limit=500::Int, debug=false::Bool, dist=Euclidean())
   """
   Initiate an Trace object by sampling from specified prior distributions
@@ -438,4 +359,82 @@ function initialize(ilm_priors::ILM_priors, obs::SEIR_observed, limit=500::Int, 
   else
     print("Failed to initialize after $count attempts")
   end
+end
+
+function SEIR_MCMC(n::Int64, transition_cov::Array{Float64}, trace::SEIR_trace, priors::SEIR_priors, obs::SEIR_observed, progress=true::Bool, dist=Euclidean())
+  """
+  Performs `n` data-augmented metropolis hastings MCMC iterations. Initiates a single chain by sampling from prior distribution
+
+  α, β: powerlaw exposure kernel parameters
+  η: external pressure rate
+  ρ: infectivity rate (1/mean latent period)
+  γ: recovery rate (1/mean infectious period)
+  ν: detection rate (1/mean detection lag)
+  """
+  @assert(size(transition_cov) == (6,6), "transition_cov must be a 6x6 matrix")
+
+  for i = 1:n
+
+    # Create and incremenet progress bar
+    if progress
+      if i == 1
+        progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 30)
+      else
+        next!(progressbar)
+      end
+    end
+
+    # Only generate valid proposals
+    proposal = [trace.α[end], trace.β[end], trace.η[end], trace.ρ[end], trace.γ[end], trace.ν[end]] .+ rand(MvNormal(transition_cov))
+    while any(proposal .< 0.)
+      proposal = [trace.α[end], trace.β[end], trace.η[end], trace.ρ[end], trace.γ[end], trace.ν[end]] .+ rand(MvNormal(transition_cov))
+    end
+
+    # Augment the data
+    aug = SEIR_augmentation(proposal[4], proposal[6], obs)
+
+    # Loglikelihood calculation and exposure network array
+    ll, network = SEIR_loglikelihood(proposal[1], proposal[2], proposal[3], proposal[4], proposal[5], proposal[6], aug, obs, dist)
+
+    # Add logprior for logposterior
+    logposterior = ll + SEIR_logprior(priors, proposal[1], proposal[2], proposal[3], proposal[4], proposal[5], proposal[6])
+
+    # Accept/reject based on logposterior
+    if logposterior == -Inf
+      reject = true
+    elseif logposterior > trace.logposterior[end]
+      reject = false
+    elseif exp(logposterior - trace.logposterior[end]) >= rand()
+      reject = false
+    else
+      reject = true
+    end
+
+    # Re-augment data (and recalculate log posterior) if proposal is rejected...
+    if reject
+      proposal[1] = trace.α[end]
+      proposal[2] = trace.β[end]
+      proposal[3] = trace.η[end]
+      proposal[4] = trace.ρ[end]
+      proposal[5] = trace.γ[end]
+      proposal[6] = trace.ν[end]
+
+      aug = SEIR_augmentation(proposal[4], proposal[6], obs)
+      ll, network = SEIR_loglikelihood(proposal[1], proposal[2], proposal[3], proposal[4], proposal[5], proposal[6], aug, obs, dist)
+      logposterior = ll + SEIR_logprior(priors, proposal[1], proposal[2], proposal[3], proposal[4], proposal[5], proposal[6])
+    end
+
+    # Update chain
+    push!(trace.α, proposal[1])
+    push!(trace.β, proposal[2])
+    push!(trace.η, proposal[3])
+    push!(trace.ρ, proposal[4])
+    push!(trace.γ, proposal[5])
+    push!(trace.ν, proposal[6])
+    push!(trace.aug, aug)
+    push!(trace.network, network)
+    push!(trace.logposterior, logposterior)
+  end
+
+  return trace
 end
