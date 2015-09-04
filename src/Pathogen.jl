@@ -19,8 +19,8 @@ export
       JC69_priors,
 
   Trace,
-    SEIR_trace,
-      ILM_trace,
+    ILM_trace,
+      SEIR_trace,
     Detection_trace,
       Lag_trace,
     Mutation_trace,
@@ -50,7 +50,7 @@ export
   rand_prior,
   seq_distances,
   seq_loglikelihood,
-  network_loglikelihood
+  network_loglikelihood,
   SEIR_loglikelihood,
   initialize,
   MCMC
