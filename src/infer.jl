@@ -394,20 +394,20 @@ function initialize(ilm_priors::ILM_priors, obs::SEIR_observed, limit=500::Int, 
 end
 
 function MCMC(n::Int64,
-                   transition_cov::Array{Float64},
-                   ilm_trace::ILM_trace,
-                   detection_trace::Lag_trace,
-                   mutation_trace::JC69_trace,
-                   ilm_priors::ILM_priors,
-                   detection_priors::Lag_priors,
-                   mutation_priors::JC69_priors,
-                   obs::SEIR_observed,
-                   progress=true::Bool,
-                   dist=Euclidean())
+              transition_cov::Array{Float64},
+              ilm_priors::ILM_priors,
+              detection_priors::Lag_priors,
+              mutation_priors::JC69_priors,
+              obs::SEIR_observed,
+              progress=true::Bool,
+              dist=Euclidean(),
+              init_limit=500::Int64)
   """
   Performs `n` data-augmented metropolis hastings within Gibbs MCMC iterations. Initiates a single chain by sampling from prior distribution
   """
   @assert(size(transition_cov) == (7,7), "transition_cov must be a 7x7 matrix")
+
+  ilm_trace, lag_trace, JC69_trace = initialize(ilm_priors, mutation_priors, detection_priors, obs, init_limit, false, dist)
 
   for i = 1:n
 
