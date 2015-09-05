@@ -115,7 +115,7 @@ function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, network::Array)
   """
   For a given transmission network, find the time between the pathogen sequences between every individuals i and j
   """
-  infected = find(!isnan(obs.seq[i]))
+  infected = find(!isnan(obs.seq))
   pathway = infected[1]
   while pathway[end] != 0
     push!(pathway, findfirst(network[:,pathway[end]])-1)
