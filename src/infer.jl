@@ -116,14 +116,14 @@ function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, network::Array)
   For a given transmission network, find the time between the pathogen sequences between every individuals i and j
   """
   infected = find(isseq(obs.seq))
-  pathway = infected[1]
+  pathway = [infected[1]]
   while pathway[end] != 0
     push!(pathway, findfirst(network[:,pathway[end]])-1)
   end
   pathways = Vector[pathway]
 
   for i = 2:length(infected)
-    pathway = infected[i]
+    pathway = [infected[i]]
     while pathway[end] != 0
       push!(pathway, findfirst(network[:,pathway[end]])-1)
     end
@@ -135,11 +135,11 @@ function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, network::Array)
     for j = 1:i
 
       k = 1
-      while length(pathways[infected[i]]) > k && length(pathways[infected[j]]) && pathways[infected[i]][end - k] == pathways[infected[j]][end - k]
+      while length(pathways[infected[i]]) > k && length(pathways[infected[j]]) > k && pathways[infected[i]][end - k] == pathways[infected[j]][end - k]
         k += 1
       end
 
-      seq_dist[i,j] += obs.infectious[pathways[infected[i]][1]] - aug.exposed[pathways[infected[i]][end - k]]å
+      seq_dist[i,j] += obs.infectious[pathways[infected[i]][1]] - aug.exposed[pathways[infected[i]][end - k]]
       seq_dist[i,j] += obs.infectious[pathways[infected[j]][1]] - aug.exposed[pathways[infected[j]][end - k]]
       seq_dist[i,j] += abs(aug.exposed[pathways[infected[j]][end - k]] - aug.exposed[pathways[infected[i]][end - k]])
 

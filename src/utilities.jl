@@ -124,9 +124,11 @@ function isseq(x::Vector{Any})
   """
   Identifies the pressence of a Nucleotide2bitSeq in a Vector{Any}
   """
-  seq = fill(false, size(x))
-  for i = 1:size(x)
-    typeof(x[i]) == Nucleotide2bitSeq && seq[i] = true
+  seq = fill(false, length(x))
+  for i = 1:length(x)
+    if typeof(x[i]) == Nucleotide2bitSeq
+      seq[i] = true
+    end
   end
   return seq
 end
