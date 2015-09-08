@@ -135,7 +135,7 @@ function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, network::Array)
     for j = 1:i
 
       k = 1
-      while length(pathways[infected[i]]) > k && length(pathways[infected[j]]) > k && pathways[infected[i]][end - k] == pathways[infected[j]][end - k]
+      while length(pathways[i]) > k && length(pathways[j]) > k && pathways[i][end - k] == pathways[j][end - k]
         k += 1
       end
 
