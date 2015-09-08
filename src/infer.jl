@@ -139,9 +139,9 @@ function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, network::Array)
         k += 1
       end
 
-      seq_dist[i,j] += obs.infectious[pathways[infected[i]][1]] - aug.exposed[pathways[infected[i]][end - k]]
-      seq_dist[i,j] += obs.infectious[pathways[infected[j]][1]] - aug.exposed[pathways[infected[j]][end - k]]
-      seq_dist[i,j] += abs(aug.exposed[pathways[infected[j]][end - k]] - aug.exposed[pathways[infected[i]][end - k]])
+      seq_dist[i,j] += obs.infectious[pathways[i][1]] - aug.exposed[pathways[i][end - k]]
+      seq_dist[i,j] += obs.infectious[pathways[j][1]] - aug.exposed[pathways[j][end - k]]
+      seq_dist[i,j] += abs(aug.exposed[pathways[j][end - k]] - aug.exposed[pathways[i][end - k]])
 
     end
   end
