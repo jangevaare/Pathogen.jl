@@ -31,6 +31,7 @@ export
   plotdata,
   convert,
   maximum,
+  isseq,
 
   # mutate.jl
   jc69,

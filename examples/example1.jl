@@ -3,7 +3,6 @@ Example 1
 SEIR simulation, visualization, and inference
 Justin Angevaare
 """
-
 using Pathogen, Gadfly, DataFrames, Distributions, ProgressMeter
 
 cd("Desktop/example1")

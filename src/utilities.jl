@@ -119,3 +119,14 @@ function maximum(aug::SEIR_augmented)
   """
   return maximum([aug.exposed aug.infectious aug.removed])
 end
+
+function isseq(x::Vector{Any})
+  """
+  Identifies the pressence of a Nucleotide2bitSeq in a Vector{Any}
+  """
+  seq = fill(false, size(x))
+  for i = 1:size(x)
+    typeof(x[i]) == Nucleotide2bitSeq && seq[i] = true
+  end
+  return seq
+end
