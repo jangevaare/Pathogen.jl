@@ -569,7 +569,7 @@ function MCMC(n::Int64,
     push!(ilm_trace.γ, ilm_proposal[5])
     push!(ilm_trace.aug, aug)
     push!(ilm_trace.network, network)
-    push!(ilm_trace.logposterior, logposterior)
+    push!(ilm_trace.logposterior, lp)
 
     push!(detection_trace.ν, detection_proposal[1])
 
@@ -671,7 +671,7 @@ function MCMC(n::Int64,
     push!(ilm_trace.γ, ilm_proposal[5])
     push!(ilm_trace.aug, aug)
     push!(ilm_trace.network, network)
-    push!(ilm_trace.logposterior, logposterior)
+    push!(ilm_trace.logposterior, lp)
 
     push!(detection_trace.ν, detection_proposal[1])
 
