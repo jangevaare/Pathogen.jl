@@ -555,7 +555,7 @@ function MCMC(n::Int64,
       # Re-augment data (and recalculate log posterior) if proposal is rejected...
       aug = augment(ilm_proposal[4], detection_proposal[1], obs)
       lp, network = SEIR_loglikelihood(ilm_proposal[1], ilm_proposal[2], ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], aug, obs, dist)
-      lp += network_loglikelihood(obs, aug, network, jc69([mutation_params[1]]), debug)
+      lp += network_loglikelihood(obs, aug, network, jc69([mutation_proposal[1]]), debug)
       lp += logprior(ilm_priors, ilm_proposal)
       lp += logprior(detection_priors, detection_proposal)
       lp += logprior(mutation_priors, mutation_proposal)
@@ -627,7 +627,7 @@ function MCMC(n::Int64,
     lp, network = SEIR_loglikelihood(ilm_proposal[1], ilm_proposal[2], ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], aug, obs, dist)
 
     # Network loglikelihood
-    lp += network_loglikelihood(obs, aug, network, jc69([mutation_params[1]]), debug)
+    lp += network_loglikelihood(obs, aug, network, jc69([mutation_proposal[1]]), debug)
 
     # Add logpriors
     lp += logprior(ilm_priors, ilm_proposal)
@@ -657,7 +657,7 @@ function MCMC(n::Int64,
       # Re-augment data (and recalculate log posterior) if proposal is rejected...
       aug = augment(ilm_proposal[4], detection_proposal[1], obs)
       lp, network = SEIR_loglikelihood(ilm_proposal[1], ilm_proposal[2], ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], aug, obs, dist)
-      lp += network_loglikelihood(obs, aug, network, jc69([mutation_params[1]]), debug)
+      lp += network_loglikelihood(obs, aug, network, jc69([mutation_proposal[1]]), debug)
       lp += logprior(ilm_priors, ilm_proposal)
       lp += logprior(detection_priors, detection_proposal)
       lp += logprior(mutation_priors, mutation_proposal)
