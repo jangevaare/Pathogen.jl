@@ -95,7 +95,7 @@ function logprior(priors::Priors, params::Vector{Float64})
   """
   lprior = 0.
   for i = 1:length(params)
-    lprior += logpdf(priors.(names(priors)[i]), mutation_params[i])
+    lprior += logpdf(priors.(names(priors)[i]), params[i])
   end
   return lprior
 end
