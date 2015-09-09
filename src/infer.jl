@@ -111,7 +111,7 @@ function randprior(priors::Priors)
   return params
 end
 
-function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, network::Array)
+function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, network::Array, debug=false::Bool)
   """
   For a given transmission network, find the time between the pathogen sequences between every individuals i and j
   """
@@ -140,10 +140,14 @@ function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, network::Array)
         k += 1
       end
 
-      test = obs.infectious[infected[i]]
-      test = obs.infectious[infected[j]]
-      test = aug.exposed[pathways[i][end - k]]
-      test = aug.exposed[pathways[j][end - k]]
+      if debug
+        println("infection of individual $(infected[i]) observed at $(obs.infectious[infected[i]])")
+        println("infection pathway of individual $(infected[i]) is $(pathways[i])")
+        println("infection of individual $(infected[j]) observed at $(obs.infectious[infected[j]])")
+        println("infection pathway of individual $(infected[j]) is $(pathways[j])")
+        println("most recent common infection source of individuals $(infected[i]) and $(infected[j]) is $(pathways[i][end - k + 1])")
+        println("the infection pathway of $(infected[i]) and $(infected[j]) diverged with $(pathways[i][end - k]) and $(pathways[j][end - k])")
+      end
 
       seq_dist[infected[i],infected[j]] += obs.infectious[infected[i]] - aug.exposed[pathways[i][end - k]]
       seq_dist[infected[i],infected[j]] += obs.infectious[infected[j]] - aug.exposed[pathways[j][end - k]]
@@ -176,12 +180,12 @@ function seq_loglikelihood(seq1::Nucleotide2bitSeq, seq2::Nucleotide2bitSeq, bra
   return ll
 end
 
-function network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmented, network::Array, substitution_matrix::Array)
+function network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmented, network::Array, substitution_matrix::Array, debug=false::Bool)
   """
   Loglikelihood for an entire transmission network
   """
   ll = 0.
-  seq_dist = seq_distances(obs, aug, network)
+  seq_dist = seq_distances(obs, aug, network, debug)
   for i = 1:size(seq_dist, 1)
     for j = 1:i
        ll += seq_loglikelihood(obs.seq[i], obs.seq[j], seq_dist[i,j], substitution_matrix)
@@ -292,7 +296,7 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
   detection_params = randprior(detection_priors)
   aug = augment(ilm_params[4], detection_params[1], obs)
   ll, network = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, dist, debug)
-  ll += network_loglikelihood(obs, aug, network, jc69([mutation_params[1]]))
+  ll += network_loglikelihood(obs, aug, network, jc69([mutation_params[1]]), debug)
   count = 1
 
   # Retry initialization until non-negative infinity loglikelihood
@@ -303,7 +307,7 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
     detection_params = randprior(detection_priors)
     aug = augment(ilm_params[4], detection_params[1], obs)
     ll, network = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, dist, debug)
-    ll += network_loglikelihood(obs, aug, network, jc69([mutation_params[1]]))
+    ll += network_loglikelihood(obs, aug, network, jc69([mutation_params[1]]), debug)
   end
 
   if count < limit
@@ -323,7 +327,7 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, obs::
   mutation_params = randprior(mutation_priors)
   aug = augment(ilm_params[4], obs)
   ll, network = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, dist, debug)
-  ll += network_loglikelihood(obs, aug, network, jc69([mutation_params[1]]))
+  ll += network_loglikelihood(obs, aug, network, jc69([mutation_params[1]]), debug)
   count = 1
 
   # Retry initialization until non-negative infinity loglikelihood
@@ -333,7 +337,7 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, obs::
     mutation_params = randprior(mutation_priors)
     aug = augment(ilm_params[4], obs)
     ll, network = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, dist, debug)
-    ll += network_loglikelihood(obs, aug, network, jc69([mutation_params[1]]))
+    ll += network_loglikelihood(obs, aug, network, jc69([mutation_params[1]]), debug)
   end
 
   if count < limit
@@ -448,7 +452,7 @@ function MCMC(n::Int64,
     lp, network = SEIR_loglikelihood(ilm_proposal[1], ilm_proposal[2], ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], aug, obs, dist)
 
     # Network loglikelihood
-    lp += network_loglikelihood(obs, aug, network, jc69([mutation_params[1]]))
+    lp += network_loglikelihood(obs, aug, network, jc69([mutation_params[1]]), debug)
 
     # Add logpriors
     lp += logprior(ilm_priors, ilm_proposal)
@@ -478,7 +482,7 @@ function MCMC(n::Int64,
       # Re-augment data (and recalculate log posterior) if proposal is rejected...
       aug = augment(ilm_proposal[4], detection_proposal[1], obs)
       lp, network = SEIR_loglikelihood(ilm_proposal[1], ilm_proposal[2], ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], aug, obs, dist)
-      lp += network_loglikelihood(obs, aug, network, jc69([mutation_params[1]]))
+      lp += network_loglikelihood(obs, aug, network, jc69([mutation_params[1]]), debug)
       lp += logprior(ilm_priors, ilm_proposal)
       lp += logprior(detection_priors, detection_proposal)
       lp += logprior(mutation_priors, mutation_proposal)
@@ -550,7 +554,7 @@ function MCMC(n::Int64,
     lp, network = SEIR_loglikelihood(ilm_proposal[1], ilm_proposal[2], ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], aug, obs, dist)
 
     # Network loglikelihood
-    lp += network_loglikelihood(obs, aug, network, jc69([mutation_params[1]]))
+    lp += network_loglikelihood(obs, aug, network, jc69([mutation_params[1]]), debug)
 
     # Add logpriors
     lp += logprior(ilm_priors, ilm_proposal)
@@ -580,7 +584,7 @@ function MCMC(n::Int64,
       # Re-augment data (and recalculate log posterior) if proposal is rejected...
       aug = augment(ilm_proposal[4], detection_proposal[1], obs)
       lp, network = SEIR_loglikelihood(ilm_proposal[1], ilm_proposal[2], ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], aug, obs, dist)
-      lp += network_loglikelihood(obs, aug, network, jc69([mutation_params[1]]))
+      lp += network_loglikelihood(obs, aug, network, jc69([mutation_params[1]]), debug)
       lp += logprior(ilm_priors, ilm_proposal)
       lp += logprior(detection_priors, detection_proposal)
       lp += logprior(mutation_priors, mutation_proposal)
