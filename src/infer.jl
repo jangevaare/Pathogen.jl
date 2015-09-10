@@ -537,7 +537,7 @@ function MCMC(n::Int64,
       reject = true
     elseif lp > ilm_trace.logposterior[end]
       reject = false
-    elseif exp(lp - trace.logposterior[end]) >= rand()
+    elseif exp(lp - ilm_trace.logposterior[end]) >= rand()
       reject = false
     else
       reject = true
@@ -639,7 +639,7 @@ function MCMC(n::Int64,
       reject = true
     elseif lp > ilm_trace.logposterior[end]
       reject = false
-    elseif exp(lp - trace.logposterior[end]) >= rand()
+    elseif exp(lp - ilm_trace.logposterior[end]) >= rand()
       reject = false
     else
       reject = true
