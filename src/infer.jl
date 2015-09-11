@@ -305,8 +305,8 @@ function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, 
       for j = 1:size(rate_array, 2)
         if j != id[1] && rate_array[1, j] != 0.
           rate_array[id[1] + 1, j] = α*evaluate(dist, obs.covariates[id[1]], obs.covariates[j])^-β
-#         else
-#           rate_array[id[1] + 1, j] = 0.
+        else
+          rate_array[id[1] + 1, j] = 0.
         end
       end
 
@@ -314,7 +314,7 @@ function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, 
     elseif id[2] == 3
       # Update rate_array for exposure & removal
       rate_array[id[1] + 1, :] = 0.
-      rate_array[1 + size(rate_array,2) + 2, id[1]] = 0.
+      rate_array[:, id[1]] = 0.
     end
 
     # Provide loop position when loglikelihood goes to -Inf if desired
