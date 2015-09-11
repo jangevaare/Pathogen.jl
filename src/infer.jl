@@ -627,6 +627,7 @@ function MCMC(n::Int64,
               obs::SEIR_observed,
               debug=false::Bool,
               progress=true::Bool,
+              reaugment=false::Bool,
               dist=Euclidean())
   """
   Performs `n` data-augmented metropolis hastings within Gibbs MCMC iterations. Initiates a single chain by sampling from prior distribution
@@ -695,21 +696,23 @@ function MCMC(n::Int64,
       ilm_proposal[3] = ilm_trace.η[end]
       ilm_proposal[4] = ilm_trace.ρ[end]
       ilm_proposal[5] = ilm_trace.γ[end]
-      aug = ilm_trace.aug[end]
-      network = ilm_trace.network[end]
-      lp = ilm_trace.logposterior[end]
 
-      detection_proposal[1] = detection_trace.ν[end]
-
-      mutation_proposal[1] = mutation_trace.λ[end]
-
-#       # Re-augment data (and recalculate log posterior) if proposal is rejected...
-#       aug = augment(ilm_proposal[4], detection_proposal[1], obs)
-#       lp, network = SEIR_loglikelihood(ilm_proposal[1], ilm_proposal[2], ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], aug, obs, dist)
-#       lp += network_loglikelihood(obs, aug, network, jc69([mutation_proposal[1]]), debug)
-#       lp += logprior(ilm_priors, ilm_proposal)
-#       lp += logprior(detection_priors, detection_proposal)
-#       lp += logprior(mutation_priors, mutation_proposal)
+      if reaugment
+        detection_proposal[1] = detection_trace.ν[end]
+        mutation_proposal[1] = mutation_trace.λ[end]
+        aug = augment(ilm_proposal[4], detection_proposal[1], obs)
+        lp, network = SEIR_loglikelihood(ilm_proposal[1], ilm_proposal[2], ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], aug, obs, dist)
+        lp += network_loglikelihood(obs, aug, network, jc69([mutation_proposal[1]]), debug)
+        lp += logprior(ilm_priors, ilm_proposal)
+        lp += logprior(detection_priors, detection_proposal)
+        lp += logprior(mutation_priors, mutation_proposal)
+      else
+        aug = ilm_trace.aug[end]
+        network = ilm_trace.network[end]
+        lp = ilm_trace.logposterior[end]
+        detection_proposal[1] = detection_trace.ν[end]
+        mutation_proposal[1] = mutation_trace.λ[end]
+      end
     end
 
     # Update trace objects
@@ -738,6 +741,7 @@ function MCMC(n::Int64,
               obs::SEIR_observed,
               debug=false::Bool,
               progress=true::Bool,
+              reaugment=false::Bool,
               dist=Euclidean(),
               init_limit=500::Int64)
   """
@@ -759,6 +763,7 @@ function MCMC(n::Int64,
               obs,
               debug,
               progress,
+              reaugment,
               dist)
 
   end
@@ -770,6 +775,7 @@ function MCMC(n::Int64,
               obs::SEIR_observed,
               debug=false::Bool,
               progress=true::Bool,
+              reaugment=false::Bool,
               dist=Euclidean(),
               init_limit=500::Int64)
   """
@@ -792,6 +798,7 @@ function MCMC(n::Int64,
               obs,
               debug,
               progress,
+              reaugment,
               dist,
               init_limit)
 end
