@@ -232,22 +232,39 @@ function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, infected::Vector
   return seq_dist += transpose(seq_dist)
 end
 
-function seq_loglikelihood(seq1::Nucleotide2bitSeq, seq2::Nucleotide2bitSeq, branchdistance::Float64, substitution_matrix::Array)
+# function seq_loglikelihood(seq1::Nucleotide2bitSeq, seq2::Nucleotide2bitSeq, branchdistance::Float64, substitution_matrix::Array)
+#   """
+#   Loglikelihood for any two aligned sequences, a specified time apart on a transmission network
+#   """
+#   @assert(length(seq1) == length(seq2), "Sequences not aligned")
+#   ll = 0.
+#   for i = 1:length(seq1)
+#     base1 = convert(Int64, seq1[i])
+#     for base2 = 1:4
+#       if base2 == convert(Int64, seq2[i])
+#         if base1 != base2
+#           ll += log(1 - exp(substitution_matrix[base1, base2] .* branchdistance))
+#         end
+#       else
+#         ll += substitution_matrix[base1, base2] .* branchdistance
+#       end
+#     end
+#   end
+#   return ll
+# end
+
+function seq_loglikelihood(seq1::Nucleotide2bitSeq, seq2::Nucleotide2bitSeq, seqdistance::Float64, substitution_matrix::Array)
   """
   Loglikelihood for any two aligned sequences, a specified time apart on a transmission network
   """
   @assert(length(seq1) == length(seq2), "Sequences not aligned")
   ll = 0.
   for i = 1:length(seq1)
-    base1 = convert(Int64, seq1[i])
-    for base2 = 1:4
-      if base2 == convert(Int64, seq2[i])
-        if base1 != base2
-          ll += log(1 - exp(substitution_matrix[base1, base2] .* branchdistance))
-        end
-      else
-        ll += substitution_matrix[base1, base2] .* branchdistance
-      end
+    if seq1[i] == seq2[i]
+      ll += -seq_distance*sum(substitution_matrix[convert(Int64, seq1[i]),:])
+    else
+      ll += log(1-(exp(-seq_distance*sum(substitution_matrix[convert(Int64, seq1[i]),:]))))
+      ll += log(substitution_matrix[convert(Int64, seq1[i]),convert(Int64, seq2[i])]/sum(substitution_matrix[convert(Int64, seq1[i]),:]))
     end
   end
   return ll
