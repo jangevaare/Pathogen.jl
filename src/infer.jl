@@ -167,66 +167,66 @@ function randprior(priors::Priors)
   return params
 end
 
-function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, network::Array, debug=false::Bool)
-  """
-  For a given transmission network, find the time between the pathogen sequences between every individuals i and j
-  """
-  infected = find(isseq(obs.seq))
-  pathway = [infected[1]]
-  while pathway[end] != 0
-    push!(pathway, findfirst(network[:,pathway[end]])-1)
-  end
-  pathways = Vector[pathway]
+# function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, network::Array, debug=false::Bool)
+#   """
+#   For a given transmission network, find the time between the pathogen sequences between every individuals i and j
+#   """
+#   infected = find(isseq(obs.seq))
+#   pathway = [infected[1]]
+#   while pathway[end] != 0
+#     push!(pathway, findfirst(network[:,pathway[end]])-1)
+#   end
+#   pathways = Vector[pathway]
 
-  for i = 2:length(infected)
-    pathway = [infected[i]]
-    while pathway[end] != 0
-      push!(pathway, findfirst(network[:,pathway[end]])-1)
-    end
-    push!(pathways, pathway)
-  end
+#   for i = 2:length(infected)
+#     pathway = [infected[i]]
+#     while pathway[end] != 0
+#       push!(pathway, findfirst(network[:,pathway[end]])-1)
+#     end
+#     push!(pathways, pathway)
+#   end
 
-  seq_dist = fill(0., (size(network, 2), size(network, 2)))
+#   seq_dist = fill(0., (size(network, 2), size(network, 2)))
 
-  for i = 1:length(infected)
-    for j = 1:(i-1)
+#   for i = 1:length(infected)
+#     for j = 1:(i-1)
 
-      k = 1
-      while length(pathways[i]) > k && length(pathways[j]) > k && pathways[i][end - k] == pathways[j][end - k]
-        k += 1
-      end
+#       k = 1
+#       while length(pathways[i]) > k && length(pathways[j]) > k && pathways[i][end - k] == pathways[j][end - k]
+#         k += 1
+#       end
 
-      if debug
-        println("infection of individual $(infected[i]) observed at $(obs.infectious[infected[i]])")
-        println("infection pathway of individual $(infected[i]) is $(pathways[i])")
-        println("infection of individual $(infected[j]) observed at $(obs.infectious[infected[j]])")
-        println("infection pathway of individual $(infected[j]) is $(pathways[j])")
-        if k == length(pathways[i]) || k == length(pathways[j])
-          println("linear infection pathway between individual $(infected[i]) and individual $(infected[j])")
-        else
-          println("most recent common infection source of individuals $(infected[i]) and $(infected[j]) is $(pathways[i][end - k + 1])")
-          println("the infection pathway of $(infected[i]) and $(infected[j]) diverged with $(pathways[i][end - k]) and $(pathways[j][end - k])")
-        end
-        println("")
-      end
+#       if debug
+#         println("infection of individual $(infected[i]) observed at $(obs.infectious[infected[i]])")
+#         println("infection pathway of individual $(infected[i]) is $(pathways[i])")
+#         println("infection of individual $(infected[j]) observed at $(obs.infectious[infected[j]])")
+#         println("infection pathway of individual $(infected[j]) is $(pathways[j])")
+#         if k == length(pathways[i]) || k == length(pathways[j])
+#           println("linear infection pathway between individual $(infected[i]) and individual $(infected[j])")
+#         else
+#           println("most recent common infection source of individuals $(infected[i]) and $(infected[j]) is $(pathways[i][end - k + 1])")
+#           println("the infection pathway of $(infected[i]) and $(infected[j]) diverged with $(pathways[i][end - k]) and $(pathways[j][end - k])")
+#         end
+#         println("")
+#       end
 
-      if k == length(pathways[i])
-        seq_dist[infected[i],infected[j]] += obs.infectious[infected[j]] - aug.exposed[pathways[j][end - k]]
-        seq_dist[infected[i],infected[j]] += abs(aug.exposed[pathways[j][end - k]] - obs.infectious[infected[i]])
-      elseif k == length(pathways[j])
-        seq_dist[infected[i],infected[j]] += obs.infectious[infected[i]] - aug.exposed[pathways[i][end - k]]
-        seq_dist[infected[i],infected[j]] += abs(aug.exposed[pathways[i][end - k]] - obs.infectious[infected[j]])
-      else
-        seq_dist[infected[i],infected[j]] += obs.infectious[infected[i]] - aug.exposed[pathways[i][end - k]]
-        seq_dist[infected[i],infected[j]] += obs.infectious[infected[j]] - aug.exposed[pathways[j][end - k]]
-        seq_dist[infected[i],infected[j]] += abs(aug.exposed[pathways[j][end - k]] - aug.exposed[pathways[i][end - k]])
-      end
+#       if k == length(pathways[i])
+#         seq_dist[infected[i],infected[j]] += obs.infectious[infected[j]] - aug.exposed[pathways[j][end - k]]
+#         seq_dist[infected[i],infected[j]] += abs(aug.exposed[pathways[j][end - k]] - obs.infectious[infected[i]])
+#       elseif k == length(pathways[j])
+#         seq_dist[infected[i],infected[j]] += obs.infectious[infected[i]] - aug.exposed[pathways[i][end - k]]
+#         seq_dist[infected[i],infected[j]] += abs(aug.exposed[pathways[i][end - k]] - obs.infectious[infected[j]])
+#       else
+#         seq_dist[infected[i],infected[j]] += obs.infectious[infected[i]] - aug.exposed[pathways[i][end - k]]
+#         seq_dist[infected[i],infected[j]] += obs.infectious[infected[j]] - aug.exposed[pathways[j][end - k]]
+#         seq_dist[infected[i],infected[j]] += abs(aug.exposed[pathways[j][end - k]] - aug.exposed[pathways[i][end - k]])
+#       end
 
-    end
-  end
+#     end
+#   end
 
-  return seq_dist += transpose(seq_dist)
-end
+#   return seq_dist += transpose(seq_dist)
+# end
 
 function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, infected::Vector{Int64}, network::Array, debug=false::Bool)
   """
@@ -309,7 +309,32 @@ end
 #   return ll
 # end
 
-function seq_loglikelihood(seq1::Nucleotide2bitSeq, seq2::Nucleotide2bitSeq, seq_distance::Float64, substitution_matrix::Array, debug=false::Bool)
+# function seq_loglikelihood(seq1::Nucleotide2bitSeq, seq2::Nucleotide2bitSeq, seq_distance::Float64, substitution_matrix::Array, debug=false::Bool)
+#   """
+#   Loglikelihood for any two aligned sequences, a specified time apart on a transmission network
+#   """
+#   if debug
+#     @assert(length(seq1) == length(seq2), "Sequences not aligned")
+#     @assert(size(substitution_matrix) == (4,4), "Invalid substitution_matrix")
+#   end
+
+#   ll = 0.
+#   for i = 1:length(seq1)
+#     if seq1[i] == seq2[i]
+#       base = convert(Int64, seq1[i])
+#       ll += -seq_distance*sum(substitution_matrix[base,:])
+#     else
+#       base1 = convert(Int64, seq1[i])
+#       base2 = convert(Int64, seq2[i])
+#       rate = sum(substitution_matrix[base1,:])
+#       ll += log(1-(exp(-seq_distance*rate)))
+#       ll += log(substitution_matrix[base1, base2]/rate)
+#     end
+#   end
+#   return ll
+# end
+
+function seq_loglikelihood(seq1::Vector{Int64}, seq2::Vector{Int64}, seq_distance::Float64, substitution_matrix::Array, debug=false::Bool)
   """
   Loglikelihood for any two aligned sequences, a specified time apart on a transmission network
   """
@@ -321,14 +346,11 @@ function seq_loglikelihood(seq1::Nucleotide2bitSeq, seq2::Nucleotide2bitSeq, seq
   ll = 0.
   for i = 1:length(seq1)
     if seq1[i] == seq2[i]
-      base = convert(Int64, seq1[i])
-      ll += -seq_distance*sum(substitution_matrix[base,:])
+      ll += -seq_distance*sum(substitution_matrix[seq1[i],:])
     else
-      base1 = convert(Int64, seq1[i])
-      base2 = convert(Int64, seq2[i])
-      rate = sum(substitution_matrix[base1,:])
+      rate = sum(substitution_matrix[seq1[i],:])
       ll += log(1-(exp(-seq_distance*rate)))
-      ll += log(substitution_matrix[base1, base2]/rate)
+      ll += log(substitution_matrix[seq1[i], seq2[i]]/rate)
     end
   end
   return ll
