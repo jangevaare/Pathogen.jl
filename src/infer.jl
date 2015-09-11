@@ -2,6 +2,62 @@
 infer.jl
 """
 
+# function surveil(population::Population, ν::Float64)
+#   """
+#   Gather surveillance data on specific individuals in a population, with an exponentially distributed detection lag with rate ν
+#   """
+#   exposed_actual = fill(NaN, length(population.events)-1)
+#   infectious_actual = fill(NaN, length(population.events)-1)
+#   infectious_observed = fill(NaN, length(population.events)-1)
+#   removed_actual = fill(NaN, length(population.events)-1)
+#   removed_observed = fill(NaN, length(population.events)-1)
+#   covariates_actual = fill(fill(NaN, length(population.history[2][1][1])),  length(population.events)-1)
+#   covariates_observed = fill(fill(NaN, length(population.history[2][1][1])),  length(population.events)-1)
+#   seq_actual = convert(Vector{Any}, fill(NaN, length(population.events)-1))
+#   seq_observed = convert(Vector{Any}, fill(NaN, length(population.events)-1))
+
+#   for i = 2:length(population.events)
+#     # Initial conditions (assumed to be constant and observed without error)
+#     covariates_actual[i-1] = population.history[i][1][1]
+#     covariates_observed[i-1] = population.history[i][1][1]
+
+#     # Exposure time (unobservable)
+#     if length(population.events[i][1]) > 0
+#       exposed_actual[i-1] = population.events[i][1][1]
+#     end
+
+#     # Infectious time (observed with latency)
+#     if length(population.events[i][3]) > 0
+#       infectious_actual[i-1] = population.events[i][3][1]
+#       seq_actual[i-1] = population.history[i][2][find(infectious_actual[i-1] .>= population.events[i][6])[end]]
+#       if ν < Inf
+#         infectious_observed[i-1] = infectious_actual[i-1] + rand(Exponential(1/ν))
+#       elseif ν == Inf
+#         infectious_observed[i-1] = infectious_actual[i-1]
+#       end
+
+#       if length(population.events[i][4]) > 0 && infectious_observed[i-1] >= population.events[i][4][1]
+#         infectious_observed[i-1] = NaN
+#       else
+#         seq_observed[i-1] = population.history[i][2][find(infectious_observed[i-1] .>= population.events[i][6])[end]]
+#       end
+#     end
+
+#     # Removal time (observed with latency)
+#     if length(population.events[i][4]) > 0
+#       removed_actual[i-1] = population.events[i][4][1]
+#       if !isnan(infectious_observed[i-1])
+#         if ν < Inf
+#           removed_observed[i-1] = removed_actual[i-1] + rand(Exponential(1/ν))
+#         elseif ν == Inf
+#           removed_observed[i-1] = removed_actual[i-1]
+#         end
+#       end
+#     end
+#   end
+#   return SEIR_actual(exposed_actual, infectious_actual, removed_actual, covariates_actual, seq_actual), SEIR_observed(infectious_observed, removed_observed, covariates_observed, seq_observed)
+# end
+
 function surveil(population::Population, ν::Float64)
   """
   Gather surveillance data on specific individuals in a population, with an exponentially distributed detection lag with rate ν
@@ -29,7 +85,7 @@ function surveil(population::Population, ν::Float64)
     # Infectious time (observed with latency)
     if length(population.events[i][3]) > 0
       infectious_actual[i-1] = population.events[i][3][1]
-      seq_actual[i-1] = population.history[i][2][find(infectious_actual[i-1] .>= population.events[i][6])[end]]
+      seq_actual[i-1] = convert(Vector{Int64}, population.history[i][2][find(infectious_actual[i-1] .>= population.events[i][6])[end]])
       if ν < Inf
         infectious_observed[i-1] = infectious_actual[i-1] + rand(Exponential(1/ν))
       elseif ν == Inf
@@ -39,7 +95,7 @@ function surveil(population::Population, ν::Float64)
       if length(population.events[i][4]) > 0 && infectious_observed[i-1] >= population.events[i][4][1]
         infectious_observed[i-1] = NaN
       else
-        seq_observed[i-1] = population.history[i][2][find(infectious_observed[i-1] .>= population.events[i][6])[end]]
+        seq_observed[i-1] = convert(Vector{Int64}, population.history[i][2][find(infectious_observed[i-1] .>= population.events[i][6])[end]])
       end
     end
 
