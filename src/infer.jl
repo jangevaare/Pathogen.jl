@@ -485,6 +485,7 @@ function MCMC(n::Int64,
               detection_priors::Lag_priors,
               mutation_priors::JC69_priors,
               obs::SEIR_observed,
+              debug=false::Bool,
               progress=true::Bool,
               dist=Euclidean())
   """
@@ -556,7 +557,7 @@ function MCMC(n::Int64,
       ilm_proposal[5] = ilm_trace.γ[end]
       aug = ilm_trace.aug[end]
       network = ilm_trace.network[end]
-      lp = ilm_trace.logposterior
+      lp = ilm_trace.logposterior[end]
 
       detection_proposal[1] = detection_trace.ν[end]
 
@@ -616,8 +617,9 @@ function MCMC(n::Int64,
               detection_priors,
               mutation_priors,
               obs,
+              debug,
               progress,
-              dis)
+              dist)
 
   end
 
