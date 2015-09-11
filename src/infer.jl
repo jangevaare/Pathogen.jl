@@ -478,217 +478,6 @@ end
 
 function MCMC(n::Int64,
               transition_cov::Array{Float64},
-              ilm_priors::SEIR_priors,
-              detection_priors::Lag_priors,
-              mutation_priors::JC69_priors,
-              obs::SEIR_observed,
-              debug=false::Bool,
-              progress=true::Bool,
-              dist=Euclidean(),
-              init_limit=500::Int64)
-  """
-  Performs `n` data-augmented metropolis hastings within Gibbs MCMC iterations. Initiates a single chain by sampling from prior distribution
-  """
-
-  @assert(size(transition_cov) == (7,7), "transition_cov must be a 7x7 matrix")
-
-  ilm_trace, detection_trace, mutation_trace = initialize(ilm_priors, mutation_priors, detection_priors, obs, init_limit, debug, dist)
-
-  for i = 1:n
-
-    # Create and incremenet progress bar
-    if progress
-      if i == 1
-        progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 30)
-      else
-        next!(progressbar)
-      end
-    end
-
-    # Only generate valid proposals
-    step = rand(MvNormal(transition_cov))
-    ilm_proposal = [ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.ρ[end], ilm_trace.γ[end]] .+ step[1:5]
-    detection_proposal = [detection_trace.ν[end]] .+ step[6]
-    mutation_proposal = [mutation_trace.λ[end]] .+ step[7]
-
-    while any([any(ilm_proposal .< 0.), any(detection_proposal .< 0.), any(mutation_proposal .< 0.)])
-      step = rand(MvNormal(transition_cov))
-      ilm_proposal = [ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.ρ[end], ilm_trace.γ[end]] .+ step[1:5]
-      detection_proposal = [detection_trace.ν[end]] .+ step[6]
-      mutation_proposal = [mutation_trace.λ[end]] .+ step[7]
-    end
-
-    # Augment the data
-    aug = augment(ilm_proposal[4], detection_proposal[1], obs)
-
-    # ILM loglikelihood component
-    lp, network = SEIR_loglikelihood(ilm_proposal[1], ilm_proposal[2], ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], aug, obs, dist)
-
-    # Network loglikelihood
-    lp += network_loglikelihood(obs, aug, network, jc69([mutation_proposal[1]]), debug)
-
-    # Add logpriors
-    lp += logprior(ilm_priors, ilm_proposal)
-    lp += logprior(detection_priors, detection_proposal)
-    lp += logprior(mutation_priors, mutation_proposal)
-
-    # Accept/reject based on logposterior
-    if lp == -Inf
-      reject = true
-    elseif lp > ilm_trace.logposterior[end]
-      reject = false
-    elseif exp(lp - ilm_trace.logposterior[end]) >= rand()
-      reject = false
-    else
-      reject = true
-    end
-
-    if reject
-      ilm_proposal[1] = ilm_trace.α[end]
-      ilm_proposal[2] = ilm_trace.β[end]
-      ilm_proposal[3] = ilm_trace.η[end]
-      ilm_proposal[4] = ilm_trace.ρ[end]
-      ilm_proposal[5] = ilm_trace.γ[end]
-      detection_proposal[1] = detection_trace.ν[end]
-      mutation_proposal[1] = mutation_trace.λ[end]
-
-      # Re-augment data (and recalculate log posterior) if proposal is rejected...
-      aug = augment(ilm_proposal[4], detection_proposal[1], obs)
-      lp, network = SEIR_loglikelihood(ilm_proposal[1], ilm_proposal[2], ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], aug, obs, dist)
-      lp += network_loglikelihood(obs, aug, network, jc69([mutation_proposal[1]]), debug)
-      lp += logprior(ilm_priors, ilm_proposal)
-      lp += logprior(detection_priors, detection_proposal)
-      lp += logprior(mutation_priors, mutation_proposal)
-    end
-
-    # Update trace objects
-    push!(ilm_trace.α, ilm_proposal[1])
-    push!(ilm_trace.β, ilm_proposal[2])
-    push!(ilm_trace.η, ilm_proposal[3])
-    push!(ilm_trace.ρ, ilm_proposal[4])
-    push!(ilm_trace.γ, ilm_proposal[5])
-    push!(ilm_trace.aug, aug)
-    push!(ilm_trace.network, network)
-    push!(ilm_trace.logposterior, lp)
-
-    push!(detection_trace.ν, detection_proposal[1])
-
-    push!(mutation_trace.λ, mutation_proposal[1])
-  end
-
-  return ilm_trace, detection_trace, mutation_trace
-end
-
-function MCMC(n::Int64,
-              ilm_priors::SEIR_priors,
-              detection_priors::Lag_priors,
-              mutation_priors::JC69_priors,
-              obs::SEIR_observed,
-              debug=false::Bool,
-              progress=true::Bool,
-              dist=Euclidean(),
-              init_limit=500::Int64)
-  """
-  Performs `n` data-augmented metropolis hastings within Gibbs MCMC iterations. Initiates a single chain by sampling from prior distribution
-  """
-
-  transition_cov = diagm([var(ilm_priors.α),
-                          var(ilm_priors.β),
-                          var(ilm_priors.η),
-                          var(ilm_priors.ρ),
-                          var(ilm_priors.γ),
-                          var(detection_priors.ν),
-                          var(mutation_priors.λ)])
-
-  ilm_trace, detection_trace, mutation_trace = initialize(ilm_priors, mutation_priors, detection_priors, obs, init_limit, debug, dist)
-
-  for i = 1:n
-
-    # Create and incremenet progress bar
-    if progress
-      if i == 1
-        progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 30)
-      else
-        next!(progressbar)
-      end
-    end
-
-    # Only generate valid proposals
-    step = rand(MvNormal(transition_cov))
-    ilm_proposal = [ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.ρ[end], ilm_trace.γ[end]] .+ step[1:5]
-    detection_proposal = [detection_trace.ν[end]] .+ step[6]
-    mutation_proposal = [mutation_trace.λ[end]] .+ step[7]
-
-    while any([any(ilm_proposal .< 0.), any(detection_proposal .< 0.), any(mutation_proposal .< 0.)])
-      step = rand(MvNormal(transition_cov))
-      ilm_proposal = [ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.ρ[end], ilm_trace.γ[end]] .+ step[1:5]
-      detection_proposal = [detection_trace.ν[end]] .+ step[6]
-      mutation_proposal = [mutation_trace.λ[end]] .+ step[7]
-    end
-
-    # Augment the data
-    aug = augment(ilm_proposal[4], detection_proposal[1], obs)
-
-    # ILM loglikelihood component
-    lp, network = SEIR_loglikelihood(ilm_proposal[1], ilm_proposal[2], ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], aug, obs, dist)
-
-    # Network loglikelihood
-    lp += network_loglikelihood(obs, aug, network, jc69([mutation_proposal[1]]), debug)
-
-    # Add logpriors
-    lp += logprior(ilm_priors, ilm_proposal)
-    lp += logprior(detection_priors, detection_proposal)
-    lp += logprior(mutation_priors, mutation_proposal)
-
-    # Accept/reject based on logposterior
-    if lp == -Inf
-      reject = true
-    elseif lp > ilm_trace.logposterior[end]
-      reject = false
-    elseif exp(lp - ilm_trace.logposterior[end]) >= rand()
-      reject = false
-    else
-      reject = true
-    end
-
-    if reject
-      ilm_proposal[1] = ilm_trace.α[end]
-      ilm_proposal[2] = ilm_trace.β[end]
-      ilm_proposal[3] = ilm_trace.η[end]
-      ilm_proposal[4] = ilm_trace.ρ[end]
-      ilm_proposal[5] = ilm_trace.γ[end]
-      detection_proposal[1] = detection_trace.ν[end]
-      mutation_proposal[1] = mutation_trace.λ[end]
-
-      # Re-augment data (and recalculate log posterior) if proposal is rejected...
-      aug = augment(ilm_proposal[4], detection_proposal[1], obs)
-      lp, network = SEIR_loglikelihood(ilm_proposal[1], ilm_proposal[2], ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], aug, obs, dist)
-      lp += network_loglikelihood(obs, aug, network, jc69([mutation_proposal[1]]), debug)
-      lp += logprior(ilm_priors, ilm_proposal)
-      lp += logprior(detection_priors, detection_proposal)
-      lp += logprior(mutation_priors, mutation_proposal)
-    end
-
-    # Update trace objects
-    push!(ilm_trace.α, ilm_proposal[1])
-    push!(ilm_trace.β, ilm_proposal[2])
-    push!(ilm_trace.η, ilm_proposal[3])
-    push!(ilm_trace.ρ, ilm_proposal[4])
-    push!(ilm_trace.γ, ilm_proposal[5])
-    push!(ilm_trace.aug, aug)
-    push!(ilm_trace.network, network)
-    push!(ilm_trace.logposterior, lp)
-
-    push!(detection_trace.ν, detection_proposal[1])
-
-    push!(mutation_trace.λ, mutation_proposal[1])
-  end
-
-  return ilm_trace, detection_trace, mutation_trace
-end
-
-function MCMC(n::Int64,
-              transition_cov::Array{Float64},
               ilm_trace::SEIR_trace,
               detection_trace::Lag_trace,
               mutation_trace::JC69_trace,
@@ -721,26 +510,32 @@ function MCMC(n::Int64,
     detection_proposal = [detection_trace.ν[end]] .+ step[6]
     mutation_proposal = [mutation_trace.λ[end]] .+ step[7]
 
-    while any([any(ilm_proposal .< 0.), any(detection_proposal .< 0.), any(mutation_proposal .< 0.)])
+    lp = logprior(ilm_priors, ilm_proposal)
+    lp += logprior(detection_priors, detection_proposal)
+    lp += logprior(mutation_priors, mutation_proposal)
+
+    while lp == -Inf
       step = rand(MvNormal(transition_cov))
       ilm_proposal = [ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.ρ[end], ilm_trace.γ[end]] .+ step[1:5]
       detection_proposal = [detection_trace.ν[end]] .+ step[6]
       mutation_proposal = [mutation_trace.λ[end]] .+ step[7]
+
+      lp = logprior(ilm_priors, ilm_proposal)
+      lp += logprior(detection_priors, detection_proposal)
+      lp += logprior(mutation_priors, mutation_proposal)
     end
 
     # Augment the data
     aug = augment(ilm_proposal[4], detection_proposal[1], obs)
 
     # ILM loglikelihood component
-    lp, network = SEIR_loglikelihood(ilm_proposal[1], ilm_proposal[2], ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], aug, obs, dist)
+    ll, network = SEIR_loglikelihood(ilm_proposal[1], ilm_proposal[2], ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], aug, obs, dist)
+    lp += ll
 
     # Network loglikelihood
-    lp += network_loglikelihood(obs, aug, network, jc69([mutation_proposal[1]]), debug)
-
-    # Add logpriors
-    lp += logprior(ilm_priors, ilm_proposal)
-    lp += logprior(detection_priors, detection_proposal)
-    lp += logprior(mutation_priors, mutation_proposal)
+    if lp > -Inf
+      lp += network_loglikelihood(obs, aug, network, jc69([mutation_proposal[1]]), debug)
+    end
 
     # Accept/reject based on logposterior
     if lp == -Inf
@@ -759,16 +554,21 @@ function MCMC(n::Int64,
       ilm_proposal[3] = ilm_trace.η[end]
       ilm_proposal[4] = ilm_trace.ρ[end]
       ilm_proposal[5] = ilm_trace.γ[end]
+      aug = ilm_trace.aug[end]
+      network = ilm_trace.network[end]
+      lp = ilm_trace.logposterior
+
       detection_proposal[1] = detection_trace.ν[end]
+
       mutation_proposal[1] = mutation_trace.λ[end]
 
-      # Re-augment data (and recalculate log posterior) if proposal is rejected...
-      aug = augment(ilm_proposal[4], detection_proposal[1], obs)
-      lp, network = SEIR_loglikelihood(ilm_proposal[1], ilm_proposal[2], ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], aug, obs, dist)
-      lp += network_loglikelihood(obs, aug, network, jc69([mutation_proposal[1]]), debug)
-      lp += logprior(ilm_priors, ilm_proposal)
-      lp += logprior(detection_priors, detection_proposal)
-      lp += logprior(mutation_priors, mutation_proposal)
+#       # Re-augment data (and recalculate log posterior) if proposal is rejected...
+#       aug = augment(ilm_proposal[4], detection_proposal[1], obs)
+#       lp, network = SEIR_loglikelihood(ilm_proposal[1], ilm_proposal[2], ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], aug, obs, dist)
+#       lp += network_loglikelihood(obs, aug, network, jc69([mutation_proposal[1]]), debug)
+#       lp += logprior(ilm_priors, ilm_proposal)
+#       lp += logprior(detection_priors, detection_proposal)
+#       lp += logprior(mutation_priors, mutation_proposal)
     end
 
     # Update trace objects
@@ -787,4 +587,69 @@ function MCMC(n::Int64,
   end
 
   return ilm_trace, detection_trace, mutation_trace
+end
+
+function MCMC(n::Int64,
+              transition_cov::Array{Float64},
+              ilm_priors::SEIR_priors,
+              detection_priors::Lag_priors,
+              mutation_priors::JC69_priors,
+              obs::SEIR_observed,
+              debug=false::Bool,
+              progress=true::Bool,
+              dist=Euclidean(),
+              init_limit=500::Int64)
+  """
+  Performs `n` data-augmented metropolis hastings within Gibbs MCMC iterations. Initiates a single chain by sampling from prior distribution
+  """
+
+  @assert(size(transition_cov) == (7,7), "transition_cov must be a 7x7 matrix")
+
+  ilm_trace, detection_trace, mutation_trace = initialize(ilm_priors, mutation_priors, detection_priors, obs, init_limit, debug, dist)
+
+  return MCMC(n,
+              transition_cov,
+              ilm_trace,
+              detection_trace,
+              mutation_trace,
+              ilm_priors,
+              detection_priors,
+              mutation_priors,
+              obs,
+              progress,
+              dis)
+
+  end
+
+function MCMC(n::Int64,
+              ilm_priors::SEIR_priors,
+              detection_priors::Lag_priors,
+              mutation_priors::JC69_priors,
+              obs::SEIR_observed,
+              debug=false::Bool,
+              progress=true::Bool,
+              dist=Euclidean(),
+              init_limit=500::Int64)
+  """
+  Performs `n` data-augmented metropolis hastings within Gibbs MCMC iterations. Initiates a single chain by sampling from prior distribution
+  """
+
+  transition_cov = diagm([var(ilm_priors.α),
+                          var(ilm_priors.β),
+                          var(ilm_priors.η),
+                          var(ilm_priors.ρ),
+                          var(ilm_priors.γ),
+                          var(detection_priors.ν),
+                          var(mutation_priors.λ)])
+
+  return MCMC(n,
+              transition_cov,
+              ilm_priors,
+              detection_priors,
+              mutation_priors,
+              obs,
+              debug,
+              progress,
+              dist,
+              init_limit)
 end
