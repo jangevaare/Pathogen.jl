@@ -392,12 +392,12 @@ function network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmented, network:
   infected = find(isseq(obs.seq))
   seq_dist = seq_distances(obs, aug, infected, network, debug)
 
-  log_relative_rates = substitution_matrix
+  log_relative_rates = fill(-Inf, size(substitution_matrix))
   nochange_rates = [0., 0., 0., 0.]
 
   for i = 1:4
-    nochange_rates[i] = sum(relative_rates[i,:])
-    log_relative_rates[i,:] = log(relative_rates[i,:]/nochange_rates[i])
+    nochange_rates[i] = sum(substitution_matrix[i,:])
+    log_relative_rates[i,:] = log(substitution_matrix[i,:]/nochange_rates[i])
   end
 
   for i = 1:length(infected)
