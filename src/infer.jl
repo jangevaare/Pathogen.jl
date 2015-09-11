@@ -253,11 +253,15 @@ end
 #   return ll
 # end
 
-function seq_loglikelihood(seq1::Nucleotide2bitSeq, seq2::Nucleotide2bitSeq, seq_distance::Float64, substitution_matrix::Array)
+function seq_loglikelihood(seq1::Nucleotide2bitSeq, seq2::Nucleotide2bitSeq, seq_distance::Float64, substitution_matrix::Array, debug=false::Bool)
   """
   Loglikelihood for any two aligned sequences, a specified time apart on a transmission network
   """
-  @assert(length(seq1) == length(seq2), "Sequences not aligned")
+  if debug
+    @assert(length(seq1) == length(seq2), "Sequences not aligned")
+    @assert(size(substitution_matrix) == (4,4), "Invalid substitution_matrix")
+  end
+
   ll = 0.
   for i = 1:length(seq1)
     if seq1[i] == seq2[i]
@@ -283,7 +287,7 @@ function network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmented, network:
   seq_dist = seq_distances(obs, aug, infected, network, debug)
   for i = 1:length(infected)
     for j = 1:(i-1)
-       ll += seq_loglikelihood(obs.seq[infected[i]], obs.seq[infected[j]], seq_dist[i,j], substitution_matrix)
+       ll += seq_loglikelihood(obs.seq[infected[i]], obs.seq[infected[j]], seq_dist[i,j], substitution_matrix, debug)
     end
   end
   return ll
