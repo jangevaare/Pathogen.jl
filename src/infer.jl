@@ -261,10 +261,14 @@ function seq_loglikelihood(seq1::Nucleotide2bitSeq, seq2::Nucleotide2bitSeq, seq
   ll = 0.
   for i = 1:length(seq1)
     if seq1[i] == seq2[i]
-      ll += -seq_distance*sum(substitution_matrix[convert(Int64, seq1[i]),:])
+      base = convert(Int64, seq1[i])
+      ll += -seq_distance*sum(substitution_matrix[base,:])
     else
-      ll += log(1-(exp(-seq_distance*sum(substitution_matrix[convert(Int64, seq1[i]),:]))))
-      ll += log(substitution_matrix[convert(Int64, seq1[i]),convert(Int64, seq2[i])]/sum(substitution_matrix[convert(Int64, seq1[i]),:]))
+      base1 = convert(Int64, seq1[i])
+      base2 = convert(Int64, seq2[i])
+      rate = sum(substitution_matrix[base1,:])
+      ll += log(1-(exp(-seq_distance*rate)))
+      ll += log(substitution_matrix[base1, base2]/rate)
     end
   end
   return ll
