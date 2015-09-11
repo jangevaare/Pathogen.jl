@@ -2,62 +2,6 @@
 infer.jl
 """
 
-# function surveil(population::Population, ν::Float64)
-#   """
-#   Gather surveillance data on specific individuals in a population, with an exponentially distributed detection lag with rate ν
-#   """
-#   exposed_actual = fill(NaN, length(population.events)-1)
-#   infectious_actual = fill(NaN, length(population.events)-1)
-#   infectious_observed = fill(NaN, length(population.events)-1)
-#   removed_actual = fill(NaN, length(population.events)-1)
-#   removed_observed = fill(NaN, length(population.events)-1)
-#   covariates_actual = fill(fill(NaN, length(population.history[2][1][1])),  length(population.events)-1)
-#   covariates_observed = fill(fill(NaN, length(population.history[2][1][1])),  length(population.events)-1)
-#   seq_actual = convert(Vector{Any}, fill(NaN, length(population.events)-1))
-#   seq_observed = convert(Vector{Any}, fill(NaN, length(population.events)-1))
-
-#   for i = 2:length(population.events)
-#     # Initial conditions (assumed to be constant and observed without error)
-#     covariates_actual[i-1] = population.history[i][1][1]
-#     covariates_observed[i-1] = population.history[i][1][1]
-
-#     # Exposure time (unobservable)
-#     if length(population.events[i][1]) > 0
-#       exposed_actual[i-1] = population.events[i][1][1]
-#     end
-
-#     # Infectious time (observed with latency)
-#     if length(population.events[i][3]) > 0
-#       infectious_actual[i-1] = population.events[i][3][1]
-#       seq_actual[i-1] = population.history[i][2][find(infectious_actual[i-1] .>= population.events[i][6])[end]]
-#       if ν < Inf
-#         infectious_observed[i-1] = infectious_actual[i-1] + rand(Exponential(1/ν))
-#       elseif ν == Inf
-#         infectious_observed[i-1] = infectious_actual[i-1]
-#       end
-
-#       if length(population.events[i][4]) > 0 && infectious_observed[i-1] >= population.events[i][4][1]
-#         infectious_observed[i-1] = NaN
-#       else
-#         seq_observed[i-1] = population.history[i][2][find(infectious_observed[i-1] .>= population.events[i][6])[end]]
-#       end
-#     end
-
-#     # Removal time (observed with latency)
-#     if length(population.events[i][4]) > 0
-#       removed_actual[i-1] = population.events[i][4][1]
-#       if !isnan(infectious_observed[i-1])
-#         if ν < Inf
-#           removed_observed[i-1] = removed_actual[i-1] + rand(Exponential(1/ν))
-#         elseif ν == Inf
-#           removed_observed[i-1] = removed_actual[i-1]
-#         end
-#       end
-#     end
-#   end
-#   return SEIR_actual(exposed_actual, infectious_actual, removed_actual, covariates_actual, seq_actual), SEIR_observed(infectious_observed, removed_observed, covariates_observed, seq_observed)
-# end
-
 function surveil(population::Population, ν::Float64)
   """
   Gather surveillance data on specific individuals in a population, with an exponentially distributed detection lag with rate ν
@@ -167,67 +111,6 @@ function randprior(priors::Priors)
   return params
 end
 
-# function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, network::Array, debug=false::Bool)
-#   """
-#   For a given transmission network, find the time between the pathogen sequences between every individuals i and j
-#   """
-#   infected = find(isseq(obs.seq))
-#   pathway = [infected[1]]
-#   while pathway[end] != 0
-#     push!(pathway, findfirst(network[:,pathway[end]])-1)
-#   end
-#   pathways = Vector[pathway]
-
-#   for i = 2:length(infected)
-#     pathway = [infected[i]]
-#     while pathway[end] != 0
-#       push!(pathway, findfirst(network[:,pathway[end]])-1)
-#     end
-#     push!(pathways, pathway)
-#   end
-
-#   seq_dist = fill(0., (size(network, 2), size(network, 2)))
-
-#   for i = 1:length(infected)
-#     for j = 1:(i-1)
-
-#       k = 1
-#       while length(pathways[i]) > k && length(pathways[j]) > k && pathways[i][end - k] == pathways[j][end - k]
-#         k += 1
-#       end
-
-#       if debug
-#         println("infection of individual $(infected[i]) observed at $(obs.infectious[infected[i]])")
-#         println("infection pathway of individual $(infected[i]) is $(pathways[i])")
-#         println("infection of individual $(infected[j]) observed at $(obs.infectious[infected[j]])")
-#         println("infection pathway of individual $(infected[j]) is $(pathways[j])")
-#         if k == length(pathways[i]) || k == length(pathways[j])
-#           println("linear infection pathway between individual $(infected[i]) and individual $(infected[j])")
-#         else
-#           println("most recent common infection source of individuals $(infected[i]) and $(infected[j]) is $(pathways[i][end - k + 1])")
-#           println("the infection pathway of $(infected[i]) and $(infected[j]) diverged with $(pathways[i][end - k]) and $(pathways[j][end - k])")
-#         end
-#         println("")
-#       end
-
-#       if k == length(pathways[i])
-#         seq_dist[infected[i],infected[j]] += obs.infectious[infected[j]] - aug.exposed[pathways[j][end - k]]
-#         seq_dist[infected[i],infected[j]] += abs(aug.exposed[pathways[j][end - k]] - obs.infectious[infected[i]])
-#       elseif k == length(pathways[j])
-#         seq_dist[infected[i],infected[j]] += obs.infectious[infected[i]] - aug.exposed[pathways[i][end - k]]
-#         seq_dist[infected[i],infected[j]] += abs(aug.exposed[pathways[i][end - k]] - obs.infectious[infected[j]])
-#       else
-#         seq_dist[infected[i],infected[j]] += obs.infectious[infected[i]] - aug.exposed[pathways[i][end - k]]
-#         seq_dist[infected[i],infected[j]] += obs.infectious[infected[j]] - aug.exposed[pathways[j][end - k]]
-#         seq_dist[infected[i],infected[j]] += abs(aug.exposed[pathways[j][end - k]] - aug.exposed[pathways[i][end - k]])
-#       end
-
-#     end
-#   end
-
-#   return seq_dist += transpose(seq_dist)
-# end
-
 function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, infected::Vector{Int64}, network::Array, debug=false::Bool)
   """
   For a given transmission network, find the time between the pathogen sequences between every individuals i and j
@@ -287,52 +170,6 @@ function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, infected::Vector
 
   return seq_dist += transpose(seq_dist)
 end
-
-# function seq_loglikelihood(seq1::Nucleotide2bitSeq, seq2::Nucleotide2bitSeq, branchdistance::Float64, substitution_matrix::Array)
-#   """
-#   Loglikelihood for any two aligned sequences, a specified time apart on a transmission network
-#   """
-#   @assert(length(seq1) == length(seq2), "Sequences not aligned")
-#   ll = 0.
-#   for i = 1:length(seq1)
-#     base1 = convert(Int64, seq1[i])
-#     for base2 = 1:4
-#       if base2 == convert(Int64, seq2[i])
-#         if base1 != base2
-#           ll += log(1 - exp(substitution_matrix[base1, base2] .* branchdistance))
-#         end
-#       else
-#         ll += substitution_matrix[base1, base2] .* branchdistance
-#       end
-#     end
-#   end
-#   return ll
-# end
-
-# function seq_loglikelihood(seq1::Nucleotide2bitSeq, seq2::Nucleotide2bitSeq, seq_distance::Float64, substitution_matrix::Array, debug=false::Bool)
-#   """
-#   Loglikelihood for any two aligned sequences, a specified time apart on a transmission network
-#   """
-#   if debug
-#     @assert(length(seq1) == length(seq2), "Sequences not aligned")
-#     @assert(size(substitution_matrix) == (4,4), "Invalid substitution_matrix")
-#   end
-
-#   ll = 0.
-#   for i = 1:length(seq1)
-#     if seq1[i] == seq2[i]
-#       base = convert(Int64, seq1[i])
-#       ll += -seq_distance*sum(substitution_matrix[base,:])
-#     else
-#       base1 = convert(Int64, seq1[i])
-#       base2 = convert(Int64, seq2[i])
-#       rate = sum(substitution_matrix[base1,:])
-#       ll += log(1-(exp(-seq_distance*rate)))
-#       ll += log(substitution_matrix[base1, base2]/rate)
-#     end
-#   end
-#   return ll
-# end
 
 function seq_loglikelihood(seq1::Vector{Int64}, seq2::Vector{Int64}, seq_distance::Float64, substitution_matrix::Array, debug=false::Bool)
   """
