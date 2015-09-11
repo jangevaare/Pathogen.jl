@@ -371,10 +371,10 @@ function seq_loglikelihood(seq1::Vector{Int64},
   ll = 0.
   for i = 1:length(seq1)
     if seq1[i] == seq2[i]
-      ll += -seq_distance*nochange_rates[i]
+      ll += -seq_distance*nochange_rates[seq1[i]]
     else
-      ll += log(1-(exp(-seq_distance*nochange_rates)))
-      ll += relative_rates[seq1[i], seq2[i]]
+      ll += log(1-(exp(-seq_distance*nochange_rates[seq1[i]])))
+      ll += log_relative_rates[seq1[i], seq2[i]]
     end
   end
   return ll
