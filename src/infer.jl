@@ -340,7 +340,6 @@ function seq_loglikelihood(seq1::Vector{Int64}, seq2::Vector{Int64}, seq_distanc
   """
   if debug
     @assert(length(seq1) == length(seq2), "Sequences not aligned")
-    @assert(size(substitution_matrix) == (4,4), "Invalid substitution_matrix")
   end
 
   ll = 0.
@@ -356,16 +355,54 @@ function seq_loglikelihood(seq1::Vector{Int64}, seq2::Vector{Int64}, seq_distanc
   return ll
 end
 
+function seq_loglikelihood(seq1::Vector{Int64},
+                           seq2::Vector{Int64},
+                           seq_distance::Float64,
+                           log_relative_rates::Array{Float64},
+                           nochange_rates::Vector{Float64},
+                           debug=false::Bool)
+  """
+  Loglikelihood for any two aligned sequences, a specified time apart on a transmission network
+  """
+  if debug
+    @assert(length(seq1) == length(seq2), "Sequences not aligned")
+  end
+
+  ll = 0.
+  for i = 1:length(seq1)
+    if seq1[i] == seq2[i]
+      ll += -seq_distance*nochange_rates[i]
+    else
+      ll += log(1-(exp(-seq_distance*nochange_rates)))
+      ll += relative_rates[seq1[i], seq2[i]]
+    end
+  end
+  return ll
+end
+
 function network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmented, network::Array, substitution_matrix::Array, debug=false::Bool)
   """
   Loglikelihood for an entire transmission network
   """
+  if debug
+    @assert(size(substitution_matrix) == (4,4), "Invalid substitution_matrix")
+  end
+
   ll = 0.
   infected = find(isseq(obs.seq))
   seq_dist = seq_distances(obs, aug, infected, network, debug)
+
+  log_relative_rates = substitution_matrix
+  nochange_rates = [0., 0., 0., 0.]
+
+  for i = 1:4
+    nochange_rates[i] = sum(relative_rates[i,:])
+    log_relative_rates[i,:] = log(relative_rates[i,:]/nochange_rates[i])
+  end
+
   for i = 1:length(infected)
     for j = 1:(i-1)
-       ll += seq_loglikelihood(obs.seq[infected[i]], obs.seq[infected[j]], seq_dist[i,j], substitution_matrix, debug)
+       ll += seq_loglikelihood(obs.seq[infected[i]], obs.seq[infected[j]], seq_dist[i,j], log_relative_rates, nochange_rates, debug)
     end
   end
   return ll
