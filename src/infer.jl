@@ -253,7 +253,7 @@ end
 #   return ll
 # end
 
-function seq_loglikelihood(seq1::Nucleotide2bitSeq, seq2::Nucleotide2bitSeq, seqdistance::Float64, substitution_matrix::Array)
+function seq_loglikelihood(seq1::Nucleotide2bitSeq, seq2::Nucleotide2bitSeq, seq_distance::Float64, substitution_matrix::Array)
   """
   Loglikelihood for any two aligned sequences, a specified time apart on a transmission network
   """
