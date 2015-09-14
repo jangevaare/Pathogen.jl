@@ -37,7 +37,7 @@ ilm_priors = SEIR_priors(Uniform(0,10), Uniform(0,10), Uniform(0,0.005), Uniform
 detection_priors = Lag_priors(Uniform(1,3))
 mutation_priors = JC69_priors(Uniform(0,0.1))
 
-ilm_trace, detection_trace, mutation_trace = MCMC(200000, ilm_priors, detection_priors, mutation_priors, obs, false, true, false)
+ilm_trace, detection_trace, mutation_trace = MCMC(100000, ilm_priors, detection_priors, mutation_priors, obs, false, true, false)
 
 # Tune the transition kernel's covariance matrix over 200k iterations
 n = 300
