@@ -33,11 +33,11 @@ end
 
 actual, obs = surveil(pop, 2.)
 
-ilm_priors = SEIR_priors(Uniform(0,10), Uniform(0,10), Uniform(0,0.01), Uniform(0,1), Uniform(0,1))
+ilm_priors = SEIR_priors(Uniform(0,10), Uniform(0,10), Uniform(0,0.005), Uniform(0,1), Uniform(0,1))
 detection_priors = Lag_priors(Uniform(1,3))
 mutation_priors = JC69_priors(Uniform(0,0.1))
 
-ilm_trace, detection_trace, mutation_trace = MCMC(100000, ilm_priors, detection_priors, mutation_priors, obs, false, true, true)
+ilm_trace, detection_trace, mutation_trace = MCMC(200000, ilm_priors, detection_priors, mutation_priors, obs, false, true, false)
 
 # Tune the transition kernel's covariance matrix over 200k iterations
 n = 300
@@ -54,11 +54,11 @@ for i = 1:n
   opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.ρ ilm_trace.γ ilm_trace.η detection_trace.ν mutation_trace.λ])*(2.38^2)/7.
 
   # Perform 1000 MCMC iterations
-  MCMC(1000, opt_cov, ilm_trace, detection_trace, mutation_trace, ilm_priors, detection_priors, mutation_priors, obs, false, false)
+  MCMC(1000, opt_cov, ilm_trace, detection_trace, mutation_trace, ilm_priors, detection_priors, mutation_priors, obs, false, false, false)
 end
 
 opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.ρ ilm_trace.γ ilm_trace.η detection_trace.ν mutation_trace.λ])*(2.38^2)/7.
-MCMC(100000, opt_cov, ilm_trace, detection_trace, mutation_trace, ilm_priors, detection_priors, mutation_priors, obs, false, true, true)
+MCMC(100000, opt_cov, ilm_trace, detection_trace, mutation_trace, ilm_priors, detection_priors, mutation_priors, obs, false, true, false)
 
 # Simulation/Maximum posteriori visualization
 images = 500

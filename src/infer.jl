@@ -245,7 +245,7 @@ function network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmented, network:
   return ll
 end
 
-function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, γ::Float64, aug::SEIR_augmented, obs::SEIR_observed, dist::Metric, debug=false::Bool)
+function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, γ::Float64, aug::SEIR_augmented, obs::SEIR_observed, dist::Metric, debug=false::Bool, safe=false::Bool)
   """
   Calculate the loglikelihood and return an exposure network array under specified parameters values and observations
 
@@ -289,10 +289,15 @@ function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, 
 
     # Don't consider likelilihood contribution of first event
     if i > 1
+
+      # Find time since last event
+      Δtime = event_times[event_order[i]] - event_times[event_order[i-1]]
+
       # loglikelihood of the event that did occur
-      ll += logpdf(Exponential(1/sum(rate_array[:,id[1]])), event_times[event_order[i]] - event_times[event_order[i-1]])
+      ll += logpdf(Exponential(1/sum(rate_array[:,id[1]])), Δtime)
+
       # loglikelihood of the events that did not occur
-      ll += -sum(rate_array[:,[1:(id[1]-1), (id[1]+1):end]]) * (event_times[event_order[i]] - event_times[event_order[i-1]])
+      ll += logccdf(Exponential(1/sum(rate_array[:,[1:(id[1]-1), (id[1]+1):end]])), Δtime)
     end
 
     # Exposure event
@@ -301,31 +306,57 @@ function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, 
       # Generate a exposure source based on disease pressures at time of exposure
       network[:, id[1]] = rand(Multinomial(1, rate_array[1:(length(obs.covariates)+1), id[1]]./sum(rate_array[1:(length(obs.covariates)+1), id[1]])))
 
-      # Update exposure and infectivity rates
-      rate_array[:, id[1]] = 0.
+      # Update exposure rates
+      if safe
+        rate_array[:, id[1]] = 0.
+      else
+        rate_array[1:(1 + size(rate_array, 2)), id[1]] = 0.
+      end
+
+      # Update infectivity rate
       rate_array[1 + size(rate_array, 2) + 1, id[1]] = ρ
 
     # Infectiousness event
     elseif id[2] == 2
 
-      # Update infectivity and removal rates
-      rate_array[:, id[1]] = 0.
+      # Update infectivity rate
+      if safe
+        rate_array[:, id[1]] = 0.
+      else
+        rate_array[1 + size(rate_array, 2) + 1, id[1]] = 0.
+      end
+
+      # Update removal rate
       rate_array[1 + size(rate_array, 2) + 2, id[1]] = γ
 
       # Update exposure rates for rest of susceptible population
-      for j = 1:size(rate_array, 2)
-        if j != id[1] && rate_array[1, j] != 0.
-          rate_array[id[1] + 1, j] = α*evaluate(dist, obs.covariates[id[1]], obs.covariates[j])^-β
-        else
-          rate_array[id[1] + 1, j] = 0.
+      if safe
+        for j = 1:size(rate_array, 2)
+          if j != id[1] && rate_array[1, j] != 0.
+            rate_array[id[1] + 1, j] = α*evaluate(dist, obs.covariates[id[1]], obs.covariates[j])^-β
+          else
+            rate_array[id[1] + 1, j] = 0.
+          end
+        end
+      else
+        for j = 1:size(rate_array, 2)
+          if j != id[1] && rate_array[1, j] != 0.
+            rate_array[id[1] + 1, j] = α*evaluate(dist, obs.covariates[id[1]], obs.covariates[j])^-β
+          end
         end
       end
 
     # Removal event
     elseif id[2] == 3
 
-      # Update removal and exposure rates
-      rate_array[:, id[1]] = 0.
+      # Update removal rate
+      if safe
+        rate_array[:, id[1]] = 0.
+      else
+        rate_array[1 + size(rate_array, 2) + 2, id[1]] = 0.
+      end
+
+      # Update exposure rates
       rate_array[id[1] + 1, :] = 0.
     end
 
