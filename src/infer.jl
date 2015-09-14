@@ -181,12 +181,14 @@ function seq_loglikelihood(seq1::Vector{Int64}, seq2::Vector{Int64}, seq_distanc
 
   ll = 0.
   for i = 1:length(seq1)
+    # If nucleotides are the same at location i...
     if seq1[i] == seq2[i]
-      ll += -seq_distance*sum(substitution_matrix[seq1[i],:])
+      ll += logccdf(Exponential(1/sum(substitution_matrix[seq1[i]])), seq_distance)
+
+    # If nucleotides are not the same at location i...
     else
-      rate = sum(substitution_matrix[seq1[i],:])
-      ll += log(1-(exp(-seq_distance*rate)))
-      ll += log(substitution_matrix[seq1[i], seq2[i]]/rate)
+      ll += logccdf(Exponential(1/sum(substitution_matrix[seq1[i], 1:(seq2[i]-1), (seq2[i]+1):end])), seq_distance)
+      ll += logcdf(Exponential(1/sum(substitution_matrix[seq1[i], seq2[i]])), seq_distance)
     end
   end
   return ll
@@ -208,10 +210,9 @@ function seq_loglikelihood(seq1::Vector{Int64},
   ll = 0.
   for i = 1:length(seq1)
     if seq1[i] == seq2[i]
-      ll += -seq_distance*nochange_rates[seq1[i]]
+      ll += logccdf(Exponential(nochange_rates[seq1[i]]), seq_distance)
     else
-      ll += log(1-(exp(-seq_distance*nochange_rates[seq1[i]])))
-      ll += log_relative_rates[seq1[i], seq2[i]]
+      ll += logcdf(Exponential(nochange_rates[seq1[i]]), seq_distance)
     end
   end
   return ll
