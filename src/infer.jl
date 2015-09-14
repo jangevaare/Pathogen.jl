@@ -209,7 +209,7 @@ function seq_loglikelihood(seq1::Vector{Int64},
 
   ll = 0.
   for i = 1:length(seq1)
-    ll += logccdf(Exponential(logccdf_scales[seq1[i], seq2[i]]))
+    ll += logccdf(Exponential(logccdf_scales[seq1[i], seq2[i]]), seq_distance)
 
     # If nucleotides are different at location i...
     if seq1[i] != seq2[i]
