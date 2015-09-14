@@ -236,12 +236,10 @@ function network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmented, network:
   for i = 1:4
     for j = 1:i
       logccdf_scales[i,j] = 1/sum(substitution_matrix[i,[1:(j-1), (j+1):end]])
+      logccdf_scales[j,i] = logccdf_scales[i,j]
     end
+    logccdf_scales[i,i] = 1./sum(substitution_matrix[i,:])
   end
-
-  logccdf_scales += logccdf_scales'
-
-  diag(logccdf_scales) = 1/sum(substitution_matrix,1)
 
   for i = 1:length(infected)
     for j = 1:(i-1)
