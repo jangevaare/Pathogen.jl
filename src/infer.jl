@@ -245,7 +245,7 @@ function network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmented, network:
   return ll
 end
 
-function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, γ::Float64, aug::SEIR_augmented, obs::SEIR_observed, dist::Metric, debug=false::Bool, safe=false::Bool)
+function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, γ::Float64, aug::SEIR_augmented, obs::SEIR_observed, dist::Metric, debug=false::Bool, safe=false::Bool, method1=true::Bool)
   """
   Calculate the loglikelihood and return an exposure network array under specified parameters values and observations
 
@@ -290,14 +290,26 @@ function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, 
     # Don't consider likelilihood contribution of first event
     if i > 1
 
-      # Find time since last event
-      Δtime = event_times[event_order[i]] - event_times[event_order[i-1]]
+      if method1
+        # Find the "master rate" through the sum of rate_array
+        master_rate = sum(rate_array)
 
-      # loglikelihood of the event that did occur
-      ll += logpdf(Exponential(1/sum(rate_array[:,id[1]])), Δtime)
+        # loglikelihood of event time with master rate
+        ll += logpdf(Exponential(1/master_rate), event_times[event_order[i]] - event_times[event_order[i-1]])
 
-      # loglikelihood of the events that did not occur
-      ll += logccdf(Exponential(1/sum(rate_array[:,[1:(id[1]-1), (id[1]+1):end]])), Δtime)
+        # loglikelihood of the one event that did occur
+        ll += log(sum(rate_array[:, id[1]]) / master_rate)
+
+      else
+        # Find time since last event
+        Δtime = event_times[event_order[i]] - event_times[event_order[i-1]]
+
+        # loglikelihood of the event that did occur
+        ll += logpdf(Exponential(1/sum(rate_array[:,id[1]])), Δtime)
+
+        # loglikelihood of the events that did not occur
+        ll += logccdf(Exponential(1/sum(rate_array[:,[1:(id[1]-1), (id[1]+1):end]])), Δtime)
+      end
     end
 
     # Exposure event
