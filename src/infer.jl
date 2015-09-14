@@ -188,7 +188,7 @@ function seq_loglikelihood(seq1::Vector{Int64}, seq2::Vector{Int64}, seq_distanc
     # If nucleotides are not the same at location i...
     else
       ll += logccdf(Exponential(1/sum(substitution_matrix[seq1[i], 1:(seq2[i]-1), (seq2[i]+1):end])), seq_distance)
-      ll += logcdf(Exponential(1/sum(substitution_matrix[seq1[i], seq2[i]])), seq_distance)
+      ll += logcdf(Exponential(1/substitution_matrix[seq1[i], seq2[i]]), seq_distance)
     end
   end
   return ll
@@ -197,8 +197,8 @@ end
 function seq_loglikelihood(seq1::Vector{Int64},
                            seq2::Vector{Int64},
                            seq_distance::Float64,
-                           log_relative_rates::Array{Float64},
-                           nochange_rates::Vector{Float64},
+                           logccdf_scales::Array{Float64},
+                           substitution_matrix::Array{Float64},
                            debug=false::Bool)
   """
   Loglikelihood for any two aligned sequences, a specified time apart on a transmission network
@@ -209,10 +209,11 @@ function seq_loglikelihood(seq1::Vector{Int64},
 
   ll = 0.
   for i = 1:length(seq1)
-    if seq1[i] == seq2[i]
-      ll += logccdf(Exponential(nochange_rates[seq1[i]]), seq_distance)
-    else
-      ll += logcdf(Exponential(nochange_rates[seq1[i]]), seq_distance)
+    ll += logccdf(Exponential(logccdf_scales[seq1[i], seq2[i]]))
+
+    # If nucleotides are different at location i...
+    if seq1[i] != seq2[i]
+      ll += logcdf(Exponential(1/substitution_matrix[seq1[i], seq2[i]]), seq_distance)
     end
   end
   return ll
@@ -230,17 +231,21 @@ function network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmented, network:
   infected = find(isseq(obs.seq))
   seq_dist = seq_distances(obs, aug, infected, network, debug)
 
-  log_relative_rates = fill(-Inf, size(substitution_matrix))
-  nochange_rates = [0., 0., 0., 0.]
+  logccdf_scales = fill(0., size(substitution_matrix))
 
   for i = 1:4
-    nochange_rates[i] = sum(substitution_matrix[i,:])
-    log_relative_rates[i,:] = log(substitution_matrix[i,:]/nochange_rates[i])
+    for j = 1:i
+      logccdf_scales[i,j] = 1/sum(substitution_matrix[i,[1:(j-1), (j+1):end]])
+    end
   end
+
+  logccdf_scales += logccdf_scales'
+
+  diag(logccdf_scales) = 1/sum(substitution_matrix,1)
 
   for i = 1:length(infected)
     for j = 1:(i-1)
-       ll += seq_loglikelihood(obs.seq[infected[i]], obs.seq[infected[j]], seq_dist[i,j], log_relative_rates, nochange_rates, debug)
+       ll += seq_loglikelihood(obs.seq[infected[i]], obs.seq[infected[j]], seq_dist[i,j], logccdf_scales, substitution_matrix, debug)
     end
   end
   return ll
