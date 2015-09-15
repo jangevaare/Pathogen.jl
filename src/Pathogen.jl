@@ -50,7 +50,6 @@ export
   logprior,
   rand_prior,
   seq_distances,
-  seq_loglikelihood,
   network_loglikelihood,
   SEIR_loglikelihood,
   initialize,

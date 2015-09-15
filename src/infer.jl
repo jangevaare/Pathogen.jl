@@ -171,54 +171,6 @@ function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, infected::Vector
   return seq_dist += transpose(seq_dist)
 end
 
-function seq_loglikelihood(seq1::Vector{Int64}, seq2::Vector{Int64}, seq_distance::Float64, substitution_matrix::Array, debug=false::Bool)
-  """
-  Loglikelihood for any two aligned sequences, a specified time apart on a transmission network
-  """
-  if debug
-    @assert(length(seq1) == length(seq2), "Sequences not aligned")
-  end
-
-  ll = 0.
-  for i = 1:length(seq1)
-    # If nucleotides are the same at location i...
-    if seq1[i] == seq2[i]
-      ll += logccdf(Exponential(1/sum(substitution_matrix[seq1[i]])), seq_distance)
-
-    # If nucleotides are not the same at location i...
-    else
-      ll += logccdf(Exponential(1/sum(substitution_matrix[seq1[i], 1:(seq2[i]-1), (seq2[i]+1):end])), seq_distance)
-      ll += logcdf(Exponential(1/substitution_matrix[seq1[i], seq2[i]]), seq_distance)
-    end
-  end
-  return ll
-end
-
-function seq_loglikelihood(seq1::Vector{Int64},
-                           seq2::Vector{Int64},
-                           seq_distance::Float64,
-                           logccdf_scales::Array{Float64},
-                           substitution_matrix::Array{Float64},
-                           debug=false::Bool)
-  """
-  Loglikelihood for any two aligned sequences, a specified time apart on a transmission network
-  """
-  if debug
-    @assert(length(seq1) == length(seq2), "Sequences not aligned")
-  end
-
-  ll = 0.
-  for i = 1:length(seq1)
-    ll += logccdf(Exponential(logccdf_scales[seq1[i], seq2[i]]), seq_distance)
-
-    # If nucleotides are different at location i...
-    if seq1[i] != seq2[i]
-      ll += logcdf(Exponential(1/substitution_matrix[seq1[i], seq2[i]]), seq_distance)
-    end
-  end
-  return ll
-end
-
 function network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmented, network::Array, substitution_matrix::Array, debug=false::Bool)
   """
   Loglikelihood for an entire transmission network
@@ -231,19 +183,9 @@ function network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmented, network:
   infected = find(isseq(obs.seq))
   seq_dist = seq_distances(obs, aug, infected, network, debug)
 
-  logccdf_scales = fill(0., size(substitution_matrix))
-
-  for i = 1:4
-    for j = 1:i
-      logccdf_scales[i,j] = 1/sum(substitution_matrix[i,[1:(j-1), (j+1):end]])
-      logccdf_scales[j,i] = logccdf_scales[i,j]
-    end
-    logccdf_scales[i,i] = 1./sum(substitution_matrix[i,:])
-  end
-
   for i = 1:length(infected)
     for j = 1:(i-1)
-       ll += seq_loglikelihood(obs.seq[infected[i]], obs.seq[infected[j]], seq_dist[i,j], logccdf_scales, substitution_matrix, debug)
+      ll += log(prod(expm(substitution_matrix*seq_dist[i,j])[obs.seq[infected[i]], obs.seq[infected[j]]]))
     end
   end
   return ll
