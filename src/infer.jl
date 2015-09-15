@@ -185,7 +185,7 @@ function network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmented, network:
 
   for i = 1:length(infected)
     for j = 1:(i-1)
-      ll += log(prod(expm(substitution_matrix*seq_dist[i,j])[obs.seq[infected[i]], obs.seq[infected[j]]]))
+      ll += sum(log(expm(substitution_matrix*seq_dist[i,j]))[sub2ind((4,4), obs.seq[infected[i]], obs.seq[infected[j]])])
     end
   end
   return ll
