@@ -37,7 +37,7 @@ ilm_priors = SEIR_priors(Uniform(0,10), Uniform(0,10), Uniform(0,0.005), Uniform
 detection_priors = Lag_priors(Uniform(1,3))
 mutation_priors = JC69_priors(Uniform(0,0.1))
 
-ilm_trace, detection_trace, mutation_trace = MCMC(100000, ilm_priors, detection_priors, mutation_priors, obs, false, true, false)
+ilm_trace, detection_trace, mutation_trace = MCMC(200000, ilm_priors, detection_priors, mutation_priors, obs, false, true, false)
 
 # Tune the transition kernel's covariance matrix over 200k iterations
 n = 300
@@ -58,7 +58,7 @@ for i = 1:n
 end
 
 opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.ρ ilm_trace.γ ilm_trace.η detection_trace.ν mutation_trace.λ])*(2.38^2)/7.
-MCMC(100000, opt_cov, ilm_trace, detection_trace, mutation_trace, ilm_priors, detection_priors, mutation_priors, obs, false, true, false)
+MCMC(200000, opt_cov, ilm_trace, detection_trace, mutation_trace, ilm_priors, detection_priors, mutation_priors, obs, false, true, true)
 
 # Simulation/Maximum posteriori visualization
 images = 500
@@ -180,7 +180,7 @@ draw(PNG("SEIR_lambda_hist.png", 20cm, 15cm),
                 background_color=color("white"))))
 
 # Of those infected, what is the posterior probability of being exposed from external source (last 100k iterations)
-network_posterior = mean(trace.network[end-100000:end])
+network_posterior = mean(ilm_trace.network[end-100000:end])
 
 y, x, z = findnz(network_posterior)
 df = DataFrame(x=x, y=y, z=z)

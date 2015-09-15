@@ -7,10 +7,10 @@ function jc69(θ::Vector{Float64})
   Returns the JC69 Q matrix with parameter λ
   """
   λ = θ[1]
-  return [[0 λ λ λ]
-          [λ 0 λ λ]
-          [λ λ 0 λ]
-          [λ λ λ 0]]
+  return [[-3λ λ λ λ]
+          [λ -3λ λ λ]
+          [λ λ -3λ λ]
+          [λ λ λ -3λ]]
 end
 
 # function k80(θ::Tuple)

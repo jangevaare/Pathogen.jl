@@ -114,6 +114,7 @@ function create_ratearray(population::Population, susceptibility_fun::Function, 
   end
 
   # Mutation of external pathogen
+  substitution_matrix[[1,6,11,16]] = 0.
   rate_ref = sum(substitution_matrix,2)[:]
   rate_array.rates[length(population.events)+3:end,1] = rate_ref[convert(Vector{Int64}, population.history[1][2][1])]
 
@@ -155,6 +156,7 @@ function onestep!(rate_array::RateArray, population::Population, susceptibility_
     # Update population - sequence time
     push!(population.events[event[2]][6], population.timeline[1][end])
     # Update rates - mutation rates
+    substitution_matrix[[1,6,11,16]] = 0.
     rate_ref = sum(substitution_matrix,2)[:]
     rate_array.rates[length(population.events)+3:end, event[2]] = rate_ref[convert(Vector{Int64}, population.history[event[2]][2][1])]
 
@@ -187,6 +189,7 @@ function onestep!(rate_array::RateArray, population::Population, susceptibility_
   else
     # Mutation
     # Update population - sequence
+    substitution_matrix[[1,6,11,16]] = 0.
     population.history[event[2]][2] = push!(population.history[event[2]][2], population.history[event[2]][2][end])
     population.history[event[2]][2][end][event[3]] = convert(Nucleotide2bitBase, findfirst(rand(Multinomial(1, substitution_matrix[:,convert(Int64, population.history[event[2]][2][end][event[3]])][:]/sum(substitution_matrix[:,convert(Int64, population.history[event[2]][2][end][event[3]])][:])))))
     # Update population - sequence time
@@ -197,4 +200,3 @@ function onestep!(rate_array::RateArray, population::Population, susceptibility_
   end
   return rate_array, population
 end
-
