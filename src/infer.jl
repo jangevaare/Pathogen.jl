@@ -182,10 +182,13 @@ function network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmented, network:
   ll = 0.
   infected = find(isseq(obs.seq))
   seq_dist = seq_distances(obs, aug, infected, network, debug)
-
+  substitution_eigvals, substitution_eigvectors = eig(substitution_matrix)
+  substitution_eigvals = exp(substitution_eigvals)
+  substitution_eigvectors_inv = substitution_eigvectors^-1
   for i = 1:length(infected)
     for j = 1:(i-1)
-      ll += sum(log(expm(substitution_matrix*seq_dist[i,j]))[sub2ind((4,4), obs.seq[infected[i]], obs.seq[infected[j]])])
+      P_mat = log(substitution_eigvectors * diagm(substitution_eigvals.^seq_dist[i,j]) * substitution_eigvectors_inv)
+      ll += sum(P_mat[sub2ind((4,4), obs.seq[infected[i]], obs.seq[infected[j]])])
     end
   end
   return ll
