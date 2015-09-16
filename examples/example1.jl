@@ -8,8 +8,8 @@ using Pathogen, Gadfly, DataFrames, Distributions, ProgressMeter
 cd("Desktop/example1")
 
 # Simulate
-init_seq = create_seq(200, 0.25, 0.25, 0.25, 0.25)
-init_var = rand(Uniform(0,25), (2,200))
+init_seq = create_seq(100, 0.25, 0.25, 0.25, 0.25)
+init_var = rand(Uniform(0,10), (2,40))
 
 pop = create_population(init_seq, init_var)
 
@@ -20,7 +20,7 @@ substitution = jc69([0.05])
 
 ratearray = create_ratearray(pop, powerlaw, substitution)
 
-@time while length(pop.timeline[1]) < 20000.
+@time while length(pop.timeline[1]) < 5000.
   onestep!(ratearray, pop, powerlaw, latency, recovery, substitution)
 end
 
@@ -37,10 +37,19 @@ ilm_priors = SEIR_priors(Uniform(2,8), Uniform(2,8), Uniform(0,0.005), Uniform(0
 detection_priors = Lag_priors(Uniform(1,3))
 mutation_priors = JC69_priors(Uniform(0,0.1))
 
-ilm_trace, detection_trace, mutation_trace = MCMC(5000, ilm_priors, detection_priors, mutation_priors, obs, false, true, false)
+# From some previous simulation runs...
+opt_cov = [0.23086898731119626 -0.06339624871696066 -0.0031800042117832114 0.01611130363856698 7.502308677590557e-5 -0.04172552030369371 9.656673691052941e-6
+ -0.06339624871696066 0.7402072386878623 -0.06563597504892492 -0.020217534870576297 -0.0002459116200602692 0.1563007257329955 -5.731936222295633e-6
+ -0.0031800042117832114 -0.06563597504892492 0.036204426712783414 0.00014101116046161534 3.31375867657149e-5 -0.019469166893799742 2.2529637404798412e-6
+ 0.01611130363856698 -0.020217534870576297 0.00014101116046161534 0.009196894826401476 2.7716042390333208e-5 -0.00574364739285761 5.448990926026132e-7
+ 7.502308677590557e-5 -0.0002459116200602692 3.31375867657149e-5 2.7716042390333208e-5 1.7177313965323465e-6 -2.4717221007601892e-5 7.801292516978605e-9
+ -0.04172552030369371 0.1563007257329955 -0.019469166893799742 -0.00574364739285761 -2.4717221007601892e-5 0.15638126601298286 -5.625526286964686e-6
+ 9.656673691052941e-6 -5.731936222295633e-6 2.2529637404798412e-6 5.448990926026132e-7 7.801292516978605e-9 -5.625526286964686e-6 1.6749597385278377e-8]
 
-# Tune the transition kernel's covariance matrix over 200k iterations
-n = 300
+ilm_trace, detection_trace, mutation_trace = MCMC(100000, opt_cov, ilm_priors, detection_priors, mutation_priors, obs, false, true, true)
+
+# Tune the transition kernel's covariance matrix
+n = 100
 for i = 1:n
 
   # Progress bar
@@ -58,7 +67,8 @@ for i = 1:n
 end
 
 opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.ρ ilm_trace.γ ilm_trace.η detection_trace.ν mutation_trace.λ])*(2.38^2)/7.
-MCMC(200000, opt_cov, ilm_trace, detection_trace, mutation_trace, ilm_priors, detection_priors, mutation_priors, obs, false, true, true)
+
+MCMC(100000, opt_cov, ilm_trace, detection_trace, mutation_trace, ilm_priors, detection_priors, mutation_priors, obs, false, true, true)
 
 # Simulation/Maximum posteriori visualization
 images = 500
