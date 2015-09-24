@@ -57,15 +57,15 @@ abstract ILM_priors <: Priors
 abstract Detection_priors <: Priors
 abstract Mutation_priors <: Priors
 
-type SEIR_priors{T<:UnivariateDistribution} <: ILM_priors
+type SEIR_priors <: ILM_priors
   """
   Prior distributions for ILM model inference
   """
-  α::T
-  β::T
-  η::T
-  ρ::T
-  γ::T
+  α::UnivariateDistribution
+  β::UnivariateDistribution
+  η::UnivariateDistribution
+  ρ::UnivariateDistribution
+  γ::UnivariateDistribution
 end
 
 type Lag_priors{T<:UnivariateDistribution} <: Detection_priors
