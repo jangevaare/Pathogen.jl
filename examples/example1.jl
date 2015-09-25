@@ -49,7 +49,7 @@ opt_cov = [0.4991029163531124 -0.052493472693238084 0.003666982270319116 -0.0241
  0.10591941189035393 -0.11461030746419042 0.04982599688243553 -0.05016228293267766 0.04174857884491579 0.3306199900603791 1.713833489555216e-5
  3.5837831664829387e-5 -4.714603858147985e-6 6.343496770080494e-6 -4.31057371321607e-6 2.9063320122521e-5 1.713833489555216e-5 7.115811272951907e-8]
 
-ilm_trace, detection_trace, mutation_trace = MCMC(100000, opt_cov, ilm_priors, detection_priors, mutation_priors, obs, false, true, true)
+ilm_trace, detection_trace, mutation_trace = MCMC(100000, opt_cov, ilm_priors, detection_priors, mutation_priors, obs, false, true, false)
 
 # Tune the transition kernel's covariance matrix
 n = 100
@@ -70,8 +70,6 @@ for i = 1:n
 end
 
 opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.ρ ilm_trace.γ ilm_trace.η detection_trace.ν mutation_trace.λ])*(2.38^2)/7.
-
-print(opt_cov)
 
 MCMC(100000, opt_cov, ilm_trace, detection_trace, mutation_trace, ilm_priors, detection_priors, mutation_priors, obs, false, true, true)
 
