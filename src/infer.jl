@@ -2,6 +2,7 @@
 infer.jl
 """
 
+
 function surveil(population::Population, ν::Float64)
   """
   Gather surveillance data on specific individuals in a population, with an exponentially distributed detection lag with rate ν
@@ -58,7 +59,64 @@ function surveil(population::Population, ν::Float64)
   return SEIR_actual(exposed_actual, infectious_actual, removed_actual, covariates_actual, seq_actual), SEIR_observed(infectious_observed, removed_observed, covariates_observed, seq_observed)
 end
 
+
 surveil(population::Population) = surveil(population, Inf)
+
+
+function augment(ρ::Float64, ν::Float64, network::array{Bool, 2}, obs::SEIR_observed)
+  """
+  Augments surveilance data, organizes observations, based on ρ, ν, and a transmission network
+  """
+  exposed_augmented = fill(NaN, length(obs.infectious))
+  infectious_augmented = fill(NaN, length(obs.infectious))
+  removed_augmented = fill(NaN, length(obs.removed))
+
+  # Determine which event times have additional restrictions...
+  unrestricted = find(network[1,:])
+  restricted = Vector{Int64}
+  previous_length = 0
+  for i = unrestricted
+    append!(restricted, find(network[i, :]))
+  end
+  while length(restricted)-previous_length > 0
+    previous_length = length(restricted)
+    for i = restricted[(previous_length+1):end]
+      append!(restricted, find(network[i, :]))
+    end
+  end
+
+  for i = unrestricted
+    if ν < Inf
+      infectious_augmented[i] = obs.infectious[i] - rand(Exponential(1/ν))
+    elseif ν == Inf
+      infectious_augmented[i] = obs.infectious[i]
+    end
+    exposed_augmented[i] = infectious_augmented[i] - rand(Exponential(1/ρ))
+    if ν < Inf
+      removed_augmented[i] = obs.removed[i] - rand(Truncated(Exponential(1/ν), -Inf, obs.removed[i] - obs.infectious[i]))
+    elseif ν == Inf
+      removed_augmented[i] = obs.removed[i]
+    end
+  end
+
+  for i = restricted
+    source = findfirst(network[:,i])
+    if ν < Inf
+      infectious_augmented[i] = obs.infectious[i] - rand(Trucated(Exponential(1/ν), -Inf, UPPERBOUND))
+    elseif ν == Inf
+      infectious_augmented[i] = obs.infectious[i]
+    end
+    exposed_augmented[i] = infectious_augmented[i] - rand(Truncated(Exponential(1/ρ), LOWERBOUND, UPPERBOUND))
+    if ν < Inf
+      removed_augmented[i] = obs.removed[i] - rand(Truncated(Exponential(1/ν), -Inf, obs.removed[i] - obs.infectious[i]))
+    elseif ν == Inf
+      removed_augmented[i] = obs.removed[i]
+    end
+  end
+  return SEIR_augmented(exposed_augmented, infectious_augmented, removed_augmented)
+end
+
+augment(ρ::Float64, network::array{Bool, 2}, obs::SEIR_observed) = augment(ρ, Inf, network, obs)
 
 function augment(ρ::Float64, ν::Float64, obs::SEIR_observed)
   """
@@ -87,7 +145,9 @@ function augment(ρ::Float64, ν::Float64, obs::SEIR_observed)
   return SEIR_augmented(exposed_augmented, infectious_augmented, removed_augmented)
 end
 
+
 augment(ρ::Float64, obs::SEIR_observed) = augment(ρ, Inf, obs)
+
 
 function logprior(priors::Priors, params::Vector{Float64})
   """
@@ -200,7 +260,7 @@ function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, 
   γ: removal rate (1/mean infectious period)
   """
   # Initiate an exposure network
-  network = fill(0, (1 + length(obs.covariates), length(obs.covariates)))
+  network_rates = fill(0., (1 + length(obs.covariates), length(obs.covariates)))
 
   # Start with loglikelihood of 0
   ll = 0.
@@ -243,13 +303,9 @@ function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, 
 
     # Exposure event
     if id[2] == 1
-      # Generate an exposure source based on disease pressures at time of exposure
-      # Metropolis method
-      network[sample(find(rate_array[1:(length(obs.covariates)+1), id[1]] .> 0)), id[1]] = 1
-      ll += logpdf(Multinomial(1, rate_array[1:(length(obs.covariates)+1), id[1]]./sum(rate_array[1:(length(obs.covariates)+1), id[1]])), network[:, id[1]])
 
-#       # Gibbs method
-#       network[:, id[1]] = rand(Multinomial(1, rate_array[1:(length(obs.covariates)+1), id[1]]./sum(rate_array[1:(length(obs.covariates)+1), id[1]])))
+      # Record exposure rates at time of exposure
+      network_rates[:, id[1]] = rate_array[1:(length(obs.covariates)+1), id[1]]
 
       # Update exposure rates
       rate_array[1:(1 + size(rate_array, 2)), id[1]] = 0.
@@ -292,7 +348,7 @@ function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, 
       end
     end
   end
-  return ll, network
+  return ll, network_rates
 end
 
 function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detection_priors::Lag_priors, obs::SEIR_observed, limit=500::Int, debug=false::Bool, dist=Euclidean())
@@ -466,7 +522,7 @@ function MCMC(n::Int64,
     aug = augment(ilm_proposal[4], detection_proposal[1], obs)
 
     # ILM loglikelihood component
-    ll, network = SEIR_loglikelihood(ilm_proposal[1], ilm_proposal[2], ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], aug, obs, dist)
+    ll, network_rates = SEIR_loglikelihood(ilm_proposal[1], ilm_proposal[2], ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], aug, obs, dist)
     lp += ll
 
     # Network loglikelihood
