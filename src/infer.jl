@@ -389,7 +389,8 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
   mutation_params = randprior(mutation_priors)
   detection_params = randprior(detection_priors)
   aug = augment(ilm_params[4], detection_params[1], obs)
-  ll, network = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, dist, debug)
+  ll, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, dist, debug)
+  network = propose_network(network_rates, false)
   ll += network_loglikelihood(obs, aug, network, jc69([mutation_params[1]]), debug)
   count = 1
 
@@ -400,14 +401,16 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
     mutation_params = randprior(mutation_priors)
     detection_params = randprior(detection_priors)
     aug = augment(ilm_params[4], detection_params[1], obs)
-    ll, network = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, dist, debug)
-    ll += network_loglikelihood(obs, aug, network, jc69([mutation_params[1]]), debug)
+    lp1, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, dist, debug)
+    network = propose_network(network_rates, false)
+    lp2 = network_loglikelihood(obs, aug, network, jc69([mutation_params[1]]), debug)
   end
 
   if count < limit
     print("Successfully initialized on attempt $count")
-    lp = ll + logprior(ilm_priors, ilm_params) + logprior(mutation_priors, mutation_params) + logprior(detection_priors, detection_params)
-      return SEIR_trace([ilm_params[1]], [ilm_params[2]], [ilm_params[3]], [ilm_params[4]], [ilm_params[5]], [aug], Array[network], [lp]), Lag_trace([detection_params[1]]), JC69_trace([mutation_params[1]])
+    lp1 += logprior(ilm_priors, ilm_params) + logprior(mutation_priors, mutation_params)
+    lp2 += logprior(detection_priors, detection_params)
+    return SEIR_trace([ilm_params[1]], [ilm_params[2]], [ilm_params[3]], [ilm_params[4]], [ilm_params[5]], [aug], Array[network_rates], Array[network], [lp1], [lp2]), Lag_trace([detection_params[1]]), JC69_trace([mutation_params[1]])
   else
     print("Failed to initialize after $count attempts")
   end
