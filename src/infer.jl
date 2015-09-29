@@ -175,6 +175,30 @@ function randprior(priors::Priors)
 end
 
 
+function propose_network(network_rates::Array{Float64, 2}, uniform=true::Bool)
+  """
+  Propose a network based on network_rates
+  """
+  network = fill(false, size(network_rates))
+  if uniform
+    for i = 1:size(network_rates,2)
+      rate_sum = sum(network_rates[:,i])
+      if rate_sum > 0.
+        network[sample(find(network_rates[:,i] .> 0.)), i] = true
+      end
+    end
+  else
+    for i = 1:size(network_rates,2)
+      rate_sum = sum(network_rates[:,i])
+      if rate_sum > 0.
+        network[findfirst(rand(Multinomial(network_rates[:,i]/rate_sum))), i] = true
+      end
+    end
+  end
+  return network
+end
+
+
 function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, infected::Vector{Int64}, network::Array, debug=false::Bool)
   """
   For a given transmission network, find the time between the pathogen sequences between every individuals i and j
@@ -506,47 +530,48 @@ function MCMC(n::Int64,
       end
     end
 
+    # Step 1: Gibbs
+    # Augment the data based on current parameter values and network
+    push!(ilm_trace.aug, augment(ilm_trace.ρ[end], detection_trace.ν[end], ilm_trace.network[end], obs))
+
+    # Step 2a: Metropolis-Hastings proposal
     # Only generate valid proposals
     step = rand(MvNormal(transition_cov))
     ilm_proposal = [ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.ρ[end], ilm_trace.γ[end]] .+ step[1:5]
     detection_proposal = [detection_trace.ν[end]] .+ step[6]
     mutation_proposal = [mutation_trace.λ[end]] .+ step[7]
 
-    lp1 = logprior(ilm_priors, ilm_proposal)
-    lp1 += logprior(detection_priors, detection_proposal)
-    lp2 = logprior(mutation_priors, mutation_proposal)
+    lp1_proposal = logprior(ilm_priors, ilm_proposal)
+    lp1_proposal += logprior(detection_priors, detection_proposal)
+    lp2_proposal = logprior(mutation_priors, mutation_proposal)
 
-    while lp1 + lp2 == -Inf
+    while lp1_proposal + lp2_proposal == -Inf
       step = rand(MvNormal(transition_cov))
       ilm_proposal = [ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.ρ[end], ilm_trace.γ[end]] .+ step[1:5]
       detection_proposal = [detection_trace.ν[end]] .+ step[6]
       mutation_proposal = [mutation_trace.λ[end]] .+ step[7]
-      lp1 = logprior(ilm_priors, ilm_proposal)
-      lp1 += logprior(detection_priors, detection_proposal)
-      lp2 = logprior(mutation_priors, mutation_proposal)
+      lp1_proposal = logprior(ilm_priors, ilm_proposal)
+      lp1_proposal += logprior(detection_priors, detection_proposal)
+      lp2_proposal = logprior(mutation_priors, mutation_proposal)
     end
 
-    # Augment the data
-    aug = augment(ilm_proposal[4], detection_proposal[1], ilm_trace.network[end], obs)
+    # Step 2b: loglikelihood calculation for Metropolis-Hastings step
+    # ILM loglikelihood component for proposal
+    ll_proposal, network_rates_proposal = SEIR_loglikelihood(ilm_proposal[1], ilm_proposal[2], ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], ilm_trace.aug[end], obs, dist)
+    lp1_proposal += ll_proposal
 
-    # ILM loglikelihood component
-    ll, network_rates = SEIR_loglikelihood(ilm_proposal[1], ilm_proposal[2], ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], aug, obs, dist)
-    lp += ll
+    # Must also calculate ILM log posterior for the previous parameter values, based on new event timings...
+    lp1 = logprior(ilm_priors, [ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.ρ[end], ilm_trace.γ[end]])
+    lp1 += logprior(detection_priors, [detection_trace.ν[end]])
+    ll, network_rates = SEIR_loglikelihood(ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.ρ[end], ilm_trace.γ[end], ilm_trace.aug[end], obs, dist)
+    lp1 += ll
 
-    # Network loglikelihood
-    if lp > -Inf
-      lp += network_loglikelihood(obs, aug, network, jc69([mutation_proposal[1]]), debug)
-    end
-
-    # Accept/reject based on logposterior
-    if lp == -Inf
-      reject = true
-    elseif lp > ilm_trace.logposterior[end]
+    # Step 2c: accept/reject based on logposterior comparison
+    reject = true
+    if lp1_proposal > lp1
       reject = false
-    elseif exp(lp - ilm_trace.logposterior[end]) >= rand()
+    elseif exp(lp1_proposal - lp1) > rand()
       reject = false
-    else
-      reject = true
     end
 
     if reject
@@ -555,33 +580,44 @@ function MCMC(n::Int64,
       ilm_proposal[3] = ilm_trace.η[end]
       ilm_proposal[4] = ilm_trace.ρ[end]
       ilm_proposal[5] = ilm_trace.γ[end]
-
-      if reaugment
-        detection_proposal[1] = detection_trace.ν[end]
-        mutation_proposal[1] = mutation_trace.λ[end]
-        aug = augment(ilm_proposal[4], detection_proposal[1], obs)
-        lp, network = SEIR_loglikelihood(ilm_proposal[1], ilm_proposal[2], ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], aug, obs, dist)
-        lp += network_loglikelihood(obs, aug, network, jc69([mutation_proposal[1]]), debug)
-        lp += logprior(ilm_priors, ilm_proposal)
-        lp += logprior(detection_priors, detection_proposal)
-        lp += logprior(mutation_priors, mutation_proposal)
-      else
-        aug = ilm_trace.aug[end]
-        network = ilm_trace.network[end]
-        lp = ilm_trace.logposterior[end]
-        detection_proposal[1] = detection_trace.ν[end]
-        mutation_proposal[1] = mutation_trace.λ[end]
-      end
+      network_rates_proposal = network_rates
+      detection_proposal = detection_trace.ν[end]
+      lp1_proposal = lp1
+      lp2_proposal = lp2
     end
 
-    # Update trace objects
+    # Step 2d: Update chain
     push!(ilm_trace.α, ilm_proposal[1])
     push!(ilm_trace.β, ilm_proposal[2])
     push!(ilm_trace.η, ilm_proposal[3])
     push!(ilm_trace.ρ, ilm_proposal[4])
     push!(ilm_trace.γ, ilm_proposal[5])
-    push!(ilm_trace.aug, aug)
-    push!(ilm_trace.network, network)
+    push!(ilm_trace.network_rates, network_rates_proposal)
+    push!(ilm_trace.logposterior1, lp1_proposal)
+    push!(detection_trace.ν, detection_proposal[1])
+
+    # Step 3: Independence sampling of network
+    network_proposal =
+    lp2_proposal += network_loglikelihood(obs, ilm_trace.aug[end], network, jc69([mutation_proposal[1]]), debug)
+    lp2_proposal += network_loglikelihood(obs, ilm_trace.aug[end], network, jc69([mutation_proposal[1]]), debug)
+
+    lp2 = logprior(mutation_priors, [mutation_trace.λ[end]])
+    lp2 += network_loglikelihood(obs, ilm_trace.aug[end], ilm_trace.network[end], jc69([mutation_proposal[1]]), debug)
+    lp2 +=
+  end
+
+    else
+      aug = ilm_trace.aug[end]
+      lp = ilm_trace.logposterior[end]
+      detection_proposal[1] = detection_trace.ν[end]
+      mutation_proposal[1] = mutation_trace.λ[end]
+    end
+
+    # Network loglikelihood
+
+
+    # Update trace objects
+
     push!(ilm_trace.logposterior, lp)
 
     push!(detection_trace.ν, detection_proposal[1])
