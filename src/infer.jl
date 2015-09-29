@@ -512,23 +512,22 @@ function MCMC(n::Int64,
     detection_proposal = [detection_trace.ν[end]] .+ step[6]
     mutation_proposal = [mutation_trace.λ[end]] .+ step[7]
 
-    lp = logprior(ilm_priors, ilm_proposal)
-    lp += logprior(detection_priors, detection_proposal)
-    lp += logprior(mutation_priors, mutation_proposal)
+    lp1 = logprior(ilm_priors, ilm_proposal)
+    lp1 += logprior(detection_priors, detection_proposal)
+    lp2 = logprior(mutation_priors, mutation_proposal)
 
-    while lp == -Inf
+    while lp1 + lp2 == -Inf
       step = rand(MvNormal(transition_cov))
       ilm_proposal = [ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.ρ[end], ilm_trace.γ[end]] .+ step[1:5]
       detection_proposal = [detection_trace.ν[end]] .+ step[6]
       mutation_proposal = [mutation_trace.λ[end]] .+ step[7]
-
-      lp = logprior(ilm_priors, ilm_proposal)
-      lp += logprior(detection_priors, detection_proposal)
-      lp += logprior(mutation_priors, mutation_proposal)
+      lp1 = logprior(ilm_priors, ilm_proposal)
+      lp1 += logprior(detection_priors, detection_proposal)
+      lp2 = logprior(mutation_priors, mutation_proposal)
     end
 
     # Augment the data
-    aug = augment(ilm_proposal[4], detection_proposal[1], obs)
+    aug = augment(ilm_proposal[4], detection_proposal[1], ilm_trace.network[end], obs)
 
     # ILM loglikelihood component
     ll, network_rates = SEIR_loglikelihood(ilm_proposal[1], ilm_proposal[2], ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], aug, obs, dist)

@@ -120,6 +120,7 @@ type SEIR_trace <: Trace
   ρ::Vector{Float64}
   γ::Vector{Float64}
   aug::Vector{SEIR_augmented}
+  network_rates::Vector{Array{Float64}}
   network::Vector{Array{Bool}}
   logposterior_1::Vector{Float64}
   logposterior_2::Vector{Float64}
