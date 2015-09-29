@@ -3,7 +3,10 @@ utilities.jl
 """
 
 import Base.convert
+
+
 import Base.maximum
+
 
 function convert(::Type{Vector{Int64}}, x::Nucleotide2bitSeq)
   """
@@ -11,6 +14,7 @@ function convert(::Type{Vector{Int64}}, x::Nucleotide2bitSeq)
   """
   return sub2ind((2,2), x.b1 .+1, x.b2 .+1)
 end
+
 
 function convert(::Type{Nucleotide2bitSeq}, x::Vector{Int64})
   """
@@ -24,12 +28,14 @@ function convert(::Type{Nucleotide2bitSeq}, x::Vector{Int64})
   end
 end
 
+
 function convert(::Type{Int64}, x::Nucleotide2bitBase)
   """
   Add a conversion method to move from nucleotide base to an integer
   """
   return sub2ind((2,2), x.b1 .+1, x.b2 .+1)
 end
+
 
 function convert(::Type{Nucleotide2bitBase}, x::Int64)
   """
@@ -38,6 +44,7 @@ function convert(::Type{Nucleotide2bitBase}, x::Int64)
   b1,b2 = ind2sub((2,2), x)
   return Nucleotide2bitBase(convert(Bool, b1 - 1), convert(Bool, b2 - 1))
 end
+
 
 function findstate(population::Population, individual::Int64, time::Float64)
   """
@@ -56,6 +63,7 @@ function findstate(population::Population, individual::Int64, time::Float64)
   end
 end
 
+
 function findstate(trace::SEIR_trace, iteration::Int64, individual::Int64, time::Float64)
   """
   Find the disease state of a specific individual
@@ -72,6 +80,7 @@ function findstate(trace::SEIR_trace, iteration::Int64, individual::Int64, time:
     return "unknown"
   end
 end
+
 
 function plotdata(population::Population, time::Float64)
   """
@@ -93,6 +102,7 @@ function plotdata(population::Population, time::Float64)
   return states, routes
 end
 
+
 function plotdata(obs::SEIR_observed, trace::SEIR_trace, iteration::Int64, time::Float64)
   """
   Create dataframes with all necessary plotting information
@@ -113,6 +123,7 @@ function plotdata(obs::SEIR_observed, trace::SEIR_trace, iteration::Int64, time:
   return states, routes
 end
 
+
 function maximum(aug::SEIR_augmented)
   """
   Find maximum augmented event time
@@ -132,6 +143,7 @@ end
 #   end
 #   return seq
 # end
+
 
 function isseq(x::Vector{Any})
   """
