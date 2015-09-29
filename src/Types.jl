@@ -98,7 +98,8 @@ type SEIR_trace <: Trace
   γ::Vector{Float64}
   aug::Vector{SEIR_augmented}
   network::Vector{Array{Bool}}
-  logposterior::Vector{Float64}
+  logposterior_1::Vector{Float64}
+  logposterior_2::Vector{Float64}
 end
 
 type Lag_trace <: Detection_trace
