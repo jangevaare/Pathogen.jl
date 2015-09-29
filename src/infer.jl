@@ -515,7 +515,6 @@ function MCMC(n::Int64,
               obs::SEIR_observed,
               debug=false::Bool,
               progress=true::Bool,
-              reaugment=false::Bool,
               dist=Euclidean())
   """
   Performs `n` data-augmented metropolis hastings within Gibbs MCMC iterations. Initiates a single chain by sampling from prior distribution
@@ -638,7 +637,6 @@ function MCMC(n::Int64,
               obs::SEIR_observed,
               debug=false::Bool,
               progress=true::Bool,
-              reaugment=false::Bool,
               dist=Euclidean(),
               init_limit=500::Int64)
   """
@@ -660,7 +658,6 @@ function MCMC(n::Int64,
               obs,
               debug,
               progress,
-              reaugment,
               dist)
 
   end
@@ -673,7 +670,6 @@ function MCMC(n::Int64,
               obs::SEIR_observed,
               debug=false::Bool,
               progress=true::Bool,
-              reaugment=false::Bool,
               dist=Euclidean(),
               init_limit=500::Int64)
   """
@@ -696,7 +692,6 @@ function MCMC(n::Int64,
               obs,
               debug,
               progress,
-              reaugment,
               dist,
               init_limit)
 end
