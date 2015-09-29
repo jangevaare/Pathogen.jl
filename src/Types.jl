@@ -2,6 +2,7 @@
 types.jl
 """
 
+
 import Base.display
 import Base.push!
 
@@ -14,6 +15,7 @@ type Population
   timeline::Array
 end
 
+
 type RateArray
   """
   Contains rates, and information to as what they refer to
@@ -21,6 +23,7 @@ type RateArray
   rates::Array
   events::Array
 end
+
 
 type SEIR_actual
   """
@@ -33,6 +36,7 @@ type SEIR_actual
   seq::Vector{Any}
 end
 
+
 type SEIR_observed
   """
   Contains observed event times and information
@@ -43,6 +47,7 @@ type SEIR_observed
   seq::Vector{Any}
 end
 
+
 type SEIR_augmented
   """
   Contains event times from data augmentation
@@ -52,10 +57,18 @@ type SEIR_augmented
   removed::Vector{Float64}
 end
 
+
 abstract Priors
+
+
 abstract ILM_priors <: Priors
+
+
 abstract Detection_priors <: Priors
+
+
 abstract Mutation_priors <: Priors
+
 
 type SEIR_priors <: ILM_priors
   """
@@ -68,12 +81,14 @@ type SEIR_priors <: ILM_priors
   γ::UnivariateDistribution
 end
 
+
 type Lag_priors{T<:UnivariateDistribution} <: Detection_priors
   """
   Prior distributions for a simple detection rate
   """
   ν::T
 end
+
 
 type JC69_priors{T<:UnivariateDistribution} <: Mutation_priors
   """
@@ -82,10 +97,18 @@ type JC69_priors{T<:UnivariateDistribution} <: Mutation_priors
   λ::T
 end
 
+
 abstract Trace
+
+
 abstract ILM_trace <: Trace
+
+
 abstract Detection_trace <: Trace
+
+
 abstract Mutation_trace <: Trace
+
 
 type SEIR_trace <: Trace
   """
@@ -102,12 +125,14 @@ type SEIR_trace <: Trace
   logposterior_2::Vector{Float64}
 end
 
+
 type Lag_trace <: Detection_trace
   """
   Contains an MCMC trace object for detection rate
   """
   ν::Vector{Float64}
 end
+
 
 type JC69_trace <: Mutation_trace
   """
