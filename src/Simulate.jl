@@ -11,6 +11,7 @@ function create_seq(n::Int, π_A::Float64, π_T::Float64, π_C::Float64, π_G::F
   return convert(Nucleotide2bitSeq, findn(rand(Multinomial(1, [π_A, π_T, π_C, π_G]),n))[1])
 end
 
+
 function create_population(init_seq::Nucleotide2bitSeq, init_var::Array)
 """
 Create an infection database.
@@ -35,6 +36,7 @@ Each column of the `init_var` is assigned to an individual
   # save as a population object type
   return Population(events, history, timeline)
 end
+
 
 function create_powerlaw(α::Float64, β::Float64, η::Float64, dist=Euclidean()::Metric)
   """
@@ -66,6 +68,7 @@ function create_powerlaw(α::Float64, β::Float64, η::Float64, dist=Euclidean()
   end
 end
 
+
 function create_constantrate(τ::Float64)
   """
   Creates generic constant rate function
@@ -78,6 +81,7 @@ function create_constantrate(τ::Float64)
     return τ
   end
 end
+
 
 function create_ratearray(population::Population, susceptibility_fun::Function, substitution_matrix::Array)
   """
@@ -121,6 +125,7 @@ function create_ratearray(population::Population, susceptibility_fun::Function, 
   # Return RateArray
   return rate_array
 end
+
 
 function onestep!(rate_array::RateArray, population::Population, susceptibility_fun::Function, latency_fun::Function, recovery_fun::Function, substitution_matrix::Array)
   """
