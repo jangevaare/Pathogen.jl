@@ -102,11 +102,11 @@ function augment(ρ::Float64, ν::Float64, network::array{Bool, 2}, obs::SEIR_ob
   for i = restricted
     source = findfirst(network[:,i])
     if ν < Inf
-      infectious_augmented[i] = obs.infectious[i] - rand(Trucated(Exponential(1/ν), -Inf, UPPERBOUND))
+      infectious_augmented[i] = obs.infectious[i] - rand(Trucated(Exponential(1/ν), -Inf, infectious_augmented[source]-obs.infectious[i]))
     elseif ν == Inf
       infectious_augmented[i] = obs.infectious[i]
     end
-    exposed_augmented[i] = infectious_augmented[i] - rand(Truncated(Exponential(1/ρ), LOWERBOUND, UPPERBOUND))
+    exposed_augmented[i] = infectious_augmented[i] - rand(Truncated(Exponential(1/ρ), removed_augmented[source] - infectious_augmented[i], infectious_augmented[source] - infectious_augmented[i]))
     if ν < Inf
       removed_augmented[i] = obs.removed[i] - rand(Truncated(Exponential(1/ν), -Inf, obs.removed[i] - obs.infectious[i]))
     elseif ν == Inf
