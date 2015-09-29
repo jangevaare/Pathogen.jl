@@ -596,32 +596,29 @@ function MCMC(n::Int64,
     push!(ilm_trace.logposterior1, lp1_proposal)
     push!(detection_trace.ν, detection_proposal[1])
 
-    # Step 3: Independence sampling of network
-    network_proposal =
-    lp2_proposal += network_loglikelihood(obs, ilm_trace.aug[end], network, jc69([mutation_proposal[1]]), debug)
-    lp2_proposal += network_loglikelihood(obs, ilm_trace.aug[end], network, jc69([mutation_proposal[1]]), debug)
+    # Step 3a: Independence sampling of network
+    network_proposal = propose_network(ilm_trace.network_rates[end], false)
+    lp2_proposal += network_loglikelihood(obs, ilm_trace.aug[end], network_proposal, jc69([mutation_proposal[1]]), debug)
 
     lp2 = logprior(mutation_priors, [mutation_trace.λ[end]])
-    lp2 += network_loglikelihood(obs, ilm_trace.aug[end], ilm_trace.network[end], jc69([mutation_proposal[1]]), debug)
-    lp2 +=
-  end
+    lp2 += network_loglikelihood(obs, ilm_trace.aug[end], ilm_trace.network[end], jc69([mutation_trace.λ[end]]), debug)
 
-    else
-      aug = ilm_trace.aug[end]
-      lp = ilm_trace.logposterior[end]
-      detection_proposal[1] = detection_trace.ν[end]
-      mutation_proposal[1] = mutation_trace.λ[end]
+    # Step 3b: Accept/reject proposal
+    reject = true
+    if lp2_proposal > lp2
+      reject = false
+    elseif exp(lp2_proposal - lp2) > rand()
+      reject = false
     end
 
-    # Network loglikelihood
+    if reject
+      lp2_proposal = lp2
+      network_proposal = ilm_trace.network[end]
+      mutation_proposal = mutation_trace.λ[end]
+    end
 
-
-    # Update trace objects
-
-    push!(ilm_trace.logposterior, lp)
-
-    push!(detection_trace.ν, detection_proposal[1])
-
+    push!(ilm_trace.logposterior2, lp2_proposal)
+    push!(ilm_trace.network, network_proposal)
     push!(mutation_trace.λ, mutation_proposal[1])
   end
 
