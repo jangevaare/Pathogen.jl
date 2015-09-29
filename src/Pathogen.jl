@@ -1,6 +1,8 @@
 module Pathogen
 
+
 using Distributions, Distances, DataFrames, BioSeq, ProgressMeter
+
 
 export
   # types.jl
@@ -49,16 +51,19 @@ export
   augment,
   logprior,
   rand_prior,
+  propose_network,
   seq_distances,
   network_loglikelihood,
   SEIR_loglikelihood,
   initialize,
   MCMC
 
+
 include("types.jl")
 include("utilities.jl")
 include("mutate.jl")
 include("simulate.jl")
 include("infer.jl")
+
 
 end

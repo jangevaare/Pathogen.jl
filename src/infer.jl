@@ -2,7 +2,6 @@
 infer.jl
 """
 
-
 function surveil(population::Population, ν::Float64)
   """
   Gather surveillance data on specific individuals in a population, with an exponentially distributed detection lag with rate ν
@@ -60,10 +59,10 @@ function surveil(population::Population, ν::Float64)
 end
 
 
-surveil(population::Population) = surveil(population, Inf)
+surveil(population, Inf) = surveil(population::Population)
 
 
-function augment(ρ::Float64, ν::Float64, network::array{Bool, 2}, obs::SEIR_observed)
+function augment(ρ::Float64, ν::Float64, network::Array{Bool, 2}, obs::SEIR_observed)
   """
   Augments surveilance data, organizes observations, based on ρ, ν, and a transmission network
   """
@@ -117,7 +116,7 @@ function augment(ρ::Float64, ν::Float64, network::array{Bool, 2}, obs::SEIR_ob
 end
 
 
-augment(ρ::Float64, network::array{Bool, 2}, obs::SEIR_observed) = augment(ρ, Inf, network, obs)
+augment(ρ, Inf, network, obs) = augment(ρ::Float64, network::array{Bool, 2}, obs::SEIR_observed)
 
 
 function augment(ρ::Float64, ν::Float64, obs::SEIR_observed)
@@ -148,7 +147,7 @@ function augment(ρ::Float64, ν::Float64, obs::SEIR_observed)
 end
 
 
-augment(ρ::Float64, obs::SEIR_observed) = augment(ρ, Inf, obs)
+augment(ρ, Inf, obs) = augment(ρ::Float64, obs::SEIR_observed)
 
 
 function logprior(priors::Priors, params::Vector{Float64})
