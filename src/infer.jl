@@ -116,7 +116,9 @@ function augment(ρ::Float64, ν::Float64, network::array{Bool, 2}, obs::SEIR_ob
   return SEIR_augmented(exposed_augmented, infectious_augmented, removed_augmented)
 end
 
+
 augment(ρ::Float64, network::array{Bool, 2}, obs::SEIR_observed) = augment(ρ, Inf, network, obs)
+
 
 function augment(ρ::Float64, ν::Float64, obs::SEIR_observed)
   """
@@ -160,6 +162,7 @@ function logprior(priors::Priors, params::Vector{Float64})
   return lprior
 end
 
+
 function randprior(priors::Priors)
   """
   Randomly generate a parameter vector from specified priors
@@ -170,6 +173,7 @@ function randprior(priors::Priors)
   end
   return params
 end
+
 
 function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, infected::Vector{Int64}, network::Array, debug=false::Bool)
   """
@@ -229,6 +233,7 @@ function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, infected::Vector
 
   return seq_dist += transpose(seq_dist)
 end
+
 
 function network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmented, network::Array, substitution_matrix::Array, debug=false::Bool)
   """
@@ -351,6 +356,7 @@ function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, 
   return ll, network_rates
 end
 
+
 function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detection_priors::Lag_priors, obs::SEIR_observed, limit=500::Int, debug=false::Bool, dist=Euclidean())
   """
   Initiate an Trace object by sampling from specified prior distributions
@@ -382,6 +388,7 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
     print("Failed to initialize after $count attempts")
   end
 end
+
 
 function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, obs::SEIR_observed, limit=500::Int, debug=false::Bool, dist=Euclidean())
   """
@@ -441,6 +448,7 @@ function initialize(ilm_priors::SEIR_priors, detection_priors::Lag_priors, obs::
   end
 end
 
+
 function initialize(ilm_priors::SEIR_priors, obs::SEIR_observed, limit=500::Int, debug=false::Bool, dist=Euclidean())
   """
   Initiate an Trace object by sampling from specified prior distributions
@@ -466,6 +474,7 @@ function initialize(ilm_priors::SEIR_priors, obs::SEIR_observed, limit=500::Int,
     print("Failed to initialize after $count attempts")
   end
 end
+
 
 function MCMC(n::Int64,
               transition_cov::Array{Float64},
@@ -584,6 +593,7 @@ function MCMC(n::Int64,
   return ilm_trace, detection_trace, mutation_trace
 end
 
+
 function MCMC(n::Int64,
               transition_cov::Array{Float64},
               ilm_priors::SEIR_priors,
@@ -618,6 +628,7 @@ function MCMC(n::Int64,
               dist)
 
   end
+
 
 function MCMC(n::Int64,
               ilm_priors::SEIR_priors,
