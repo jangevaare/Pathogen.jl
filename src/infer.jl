@@ -190,7 +190,7 @@ function propose_network(network_rates::Array{Float64, 2}, uniform=true::Bool)
     for i = 1:size(network_rates,2)
       rate_sum = sum(network_rates[:,i])
       if rate_sum > 0.
-        network[findfirst(rand(Multinomial(network_rates[:,i]/rate_sum))), i] = true
+        network[findfirst(rand(Multinomial(1, network_rates[:,i]/rate_sum))), i] = true
       end
     end
   end
@@ -388,13 +388,13 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
   mutation_params = randprior(mutation_priors)
   detection_params = randprior(detection_priors)
   aug = augment(ilm_params[4], detection_params[1], obs)
-  ll, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, dist, debug)
+  lp1, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, dist, debug)
   network = propose_network(network_rates, false)
-  ll += network_loglikelihood(obs, aug, network, jc69([mutation_params[1]]), debug)
+  lp2 = network_loglikelihood(obs, aug, network, jc69([mutation_params[1]]), debug)
   count = 1
 
   # Retry initialization until non-negative infinity loglikelihood
-  while ll == -Inf && count < limit
+  while lp1 + lp2 == -Inf && count < limit
     count += 1
     ilm_params = randprior(ilm_priors)
     mutation_params = randprior(mutation_priors)
