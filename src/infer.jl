@@ -200,7 +200,14 @@ function propose_network(network_rates::Array{Float64, 2}, uniform=true::Bool, d
   end
   if debug
     println("Network proposal:")
-    print(network)
+    println(0 + network)
+    println("")
+    println("Infections caused:")
+    println(sum(network, 2))
+    println("")
+    println("Total infections:")
+    println(sum(network))
+    printl("")
   end
   return network
 end
@@ -376,11 +383,11 @@ function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, 
     # Provide loop position when loglikelihood goes to -Inf when debugging
     if debug && ll == -Inf
       if id[2] == 1
-        print("Event $i (exposure of individual $(id[1])) caused loglikelihood to go to -Inf")
+        println("Event $i (exposure of individual $(id[1])) caused loglikelihood to go to -Inf")
       elseif id[2] == 2
-        print("Event $i (infection of individual $(id[1])) caused loglikelihood to go to -Inf")
+        println("Event $i (infection of individual $(id[1])) caused loglikelihood to go to -Inf")
       elseif id[2] == 3
-        print("Event $i (removal of individual $(id[1])) caused loglikelihood to go to -Inf")
+        println("Event $i (removal of individual $(id[1])) caused loglikelihood to go to -Inf")
       end
     end
   end
@@ -418,10 +425,10 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
   end
 
   if count < limit
-    print("Successfully initialized on attempt $count")
+    println("Successfully initialized on attempt $count")
     return SEIR_trace([ilm_params[1]], [ilm_params[2]], [ilm_params[3]], [ilm_params[4]], [ilm_params[5]], [aug], Array[network_rates], Array[network], [lp1], [lp2]), Lag_trace([detection_params[1]]), JC69_trace([mutation_params[1]])
   else
-    print("Failed to initialize after $count attempts")
+    println("Failed to initialize after $count attempts")
   end
 end
 
