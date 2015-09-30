@@ -198,6 +198,10 @@ function propose_network(network_rates::Array{Float64, 2}, uniform=true::Bool, d
       end
     end
   end
+  if debug
+    println("Network proposal:")
+    print(network)
+  end
   return network
 end
 
