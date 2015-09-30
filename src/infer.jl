@@ -72,9 +72,9 @@ function augment(ρ::Float64, ν::Float64, network::Array{Bool, 2}, obs::SEIR_ob
 
   # Determine which event times have additional restrictions...
   unrestricted = find(network[1,:])
-  restricted = Vector{Int64}
+  restricted = find(network[unrestricted[1], :])
   previous_length = 0
-  for i = unrestricted
+  for i = unrestricted[2:end]
     append!(restricted, find(network[i, :]))
   end
   while length(restricted)-previous_length > 0
@@ -101,11 +101,15 @@ function augment(ρ::Float64, ν::Float64, network::Array{Bool, 2}, obs::SEIR_ob
   for i = restricted
     source = findfirst(network[:,i])
     if ν < Inf
-      infectious_augmented[i] = obs.infectious[i] - rand(Trucated(Exponential(1/ν), -Inf, infectious_augmented[source]-obs.infectious[i]))
+      infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), -Inf, obs.infectious[i] - infectious_augmented[source]))
     elseif ν == Inf
       infectious_augmented[i] = obs.infectious[i]
     end
-    exposed_augmented[i] = infectious_augmented[i] - rand(Truncated(Exponential(1/ρ), removed_augmented[source] - infectious_augmented[i], infectious_augmented[source] - infectious_augmented[i]))
+    if isnan(removed_augmented[source])
+      exposed_augmented[i] = infectious_augmented[i] - rand(Truncated(Exponential(1/ρ), -Inf, infectious_augmented[i]-infectious_augmented[source]))
+    else
+      exposed_augmented[i] = infectious_augmented[i] - rand(Truncated(Exponential(1/ρ), infectious_augmented[i]-removed_augmented[source], infectious_augmented[i]-infectious_augmented[source]))
+    end
     if ν < Inf
       removed_augmented[i] = obs.removed[i] - rand(Truncated(Exponential(1/ν), -Inf, obs.removed[i] - obs.infectious[i]))
     elseif ν == Inf
@@ -595,7 +599,7 @@ function MCMC(n::Int64,
     push!(ilm_trace.ρ, ilm_proposal[4])
     push!(ilm_trace.γ, ilm_proposal[5])
     push!(ilm_trace.network_rates, network_rates_proposal)
-    push!(ilm_trace.logposterior1, lp1_proposal)
+    push!(ilm_trace.logposterior_1, lp1_proposal)
     push!(detection_trace.ν, detection_proposal[1])
 
     # Step 3a: Independence sampling of network
@@ -619,7 +623,7 @@ function MCMC(n::Int64,
       mutation_proposal = mutation_trace.λ[end]
     end
 
-    push!(ilm_trace.logposterior2, lp2_proposal)
+    push!(ilm_trace.logposterior_2, lp2_proposal)
     push!(ilm_trace.network, network_proposal)
     push!(mutation_trace.λ, mutation_proposal[1])
   end
