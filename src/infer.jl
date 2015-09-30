@@ -159,12 +159,15 @@ function augment(ρ::Float64, ν::Float64, obs::SEIR_observed, debug=false::Bool
     end
   end
   if debug
+    println("$(sum(isnan(exposed_augmented))) augmented exposures")
     println("Augmented exposure times:")
     println(exposed_augmented)
     println("")
+    println("$(sum(isnan(infectious_augmented))) augmented infections")
     println("Augmented infection times:")
     println(infectious_augmented)
     println("")
+    println("$(sum(isnan(removed_augmented))) augmented removals")
     println("Augmented removal times:")
     println(removed_augmented)
     println("")
@@ -229,8 +232,7 @@ function propose_network(network_rates::Array{Float64, 2}, uniform=true::Bool, d
     println("Infections caused:")
     println(sum(network, 2)[:])
     println("")
-    println("Total infections:")
-    println(sum(network))
+    println("Total infections: $sum(network)")
     println("")
   end
   return network
