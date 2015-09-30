@@ -62,7 +62,7 @@ end
 surveil(population, Inf) = surveil(population::Population)
 
 
-function augment(ρ::Float64, ν::Float64, network::Array{Bool, 2}, obs::SEIR_observed)
+function augment(ρ::Float64, ν::Float64, network::Array{Bool, 2}, obs::SEIR_observed, debug=false::Bool)
   """
   Augments surveilance data, organizes observations, based on ρ, ν, and a transmission network
   """
@@ -116,14 +116,25 @@ function augment(ρ::Float64, ν::Float64, network::Array{Bool, 2}, obs::SEIR_ob
       removed_augmented[i] = obs.removed[i]
     end
   end
+  if debug
+    println("Augmented exposure times:")
+    println(exposed_augmented)
+    println("")
+    println("Augmented infection times:")
+    println(infectious_augmented)
+    println("")
+    println("Augmented removal times:")
+    println(removed_augmented)
+    println("")
+  end
   return SEIR_augmented(exposed_augmented, infectious_augmented, removed_augmented)
 end
 
 
-augment(ρ, Inf, network, obs) = augment(ρ::Float64, network::array{Bool, 2}, obs::SEIR_observed)
+augment(ρ, Inf, network, obs, debug) = augment(ρ::Float64, network::array{Bool, 2}, obs::SEIR_observed, debug=false::Bool)
 
 
-function augment(ρ::Float64, ν::Float64, obs::SEIR_observed)
+function augment(ρ::Float64, ν::Float64, obs::SEIR_observed, debug=false::Bool)
   """
   Augments surveilance data, organizes observations
   """
@@ -147,11 +158,22 @@ function augment(ρ::Float64, ν::Float64, obs::SEIR_observed)
       end
     end
   end
+  if debug
+    println("Augmented exposure times:")
+    println(exposed_augmented)
+    println("")
+    println("Augmented infection times:")
+    println(infectious_augmented)
+    println("")
+    println("Augmented removal times:")
+    println(removed_augmented)
+    println("")
+  end
   return SEIR_augmented(exposed_augmented, infectious_augmented, removed_augmented)
 end
 
 
-augment(ρ, Inf, obs) = augment(ρ::Float64, obs::SEIR_observed)
+augment(ρ, Inf, obs, debug) = augment(ρ::Float64, obs::SEIR_observed, debug=false::Bool)
 
 
 function logprior(priors::Priors, params::Vector{Float64})
@@ -199,6 +221,8 @@ function propose_network(network_rates::Array{Float64, 2}, uniform=true::Bool, d
     end
   end
   if debug
+    println("Exposure rates:")
+    println(sum(network_rates, 1))
     println("Network proposal:")
     println(0 + network)
     println("")
@@ -213,13 +237,27 @@ function propose_network(network_rates::Array{Float64, 2}, uniform=true::Bool, d
 end
 
 
-function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, infected::Vector{Int64}, network::Array, debug=false::Bool)
+function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, infected::Vector{Int64}, network::Array{Bool, 2}, debug=false::Bool)
   """
   For a given transmission network, find the time between the pathogen sequences between every individuals i and j
   """
+  if debug
+    println("Sequence data collected on individuals:")
+    println(infected)
+    println("")
+  end
+
   pathway = [infected[1]]
-  while pathway[end] != 0
-    push!(pathway, findfirst(network[:,pathway[end]])-1)
+
+  if debug
+    while pathway[end] != 0
+      println("Adding individual $(findfirst(network[:,pathway[end]])-1) to individual $(infected[1])'s transmission pathway")
+      push!(pathway, findfirst(network[:,pathway[end]])-1)
+    end
+  else
+    while pathway[end] != 0
+      push!(pathway, findfirst(network[:,pathway[end]])-1)
+    end
   end
   pathways = Vector[pathway]
 
@@ -348,7 +386,7 @@ function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, 
     if id[2] == 1
 
       # Record exposure rates at time of exposure
-      network_rates[:, id[1]] = rate_array[1:(length(obs.covariates)+1), id[1]]
+      network_rates[:, id[1]] = copy(rate_array[1:(length(obs.covariates)+1), id[1]])
 
       # Update exposure rates
       rate_array[1:(1 + size(rate_array, 2)), id[1]] = 0.
@@ -402,7 +440,7 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
   ilm_params = randprior(ilm_priors)
   mutation_params = randprior(mutation_priors)
   detection_params = randprior(detection_priors)
-  aug = augment(ilm_params[4], detection_params[1], obs)
+  aug = augment(ilm_params[4], detection_params[1], obs, debug)
   lp1, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, dist, debug)
   lp1 += logprior(ilm_priors, ilm_params) + logprior(mutation_priors, mutation_params)
   network = propose_network(network_rates, false, debug)
@@ -416,7 +454,7 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
     ilm_params = randprior(ilm_priors)
     mutation_params = randprior(mutation_priors)
     detection_params = randprior(detection_priors)
-    aug = augment(ilm_params[4], detection_params[1], obs)
+    aug = augment(ilm_params[4], detection_params[1], obs, debug)
     lp1, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, dist, debug)
     lp1 += logprior(ilm_priors, ilm_params) + logprior(mutation_priors, mutation_params)
     network = propose_network(network_rates, false, debug)
@@ -551,7 +589,7 @@ function MCMC(n::Int64,
 
     # Step 1: Gibbs
     # Augment the data based on current parameter values and network
-    push!(ilm_trace.aug, augment(ilm_trace.ρ[end], detection_trace.ν[end], ilm_trace.network[end], obs))
+    push!(ilm_trace.aug, augment(ilm_trace.ρ[end], detection_trace.ν[end], ilm_trace.network[end], obs, debug))
 
     # Step 2a: Metropolis-Hastings proposal
     # Only generate valid proposals
