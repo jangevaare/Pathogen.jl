@@ -398,7 +398,7 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
   aug = augment(ilm_params[4], detection_params[1], obs)
   lp1, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, dist, debug)
   lp1 += logprior(ilm_priors, ilm_params) + logprior(mutation_priors, mutation_params)
-  network = propose_network(network_rates, false)
+  network = propose_network(network_rates, false, debug)
   lp2 = network_loglikelihood(obs, aug, network, jc69([mutation_params[1]]), debug)
   lp2 += logprior(detection_priors, detection_params)
   count = 1
@@ -412,7 +412,7 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
     aug = augment(ilm_params[4], detection_params[1], obs)
     lp1, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, dist, debug)
     lp1 += logprior(ilm_priors, ilm_params) + logprior(mutation_priors, mutation_params)
-    network = propose_network(network_rates, false)
+    network = propose_network(network_rates, false, debug)
     lp2 = network_loglikelihood(obs, aug, network, jc69([mutation_params[1]]), debug)
     lp2 += logprior(detection_priors, detection_params)
   end
@@ -608,7 +608,7 @@ function MCMC(n::Int64,
     push!(detection_trace.ν, detection_proposal[1])
 
     # Step 3a: Independence sampling of network
-    network_proposal = propose_network(ilm_trace.network_rates[end], false)
+    network_proposal = propose_network(ilm_trace.network_rates[end], false, debug)
     lp2_proposal += network_loglikelihood(obs, ilm_trace.aug[end], network_proposal, jc69([mutation_proposal[1]]), debug)
 
     lp2 = logprior(mutation_priors, [mutation_trace.λ[end]])
