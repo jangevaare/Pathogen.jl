@@ -203,11 +203,11 @@ function propose_network(network_rates::Array{Float64, 2}, uniform=true::Bool, d
     println(0 + network)
     println("")
     println("Infections caused:")
-    println(sum(network, 2))
+    println(sum(network, 2)[:])
     println("")
     println("Total infections:")
     println(sum(network))
-    printl("")
+    println("")
   end
   return network
 end
