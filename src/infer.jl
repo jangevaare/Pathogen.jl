@@ -117,9 +117,10 @@ function augment(ρ::Float64, ν::Float64, network::Array{Bool, 2}, obs::SEIR_ob
     end
   end
   if debug
-    println("Data augmentation: Augmented exposure times ($(sum(!isnan(exposed_augmented))) total): $exposed_augmented")
-    println("Data augmentation: Augmented infection times ($(sum(!isnan(removed_augmented))) total): $infectious_augmented")
-    println("Data augmentation: Augmented removal times ($(sum(!isnan(removed_augmented)))total): $removed_augmented")
+    println("DATA AUGMENTATION")
+    println("Augmented exposure times ($(sum(!isnan(exposed_augmented))) total): $exposed_augmented")
+    println("Augmented infection times ($(sum(!isnan(removed_augmented))) total): $infectious_augmented")
+    println("Augmented removal times ($(sum(!isnan(removed_augmented)))total): $removed_augmented")
     println("")
   end
   return SEIR_augmented(exposed_augmented, infectious_augmented, removed_augmented)
@@ -154,9 +155,10 @@ function augment(ρ::Float64, ν::Float64, obs::SEIR_observed, debug=false::Bool
     end
   end
   if debug
-    println("Data augmentation: Augmented exposure times ($(sum(!isnan(exposed_augmented))) total): $exposed_augmented")
-    println("Data augmentation: Augmented infection times ($(sum(!isnan(removed_augmented))) total): $infectious_augmented")
-    println("Data augmentation: Augmented removal times ($(sum(!isnan(removed_augmented)))total): $removed_augmented")
+    println("DATA AUGMENTATION")
+    println("Augmented exposure times ($(sum(!isnan(exposed_augmented))) total): $exposed_augmented")
+    println("Augmented infection times ($(sum(!isnan(removed_augmented))) total): $infectious_augmented")
+    println("Augmented removal times ($(sum(!isnan(removed_augmented)))total): $removed_augmented")
     println("")
   end
   return SEIR_augmented(exposed_augmented, infectious_augmented, removed_augmented)
@@ -211,10 +213,11 @@ function propose_network(network_rates::Array{Float64, 2}, uniform=true::Bool, d
     end
   end
   if debug
-    println("Network proposal: Individual exposure rate sums: $(sum(network_rates, 1))")
+    println("NETWORK PROPOSAL")
+    println("Individual exposure rate sums: $(sum(network_rates, 1))")
     println("Network proposal: ")
     println(0 + network)
-    println("Network proposal: Total infections in network: $(sum(network))")
+    println("Total infections in network: $(sum(network))")
     println("")
   end
   return network
@@ -226,7 +229,8 @@ function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, infected::Vector
   For a given transmission network, find the time between the pathogen sequences between every individuals i and j
   """
   if debug
-    println("Sequence distances: pathogen sequences collected from individuals: $infected")
+    println("SEQUENCE DISTANCES")
+    println("Pathogen sequences collected from individuals: $infected")
     println("")
   end
 
@@ -234,7 +238,9 @@ function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, infected::Vector
 
   if debug
     while pathway[end] != 0
-      println("Sequence distances: Adding individual $(findfirst(network[:,pathway[end]])-1) to individual $(infected[1])'s transmission pathway")
+      println("SEQUENCE DISTANCES")
+      println("Adding individual $(findfirst(network[:,pathway[end]])-1) to individual $(infected[1])'s transmission pathway")
+      println("")
       push!(pathway, findfirst(network[:,pathway[end]])-1)
     end
   else
@@ -263,15 +269,16 @@ function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, infected::Vector
       end
 
       if debug
-        println("Sequence distances: Infection of individual $(infected[i]) observed at $(obs.infectious[infected[i]])")
-        println("Sequence distances: Infection pathway of individual $(infected[i]) is $(pathways[i])")
-        println("Sequence distances: Infection of individual $(infected[j]) observed at $(obs.infectious[infected[j]])")
-        println("Sequence distances: Infection pathway of individual $(infected[j]) is $(pathways[j])")
+        println("SEQUENCE DISTANCES")
+        println("Infection of individual $(infected[i]) observed at $(obs.infectious[infected[i]])")
+        println("Infection pathway of individual $(infected[i]) is $(pathways[i])")
+        println("Infection of individual $(infected[j]) observed at $(obs.infectious[infected[j]])")
+        println("Infection pathway of individual $(infected[j]) is $(pathways[j])")
         if k == length(pathways[i]) || k == length(pathways[j])
-          println("Sequence distances: Linear infection pathway between individual $(infected[i]) and individual $(infected[j])")
+          println("Linear infection pathway between individual $(infected[i]) and individual $(infected[j])")
         else
-          println("Sequence distances: Most recent common infection source of individuals $(infected[i]) and $(infected[j]) is $(pathways[i][end - k + 1])")
-          println("Sequence distances: The infection pathway of $(infected[i]) and $(infected[j]) diverged with $(pathways[i][end - k]) and $(pathways[j][end - k])")
+          println("Most recent common infection source of individuals $(infected[i]) and $(infected[j]) is $(pathways[i][end - k + 1])")
+          println("The infection pathway of $(infected[i]) and $(infected[j]) diverged with $(pathways[i][end - k]) and $(pathways[j][end - k])")
         end
         println("")
       end
@@ -403,12 +410,13 @@ function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, 
 
     # Provide loop position when loglikelihood goes to -Inf when debugging
     if debug && ll == -Inf
+      println("SEIR LOGLIKELIHOOD")
       if id[2] == 1
-        println("SEIR loglikelihood: Event $i (exposure of individual $(id[1])) caused loglikelihood to go to -Inf")
+        println("Event $i (exposure of individual $(id[1])) caused loglikelihood to go to -Inf")
       elseif id[2] == 2
-        println("SEIR loglikelihood: Event $i (infection of individual $(id[1])) caused loglikelihood to go to -Inf")
+        println("Event $i (infection of individual $(id[1])) caused loglikelihood to go to -Inf")
       elseif id[2] == 3
-        println("SEIR loglikelihood: Event $i (removal of individual $(id[1])) caused loglikelihood to go to -Inf")
+        println("Event $i (removal of individual $(id[1])) caused loglikelihood to go to -Inf")
       end
       println("")
     end
@@ -454,10 +462,12 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
     end
 
     if count < limit && lp1 + lp2 > -Inf
-      println("Initialization: Successful on attempt $count (lp1 = $lp1, lp2 = $lp2)")
+      println("INITIALIZATON")
+      println("Successful on attempt $count (lp1 = $lp1, lp2 = $lp2)")
       return SEIR_trace([ilm_params[1]], [ilm_params[2]], [ilm_params[3]], [ilm_params[4]], [ilm_params[5]], [aug], Array[network_rates], Array[network], [lp1], [lp2]), Lag_trace([detection_params[1]]), JC69_trace([mutation_params[1]])
     else
-      println("Initialization: Failed to initialize after $count attempts (lp1 = $lp1, lp2 = $lp2)")
+      println("INITIALIZATON")
+      println("Failed to initialize after $count attempts (lp1 = $lp1, lp2 = $lp2)")
     end
     println("")
   end
@@ -626,11 +636,14 @@ function MCMC(n::Int64,
 
     if debug
       if lp1_proposal > lp1
-        println("MCMC: Accepted proposal ($lp1_proposal > $lp1) on $(i)th iteration")
+        println("MCMC")
+        println("Accepted proposal ($lp1_proposal > $lp1) on $(i)th iteration")
       elseif exp(lp1_proposal - lp1) > rand()
-        println("MCMC: Accepted proposal (with probability $(exp(lp1_proposal - lp1)) on $(i)th iteration)")
+        println("MCMC")
+        println("Accepted proposal (with probability $(exp(lp1_proposal - lp1)) on $(i)th iteration)")
       else
-        println("MCMC: Rejected proposal on $(i)th iteration")
+        println("MCMC")
+        println("Rejected proposal on $(i)th iteration")
       end
       println("")
     end
