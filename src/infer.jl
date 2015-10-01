@@ -118,9 +118,9 @@ function augment(ρ::Float64, ν::Float64, network::Array{Bool, 2}, obs::SEIR_ob
   end
   if debug
     println("DATA AUGMENTATION")
-    println("Augmented exposure times ($(round(sum(!isnan(exposed_augmented)),3)) total): $exposed_augmented")
-    println("Augmented infection times ($(round(sum(!isnan(removed_augmented)),3)) total): $infectious_augmented")
-    println("Augmented removal times ($(round(sum(!isnan(removed_augmented)),3)) total): $removed_augmented")
+    println("Augmented exposure times ($(sum(!isnan(exposed_augmented))) total): $(round(exposed_augmented,3))")
+    println("Augmented infection times ($(sum(!isnan(removed_augmented))) total): $(round(infectious_augmented,3))")
+    println("Augmented removal times ($(sum(!isnan(removed_augmented))) total): $(round(removed_augmented,3))")
     println("")
   end
   return SEIR_augmented(exposed_augmented, infectious_augmented, removed_augmented)
@@ -156,9 +156,9 @@ function augment(ρ::Float64, ν::Float64, obs::SEIR_observed, debug=false::Bool
   end
   if debug
     println("DATA AUGMENTATION")
-    println("Augmented exposure times ($(round(sum(!isnan(exposed_augmented)),3)) total): $exposed_augmented")
-    println("Augmented infection times ($(round(sum(!isnan(removed_augmented)),3)) total): $infectious_augmented")
-    println("Augmented removal times ($(round(sum(!isnan(removed_augmented)),3)) total): $removed_augmented")
+    println("Augmented exposure times ($(sum(!isnan(exposed_augmented))) total): $(round(exposed_augmented,3))")
+    println("Augmented infection times ($(sum(!isnan(removed_augmented))) total): $(round(infectious_augmented,3))")
+    println("Augmented removal times ($(sum(!isnan(removed_augmented))) total): $(round(removed_augmented,3))")
     println("")
   end
   return SEIR_augmented(exposed_augmented, infectious_augmented, removed_augmented)
@@ -216,7 +216,7 @@ function propose_network(network_rates::Array{Float64, 2}, uniform=true::Bool, d
     println("NETWORK PROPOSAL")
     println("Individual exposure rate sums:")
     println("$(round(sum(network_rates, 1), 3))")
-    println("Network proposal (total infections: $(sum(network))):")
+    println("Network proposal ($(sum(network)) infections total):")
     println("$(0 + network)")
     println("")
   end
@@ -230,21 +230,21 @@ function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, infected::Vector
   """
   if debug
     println("SEQUENCE DISTANCES")
-    println("Pathogen sequences collected from individuals: $infected")
+    println("Pathogen sequences collected from $infected individuals")
     println("")
   end
 
   pathway = [infected[1]]
 
   if debug
-    while pathway[end] != 0
+    while pathway[end] > 0
       println("SEQUENCE DISTANCES")
       println("Adding individual $(findfirst(network[:,pathway[end]])-1) to individual $(infected[1])'s transmission pathway")
       println("")
       push!(pathway, findfirst(network[:,pathway[end]])-1)
     end
   else
-    while pathway[end] != 0
+    while pathway[end] > 0
       push!(pathway, findfirst(network[:,pathway[end]])-1)
     end
   end
@@ -252,8 +252,17 @@ function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, infected::Vector
 
   for i = 2:length(infected)
     pathway = [infected[i]]
-    while pathway[end] != 0
-      push!(pathway, findfirst(network[:,pathway[end]])-1)
+    if debug
+      while pathway[end] > 0
+        println("SEQUENCE DISTANCES")
+        println("Adding individual $(findfirst(network[:,pathway[end]])-1) to individual $(infected[i])'s transmission pathway")
+        println("")
+        push!(pathway, findfirst(network[:,pathway[end]])-1)
+      end
+    else
+      while pathway[end] > 0
+        push!(pathway, findfirst(network[:,pathway[end]])-1)
+      end
     end
     push!(pathways, pathway)
   end
@@ -262,12 +271,10 @@ function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, infected::Vector
 
   for i = 1:length(infected)
     for j = 1:(i-1)
-
       k = 1
       while length(pathways[i]) > k && length(pathways[j]) > k && pathways[i][end - k] == pathways[j][end - k]
         k += 1
       end
-
       if debug
         println("SEQUENCE DISTANCES")
         println("Infection of individual $(infected[i]) observed at $(obs.infectious[infected[i]])")
