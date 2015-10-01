@@ -118,9 +118,9 @@ function augment(ρ::Float64, ν::Float64, network::Array{Bool, 2}, obs::SEIR_ob
   end
   if debug
     println("DATA AUGMENTATION")
-    println("Augmented exposure times ($(sum(!isnan(exposed_augmented))) total): $exposed_augmented")
-    println("Augmented infection times ($(sum(!isnan(removed_augmented))) total): $infectious_augmented")
-    println("Augmented removal times ($(sum(!isnan(removed_augmented)))total): $removed_augmented")
+    println("Augmented exposure times ($(round(sum(!isnan(exposed_augmented)),3)) total): $exposed_augmented")
+    println("Augmented infection times ($(round(sum(!isnan(removed_augmented)),3)) total): $infectious_augmented")
+    println("Augmented removal times ($(round(sum(!isnan(removed_augmented)),3)) total): $removed_augmented")
     println("")
   end
   return SEIR_augmented(exposed_augmented, infectious_augmented, removed_augmented)
@@ -156,9 +156,9 @@ function augment(ρ::Float64, ν::Float64, obs::SEIR_observed, debug=false::Bool
   end
   if debug
     println("DATA AUGMENTATION")
-    println("Augmented exposure times ($(sum(!isnan(exposed_augmented))) total): $exposed_augmented")
-    println("Augmented infection times ($(sum(!isnan(removed_augmented))) total): $infectious_augmented")
-    println("Augmented removal times ($(sum(!isnan(removed_augmented)))total): $removed_augmented")
+    println("Augmented exposure times ($(round(sum(!isnan(exposed_augmented)),3)) total): $exposed_augmented")
+    println("Augmented infection times ($(round(sum(!isnan(removed_augmented)),3)) total): $infectious_augmented")
+    println("Augmented removal times ($(round(sum(!isnan(removed_augmented)),3)) total): $removed_augmented")
     println("")
   end
   return SEIR_augmented(exposed_augmented, infectious_augmented, removed_augmented)
@@ -214,10 +214,10 @@ function propose_network(network_rates::Array{Float64, 2}, uniform=true::Bool, d
   end
   if debug
     println("NETWORK PROPOSAL")
-    println("Individual exposure rate sums: $(sum(network_rates, 1))")
-    println("Network proposal: ")
-    println(0 + network)
-    println("Total infections in network: $(sum(network))")
+    println("Individual exposure rate sums:")
+    println("$(round(sum(network_rates, 1) 3))")
+    println("Network proposal (total infections: $(sum(network))):")
+    println("$(0 + network)")
     println("")
   end
   return network
@@ -643,7 +643,7 @@ function MCMC(n::Int64,
         println("Accepted proposal (with probability $(exp(lp1_proposal - lp1)) on $(i)th iteration)")
       else
         println("MCMC")
-        println("Rejected proposal on $(i)th iteration")
+        println("Rejected proposal (with probability $(1-exp(lp1_proposal - lp1)) on $(i)th iteration")
       end
       println("")
     end
