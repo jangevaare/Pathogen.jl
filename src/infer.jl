@@ -215,7 +215,7 @@ function propose_network(network_rates::Array{Float64, 2}, uniform=true::Bool, d
   if debug
     println("NETWORK PROPOSAL")
     println("Individual exposure rate sums:")
-    println("$(round(sum(network_rates, 1) 3))")
+    println("$(round(sum(network_rates, 1), 3))")
     println("Network proposal (total infections: $(sum(network))):")
     println("$(0 + network)")
     println("")
