@@ -3,13 +3,14 @@ Example 1
 SEIR simulation, visualization, and inference
 Justin Angevaare
 """
+
 using Pathogen, Gadfly, DataFrames, Distributions, ProgressMeter
 
 cd("Desktop/example1")
 
 # Simulate
-init_seq = create_seq(100, 0.25, 0.25, 0.25, 0.25)
-init_var = rand(Uniform(0,10), (2,100))
+init_seq = create_seq(40, 0.25, 0.25, 0.25, 0.25)
+init_var = rand(Uniform(0,10), (2,40))
 
 pop = create_population(init_seq, init_var)
 
@@ -20,7 +21,7 @@ substitution = jc69([0.001])
 
 ratearray = create_ratearray(pop, powerlaw, substitution)
 
-@time while length(pop.timeline[1]) < 300.
+@time while length(pop.timeline[1]) < 5000.
   onestep!(ratearray, pop, powerlaw, latency, recovery, substitution)
 end
 
@@ -36,11 +37,13 @@ actual, obs = surveil(pop, 2.)
 
 obs.infectious
 
+obs.seq
+
 ilm_priors = SEIR_priors(Uniform(1,7), Uniform(2,8), Gamma(0.001), Uniform(0.1,1), Uniform(0.1,1))
 detection_priors = Lag_priors(Uniform(1,3))
 mutation_priors = JC69_priors(Uniform(0,0.003))
 
-ilm_trace, detection_trace, mutation_trace = MCMC(50000, ilm_priors, detection_priors, mutation_priors, obs)
+ilm_trace, detection_trace, mutation_trace = MCMC(1, ilm_priors, detection_priors, mutation_priors, obs, true)
 
 # Tune the transition kernel's covariance matrix
 n = 100
