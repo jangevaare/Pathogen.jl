@@ -119,12 +119,15 @@ function augment(ρ::Float64, ν::Float64, network::Array{Bool, 2}, obs::SEIR_ob
   if debug
     println("Augmented exposure times:")
     println(exposed_augmented)
+    println("Total: $(sum(!isnan(exposed_augmented)))")
     println("")
     println("Augmented infection times:")
     println(infectious_augmented)
+    println("Total: $(sum(!isnan(infectious_augmented)))")
     println("")
     println("Augmented removal times:")
     println(removed_augmented)
+    println("Total: $(sum(!isnan(removed_augmented)))")
     println("")
   end
   return SEIR_augmented(exposed_augmented, infectious_augmented, removed_augmented)
@@ -159,17 +162,17 @@ function augment(ρ::Float64, ν::Float64, obs::SEIR_observed, debug=false::Bool
     end
   end
   if debug
-    println("$(sum(isnan(exposed_augmented))) augmented exposures")
     println("Augmented exposure times:")
     println(exposed_augmented)
+    println("Total: $(sum(!isnan(exposed_augmented)))")
     println("")
-    println("$(sum(isnan(infectious_augmented))) augmented infections")
     println("Augmented infection times:")
     println(infectious_augmented)
+    println("Total: $(sum(!isnan(infectious_augmented)))")
     println("")
-    println("$(sum(isnan(removed_augmented))) augmented removals")
     println("Augmented removal times:")
     println(removed_augmented)
+    println("Total: $(sum(!isnan(removed_augmented)))")
     println("")
   end
   return SEIR_augmented(exposed_augmented, infectious_augmented, removed_augmented)
@@ -232,7 +235,7 @@ function propose_network(network_rates::Array{Float64, 2}, uniform=true::Bool, d
     println("Infections caused:")
     println(sum(network, 2)[:])
     println("")
-    println("Total infections: $sum(network)")
+    println("Total infections: $(sum(network))")
     println("")
   end
   return network
@@ -429,6 +432,7 @@ function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, 
       elseif id[2] == 3
         println("Event $i (removal of individual $(id[1])) caused loglikelihood to go to -Inf")
       end
+      println("")
     end
   end
   return ll, network_rates
@@ -444,31 +448,38 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
   detection_params = randprior(detection_priors)
   aug = augment(ilm_params[4], detection_params[1], obs, debug)
   lp1, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, dist, debug)
-  lp1 += logprior(ilm_priors, ilm_params) + logprior(mutation_priors, mutation_params)
-  network = propose_network(network_rates, false, debug)
-  lp2 = network_loglikelihood(obs, aug, network, jc69([mutation_params[1]]), debug)
-  lp2 += logprior(detection_priors, detection_params)
   count = 1
 
   # Retry initialization until non-negative infinity loglikelihood
-  while lp1 + lp2 == -Inf && count < limit
+  while lp1 == -Inf && count < limit
     count += 1
     ilm_params = randprior(ilm_priors)
     mutation_params = randprior(mutation_priors)
     detection_params = randprior(detection_priors)
     aug = augment(ilm_params[4], detection_params[1], obs, debug)
     lp1, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, dist, debug)
+  end
+
+  if count < limit
     lp1 += logprior(ilm_priors, ilm_params) + logprior(mutation_priors, mutation_params)
     network = propose_network(network_rates, false, debug)
     lp2 = network_loglikelihood(obs, aug, network, jc69([mutation_params[1]]), debug)
     lp2 += logprior(detection_priors, detection_params)
-  end
 
-  if count < limit
-    println("Successfully initialized on attempt $count")
-    return SEIR_trace([ilm_params[1]], [ilm_params[2]], [ilm_params[3]], [ilm_params[4]], [ilm_params[5]], [aug], Array[network_rates], Array[network], [lp1], [lp2]), Lag_trace([detection_params[1]]), JC69_trace([mutation_params[1]])
-  else
-    println("Failed to initialize after $count attempts")
+    while lp1 + lp2 == -Inf && count < limit
+      count += 1
+      lp1, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, dist, debug)
+      lp1 += logprior(ilm_priors, ilm_params) + logprior(mutation_priors, mutation_params)
+      network = propose_network(network_rates, false, debug)lp2 = network_loglikelihood(obs, aug, network, jc69([mutation_params[1]]), debug)
+      lp2 += logprior(detection_priors, detection_params)
+    end
+
+    if count < limit
+      println("Successfully initialized on attempt $count")
+      return SEIR_trace([ilm_params[1]], [ilm_params[2]], [ilm_params[3]], [ilm_params[4]], [ilm_params[5]], [aug], Array[network_rates], Array[network], [lp1], [lp2]), Lag_trace([detection_params[1]]), JC69_trace([mutation_params[1]])
+    else
+      println("Failed to initialize after $count attempts")
+    end
   end
 end
 
