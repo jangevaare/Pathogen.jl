@@ -79,7 +79,7 @@ function augment(ρ::Float64, ν::Float64, network::Array{Bool, 2}, obs::SEIR_ob
   end
   while length(restricted)-restricted_lengths[end] > 0
     push!(restricted_lengths, length(restricted))
-    for i = restricted[(restricted_lengths[end-1]+1):end]
+    for i = restricted[(restricted_lengths[end-1]+1):restricted_lengths[end]]
       append!(restricted, find(network[i, :]))
     end
   end
