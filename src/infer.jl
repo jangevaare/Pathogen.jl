@@ -73,13 +73,13 @@ function augment(ρ::Float64, ν::Float64, network::Array{Bool, 2}, obs::SEIR_ob
   # Determine which event times have additional restrictions...
   unrestricted = find(network[1,:])
   restricted = find(network[unrestricted[1], :])
-  previous_length = 0
+  restricted_lengths = [0]
   for i = unrestricted[2:end]
     append!(restricted, find(network[i, :]))
   end
-  while length(restricted)-previous_length > 0
-    previous_length = length(restricted)
-    for i = restricted[(previous_length+1):end]
+  while length(restricted)-restricted_lengths[end] > 0
+    append!(restricted_lengths, length(restricted))
+    for i = restricted[(restricted_lengths[end-1]+1):end]
       append!(restricted, find(network[i, :]))
     end
   end
@@ -118,6 +118,9 @@ function augment(ρ::Float64, ν::Float64, network::Array{Bool, 2}, obs::SEIR_ob
   end
   if debug
     println("DATA AUGMENTATION")
+    println("Infected individuals: $(find(sum(network,1)))")
+    println("Unrestricted individuals: $unrestricted")
+    println("Restricted individuals: $restricted")
     println("Augmented exposure times ($(sum(!isnan(exposed_augmented))) total): $(round(exposed_augmented,3))")
     println("Augmented infection times ($(sum(!isnan(infectious_augmented))) total): $(round(infectious_augmented,3))")
     println("Augmented removal times ($(sum(!isnan(removed_augmented))) total): $(round(removed_augmented,3))")
