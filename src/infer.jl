@@ -119,24 +119,16 @@ function augment(ρ::Float64, ν::Float64, network::Array{Bool, 2}, obs::SEIR_ob
   if debug
     println("DATA AUGMENTATION")
     println("Augmented exposure times ($(sum(!isnan(exposed_augmented))) total): $(round(exposed_augmented,3))")
-    println("Augmented infection times ($(sum(!isnan(removed_augmented))) total): $(round(infectious_augmented,3))")
+    println("Augmented infection times ($(sum(!isnan(infectious_augmented))) total): $(round(infectious_augmented,3))")
     println("Augmented removal times ($(sum(!isnan(removed_augmented))) total): $(round(removed_augmented,3))")
     println("")
   end
   if debug
-    println("DATA AUGMENTATION")
     for i = 1:length(obs.infectious)
-      if isnan(exposed_augmented[i]) && !isnan(obs.infectious[i])
-        println("Could not generate exposure event $i")
-      end
-      if isnan(infectious_augmented[i]) && !isnan(obs.infectious[i])
-        println("Could not generate infectious event $i")
-      end
-      if isnan(removed_augmented[i]) && !isnan(obs.removed[i])
-        println("Could not generate removal event $i")
-      end
+      @assert(!(isnan(exposed_augmented[i]) && !isnan(obs.infectious[i])), "Data augmentation error: Could not generate exposure event $i")
+      @assert(!(isnan(infectious_augmented[i]) && !isnan(obs.infectious[i])), "Data augmentation error: Could not generate infectious event $i")
+      @assert(!(isnan(removed_augmented[i]) && !isnan(obs.removed[i])), "Data augmentation error: Could not generate exposure event $i")
     end
-    println("")
   end
   return SEIR_augmented(exposed_augmented, infectious_augmented, removed_augmented)
 end
