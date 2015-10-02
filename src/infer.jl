@@ -239,8 +239,8 @@ function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, infected::Vector
   if debug
     while pathway[end] > 0
       println("SEQUENCE DISTANCES")
+      @assert(findfirst(network[:,pathway[end]]) > 0, "Network does not account for all exposure events")
       println("Adding individual $(findfirst(network[:,pathway[end]])-1) to individual $(infected[1])'s transmission pathway")
-      println("")
       push!(pathway, findfirst(network[:,pathway[end]])-1)
     end
   else
@@ -254,9 +254,8 @@ function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, infected::Vector
     pathway = [infected[i]]
     if debug
       while pathway[end] > 0
-        println("SEQUENCE DISTANCES")
+        @assert(findfirst(network[:,pathway[end]]) > 0, "Network does not account for all exposure events")
         println("Adding individual $(findfirst(network[:,pathway[end]])-1) to individual $(infected[i])'s transmission pathway")
-        println("")
         push!(pathway, findfirst(network[:,pathway[end]])-1)
       end
     else
@@ -270,15 +269,18 @@ function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, infected::Vector
   seq_dist = fill(0., (size(network, 2), size(network, 2)))
 
   for i = 1:length(infected)
+    if debug
+      println("")
+      println("SEQUENCE DISTANCES")
+      println("Infection of individual $(infected[i]) observed at $(obs.infectious[infected[i]])")
+      println("Infection pathway of individual $(infected[i]) is $(pathways[i])")
+    end
     for j = 1:(i-1)
       k = 1
       while length(pathways[i]) > k && length(pathways[j]) > k && pathways[i][end - k] == pathways[j][end - k]
         k += 1
       end
       if debug
-        println("SEQUENCE DISTANCES")
-        println("Infection of individual $(infected[i]) observed at $(obs.infectious[infected[i]])")
-        println("Infection pathway of individual $(infected[i]) is $(pathways[i])")
         println("Infection of individual $(infected[j]) observed at $(obs.infectious[infected[j]])")
         println("Infection pathway of individual $(infected[j]) is $(pathways[j])")
         if k == length(pathways[i]) || k == length(pathways[j])
@@ -287,7 +289,6 @@ function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, infected::Vector
           println("Most recent common infection source of individuals $(infected[i]) and $(infected[j]) is $(pathways[i][end - k + 1])")
           println("The infection pathway of $(infected[i]) and $(infected[j]) diverged with $(pathways[i][end - k]) and $(pathways[j][end - k])")
         end
-        println("")
       end
 
       if k == length(pathways[i])
@@ -301,6 +302,9 @@ function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, infected::Vector
         seq_dist[infected[i],infected[j]] += obs.infectious[infected[j]] - aug.exposed[pathways[j][end - k]]
         seq_dist[infected[i],infected[j]] += abs(aug.exposed[pathways[j][end - k]] - aug.exposed[pathways[i][end - k]])
       end
+    end
+    if debug
+      println("")
     end
   end
 
@@ -597,11 +601,7 @@ function MCMC(n::Int64,
       end
     end
 
-    # Step 1: Gibbs
-    # Augment the data based on current parameter values and network
-    push!(ilm_trace.aug, augment(ilm_trace.ρ[end], detection_trace.ν[end], ilm_trace.network[end], obs, debug))
-
-    # Step 2a: Metropolis-Hastings proposal
+    # Step 1a: Metropolis-Hastings proposal
     # Only generate valid proposals
     step = rand(MvNormal(transition_cov))
     ilm_proposal = [ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.ρ[end], ilm_trace.γ[end]] .+ step[1:5]
@@ -622,35 +622,31 @@ function MCMC(n::Int64,
       lp2_proposal = logprior(mutation_priors, mutation_proposal)
     end
 
-    # Step 2b: loglikelihood calculation for Metropolis-Hastings step
-    # ILM loglikelihood component for proposal
-    ll_proposal, network_rates_proposal = SEIR_loglikelihood(ilm_proposal[1], ilm_proposal[2], ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], ilm_trace.aug[end], obs, dist)
+    # Step 1b: Gibbs within Metropolis data augmentation
+    aug_proposal = augment(ilm_proposal[4], detection_proposal[1], ilm_trace.network[end], obs, debug)
+
+    # Step 1c: loglikelihood calculation for Metropolis-Hastings step
+    ll_proposal, network_rates_proposal = SEIR_loglikelihood(ilm_proposal[1], ilm_proposal[2], ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], aug_proposal, obs, dist)
     lp1_proposal += ll_proposal
 
-    # Must also calculate ILM log posterior for the previous parameter values, based on new event timings...
-    lp1 = logprior(ilm_priors, [ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.ρ[end], ilm_trace.γ[end]])
-    lp1 += logprior(detection_priors, [detection_trace.ν[end]])
-    ll, network_rates = SEIR_loglikelihood(ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.ρ[end], ilm_trace.γ[end], ilm_trace.aug[end], obs, dist)
-    lp1 += ll
-
-    # Step 2c: accept/reject based on logposterior comparison
+    # Step 1d: accept/reject based on logposterior comparison
     reject = true
-    if lp1_proposal > lp1
+    if lp1_proposal > ilm_trace.logposterior_1[end]
       reject = false
-    elseif exp(lp1_proposal - lp1) > rand()
+    elseif exp(lp1_proposal - ilm_trace.logposterior_1[end]) > rand()
       reject = false
     end
 
     if debug
-      if lp1_proposal > lp1
+      if lp1_proposal > ilm_trace.logposterior_1[end]
         println("MCMC")
-        println("Accepted proposal ($lp1_proposal > $lp1) on $(i)th iteration")
-      elseif exp(lp1_proposal - lp1) > rand()
+        println("Accepted ILM proposal ($lp1_proposal > $(ilm_trace.logposterior_1[end])) on $(i)th iteration")
+      elseif reject == false
         println("MCMC")
-        println("Accepted proposal (with probability $(exp(lp1_proposal - lp1)) on $(i)th iteration)")
+        println("Accepted ILM proposal (with probability $(exp(lp1_proposal - ilm_trace.logposterior_1[end])) on $(i)th iteration)")
       else
         println("MCMC")
-        println("Rejected proposal (with probability $(1-exp(lp1_proposal - lp1)) on $(i)th iteration")
+        println("Rejected ILM proposal (with probability $(1-exp(lp1_proposal - ilm_trace.logposterior_1[end])) on $(i)th iteration")
       end
       println("")
     end
@@ -661,17 +657,19 @@ function MCMC(n::Int64,
       ilm_proposal[3] = ilm_trace.η[end]
       ilm_proposal[4] = ilm_trace.ρ[end]
       ilm_proposal[5] = ilm_trace.γ[end]
-      network_rates_proposal = network_rates
+      aug_proposal = ilm_trace.aug[end]
+      network_rates_proposal = ilm_trace.network_rates[end]
+      lp1_proposal = ilm_trace.logposterior_1[end]
       detection_proposal = detection_trace.ν[end]
-      lp1_proposal = lp1
     end
 
-    # Step 2d: Update chain
+    # Step 1e: Update chain
     push!(ilm_trace.α, ilm_proposal[1])
     push!(ilm_trace.β, ilm_proposal[2])
     push!(ilm_trace.η, ilm_proposal[3])
     push!(ilm_trace.ρ, ilm_proposal[4])
     push!(ilm_trace.γ, ilm_proposal[5])
+    push!(ilm_trace.aug, aug_proposal)
     push!(ilm_trace.network_rates, network_rates_proposal)
     push!(ilm_trace.logposterior_1, lp1_proposal)
     push!(detection_trace.ν, detection_proposal[1])
@@ -695,6 +693,20 @@ function MCMC(n::Int64,
       lp2_proposal = lp2
       network_proposal = ilm_trace.network[end]
       mutation_proposal = mutation_trace.λ[end]
+    end
+
+    if debug
+      if lp2_proposal > lp2
+        println("MCMC")
+        println("Accepted ILM proposal ($lp2_proposal > $lp2) on $(i)th iteration")
+      elseif reject == false
+        println("MCMC")
+        println("Accepted ILM proposal (with probability $(exp(lp2_proposal - lp2)) on $(i)th iteration)")
+      else
+        println("MCMC")
+        println("Rejected ILM proposal (with probability $(1-exp(lp2_proposal - lp2)) on $(i)th iteration")
+      end
+      println("")
     end
 
     push!(ilm_trace.logposterior_2, lp2_proposal)
