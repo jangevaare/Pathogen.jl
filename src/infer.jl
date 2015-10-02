@@ -72,15 +72,15 @@ function augment(ρ::Float64, ν::Float64, network::Array{Bool, 2}, obs::SEIR_ob
 
   # Determine which event times have additional restrictions...
   unrestricted = find(network[1,:])
-  restricted = find(network[unrestricted[1], :])
+  restricted = find(network[unrestricted[1]+1, :])
   restricted_lengths = [0]
   for i = unrestricted[2:end]
-    append!(restricted, find(network[i, :]))
+    append!(restricted, find(network[i+1, :]))
   end
   while length(restricted)-restricted_lengths[end] > 0
     push!(restricted_lengths, length(restricted))
-    for i = restricted[(restricted_lengths[end-1]+1):restricted_lengths[end]]
-      append!(restricted, find(network[i, :]))
+    for i = restricted[(restricted_lengths[end-1]):restricted_lengths[end]]
+      append!(restricted, find(network[i+1, :]))
     end
   end
 
