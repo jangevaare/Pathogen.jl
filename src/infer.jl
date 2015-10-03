@@ -73,40 +73,44 @@ function augment(ρ::Float64, ν::Float64, network::Array{Bool, 2}, obs::SEIR_ob
   # Determine which event times have additional restrictions...
   unrestricted = find(network[1,:])
   restricted = find(network[unrestricted[1]+1, :])
-  restricted_lengths = [0]
   for i = unrestricted[2:end]
     append!(restricted, find(network[i+1, :]))
   end
-  while length(restricted)-restricted_lengths[end] > 0
-    push!(restricted_lengths, length(restricted))
-    for i = restricted[(restricted_lengths[end-1]):restricted_lengths[end]]
-      append!(restricted, find(network[i+1, :]))
-    end
+  for i = restricted
+    append!(restricted, find(network[i+1, :]))
+  end
+
+  if debug
+    println("DATA AUGMENTATION")
+    println("Infected individuals ($(sum(network)) total): $(find(sum(network,1)))")
+    println("Unrestricted individuals ($(length(unrestricted)) total): $unrestricted")
+    println("Restricted individuals ($(length(restricted)) total): $restricted")
+    println("")
   end
 
   for i = unrestricted
     if ν < Inf
-      infectious_augmented[i] = obs.infectious[i] - rand(Exponential(1/ν))
+      infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - maximum([obs.infectious[find(network[i+1,:])], obs.infectious[i]]), Inf))
     elseif ν == Inf
       infectious_augmented[i] = obs.infectious[i]
     end
     exposed_augmented[i] = infectious_augmented[i] - rand(Exponential(1/ρ))
     if ν < Inf
-      removed_augmented[i] = obs.removed[i] - rand(Truncated(Exponential(1/ν), -Inf, obs.removed[i] - obs.infectious[i]))
+      removed_augmented[i] = obs.removed[i] - rand(Truncated(Exponential(1/ν), 0., obs.removed[i] - obs.infectious[i]))
     elseif ν == Inf
       removed_augmented[i] = obs.removed[i]
     end
   end
 
   for i = restricted
-    source = findfirst(network[:,i])
+    source = findfirst(network[:,i])-1
     if ν < Inf
-      infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), -Inf, obs.infectious[i] - infectious_augmented[source]))
+      infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - maximum([obs.infectious[find(network[i+1,:])], obs.infectious[i]]), obs.infectious[i] - infectious_augmented[source]))
     elseif ν == Inf
       infectious_augmented[i] = obs.infectious[i]
     end
     if isnan(removed_augmented[source])
-      exposed_augmented[i] = infectious_augmented[i] - rand(Truncated(Exponential(1/ρ), -Inf, infectious_augmented[i]-infectious_augmented[source]))
+      exposed_augmented[i] = infectious_augmented[i] - rand(Truncated(Exponential(1/ρ), 0., infectious_augmented[i]-infectious_augmented[source]))
     else
       exposed_augmented[i] = infectious_augmented[i] - rand(Truncated(Exponential(1/ρ), infectious_augmented[i]-removed_augmented[source], infectious_augmented[i]-infectious_augmented[source]))
     end
@@ -118,9 +122,6 @@ function augment(ρ::Float64, ν::Float64, network::Array{Bool, 2}, obs::SEIR_ob
   end
   if debug
     println("DATA AUGMENTATION")
-    println("Infected individuals: $(find(sum(network,1)))")
-    println("Unrestricted individuals: $unrestricted")
-    println("Restricted individuals: $restricted")
     println("Augmented exposure times ($(sum(!isnan(exposed_augmented))) total): $(round(exposed_augmented,3))")
     println("Augmented infection times ($(sum(!isnan(infectious_augmented))) total): $(round(infectious_augmented,3))")
     println("Augmented removal times ($(sum(!isnan(removed_augmented))) total): $(round(removed_augmented,3))")
@@ -650,13 +651,13 @@ function MCMC(n::Int64,
     if debug
       if lp1_proposal > ilm_trace.logposterior_1[end]
         println("MCMC")
-        println("Accepted ILM proposal ($lp1_proposal > $(ilm_trace.logposterior_1[end])) on $(i)th iteration")
+        println("Accepted ILM proposal ($lp1_proposal > $(ilm_trace.logposterior_1[end])) on $(i)th iteration)")
       elseif reject == false
         println("MCMC")
         println("Accepted ILM proposal (with probability $(exp(lp1_proposal - ilm_trace.logposterior_1[end])) on $(i)th iteration)")
       else
         println("MCMC")
-        println("Rejected ILM proposal (with probability $(1-exp(lp1_proposal - ilm_trace.logposterior_1[end])) on $(i)th iteration")
+        println("Rejected ILM proposal (with probability $(1-exp(lp1_proposal - ilm_trace.logposterior_1[end])) on $(i)th iteration)")
       end
       println("")
     end
