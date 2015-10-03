@@ -343,7 +343,7 @@ function network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmented, network:
 end
 
 
-function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, γ::Float64, aug::SEIR_augmented, obs::SEIR_observed, dist::Metric, debug=false::Bool)
+function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, γ::Float64, aug::SEIR_augmented, obs::SEIR_observed, debug=false::Bool, dist=Euclidean())
   """
   Calculate the loglikelihood and return an exposure network array under specified parameters values and observations
 
@@ -455,7 +455,7 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
   mutation_params = randprior(mutation_priors)
   detection_params = randprior(detection_priors)
   aug = augment(ilm_params[4], detection_params[1], obs, debug)
-  lp1, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, dist, debug)
+  lp1, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, debug, dist)
   count = 1
 
   # Retry initialization until non-negative infinity loglikelihood
@@ -465,7 +465,7 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
     mutation_params = randprior(mutation_priors)
     detection_params = randprior(detection_priors)
     aug = augment(ilm_params[4], detection_params[1], obs, debug)
-    lp1, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, dist, debug)
+    lp1, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, debug, dist)
   end
 
   if count < limit
@@ -476,7 +476,7 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
 
     while lp1 + lp2 == -Inf && count < limit
       count += 1
-      lp1, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, dist, debug)
+      lp1, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, debug, dist)
       lp1 += logprior(ilm_priors, ilm_params) + logprior(detection_priors, detection_params)
       network = propose_network(network_rates, false, debug)
       lp2 = network_loglikelihood(obs, aug, network, jc69([mutation_params[1]]), debug)
@@ -637,7 +637,7 @@ function MCMC(n::Int64,
     aug_proposal = augment(ilm_proposal[4], detection_proposal[1], ilm_trace.network[end], obs, debug)
 
     # Step 1c: loglikelihood calculation for Metropolis-Hastings step
-    ll_proposal, network_rates_proposal = SEIR_loglikelihood(ilm_proposal[1], ilm_proposal[2], ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], aug_proposal, obs, dist)
+    ll_proposal, network_rates_proposal = SEIR_loglikelihood(ilm_proposal[1], ilm_proposal[2], ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], aug_proposal, obs, debug, dist)
     lp1_proposal += ll_proposal
 
     # Step 1d: accept/reject based on logposterior comparison

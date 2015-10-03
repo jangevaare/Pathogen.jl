@@ -35,15 +35,11 @@ end
 
 actual, obs = surveil(pop, 2.)
 
-obs.infectious
-
-obs.seq
-
 ilm_priors = SEIR_priors(Uniform(1,7), Uniform(2,8), Gamma(0.001), Uniform(0.1,1), Uniform(0.1,1))
 detection_priors = Lag_priors(Uniform(1,3))
 mutation_priors = JC69_priors(Uniform(0,0.003))
 
-ilm_trace, detection_trace, mutation_trace = MCMC(100, ilm_priors, detection_priors, mutation_priors, obs, false)
+ilm_trace, detection_trace, mutation_trace = MCMC(100000, ilm_priors, detection_priors, mutation_priors, obs, false)
 
 # Tune the transition kernel's covariance matrix
 n = 100
@@ -69,7 +65,7 @@ MCMC(100000, opt_cov, ilm_trace, detection_trace, mutation_trace, ilm_priors, de
 
 # Simulation/Maximum posteriori visualization
 images = 500
-max_tracelp=findfirst(ilm_trace.logposterior.==maximum(ilm_trace.logposterior))
+max_tracelp=findfirst(ilm_trace.logposterior_1 .+ ilm_trace.logposterior_2.==maximum(ilm_trace.logposterior_1 .+ ilm_trace.logposterior_2))
 
 for time = 1:images
   states, routes = plotdata(pop, (time*maximum([maximum(ilm_trace.aug[max_tracelp]), pop.timeline[1][end]])/images))
@@ -130,7 +126,7 @@ draw(PNG("SEIR_traceplot.png", 20cm, 15cm),
 # logposterior plot (last 100k iterations)
 draw(PNG("SEIR_logposterior.png", 20cm, 15cm),
      plot(x=1:100000,
-          y=ilm_trace.logposterior[end-99999:end],
+          y=ilm_trace.logposterior_1[end-99999:end] .+ ilm_trace.logposterior_2[end-99999:end],
           Geom.line,
           Theme(panel_opacity=1.,
                 panel_fill=color("white"),
