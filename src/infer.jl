@@ -62,46 +62,6 @@ end
 surveil(population, Inf) = surveil(population::Population)
 
 
-function pathwaysto(network::Array{Bool,2})
-  """
-  Return all transmission pathways leading to an individual
-  """
-  infections = find(sum(network,1))
-  paths = fill(Int64[],length(infections))
-  for i = infections
-    push!(paths[i], infections[i])
-    while paths[i][end] > 0
-      push!(paths[i], findfirst(network[:,i])-1)
-    end
-  end
-  return paths
-end
-
-
-function pathwaysfrom(network::Array{Bool,2})
-  """
-  Return all transmission pathways leading from an individual
-  """
-  infections = find(sum(network,1))
-  paths = fill(Int64[],length(infections))
-  for i = infections
-    push!(paths[i], infections[i])
-    pathlengths = []
-    while length(paths[i]) > previouslength[end]
-      push!(pathlengths, length(paths[i]))
-      if pathlengths[end] == 1
-        append(paths[i], find(network[paths[i][1]+1,:]))
-      else
-        for j = paths[i][pathlengths[end-1]:pathlengths[end]]
-          append!(paths[i], find(network[j+1,:]))
-        end
-      end
-    end
-  end
-  return paths
-end
-
-
 function augment(ρ::Float64, ν::Float64, network::Array{Bool, 2}, obs::SEIR_observed, debug=false::Bool)
   """
   Augments surveilance data, organizes observations, based on ρ, ν, and a transmission network

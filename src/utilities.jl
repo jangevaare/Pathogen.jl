@@ -131,6 +131,7 @@ function maximum(aug::SEIR_augmented)
   return maximum([aug.exposed aug.infectious aug.removed])
 end
 
+
 # function isseq(x::Vector{Any})
 #   """
 #   Identifies the pressence of a Nucleotide2bitSeq in a Vector{Any}
@@ -157,3 +158,44 @@ function isseq(x::Vector{Any})
   end
   return seq
 end
+
+function pathwaysto(network::Array{Bool,2})
+  """
+  Return all transmission pathways leading to an individual
+  """
+  infections = find(sum(network,1))
+  paths = fill(Int64[],length(infections))
+  for i = infections
+    push!(paths[i], infections[i])
+    while paths[i][end] > 0
+      push!(paths[i], findfirst(network[:,i])-1)
+    end
+  end
+  return paths
+end
+
+
+function pathwaysfrom(network::Array{Bool,2})
+  """
+  Return all transmission pathways leading from an individual
+  """
+  infections = find(sum(network,1))
+  paths = fill(Int64[],length(infections))
+  for i = infections
+    push!(paths[i], infections[i])
+    pathlengths = []
+    while length(paths[i]) > previouslength[end]
+      push!(pathlengths, length(paths[i]))
+      if pathlengths[end] == 1
+        append(paths[i], find(network[paths[i][1]+1,:]))
+      else
+        for j = paths[i][pathlengths[end-1]:pathlengths[end]]
+          append!(paths[i], find(network[j+1,:]))
+        end
+      end
+    end
+  end
+  return paths
+end
+
+

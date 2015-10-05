@@ -34,6 +34,8 @@ export
   convert,
   maximum,
   isseq,
+  pathwaysto,
+  pathwaysfrom,
 
   # mutate.jl
   jc69,
