@@ -197,7 +197,7 @@ function pathwaysfrom(infections::Vector{Int64}, network::Array{Bool,2})
     while length(paths[i]) > pathlengths[end]
       push!(pathlengths, length(paths[i]))
       if pathlengths[end] == 1
-        append(paths[i], find(network[paths[i][1]+1,:]))
+        append!(paths[i], find(network[paths[i][1]+1,:]))
       else
         for j = paths[i][pathlengths[end-1]:pathlengths[end]]
           append!(paths[i], find(network[j+1,:]))

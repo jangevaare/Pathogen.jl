@@ -237,56 +237,20 @@ function propose_network(network_rates::Array{Float64, 2}, uniform=true::Bool, d
 end
 
 
-function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, infected::Vector{Int64}, network::Array{Bool, 2}, debug=false::Bool)
+function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, network::Array{Bool, 2}, debug=false::Bool)
   """
   For a given transmission network, find the time between the pathogen sequences between every individuals i and j
   """
-  if debug
-    println("SEQUENCE DISTANCES")
-    println("Pathogen sequences collected from $infected individuals")
-    println("")
-  end
-
-  pathway = [infected[1]]
-
-  if debug
-    while pathway[end] > 0
-      println("SEQUENCE DISTANCES")
-      @assert(findfirst(network[:,pathway[end]]) > 0, "Network does not account for all exposure events")
-      println("Adding individual $(findfirst(network[:,pathway[end]])-1) to individual $(infected[1])'s transmission pathway")
-      push!(pathway, findfirst(network[:,pathway[end]])-1)
-    end
-  else
-    while pathway[end] > 0
-      push!(pathway, findfirst(network[:,pathway[end]])-1)
-    end
-  end
-  pathways = Vector[pathway]
-
-  for i = 2:length(infected)
-    pathway = [infected[i]]
-    if debug
-      while pathway[end] > 0
-        @assert(findfirst(network[:,pathway[end]]) > 0, "Network does not account for all exposure events")
-        println("Adding individual $(findfirst(network[:,pathway[end]])-1) to individual $(infected[i])'s transmission pathway")
-        push!(pathway, findfirst(network[:,pathway[end]])-1)
-      end
-    else
-      while pathway[end] > 0
-        push!(pathway, findfirst(network[:,pathway[end]])-1)
-      end
-    end
-    push!(pathways, pathway)
-  end
+  pathways = pathwaysto(network)
 
   seq_dist = fill(0., (size(network, 2), size(network, 2)))
 
-  for i = 1:length(infected)
+  for i = 1:length(pathways)
     if debug
       println("")
       println("SEQUENCE DISTANCES")
-      println("Infection of individual $(infected[i]) observed at $(obs.infectious[infected[i]])")
-      println("Infection pathway of individual $(infected[i]) is $(pathways[i])")
+      println("Infection of individual $(pathways[i][1]) observed at $(obs.infectious[pathways[i][1]])")
+      println("Infection pathway of individual $(pathways[i][1]) is $(pathways[i])")
     end
     for j = 1:(i-1)
       k = 1
@@ -294,26 +258,26 @@ function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, infected::Vector
         k += 1
       end
       if debug
-        println("Infection of individual $(infected[j]) observed at $(obs.infectious[infected[j]])")
-        println("Infection pathway of individual $(infected[j]) is $(pathways[j])")
+        println("Infection of individual $(pathways[j][1]) observed at $(obs.infectious[pathways[j][1]])")
+        println("Infection pathway of individual $(pathways[j][1]) is $(pathways[j])")
         if k == length(pathways[i]) || k == length(pathways[j])
-          println("Linear infection pathway between individual $(infected[i]) and individual $(infected[j])")
+          println("Linear infection pathway between individual $(pathways[i][1]) and individual $(pathways[j][1])")
         else
-          println("Most recent common infection source of individuals $(infected[i]) and $(infected[j]) is $(pathways[i][end - k + 1])")
-          println("The infection pathway of $(infected[i]) and $(infected[j]) diverged with $(pathways[i][end - k]) and $(pathways[j][end - k])")
+          println("Most recent common infection source of individuals $(pathways[i][1]) and $(pathways[j][1]) is $(pathways[i][end - k + 1])")
+          println("The infection pathway of $(pathways[i][1]) and $(pathways[j][1]) diverged with $(pathways[i][end - k]) and $(pathways[j][end - k])")
         end
       end
 
       if k == length(pathways[i])
-        seq_dist[infected[i],infected[j]] += obs.infectious[infected[j]] - aug.exposed[pathways[j][end - k]]
-        seq_dist[infected[i],infected[j]] += abs(aug.exposed[pathways[j][end - k]] - obs.infectious[infected[i]])
+        seq_dist[pathways[i][1],pathways[j][1]] += obs.infectious[pathways[j][1]] - aug.exposed[pathways[j][end - k]]
+        seq_dist[pathways[i][1],pathways[j][1]] += abs(aug.exposed[pathways[j][end - k]] - obs.infectious[pathways[i][1]])
       elseif k == length(pathways[j])
-        seq_dist[infected[i],infected[j]] += obs.infectious[infected[i]] - aug.exposed[pathways[i][end - k]]
-        seq_dist[infected[i],infected[j]] += abs(aug.exposed[pathways[i][end - k]] - obs.infectious[infected[j]])
+        seq_dist[pathways[i][1],pathways[j][1]] += obs.infectious[pathways[i][1]] - aug.exposed[pathways[i][end - k]]
+        seq_dist[pathways[i][1],pathways[j][1]] += abs(aug.exposed[pathways[i][end - k]] - obs.infectious[pathways[j][1]])
       else
-        seq_dist[infected[i],infected[j]] += obs.infectious[infected[i]] - aug.exposed[pathways[i][end - k]]
-        seq_dist[infected[i],infected[j]] += obs.infectious[infected[j]] - aug.exposed[pathways[j][end - k]]
-        seq_dist[infected[i],infected[j]] += abs(aug.exposed[pathways[j][end - k]] - aug.exposed[pathways[i][end - k]])
+        seq_dist[pathways[i][1],pathways[j][1]] += obs.infectious[pathways[i][1]] - aug.exposed[pathways[i][end - k]]
+        seq_dist[pathways[i][1],pathways[j][1]] += obs.infectious[pathways[j][1]] - aug.exposed[pathways[j][end - k]]
+        seq_dist[pathways[i][1],pathways[j][1]] += abs(aug.exposed[pathways[j][end - k]] - aug.exposed[pathways[i][end - k]])
       end
     end
     if debug
