@@ -38,10 +38,10 @@ actual, obs = surveil(pop, 2.)
 ilm_priors = SEIR_priors(Uniform(1,7), Uniform(2,8), Gamma(0.001), Uniform(0.1,1), Uniform(0.1,1))
 detection_priors = Lag_priors(Uniform(1,3))
 
-ilm_trace, detection_trace = MCMC(100000, ilm_priors, detection_priors, obs)
+ilm_trace, detection_trace = MCMC(200000, ilm_priors, detection_priors, obs)
 
 # Tune the transition kernel's covariance matrix
-n = 100
+n = 200
 for i = 1:n
   # Progress bar
   if i == 1
@@ -95,21 +95,19 @@ end
 
 # Inference visualization
 # Joint trace plots (last 100k iterations)
-plotdf = DataFrame(iteration = rep(1:100000,7),
+plotdf = DataFrame(iteration = rep(1:100000,6),
                    value = [ilm_trace.α[end-99999:end],
                             ilm_trace.β[end-99999:end],
                             ilm_trace.η[end-99999:end],
                             ilm_trace.ρ[end-99999:end],
                             ilm_trace.γ[end-99999:end],
-                            detection_trace.ν[end-99999:end],
-                            mutation_trace.λ[end-99999:end]],
+                            detection_trace.ν[end-99999:end]],
                    parameter = [rep("α",100000),
                                 rep("β",100000),
                                 rep("η",100000),
                                 rep("ρ",100000),
                                 rep("γ",100000),
-                                rep("ν",100000),
-                                rep("λ",100000)])
+                                rep("ν",100000)])
 
 draw(PNG("SEIR_traceplot.png", 20cm, 15cm),
      plot(plotdf,
@@ -168,13 +166,6 @@ draw(PNG("SEIR_gamma_hist.png", 20cm, 15cm),
 
 draw(PNG("SEIR_nu_hist.png", 20cm, 15cm),
      plot(x=detection_trace.ν[end-99999:end],
-          Geom.histogram,
-          Theme(panel_opacity=1.,
-                panel_fill=color("white"),
-                background_color=color("white"))))
-
-draw(PNG("SEIR_lambda_hist.png", 20cm, 15cm),
-     plot(x=mutation_trace.λ[end-99999:end],
           Geom.histogram,
           Theme(panel_opacity=1.,
                 panel_fill=color("white"),
