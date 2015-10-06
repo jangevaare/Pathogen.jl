@@ -298,7 +298,7 @@ function network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmented, network:
 
   if debug
     @assert(size(substitution_matrix) == (4,4), "Network loglikelihood error: invalid substitution_matrix")
-    @assert(infected == find(sum(network, 2)), "Network loglikelihood error: network and sequence data mismatch")
+    @assert(infected == find(sum(network, 1)), "Network loglikelihood error: network and sequence data mismatch")
   end
 
   seq_dist = seq_distances(obs, aug, network, debug)
