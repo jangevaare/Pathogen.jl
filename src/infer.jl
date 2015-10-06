@@ -91,7 +91,7 @@ function augment(ρ::Float64, ν::Float64, network::Array{Bool, 2}, obs::SEIR_ob
   for i = unrestricted
     if ν < Inf
       pathway = pathwaysfrom([i], network)
-      infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - maximum(obs.infectious[pathway]), Inf))
+      infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - maximum(obs.infectious[pathway[1]]), Inf))
     elseif ν == Inf
       infectious_augmented[i] = obs.infectious[i]
     end
@@ -107,7 +107,7 @@ function augment(ρ::Float64, ν::Float64, network::Array{Bool, 2}, obs::SEIR_ob
     source = findfirst(network[:,i])-1
     if ν < Inf
       pathway = pathwaysfrom([i], network)
-      infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - maximum(obs.infectious[pathway]), obs.infectious[i] - infectious_augmented[source]))
+      infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - maximum(obs.infectious[pathway[1]]), obs.infectious[i] - infectious_augmented[source]))
     elseif ν == Inf
       infectious_augmented[i] = obs.infectious[i]
     end
