@@ -132,34 +132,6 @@ function maximum(aug::SEIR_augmented)
 end
 
 
-# function isseq(x::Vector{Any})
-#   """
-#   Identifies the pressence of a Nucleotide2bitSeq in a Vector{Any}
-#   """
-#   seq = fill(false, length(x))
-#   for i = 1:length(x)
-#     if typeof(x[i]) == Nucleotide2bitSeq
-#       seq[i] = true
-#     end
-#   end
-#   return seq
-# end
-
-
-function isseq(x::Vector{Any})
-  """
-  Identifies the pressence of a Vector{Int64} in a Vector{Any}
-  """
-  seq = fill(false, length(x))
-  for i = 1:length(x)
-    if typeof(x[i]) == Vector{Int64}
-      seq[i] = true
-    end
-  end
-  return seq
-end
-
-
 function pathwayto(infection::Int64, network::Array{Bool,2})
   """
   Return the transmission pathways leading to an individual

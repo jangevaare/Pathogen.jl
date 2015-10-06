@@ -90,8 +90,8 @@ function augment(ρ::Float64, ν::Float64, network::Array{Bool, 2}, obs::SEIR_ob
 
   for i = unrestricted
     if ν < Inf
-      pathway = pathwaysfrom([i], network)
-      infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - maximum(obs.infectious[pathway[1]]), Inf))
+      pathway = pathwayfrom(i, network)
+      infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - maximum(obs.infectious[pathway]), Inf))
     elseif ν == Inf
       infectious_augmented[i] = obs.infectious[i]
     end
@@ -106,8 +106,8 @@ function augment(ρ::Float64, ν::Float64, network::Array{Bool, 2}, obs::SEIR_ob
   for i = restricted
     source = findfirst(network[:,i])-1
     if ν < Inf
-      pathway = pathwaysfrom([i], network)
-      infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - maximum(obs.infectious[pathway[1]]), obs.infectious[i] - infectious_augmented[source]))
+      pathway = pathwayfrom(i, network)
+      infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - maximum(obs.infectious[pathway]), obs.infectious[i] - infectious_augmented[source]))
     elseif ν == Inf
       infectious_augmented[i] = obs.infectious[i]
     end
@@ -289,11 +289,10 @@ function network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmented, network:
   Loglikelihood for an entire transmission network
   """
   ll = 0.
-  infected = find(isseq(obs.seq))
+  infected = find(sum(network, 1))
 
   if debug
     @assert(size(substitution_matrix) == (4,4), "Network loglikelihood error: invalid substitution_matrix")
-    @assert(infected == find(sum(network, 1)), "Network loglikelihood error: network and sequence data mismatch")
   end
 
   seq_dist = seq_distances(obs, aug, network, debug)
