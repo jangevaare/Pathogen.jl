@@ -288,13 +288,12 @@ function network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmented, network:
   """
   Loglikelihood for an entire transmission network
   """
-  ll = 0.
-  infected = find(sum(network, 1))
-
   if debug
     @assert(size(substitution_matrix) == (4,4), "Network loglikelihood error: invalid substitution_matrix")
   end
 
+  ll = 0.
+  infected = find(sum(network, 1))
   seq_dist = seq_distances(obs, aug, network, debug)
 
   for i = 1:length(infected)
