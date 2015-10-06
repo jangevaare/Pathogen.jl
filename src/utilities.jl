@@ -160,9 +160,21 @@ function isseq(x::Vector{Any})
 end
 
 
+function pathwayto(infection::Int64, network::Array{Bool,2})
+  """
+  Return the transmission pathways leading to an individual
+  """
+  path = [infection]
+  while path[end] > 0
+    push!(path, findfirst(network[:, path[end]])-1)
+  end
+  return path
+end
+
+
 function pathwaysto(infections::Vector{Int64}, network::Array{Bool,2})
   """
-  Return all transmission pathways leading to an individual
+  Return all transmission pathways leading to specified individuals
   """
   paths = Array[Int64[]]
   for i = 1:length(infections)
@@ -180,16 +192,36 @@ end
 
 function pathwaysto(network::Array{Bool,2})
   """
-  Return all transmission pathways leading to an individual
+  Return all transmission pathways
   """
   infections = find(sum(network,1))
   return pathwaysto(infections, network)
 end
 
 
+function pathwayfrom(infection::Int64, network::Array{Bool,2})
+  """
+  Return the transmission pathways leading from an individual
+  """
+  path = [infection]
+  pathlengths = [0]
+  while length(paths[i]) > pathlengths[end]
+    push!(pathlengths, length(path))
+    if pathlengths[end] == 1
+      append!(path, find(network[path[1]+1,:]))
+    else
+      for j = path[pathlengths[end-1]:pathlengths[end]]
+        append!(path, find(network[j+1,:]))
+      end
+    end
+  end
+  return path
+end
+
+
 function pathwaysfrom(infections::Vector{Int64}, network::Array{Bool,2})
   """
-  Return all transmission pathways leading from an individual
+  Return all transmission pathways leading from specified individuals
   """
   paths = Array[Int64[]]
   for i = 1:length(infections)
@@ -215,7 +247,7 @@ end
 
 function pathwaysfrom(network::Array{Bool,2})
   """
-  Return all transmission pathways leading from an individual
+  Return all transmission pathways
   """
   infections = find(sum(network,1))
   return pathwaysfrom(infections, network)
