@@ -403,10 +403,10 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
     detection_params = randprior(detection_priors)
     aug = augment(ilm_params[4], detection_params[1], obs, debug)
     lp1, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, debug, dist)
+    lp1 += logprior(ilm_priors, ilm_params) + logprior(detection_priors, detection_params)
   end
 
   if count < limit
-    lp1 += logprior(ilm_priors, ilm_params) + logprior(detection_priors, detection_params)
     network = propose_network(network_rates, false, debug)
     lp2 = network_loglikelihood(obs, aug, network, jc69p([mutation_params[1]]), debug)
     lp2 += logprior(mutation_priors, mutation_params)
