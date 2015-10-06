@@ -263,27 +263,6 @@ function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, network::Array{B
 end
 
 
-# function network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmented, network::Array{Bool, 2}, substitution_matrix::Array{Float64, 2}, debug=false::Bool)
-#   """
-#   Loglikelihood for an entire transmission network
-#   """
-#   if debug
-#     @assert(size(substitution_matrix) == (4,4), "Network loglikelihood error: invalid substitution_matrix")
-#   end
-
-#   ll = 0.
-#   infected = find(sum(network, 1))
-#   seq_dist = seq_distances(obs, aug, network, debug)
-
-#   for i = 1:length(infected)
-#     for j = 1:(i-1)
-#       ll += sum(log(expm(substitution_matrix*seq_dist[infected[i],infected[j]]))[sub2ind((4,4), obs.seq[infected[i]], obs.seq[infected[j]])])
-#     end
-#   end
-#   return ll
-# end
-
-
 function network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmented, network::Array{Bool, 2}, p_matrix::Function, debug=false::Bool)
   """
   Loglikelihood for an entire transmission network
