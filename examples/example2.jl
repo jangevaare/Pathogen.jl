@@ -9,15 +9,15 @@ using Pathogen, Gadfly, DataFrames, Distributions, ProgressMeter
 cd("Desktop/example2")
 
 # Simulate
-init_seq = create_seq(40, 0.25, 0.25, 0.25, 0.25)
-init_var = rand(Uniform(0,10), (2,40))
+init_seq = create_seq(100, 0.25, 0.25, 0.25, 0.25)
+init_var = rand(Uniform(0,10), (2,100))
 
 pop = create_population(init_seq, init_var)
 
 powerlaw = create_powerlaw(3., 5., 0.001)
 latency = create_constantrate(1/3.)
 recovery = create_constantrate(1/5.)
-substitution = jc69([0.001])
+substitution = jc69q([0.001])
 
 ratearray = create_ratearray(pop, powerlaw, substitution)
 
@@ -38,10 +38,10 @@ actual, obs = surveil(pop, 2.)
 ilm_priors = SEIR_priors(Uniform(1,7), Uniform(2,8), Gamma(0.001), Uniform(0.1,1), Uniform(0.1,1))
 detection_priors = Lag_priors(Uniform(1,3))
 
-ilm_trace, detection_trace = MCMC(200000, ilm_priors, detection_priors, obs)
+ilm_trace, detection_trace = MCMC(100000, ilm_priors, detection_priors, obs)
 
 # Tune the transition kernel's covariance matrix
-n = 200
+n = 100
 for i = 1:n
   # Progress bar
   if i == 1

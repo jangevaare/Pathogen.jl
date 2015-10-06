@@ -17,7 +17,7 @@ pop = create_population(init_seq, init_var)
 powerlaw = create_powerlaw(3., 5., 0.001)
 latency = create_constantrate(1/3.)
 recovery = create_constantrate(1/5.)
-substitution = jc69([0.001])
+substitution = jc69q([0.001])
 
 ratearray = create_ratearray(pop, powerlaw, substitution)
 

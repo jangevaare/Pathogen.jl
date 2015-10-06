@@ -13,6 +13,41 @@ function jc69(θ::Vector{Float64})
           [λ λ λ -3λ]]
 end
 
+function jc69q(θ::Vector{Float64})
+  """
+  Returns the JC69 Q matrix with parameter λ
+  """
+  λ = θ[1]
+  return [[-3λ λ λ λ]
+          [λ -3λ λ λ]
+          [λ λ -3λ λ]
+          [λ λ λ -3λ]]
+end
+
+function jc69p(θ::Vector{Float64}, t::Float64)
+  """
+  Returns the JC69 P matrix with parameter λ, for time t
+
+  Molecular Evolution: a statistical approach, Z. Yang
+  """
+  λ = θ[1]
+  p0 = 0.25 + 0.75*exp(-t*λ)
+  p1 = 0.25 - 0.25*exp(-t*λ)
+  return [[p0 p1 p1 p1]
+          [p1 p0 p1 p1]
+          [p1 p1 p0 p1]
+          [p1 p1 p1 p0]]
+end
+
+function jc69p(θ::Vector{Float64})
+  return function(t)
+    jc69p(θ, t)
+  end
+end
+
+
+
+
 # function k80(θ::Tuple)
 #   """
 #   Returns the K80 (Kimura et al., 1980) transition matrix with parameters α and β; the transition and transversion rate parameters respectively. This model assumes equal base frequencies and unique transition and transversion rates
