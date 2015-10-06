@@ -132,7 +132,7 @@ function maximum(aug::SEIR_augmented)
 end
 
 
-function maximum(obs::SEIR_obs)
+function maximum(obs::SEIR_observed)
   """
   Find maximum observed event time
   """
