@@ -35,7 +35,7 @@ end
 
 actual, obs = surveil(pop, 2.)
 
-ilm_priors = SEIR_priors(Uniform(1,7), Uniform(2,8), Gamma(0.001), Uniform(0.1,1), Uniform(0.1,1))
+ilm_priors = SEIR_priors(Uniform(2.5,3.5), Uniform(4.5,5.5), Gamma(0.001), Uniform(0.1,1), Uniform(0.1,1))
 detection_priors = Lag_priors(Uniform(1,3))
 
 ilm_trace, detection_trace = MCMC(100000, ilm_priors, detection_priors, obs)

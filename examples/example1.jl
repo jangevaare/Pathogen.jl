@@ -120,8 +120,8 @@ draw(PNG("SEIR_traceplot.png", 20cm, 15cm),
           color="parameter",
           Geom.line,
           Theme(panel_opacity=1.,
-                panel_fill=color("white"),
-                background_color=color("white"))))
+                panel_fill=parse(Colorant, "white"),
+                background_color=parse(Colorant, "white"))))
 
 # logposterior plot (last 100k iterations)
 draw(PNG("SEIR_logposterior.png", 20cm, 15cm),

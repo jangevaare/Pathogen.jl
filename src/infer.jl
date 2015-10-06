@@ -441,6 +441,7 @@ function initialize(ilm_priors::SEIR_priors, detection_priors::Lag_priors, obs::
   detection_params = randprior(detection_priors)
   aug = augment(ilm_params[4], detection_params[1], obs, debug)
   lp1, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, debug, dist)
+  lp1 += logprior(ilm_priors, ilm_params) + logprior(detection_priors, detection_params)
   count = 1
 
   # Retry initialization until non-negative infinity loglikelihood
@@ -455,10 +456,10 @@ function initialize(ilm_priors::SEIR_priors, detection_priors::Lag_priors, obs::
 
   if count < limit
     network = propose_network(network_rates, false, debug)
-    println("Successful initalization on attempt $count (log posterior = $lp1)")
+    println("Successful initalization on attempt $count (marginal log posterior = $lp1)")
     return SEIR_trace([ilm_params[1]], [ilm_params[2]], [ilm_params[3]], [ilm_params[4]], [ilm_params[5]], [aug], Array[network_rates], Array[network], [lp1], [0]), Lag_trace([detection_params[1]])
   else
-    println("Failed to initialize after $count attempts (log posterior = $lp1)")
+    println("Failed to initialize after $count attempts (marginal log posterior = $lp1)")
   end
 end
 
