@@ -177,7 +177,7 @@ function pathwayfrom(infection::Int64, network::Array{Bool,2})
   """
   path = [infection]
   pathlengths = [0]
-  while length(paths[i]) > pathlengths[end]
+  while length(path) > pathlengths[end]
     push!(pathlengths, length(path))
     if pathlengths[end] == 1
       append!(path, find(network[path[1]+1,:]))

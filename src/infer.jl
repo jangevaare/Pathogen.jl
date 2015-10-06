@@ -69,57 +69,36 @@ function augment(ρ::Float64, ν::Float64, network::Array{Bool, 2}, obs::SEIR_ob
   exposed_augmented = fill(NaN, length(obs.infectious))
   infectious_augmented = fill(NaN, length(obs.infectious))
   removed_augmented = fill(NaN, length(obs.removed))
+  augment_order = pathwayfrom(0, network)
 
-  # Determine which event times have additional restrictions...
-  unrestricted = find(network[1,:])
-  restricted = find(network[unrestricted[1]+1, :])
-  for i = unrestricted[2:end]
-    append!(restricted, find(network[i+1, :]))
-  end
-  for i = restricted
-    append!(restricted, find(network[i+1, :]))
-  end
-
-  if debug
-    println("DATA AUGMENTATION")
-    println("Infected individuals ($(sum(network)) total): $(find(sum(network,1)))")
-    println("Unrestricted individuals ($(length(unrestricted)) total): $unrestricted")
-    println("Restricted individuals ($(length(restricted)) total): $restricted")
-    println("")
-  end
-
-  for i = unrestricted
+  for i = augment_order[2:end]
     if ν < Inf
-      pathway = pathwayfrom(i, network)
-      infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - maximum(obs.infectious[pathway]), Inf))
+      pathway_out = pathwayfrom(i, network)
+      pathway_in = pathwayto(i, network)
+      if length(pathway_in) > 2
+        infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - minimum(obs.infectious[pathway_out]), obs.infectious[i] - infectious_augmented[pathway_in[2]]))
+        if isnan(obs.removed[pathway_in[2]])
+          exposed_augmented[i] = infectious_augmented[i] - rand(Truncated(Exponential(1/ρ), 0., infectious_augmented[i]-infectious_augmented[pathway_in[2]]))
+        else
+          exposed_augmented[i] = infectious_augmented[i] - rand(Truncated(Exponential(1/ρ), infectious_augmented[i]-removed_augmented[pathway_in[2]], infectious_augmented[i]-infectious_augmented[pathway_in[2]]))
+        end
+      else
+        infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - minimum(obs.infectious[pathway_out]), Inf))
+        exposed_augmented[i] = infectious_augmented[i] - rand(Exponential(1/ρ))
+      end
+      if !isnan(obs.removed[i])
+        removed_augmented[i] = obs.removed[i] - rand(Truncated(Exponential(1/ν), 0., obs.removed[i] - obs.infectious[i]))
+      end
     elseif ν == Inf
       infectious_augmented[i] = obs.infectious[i]
-    end
-    exposed_augmented[i] = infectious_augmented[i] - rand(Exponential(1/ρ))
-    if ν < Inf
-      removed_augmented[i] = obs.removed[i] - rand(Truncated(Exponential(1/ν), 0., obs.removed[i] - obs.infectious[i]))
-    elseif ν == Inf
-      removed_augmented[i] = obs.removed[i]
-    end
-  end
-
-  for i = restricted
-    source = findfirst(network[:,i])-1
-    if ν < Inf
-      pathway = pathwayfrom(i, network)
-      infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - maximum(obs.infectious[pathway]), obs.infectious[i] - infectious_augmented[source]))
-    elseif ν == Inf
-      infectious_augmented[i] = obs.infectious[i]
-    end
-    if isnan(removed_augmented[source])
-      exposed_augmented[i] = infectious_augmented[i] - rand(Truncated(Exponential(1/ρ), 0., infectious_augmented[i]-infectious_augmented[source]))
-    else
-      exposed_augmented[i] = infectious_augmented[i] - rand(Truncated(Exponential(1/ρ), infectious_augmented[i]-removed_augmented[source], infectious_augmented[i]-infectious_augmented[source]))
-    end
-    if ν < Inf
-      removed_augmented[i] = obs.removed[i] - rand(Truncated(Exponential(1/ν), -Inf, obs.removed[i] - obs.infectious[i]))
-    elseif ν == Inf
-      removed_augmented[i] = obs.removed[i]
+      if isnan(obs.removed[pathway_in[2]])
+        exposed_augmented[i] = infectious_augmented[i] - rand(Truncated(Exponential(1/ρ), 0., infectious_augmented[i]-infectious_augmented[pathway_in[2]]))
+      else
+        exposed_augmented[i] = infectious_augmented[i] - rand(Truncated(Exponential(1/ρ), infectious_augmented[i]-removed_augmented[pathway_in[2]], infectious_augmented[i]-infectious_augmented[pathway_in[2]]))
+      end
+      if !isnan(obs.removed[i])
+        removed_augmented[i] = obs.removed[i]
+      end
     end
   end
   if debug
@@ -133,6 +112,80 @@ function augment(ρ::Float64, ν::Float64, network::Array{Bool, 2}, obs::SEIR_ob
   end
   return SEIR_augmented(exposed_augmented, infectious_augmented, removed_augmented)
 end
+
+
+# function augment(ρ::Float64, ν::Float64, network::Array{Bool, 2}, obs::SEIR_observed, debug=false::Bool)
+#   """
+#   Augments surveilance data, organizes observations, based on ρ, ν, and a transmission network
+#   """
+#   exposed_augmented = fill(NaN, length(obs.infectious))
+#   infectious_augmented = fill(NaN, length(obs.infectious))
+#   removed_augmented = fill(NaN, length(obs.removed))
+
+#   # Determine which event times have additional restrictions...
+
+#   unrestricted = find(network[1,:])
+#   restricted = find(network[unrestricted[1]+1, :])
+#   for i = unrestricted[2:end]
+#     append!(restricted, find(network[i+1, :]))
+#   end
+#   for i = restricted
+#     append!(restricted, find(network[i+1, :]))
+#   end
+
+#   if debug
+#     println("DATA AUGMENTATION")
+#     println("Infected individuals ($(sum(network)) total): $(find(sum(network,1)))")
+#     println("Unrestricted individuals ($(length(unrestricted)) total): $unrestricted")
+#     println("Restricted individuals ($(length(restricted)) total): $restricted")
+#     println("")
+#   end
+
+#   for i = unrestricted
+#     if ν < Inf
+#       pathway = pathwayfrom(i, network)
+#       infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - maximum(obs.infectious[pathway]), Inf))
+#     elseif ν == Inf
+#       infectious_augmented[i] = obs.infectious[i]
+#     end
+#     exposed_augmented[i] = infectious_augmented[i] - rand(Exponential(1/ρ))
+#     if ν < Inf
+#       removed_augmented[i] = obs.removed[i] - rand(Truncated(Exponential(1/ν), 0., obs.removed[i] - obs.infectious[i]))
+#     elseif ν == Inf
+#       removed_augmented[i] = obs.removed[i]
+#     end
+#   end
+
+#   for i = restricted
+#     source = findfirst(network[:,i])-1
+#     if ν < Inf
+#       pathway = pathwayfrom(i, network)
+#       infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - maximum(obs.infectious[pathway]), obs.infectious[i] - infectious_augmented[source]))
+#     elseif ν == Inf
+#       infectious_augmented[i] = obs.infectious[i]
+#     end
+#     if isnan(removed_augmented[source])
+#       exposed_augmented[i] = infectious_augmented[i] - rand(Truncated(Exponential(1/ρ), 0., infectious_augmented[i]-infectious_augmented[source]))
+#     else
+#       exposed_augmented[i] = infectious_augmented[i] - rand(Truncated(Exponential(1/ρ), infectious_augmented[i]-removed_augmented[source], infectious_augmented[i]-infectious_augmented[source]))
+#     end
+#     if ν < Inf
+#       removed_augmented[i] = obs.removed[i] - rand(Truncated(Exponential(1/ν), -Inf, obs.removed[i] - obs.infectious[i]))
+#     elseif ν == Inf
+#       removed_augmented[i] = obs.removed[i]
+#     end
+#   end
+#   if debug
+#     println("DATA AUGMENTATION")
+#     println("$(sum(!isnan(exposed_augmented))), $(sum(!isnan(infectious_augmented))), and $(sum(!isnan(removed_augmented))) augmented exposure, infection, and removal times respectively")
+#     for i = 1:length(obs.infectious)
+#       @assert(!(isnan(exposed_augmented[i]) && !isnan(obs.infectious[i])), "Data augmentation error: could not generate exposure event $i")
+#       @assert(!(isnan(infectious_augmented[i]) && !isnan(obs.infectious[i])), "Data augmentation error: could not generate infectious event $i")
+#       @assert(!(isnan(removed_augmented[i]) && !isnan(obs.removed[i])), "Data augmentation error: could not generate exposure event $i")
+#     end
+#   end
+#   return SEIR_augmented(exposed_augmented, infectious_augmented, removed_augmented)
+# end
 
 
 augment(ρ, Inf, network, obs, debug) = augment(ρ::Float64, network::array{Bool, 2}, obs::SEIR_observed, debug=false::Bool)
@@ -674,10 +727,10 @@ function MCMC(n::Int64,
         println("Accepted ILM proposal ($lp2_proposal > $lp2) on $(i)th iteration")
       elseif reject == false
         println("MCMC")
-        println("Accepted ILM proposal (with probability $(exp(lp2_proposal - lp2)) on $(i)th iteration)")
+        println("Accepted ILM proposal (with probability $(exp(lp2_proposal - lp2))) on $(i)th iteration")
       else
         println("MCMC")
-        println("Rejected ILM proposal (with probability $(1-exp(lp2_proposal - lp2)) on $(i)th iteration")
+        println("Rejected ILM proposal (with probability $(1-exp(lp2_proposal - lp2))) on $(i)th iteration")
       end
       println("")
     end

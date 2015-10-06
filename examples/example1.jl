@@ -18,7 +18,7 @@ powerlaw = create_powerlaw(3., 5., 0.001)
 latency = create_constantrate(1/3.)
 recovery = create_constantrate(1/5.)
 substitution = jc69([0.001])
--
+
 ratearray = create_ratearray(pop, powerlaw, substitution)
 
 @time while length(pop.timeline[1]) < 300.
@@ -39,7 +39,7 @@ ilm_priors = SEIR_priors(Uniform(1,7), Uniform(2,8), Gamma(0.001), Uniform(0.1,1
 detection_priors = Lag_priors(Uniform(1,3))
 mutation_priors = JC69_priors(Uniform(0,0.003))
 
-ilm_trace, detection_trace, mutation_trace = MCMC(50000, ilm_priors, detection_priors, mutation_priors, obs, true, true)
+ilm_trace, detection_trace, mutation_trace = MCMC(50000, ilm_priors, detection_priors, mutation_priors, obs)
 
 # Tune the transition kernel's covariance matrix
 n = 100
@@ -56,7 +56,7 @@ for i = 1:n
   opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.ρ ilm_trace.γ ilm_trace.η detection_trace.ν mutation_trace.λ])*(2.38^2)/7.
 
   # Perform 1000 MCMC iterations
-  MCMC(1000, opt_cov, ilm_trace, detection_trace, mutation_trace, ilm_priors, detection_priors, mutation_priors, obs)
+  MCMC(1000, opt_cov, ilm_trace, detection_trace, mutation_trace, ilm_priors, detection_priors, mutation_priors, obs, false, false)
 end
 
 opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.ρ ilm_trace.γ ilm_trace.η detection_trace.ν mutation_trace.λ])*(2.38^2)/7.
