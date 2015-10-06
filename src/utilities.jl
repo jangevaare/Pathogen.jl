@@ -164,12 +164,16 @@ function pathwaysto(infections::Vector{Int64}, network::Array{Bool,2})
   """
   Return all transmission pathways leading to an individual
   """
-  infections = find(sum(network,1))
-  paths = fill(Int64[],length(infections))
-  for i = infections
+  paths = Array[Int64[]]
+  for i = 1:length(infections)
+    if i == 1
+      paths = Array[Int64[]]
+    else
+      push!(paths, Int64[])
+    end
     push!(paths[i], infections[i])
     while paths[i][end] > 0
-      push!(paths[i], findfirst(network[:,i])-1)
+      push!(paths[i], findfirst(network[:, paths[i][end]])-1)
     end
   end
   return paths
@@ -189,9 +193,12 @@ function pathwaysfrom(infections::Vector{Int64}, network::Array{Bool,2})
   """
   Return all transmission pathways leading from an individual
   """
-  infections = find(sum(network,1))
-  paths = fill(Int64[],length(infections))
   for i = infections
+    if i == 1
+      paths = Array[Int64[]]
+    else
+      push!(paths, Int64[])
+    end
     push!(paths[i], infections[i])
     pathlengths = [0]
     while length(paths[i]) > pathlengths[end]

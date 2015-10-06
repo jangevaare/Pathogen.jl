@@ -124,16 +124,11 @@ function augment(ρ::Float64, ν::Float64, network::Array{Bool, 2}, obs::SEIR_ob
   end
   if debug
     println("DATA AUGMENTATION")
-    println("Augmented exposure times ($(sum(!isnan(exposed_augmented))) total): $(round(exposed_augmented,3))")
-    println("Augmented infection times ($(sum(!isnan(infectious_augmented))) total): $(round(infectious_augmented,3))")
-    println("Augmented removal times ($(sum(!isnan(removed_augmented))) total): $(round(removed_augmented,3))")
-    println("")
-  end
-  if debug
+    println("$(sum(!isnan(exposed_augmented))), $(sum(!isnan(infectious_augmented))), and $(sum(!isnan(removed_augmented))) augmented exposure, infection, and removal times respectively")
     for i = 1:length(obs.infectious)
-      @assert(!(isnan(exposed_augmented[i]) && !isnan(obs.infectious[i])), "Data augmentation error: Could not generate exposure event $i")
-      @assert(!(isnan(infectious_augmented[i]) && !isnan(obs.infectious[i])), "Data augmentation error: Could not generate infectious event $i")
-      @assert(!(isnan(removed_augmented[i]) && !isnan(obs.removed[i])), "Data augmentation error: Could not generate exposure event $i")
+      @assert(!(isnan(exposed_augmented[i]) && !isnan(obs.infectious[i])), "Data augmentation error: could not generate exposure event $i")
+      @assert(!(isnan(infectious_augmented[i]) && !isnan(obs.infectious[i])), "Data augmentation error: could not generate infectious event $i")
+      @assert(!(isnan(removed_augmented[i]) && !isnan(obs.removed[i])), "Data augmentation error: could not generate exposure event $i")
     end
   end
   return SEIR_augmented(exposed_augmented, infectious_augmented, removed_augmented)
@@ -302,6 +297,7 @@ function network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmented, network:
   end
 
   seq_dist = seq_distances(obs, aug, network, debug)
+
   for i = 1:length(infected)
     for j = 1:(i-1)
       ll += sum(log(expm(substitution_matrix*seq_dist[infected[i],infected[j]]))[sub2ind((4,4), obs.seq[infected[i]], obs.seq[infected[j]])])
