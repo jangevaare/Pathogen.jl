@@ -40,7 +40,8 @@ export
   pathwaysfrom,
 
   # mutate.jl
-  jc69,
+  jc69q,
+  jc69p,
 
   # simulate.jl
   create_seq,
