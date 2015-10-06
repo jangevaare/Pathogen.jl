@@ -132,6 +132,14 @@ function maximum(aug::SEIR_augmented)
 end
 
 
+function maximum(obs::SEIR_obs)
+  """
+  Find maximum observed event time
+  """
+  return maximum([obs.infectious obs.removed])
+end
+
+
 function pathwayto(infection::Int64, network::Array{Bool,2})
   """
   Return the transmission pathways leading to an individual
