@@ -39,7 +39,7 @@ ilm_priors = SEIR_priors(Uniform(1,7), Uniform(2,8), Gamma(0.001), Uniform(0.1,1
 detection_priors = Lag_priors(Uniform(1,3))
 mutation_priors = JC69_priors(Uniform(0,0.003))
 
-ilm_trace, detection_trace, mutation_trace = MCMC(50000, ilm_priors, detection_priors, mutation_priors, obs)
+ilm_trace, detection_trace, mutation_trace = MCMC(100000, ilm_priors, detection_priors, mutation_priors, obs)
 
 # Tune the transition kernel's covariance matrix
 n = 100
@@ -68,7 +68,7 @@ images = 500
 max_tracelp=findfirst(ilm_trace.logposterior_1 .+ ilm_trace.logposterior_2.==maximum(ilm_trace.logposterior_1 .+ ilm_trace.logposterior_2))
 
 for time = 1:images
-  states, routes = plotdata(pop, (time*maximum([maximum(ilm_trace.aug[max_tracelp]), pop.timeline[1][end]])/images))
+  states, routes = plotdata(pop, (time*maximum([maximum(ilm_trace.aug[max_tracelp]), maximum(obs)])/images))
   p1 = plot(layer(states, x="x", y="y", color="state", Geom.point),
             layer(routes, x="x", y="y", group="age", Geom.polygon),
             Theme(panel_opacity=1., panel_fill=color("white"), default_color=color("black"), background_color=color("white")))

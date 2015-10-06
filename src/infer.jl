@@ -511,91 +511,35 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
 end
 
 
-# function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, obs::SEIR_observed, limit=500::Int, debug=false::Bool, dist=Euclidean())
-#   """
-#   Initiate an Trace object by sampling from specified prior distributions
-#   """
-#   ilm_params = randprior(ilm_priors)
-#   mutation_params = randprior(mutation_priors)
-#   aug = augment(ilm_params[4], obs)
-#   ll, network = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, dist, debug)
-#   ll += network_loglikelihood(obs, aug, network, jc69([mutation_params[1]]), debug)
-#   count = 1
+function initialize(ilm_priors::SEIR_priors, detection_priors::Lag_priors, obs::SEIR_observed, limit=500::Int, debug=false::Bool, dist=Euclidean())
+  """
+  Initiate an Trace object by sampling from specified prior distributions
+  """
+  ilm_params = randprior(ilm_priors)
+  detection_params = randprior(detection_priors)
+  aug = augment(ilm_params[4], detection_params[1], obs, debug)
+  lp1, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, debug, dist)
+  count = 1
 
-#   # Retry initialization until non-negative infinity loglikelihood
-#   while ll == -Inf && count < limit
-#     count += 1
-#     ilm_params = randprior(ilm_priors)
-#     mutation_params = randprior(mutation_priors)
-#     aug = augment(ilm_params[4], obs)
-#     ll, network = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, dist, debug)
-#     ll += network_loglikelihood(obs, aug, network, jc69([mutation_params[1]]), debug)
-#   end
+  # Retry initialization until non-negative infinity loglikelihood
+  while lp1 == -Inf && count < limit
+    count += 1
+    ilm_params = randprior(ilm_priors)
+    mutation_params = randprior(mutation_priors)
+    detection_params = randprior(detection_priors)
+    aug = augment(ilm_params[4], detection_params[1], obs, debug)
+    lp1, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, debug, dist)
+    lp1 += logprior(ilm_priors, ilm_params) + logprior(detection_priors, detection_params)
+  end
 
-#   if count < limit
-#     print("Successfully initialized on attempt $count")
-#     lp = ll + logprior(ilm_priors, ilm_params) + logprior(mutation_priors, mutation_params)
-#       return SEIR_trace([ilm_params[1]], [ilm_params[2]], [ilm_params[3]], [ilm_params[4]], [ilm_params[5]], [aug], Array[network], [lp]), JC69_trace([mutation_params[1]])
-#   else
-#     print("Failed to initialize after $count attempts")
-#   end
-# end
-
-# function initialize(ilm_priors::SEIR_priors, detection_priors::Lag_priors, obs::SEIR_observed, limit=500::Int, debug=false::Bool, dist=Euclidean())
-#   """
-#   Initiate an Trace object by sampling from specified prior distributions
-#   """
-#   ilm_params = randprior(ilm_priors)
-#   detection_params = randprior(detection_priors)
-#   aug = augment(ilm_params[4], detection_params[1], obs)
-#   ll, network = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, dist, debug)
-#   count = 1
-
-#   # Retry initialization until non-negative infinity loglikelihood
-#   while ll == -Inf && count < limit
-#     count += 1
-#     ilm_params = randprior(ilm_priors)
-#     detection_params = randprior(detection_priors)
-#     aug = augment(ilm_params[4], detection_params[1], obs)
-#     ll, network = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, dist, debug)
-#   end
-
-#   if count < limit
-#     print("Successfully initialized on attempt $count")
-#     lp = ll + logprior(ilm_priors, ilm_params) + logprior(detection_priors, detection_params)
-#       return SEIR_trace([ilm_params[1]], [ilm_params[2]], [ilm_params[3]], [ilm_params[4]], [ilm_params[5]], [aug], Array[network], [lp]), Lag_trace([detection_params[1]])
-#   else
-#     print("Failed to initialize after $count attempts")
-#   end
-# end
-
-
-# function initialize(ilm_priors::SEIR_priors, obs::SEIR_observed, limit=500::Int, debug=false::Bool, dist=Euclidean())
-#   """
-#   Initiate an Trace object by sampling from specified prior distributions
-#   """
-#   ilm_params = randprior(ilm_priors)
-#   aug = augment(ilm_params[4], obs)
-#   ll, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, dist, debug)
-#   count = 1
-
-#   # Retry initialization until non-negative infinity loglikelihood
-#   while ll == -Inf && count < limit
-#     count += 1
-#     ilm_params = randprior(ilm_priors)
-#     aug = augment(ilm_params[4], obs)
-#     ll, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, dist, debug)
-#   end
-
-#   if count < limit
-#     print("Successfully initialized on attempt $count")
-#     network = propose_network(network_rates, false)
-#     lp = ll + logprior(ilm_priors, ilm_params)
-#       return SEIR_trace([ilm_params[1]], [ilm_params[2]], [ilm_params[3]], [ilm_params[4]], [ilm_params[5]], [aug], Array[network_rates], Array[network], [lp], [0.])
-#   else
-#     print("Failed to initialize after $count attempts")
-#   end
-# end
+  if count < limit
+    network = propose_network(network_rates, false, debug)
+    println("Successful initalization on attempt $count (lp1 = $lp1, lp2 = $lp2)")
+    return SEIR_trace([ilm_params[1]], [ilm_params[2]], [ilm_params[3]], [ilm_params[4]], [ilm_params[5]], [aug], Array[network_rates], Array[network], [lp1], [lp2]), Lag_trace([detection_params[1]]), JC69_trace([mutation_params[1]])
+  else
+    println("Failed to initialize after $count attempts (lp1 = $lp1, lp2 = $lp2)")
+  end
+end
 
 
 function MCMC(n::Int64,
@@ -804,6 +748,172 @@ function MCMC(n::Int64,
               ilm_priors,
               detection_priors,
               mutation_priors,
+              obs,
+              debug,
+              progress,
+              dist,
+              init_limit)
+end
+
+
+function MCMC(n::Int64,
+              transition_cov::Array{Float64},
+              ilm_trace::SEIR_trace,
+              detection_trace::Lag_trace,
+              ilm_priors::SEIR_priors,
+              detection_priors::Lag_priors,
+              obs::SEIR_observed,
+              debug=false::Bool,
+              progress=true::Bool,
+              dist=Euclidean())
+  """
+  Performs `n` data-augmented metropolis hastings within Gibbs MCMC iterations. Initiates a single chain by sampling from prior distribution
+  """
+
+  @assert(size(transition_cov) == (6,6), "transition_cov must be a 6x6 matrix")
+
+  for i = 1:n
+
+    # Create and incremenet progress bar
+    if progress
+      if i == 1
+        progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 30)
+      else
+        next!(progressbar)
+      end
+    end
+
+    # Step 1a: Metropolis-Hastings proposal
+    # Only generate valid proposals
+    step = rand(MvNormal(transition_cov))
+    ilm_proposal = [ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.ρ[end], ilm_trace.γ[end]] .+ step[1:5]
+    detection_proposal = [detection_trace.ν[end]] .+ step[6]
+
+    lp1_proposal = logprior(ilm_priors, ilm_proposal)
+    lp1_proposal += logprior(detection_priors, detection_proposal)
+
+    while lp1_proposal == -Inf
+      step = rand(MvNormal(transition_cov))
+      ilm_proposal = [ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.ρ[end], ilm_trace.γ[end]] .+ step[1:5]
+      detection_proposal = [detection_trace.ν[end]] .+ step[6]
+      lp1_proposal = logprior(ilm_priors, ilm_proposal)
+      lp1_proposal += logprior(detection_priors, detection_proposal)
+    end
+
+    # Step 1b: Gibbs within Metropolis data augmentation
+    aug_proposal = augment(ilm_proposal[4], detection_proposal[1], ilm_trace.network[end], obs, debug)
+
+    # Step 1c: loglikelihood calculation for Metropolis-Hastings step
+    ll_proposal, network_rates_proposal = SEIR_loglikelihood(ilm_proposal[1], ilm_proposal[2], ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], aug_proposal, obs, debug, dist)
+    lp1_proposal += ll_proposal
+
+    # Step 1d: accept/reject based on logposterior comparison
+    reject = true
+    if lp1_proposal > ilm_trace.logposterior_1[end]
+      reject = false
+    elseif exp(lp1_proposal - ilm_trace.logposterior_1[end]) > rand()
+      reject = false
+    end
+
+    if debug
+      if lp1_proposal > ilm_trace.logposterior_1[end]
+        println("MCMC: Accepted ILM proposal ($lp1_proposal > $(ilm_trace.logposterior_1[end])) on $(i)th iteration)")
+      elseif reject == false
+        println("MCMC: Accepted ILM proposal (with probability $(exp(lp1_proposal - ilm_trace.logposterior_1[end])) on $(i)th iteration)")
+      else
+        println("MCMC: Rejected ILM proposal (with probability $(1-exp(lp1_proposal - ilm_trace.logposterior_1[end])) on $(i)th iteration)")
+      end
+    end
+
+    if reject
+      ilm_proposal[1] = ilm_trace.α[end]
+      ilm_proposal[2] = ilm_trace.β[end]
+      ilm_proposal[3] = ilm_trace.η[end]
+      ilm_proposal[4] = ilm_trace.ρ[end]
+      ilm_proposal[5] = ilm_trace.γ[end]
+      aug_proposal = ilm_trace.aug[end]
+      network_rates_proposal = ilm_trace.network_rates[end]
+      lp1_proposal = ilm_trace.logposterior_1[end]
+      detection_proposal = detection_trace.ν[end]
+    end
+
+    # Step 1e: Update chain
+    push!(ilm_trace.α, ilm_proposal[1])
+    push!(ilm_trace.β, ilm_proposal[2])
+    push!(ilm_trace.η, ilm_proposal[3])
+    push!(ilm_trace.ρ, ilm_proposal[4])
+    push!(ilm_trace.γ, ilm_proposal[5])
+    push!(ilm_trace.aug, aug_proposal)
+    push!(ilm_trace.network_rates, network_rates_proposal)
+    push!(ilm_trace.logposterior_1, lp1_proposal)
+    push!(detection_trace.ν, detection_proposal[1])
+
+    # Step 3: Gibbs sampling of network
+    network_proposal = propose_network(ilm_trace.network_rates[end], false, debug)
+    lp2_proposal = 0.
+
+    push!(ilm_trace.logposterior_2, lp2_proposal)
+    push!(ilm_trace.network, network_proposal)
+  end
+
+  return ilm_trace, detection_trace
+end
+
+
+function MCMC(n::Int64,
+              transition_cov::Array{Float64},
+              ilm_priors::SEIR_priors,
+              detection_priors::Lag_priors,
+              obs::SEIR_observed,
+              debug=false::Bool,
+              progress=true::Bool,
+              dist=Euclidean(),
+              init_limit=500::Int64)
+  """
+  Performs `n` data-augmented metropolis hastings within Gibbs MCMC iterations. Initiates a single chain by sampling from prior distribution
+  """
+
+  @assert(size(transition_cov) == (6,6), "transition_cov must be a 6x6 matrix")
+
+  ilm_trace, detection_trace = initialize(ilm_priors, detection_priors, obs, init_limit, debug, dist)
+
+  return MCMC(n,
+              transition_cov,
+              ilm_trace,
+              detection_trace,
+              ilm_priors,
+              detection_priors,
+              obs,
+              debug,
+              progress,
+              dist)
+
+  end
+
+
+function MCMC(n::Int64,
+              ilm_priors::SEIR_priors,
+              detection_priors::Lag_priors,
+              obs::SEIR_observed,
+              debug=false::Bool,
+              progress=true::Bool,
+              dist=Euclidean(),
+              init_limit=500::Int64)
+  """
+  Performs `n` data-augmented metropolis hastings within Gibbs MCMC iterations. Initiates a single chain by sampling from prior distribution
+  """
+
+  transition_cov = diagm([var(ilm_priors.α),
+                          var(ilm_priors.β),
+                          var(ilm_priors.η),
+                          var(ilm_priors.ρ),
+                          var(ilm_priors.γ),
+                          var(detection_priors.ν)])
+
+  return MCMC(n,
+              transition_cov,
+              ilm_priors,
+              detection_priors,
               obs,
               debug,
               progress,
