@@ -166,9 +166,7 @@ function pathwaysto(infections::Vector{Int64}, network::Array{Bool,2})
   """
   paths = Array[Int64[]]
   for i = 1:length(infections)
-    if i == 1
-      paths = Array[Int64[]]
-    else
+    if i > 1
       push!(paths, Int64[])
     end
     push!(paths[i], infections[i])
@@ -193,10 +191,9 @@ function pathwaysfrom(infections::Vector{Int64}, network::Array{Bool,2})
   """
   Return all transmission pathways leading from an individual
   """
-  for i = infections
-    if i == 1
-      paths = Array[Int64[]]
-    else
+  paths = Array[Int64[]]
+  for i = 1:length(infections)
+    if i > 1
       push!(paths, Int64[])
     end
     push!(paths[i], infections[i])
