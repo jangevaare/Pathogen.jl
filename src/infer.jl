@@ -728,18 +728,18 @@ function MCMC(n::Int64,
     # Step 2b: loglikelihood calculations for Metropolis-Hastings step
     ll_proposal, network_rates_proposal = SEIR_loglikelihood(ilm_proposal[1], ilm_proposal[2], ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], ilm_trace.aug[end], obs, debug, dist)
     lp1_proposal += ll_proposal
-    lp1_proposal += loglikelihood(Exponential(ilm_proposal[4]), (ilm_trace.aug[end].infectious .- ilm_trace.aug[end].exposed)[!isnan(ilm_trace.aug[end].infectious .- ilm_trace.aug[end].exposed)])
-    lp1_proposal += loglikelihood(Exponential(ilm_proposal[5]), (ilm_trace.aug[end].removed .- ilm_trace.aug[end].infectious)[!isnan(ilm_trace.aug[end].removed .- ilm_trace.aug[end].infectious)])
-    lp1_proposal += loglikelihood(Exponential(detection_proposal[1]),(ilm_trace.aug[end].infectious .- obs.infectious)[!isnan(ilm_trace.aug[end].infectious .- obs.infectious)])
-    lp1_proposal += loglikelihood(Exponential(detection_proposal[1]),(ilm_trace.aug[end].removed .- obs.removed)[!isnan(ilm_trace.aug[end].removed .- obs.removed)])
+#     lp1_proposal += loglikelihood(Exponential(ilm_proposal[4]), (ilm_trace.aug[end].infectious .- ilm_trace.aug[end].exposed)[!isnan(ilm_trace.aug[end].infectious .- ilm_trace.aug[end].exposed)])
+#     lp1_proposal += loglikelihood(Exponential(ilm_proposal[5]), (ilm_trace.aug[end].removed .- ilm_trace.aug[end].infectious)[!isnan(ilm_trace.aug[end].removed .- ilm_trace.aug[end].infectious)])
+#     lp1_proposal += loglikelihood(Exponential(detection_proposal[1]),(ilm_trace.aug[end].infectious .- obs.infectious)[!isnan(ilm_trace.aug[end].infectious .- obs.infectious)])
+#     lp1_proposal += loglikelihood(Exponential(detection_proposal[1]),(ilm_trace.aug[end].removed .- obs.removed)[!isnan(ilm_trace.aug[end].removed .- obs.removed)])
 
     lp1, network_rates = SEIR_loglikelihood(ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.ρ[end], ilm_trace.γ[end], ilm_trace.aug[end], obs, debug, dist)
     lp1 += logprior(ilm_priors, [ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.ρ[end], ilm_trace.γ[end]])
     lp1 += logprior(detection_priors, [detection_trace.ν[end]])
-    lp1 += loglikelihood(Exponential(ilm_trace.ρ[end]), (ilm_trace.aug[end].infectious .- ilm_trace.aug[end].exposed)[!isnan(ilm_trace.aug[end].infectious .- ilm_trace.aug[end].exposed)])
-    lp1 += loglikelihood(Exponential(ilm_trace.γ[end]), (ilm_trace.aug[end].removed .- ilm_trace.aug[end].infectious)[!isnan(ilm_trace.aug[end].removed .- ilm_trace.aug[end].infectious)])
-    lp1 += loglikelihood(Exponential(detection_trace.ν[end]),(ilm_trace.aug[end].infectious .- obs.infectious)[!isnan(ilm_trace.aug[end].infectious .- obs.infectious)])
-    lp1 += loglikelihood(Exponential(detection_trace.ν[end]),(ilm_trace.aug[end].removed .- obs.removed)[!isnan(ilm_trace.aug[end].removed .- obs.removed)])
+#     lp1 += loglikelihood(Exponential(ilm_trace.ρ[end]), (ilm_trace.aug[end].infectious .- ilm_trace.aug[end].exposed)[!isnan(ilm_trace.aug[end].infectious .- ilm_trace.aug[end].exposed)])
+#     lp1 += loglikelihood(Exponential(ilm_trace.γ[end]), (ilm_trace.aug[end].removed .- ilm_trace.aug[end].infectious)[!isnan(ilm_trace.aug[end].removed .- ilm_trace.aug[end].infectious)])
+#     lp1 += loglikelihood(Exponential(detection_trace.ν[end]),(ilm_trace.aug[end].infectious .- obs.infectious)[!isnan(ilm_trace.aug[end].infectious .- obs.infectious)])
+#     lp1 += loglikelihood(Exponential(detection_trace.ν[end]),(ilm_trace.aug[end].removed .- obs.removed)[!isnan(ilm_trace.aug[end].removed .- obs.removed)])
 
     # Step 2d: accept/reject based on logposterior comparison
     reject = true
