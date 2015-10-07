@@ -51,13 +51,15 @@ for i = 1:n
   end
 
   # Tune transition matrix
-  opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.ρ ilm_trace.γ ilm_trace.η detection_trace.ν])*(2.38^2)/6.
+#   opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.ρ ilm_trace.γ ilm_trace.η detection_trace.ν])*(2.38^2)/6.
+  opt_cov = diagm(diag(cov([ilm_trace.α ilm_trace.β ilm_trace.ρ ilm_trace.γ ilm_trace.η detection_trace.ν])*(2.38^2)/6.))
 
   # Perform 1000 MCMC iterations
-  MCMC(1000, opt_cov, ilm_trace, detection_trace, ilm_priors, detection_priors, obs)
+  MCMC(1000, opt_cov, ilm_trace, detection_trace, ilm_priors, detection_priors, obs, false, false)
 end
 
-opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.ρ ilm_trace.γ ilm_trace.η detection_trace.ν])*(2.38^2)/6.
+# opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.ρ ilm_trace.γ ilm_trace.η detection_trace.ν])*(2.38^2)/6.
+  opt_cov = diagm(diag(cov([ilm_trace.α ilm_trace.β ilm_trace.ρ ilm_trace.γ ilm_trace.η detection_trace.ν])*(2.38^2)/6.))
 
 MCMC(100000, opt_cov, ilm_trace, detection_trace, ilm_priors, detection_priors, obs)
 

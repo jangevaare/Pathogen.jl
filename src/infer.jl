@@ -705,7 +705,10 @@ function MCMC(n::Int64,
       end
     end
 
-    # Step 1a: Metropolis-Hastings proposal
+    # Step 1: Data augmentation
+    push!(ilm_trace.aug, augment(ilm_trace.ρ[end], detection_trace.ν[end], ilm_trace.network[end], obs, debug))
+
+    # Step 2a: Metropolis-Hastings proposal
     # Only generate valid proposals
     step = rand(MvNormal(transition_cov))
     ilm_proposal = [ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.ρ[end], ilm_trace.γ[end]] .+ step[1:5]
@@ -722,28 +725,37 @@ function MCMC(n::Int64,
       lp1_proposal += logprior(detection_priors, detection_proposal)
     end
 
-    # Step 1b: Gibbs within Metropolis data augmentation
-    aug_proposal = augment(ilm_proposal[4], detection_proposal[1], ilm_trace.network[end], obs, debug)
-
-    # Step 1c: loglikelihood calculation for Metropolis-Hastings step
-    ll_proposal, network_rates_proposal = SEIR_loglikelihood(ilm_proposal[1], ilm_proposal[2], ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], aug_proposal, obs, debug, dist)
+    # Step 2b: loglikelihood calculations for Metropolis-Hastings step
+    ll_proposal, network_rates_proposal = SEIR_loglikelihood(ilm_proposal[1], ilm_proposal[2], ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], ilm_trace.aug[end], obs, debug, dist)
     lp1_proposal += ll_proposal
+    lp1_proposal += loglikelihood(Exponential(ilm_proposal[4]), (ilm_trace.aug[end].infectious .- ilm_trace.aug[end].exposed)[!isnan(ilm_trace.aug[end].infectious .- ilm_trace.aug[end].exposed)])
+    lp1_proposal += loglikelihood(Exponential(ilm_proposal[5]), (ilm_trace.aug[end].removed .- ilm_trace.aug[end].infectious)[!isnan(ilm_trace.aug[end].removed .- ilm_trace.aug[end].infectious)])
+    lp1_proposal += loglikelihood(Exponential(detection_proposal[1]),(ilm_trace.aug[end].infectious .- obs.infectious)[!isnan(ilm_trace.aug[end].infectious .- obs.infectious)])
+    lp1_proposal += loglikelihood(Exponential(detection_proposal[1]),(ilm_trace.aug[end].removed .- obs.removed)[!isnan(ilm_trace.aug[end].removed .- obs.removed)])
 
-    # Step 1d: accept/reject based on logposterior comparison
+    lp1, network_rates = SEIR_loglikelihood(ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.ρ[end], ilm_trace.γ[end], ilm_trace.aug[end], obs, debug, dist)
+    lp1 += logprior(ilm_priors, [ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.ρ[end], ilm_trace.γ[end]])
+    lp1 += logprior(detection_priors, [detection_trace.ν[end]])
+    lp1 += loglikelihood(Exponential(ilm_trace.ρ[end]), (ilm_trace.aug[end].infectious .- ilm_trace.aug[end].exposed)[!isnan(ilm_trace.aug[end].infectious .- ilm_trace.aug[end].exposed)])
+    lp1 += loglikelihood(Exponential(ilm_trace.γ[end]), (ilm_trace.aug[end].removed .- ilm_trace.aug[end].infectious)[!isnan(ilm_trace.aug[end].removed .- ilm_trace.aug[end].infectious)])
+    lp1 += loglikelihood(Exponential(detection_trace.ν[end]),(ilm_trace.aug[end].infectious .- obs.infectious)[!isnan(ilm_trace.aug[end].infectious .- obs.infectious)])
+    lp1 += loglikelihood(Exponential(detection_trace.ν[end]),(ilm_trace.aug[end].removed .- obs.removed)[!isnan(ilm_trace.aug[end].removed .- obs.removed)])
+
+    # Step 2d: accept/reject based on logposterior comparison
     reject = true
-    if lp1_proposal > ilm_trace.logposterior_1[end]
+    if lp1_proposal >= lp1
       reject = false
-    elseif exp(lp1_proposal - ilm_trace.logposterior_1[end]) > rand()
+    elseif exp(lp1_proposal - lp1) >= rand()
       reject = false
     end
 
     if debug
-      if lp1_proposal > ilm_trace.logposterior_1[end]
-        println("MCMC: Accepted ILM proposal ($lp1_proposal > $(ilm_trace.logposterior_1[end])) on $(i)th iteration)")
+      if lp1_proposal >= lp
+        println("MCMC: Accepted ILM proposal ($lp1_proposal > $lp1) on $(i)th iteration)")
       elseif reject == false
-        println("MCMC: Accepted ILM proposal (with probability $(exp(lp1_proposal - ilm_trace.logposterior_1[end])) on $(i)th iteration)")
+        println("MCMC: Accepted ILM proposal (with probability $(exp(lp1_proposal - lp1)) on $(i)th iteration)")
       else
-        println("MCMC: Rejected ILM proposal (with probability $(1-exp(lp1_proposal - ilm_trace.logposterior_1[end])) on $(i)th iteration)")
+        println("MCMC: Rejected ILM proposal (with probability $(1-exp(lp1_proposal - lp1)) on $(i)th iteration)")
       end
     end
 
@@ -753,19 +765,17 @@ function MCMC(n::Int64,
       ilm_proposal[3] = ilm_trace.η[end]
       ilm_proposal[4] = ilm_trace.ρ[end]
       ilm_proposal[5] = ilm_trace.γ[end]
-      aug_proposal = ilm_trace.aug[end]
-      network_rates_proposal = ilm_trace.network_rates[end]
-      lp1_proposal = ilm_trace.logposterior_1[end]
+      network_rates_proposal = network_rates
+      lp1_proposal = lp1
       detection_proposal = detection_trace.ν[end]
     end
 
-    # Step 1e: Update chain
+    # Step 2e: Update chain
     push!(ilm_trace.α, ilm_proposal[1])
     push!(ilm_trace.β, ilm_proposal[2])
     push!(ilm_trace.η, ilm_proposal[3])
     push!(ilm_trace.ρ, ilm_proposal[4])
     push!(ilm_trace.γ, ilm_proposal[5])
-    push!(ilm_trace.aug, aug_proposal)
     push!(ilm_trace.network_rates, network_rates_proposal)
     push!(ilm_trace.logposterior_1, lp1_proposal)
     push!(detection_trace.ν, detection_proposal[1])
