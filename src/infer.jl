@@ -179,7 +179,7 @@ function randprior(priors::Priors)
 end
 
 
-function propose_network(network_rates::Array{Float64, 2}, previous_network::Array{Float64, 2}, debug=false::Bool, changes=1::Int64, method="multinomial"::String)
+function propose_network(network_rates::Array{Float64, 2}, previous_network::Array{Bool, 2}, debug=false::Bool, changes=1::Int64, method="multinomial"::String)
   """
   Propose a network
   """
