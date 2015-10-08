@@ -179,13 +179,14 @@ function randprior(priors::Priors)
 end
 
 
-function propose_network(network_rates::Array{Float64, 2}, previous_network::network_rates::Array{Bool, 2}, changes=1::Int64, method="rate"::String, debug=false::Bool)
+function propose_network(network_rates::Array{Float64, 2}, previous_network::Array{Float64, 2}, changes=1::Int64, method="multinomial"::String)
   """
   Propose a network
   """
-  @assert(any(method .== ["uniform", "multinomial"]), "method must be 'uniform' or 'multinomial'. The former generates a network proposed without using rate information")
+  @assert(any(method .== ["uniform", "multinomial"]), "Network proposal method must be 'uniform' or 'multinomial'.")
   network = copy(previous_network)
   rate_totals = sum(network_rates,1)
+  @assert(changes > find(rate_totals .> 0), "Attempting to make more network changes than there are exposure events")
   changed_individuals = sample(find(rate_totals .> 0), changes, replace=false)
   network[:, changed_individuals] = false
   if method == "uniform"
@@ -193,17 +194,32 @@ function propose_network(network_rates::Array{Float64, 2}, previous_network::net
       network[sample(find(network_rates[:,i] .> 0.)), i] = true
     end
   elseif method == "multinomial"
+    @assert(size(network_rates) == size(previous_network), "A mismatch in the previous network and network rates dimensions was detected in the network proposal function")
     for i = changed_individuals
       network[findfirst(rand(Multinomial(1, network_rates[:,i]/rate_sum))), i] = true
     end
   end
   if debug
-    println("NETWORK PROPOSAL")
-    println("Individual exposure rate sums:")
-    println("$(round(sum(network_rates, 1), 3))")
+    println("Network proposal ($(sum(network)) infections total, up to $(length(changed_individuals)) changes from previous network):")
+    println("$(0 + network)")
+  end
+  return network
+end
+
+
+function propose_network(network_rates::Array{Float64, 2}, debug=false::Bool)
+  """
+  Initial network proposal
+  """
+  network = fill(false, size(network_rates))
+  rate_totals = sum(network_rates,1)
+  exposures = find(rate_totals .> 0)
+  for i = exposures
+    network[findfirst(rand(Multinomial(1, network_rates[:,i]/rate_sum))), i] = true
+  end
+  if debug
     println("Network proposal ($(sum(network)) infections total):")
     println("$(0 + network)")
-    println("")
   end
   return network
 end
