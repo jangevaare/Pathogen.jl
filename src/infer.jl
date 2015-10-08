@@ -186,7 +186,7 @@ function propose_network(network_rates::Array{Float64, 2}, previous_network::Arr
   @assert(any(method .== ["uniform", "multinomial"]), "Network proposal method must be 'uniform' or 'multinomial'.")
   network = copy(previous_network)
   rate_totals = sum(network_rates,1)
-  @assert(changes > find(rate_totals .> 0), "Attempting to make more network changes than there are exposure events")
+  @assert(changes <= sum(rate_totals .> 0), "Attempting to make more network changes than there are exposure events")
   changed_individuals = sample(find(rate_totals .> 0), changes, replace=false)
   network[:, changed_individuals] = false
   if method == "uniform"
@@ -623,8 +623,6 @@ function MCMC(n::Int64,
   Performs `n` data-augmented metropolis hastings within Gibbs MCMC iterations. Initiates a single chain by sampling from prior distribution
   """
 
-  @assert(size(transition_cov) == (7,7), "transition_cov must be a 7x7 matrix")
-
   ilm_trace, detection_trace, mutation_trace = initialize(ilm_priors, mutation_priors, detection_priors, obs, init_limit, debug, dist)
 
   return MCMC(n,
@@ -810,8 +808,6 @@ function MCMC(n::Int64,
   """
   Performs `n` data-augmented metropolis hastings within Gibbs MCMC iterations. Initiates a single chain by sampling from prior distribution
   """
-
-  @assert(size(transition_cov) == (6,6), "transition_cov must be a 6x6 matrix")
 
   ilm_trace, detection_trace = initialize(ilm_priors, detection_priors, obs, init_limit, debug, dist)
 
