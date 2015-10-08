@@ -42,7 +42,7 @@ mutation_priors = JC69_priors(Uniform(0,0.003))
 ilm_trace, detection_trace, mutation_trace = MCMC(100000, ilm_priors, detection_priors, mutation_priors, obs)
 
 # Tune the transition kernel's covariance matrix
-n = 300
+n = 100
 for i = 1:n
 
   # Progress bar
