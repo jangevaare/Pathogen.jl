@@ -179,24 +179,22 @@ function randprior(priors::Priors)
 end
 
 
-function propose_network(network_rates::Array{Float64, 2}, uniform=true::Bool, debug=false::Bool)
+function propose_network(network_rates::Array{Float64, 2}, previous_network::network_rates::Array{Bool, 2}, changes=1::Int64, method="rate"::String, debug=false::Bool)
   """
-  Propose a network based on network_rates
+  Propose a network
   """
-  network = fill(false, size(network_rates))
-  if uniform
-    for i = 1:size(network_rates,2)
-      rate_sum = sum(network_rates[:,i])
-      if rate_sum > 0.
-        network[sample(find(network_rates[:,i] .> 0.)), i] = true
-      end
+  @assert(any(method .== ["uniform", "multinomial"]), "method must be 'uniform' or 'multinomial'. The former generates a network proposed without using rate information")
+  network = copy(previous_network)
+  rate_totals = sum(network_rates,1)
+  changed_individuals = sample(find(rate_totals .> 0), changes, replace=false)
+  network[:, changed_individuals] = false
+  if method == "uniform"
+    for i = changed_individuals
+      network[sample(find(network_rates[:,i] .> 0.)), i] = true
     end
-  else
-    for i = 1:size(network_rates,2)
-      rate_sum = sum(network_rates[:,i])
-      if rate_sum > 0.
-        network[findfirst(rand(Multinomial(1, network_rates[:,i]/rate_sum))), i] = true
-      end
+  elseif method == "multinomial"
+    for i = changed_individuals
+      network[findfirst(rand(Multinomial(1, network_rates[:,i]/rate_sum))), i] = true
     end
   end
   if debug
