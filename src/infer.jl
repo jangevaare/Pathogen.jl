@@ -196,7 +196,7 @@ function propose_network(network_rates::Array{Float64, 2}, previous_network::Arr
   elseif method == "multinomial"
     @assert(size(network_rates) == size(previous_network), "A mismatch in the previous network and network rates dimensions was detected in the network proposal function")
     for i = changed_individuals
-      network[findfirst(rand(Multinomial(1, network_rates[:,i]/rate_totals))), i] = true
+      network[findfirst(rand(Multinomial(1, network_rates[:,i]/rate_totals[i]))), i] = true
     end
   end
   if debug
@@ -215,7 +215,7 @@ function propose_network(network_rates::Array{Float64, 2}, debug=false::Bool)
   rate_totals = sum(network_rates,1)
   exposures = find(rate_totals .> 0)
   for i = exposures
-    network[findfirst(rand(Multinomial(1, network_rates[:,i]/rate_totals))), i] = true
+    network[findfirst(rand(Multinomial(1, network_rates[:,i]/rate_totals[i]))), i] = true
   end
   if debug
     println("Network proposal ($(sum(network)) infections total):")
