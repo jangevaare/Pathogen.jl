@@ -13,6 +13,7 @@ function jc69(θ::Vector{Float64})
           [λ λ λ -3λ]]
 end
 
+
 function jc69q(θ::Vector{Float64})
   """
   Returns the JC69 Q matrix with parameter λ
@@ -24,11 +25,10 @@ function jc69q(θ::Vector{Float64})
           [λ λ λ -3λ]]
 end
 
+
 function jc69p(θ::Vector{Float64}, t::Float64)
   """
   Returns the JC69 P matrix with parameter λ, for time t
-
-  Molecular Evolution: a statistical approach, Z. Yang
   """
   λ = θ[1]
   p0 = 0.25 + 0.75*exp(-t*λ)
@@ -39,6 +39,7 @@ function jc69p(θ::Vector{Float64}, t::Float64)
           [p1 p1 p1 p0]]
 end
 
+
 function jc69p(θ::Vector{Float64})
   return function(t)
     jc69p(θ, t)
@@ -46,20 +47,34 @@ function jc69p(θ::Vector{Float64})
 end
 
 
-
-
-# function k80(θ::Tuple)
+# function k80q(θ::Vector{Float64})
 #   """
-#   Returns the K80 (Kimura et al., 1980) transition matrix with parameters α and β; the transition and transversion rate parameters respectively. This model assumes equal base frequencies and unique transition and transversion rates
-#   http://en.wikipedia.org/wiki/Models_of_DNA_evolution#Most_common_models_of_DNA_evolution
+#   Returns the K80 (Kimura et al., 1980) Q matrix with parameters α and β
 #   """
 #   α = θ[1]
 #   β = θ[2]
 # end
 
-# function hky85(θ::Tuple)
+
+# function k80p(θ::Vector{Float64}, t::Float64)
 #   """
-#   Returns the HKY85 (Hasegawa, Kishino and Yano 1985) transition matrix with parameters α, β, π_A, π_T, π_C, and π_G, which are the the transition and transversion rate parameters and the base specific frequencies respectively.
+#   Returns the K80 (Kimura et al., 1980) P matrix with parameters α and β, for time t
+#   """
+#   α = θ[1]
+#   β = θ[2]
+# end
+
+
+# function k80p(θ::Vector{Float64})
+#   return function(t)
+#     k80p(θ, t)
+#   end
+# end
+
+
+# function hky85q(θ::Vector{Float64})
+#   """
+#   Returns the HKY85 (Hasegawa, Kishino and Yano 1985) Q matrix with parameters α, β, π_A, π_T, π_C, and π_G
 #   """
 #   α    = θ[1]
 #   β    = θ[2]
@@ -67,4 +82,24 @@ end
 #   π_T  = θ[4]
 #   π_C  = θ[5]
 #   π_G  = θ[6]
+# end
+
+
+# function hky85p(θ::Vector{Float64}, t::Float64)
+#   """
+#   Returns the HKY85 (Hasegawa, Kishino and Yano 1985) P matrix with parameters α, β, π_A, π_T, π_C, and π_G, for time t
+#   """
+#   α    = θ[1]
+#   β    = θ[2]
+#   π_A  = θ[3]
+#   π_T  = θ[4]
+#   π_C  = θ[5]
+#   π_G  = θ[6]
+# end
+
+
+# function hky85p(θ::Vector{Float64})
+#   return function(t)
+#     hky85p(θ, t)
+#   end
 # end
