@@ -17,6 +17,25 @@ pop = create_population(init_seq, init_var)
 powerlaw = create_powerlaw(3., 5., 0.001)
 latency = create_constantrate(1/3.)
 recovery = create_constantrate(1/5.)
+
+@time while length(pop.timeline[1]) < 300
+  onestep!(ratearray, pop, powerlaw, latency, recovery, substitution)
+end
+
+# Inference
+# α, β: powerlaw exposure kernel parameters
+# η: external pressure rate
+# ρ: infectivity rate (1/mean latent period)
+# γ: recovery rate (1/mean infectious period)
+# ν: detection rate (1/mean detection lag)
+# λ: JC69 transition/transversion rate
+
+actual, obs = surveil(pop, 2.)
+
+ilm_priors = SEIR_priors(Uniform(1,5), Uniform(2,8), Gamma(0.001), Uniform(0.1,1), Uniform(0.1,1))
+detection_priors = Lag_priors(Uniform(1,3))
+
+ilm_trace, detection_trace = MCMC(100000, ilm_priors, detection_priors, obs)
 substitution = jc69q([0.001])
 
 ratearray = create_ratearray(pop, powerlaw, substitution)
@@ -35,13 +54,13 @@ end
 
 actual, obs = surveil(pop, 2.)
 
-ilm_priors = SEIR_priors(Uniform(2.5,3.5), Uniform(4.5,5.5), Gamma(0.001), Uniform(0.1,1), Uniform(0.1,1))
+ilm_priors = SEIR_priors(Uniform(1,5), Uniform(2,8), Gamma(0.001), Uniform(0.1,1), Uniform(0.1,1))
 detection_priors = Lag_priors(Uniform(1,3))
 
 ilm_trace, detection_trace = MCMC(100000, ilm_priors, detection_priors, obs)
 
 # Tune the transition kernel's covariance matrix
-n = 100
+n = 200
 for i = 1:n
   # Progress bar
   if i == 1

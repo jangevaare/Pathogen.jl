@@ -42,7 +42,7 @@ mutation_priors = JC69_priors(Uniform(0,0.003))
 ilm_trace, detection_trace, mutation_trace = MCMC(100000, ilm_priors, detection_priors, mutation_priors, obs)
 
 # Tune the transition kernel's covariance matrix
-n = 100
+n = 300
 for i = 1:n
 
   # Progress bar
@@ -120,8 +120,8 @@ draw(PNG("SEIR_traceplot.png", 20cm, 15cm),
           color="parameter",
           Geom.line,
           Theme(panel_opacity=1.,
-                panel_fill=parse(Colorant, "white"),
-                background_color=parse(Colorant, "white"))))
+                panel_fill=color("white"),
+                background_color=color("white"))))
 
 # logposterior plot (last 100k iterations)
 draw(PNG("SEIR_logposterior.png", 20cm, 15cm),

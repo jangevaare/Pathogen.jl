@@ -179,7 +179,7 @@ function randprior(priors::Priors)
 end
 
 
-function propose_network(network_rates::Array{Float64, 2}, previous_network::Array{Float64, 2}, changes=1::Int64, method="multinomial"::String, debug=false::Bool)
+function propose_network(network_rates::Array{Float64, 2}, previous_network::Array{Float64, 2}, debug=false::Bool, changes=1::Int64, method="multinomial"::String)
   """
   Propose a network
   """
@@ -493,7 +493,7 @@ function MCMC(n::Int64,
   Performs `n` data-augmented metropolis hastings within Gibbs MCMC iterations. Initiates a single chain by sampling from prior distribution
   """
 
-  @assert(size(transition_cov) == (7,7), "transition_cov must be a 7x7 matrix")
+  @assert(size(transition_cov) == (7,7), "Transition kernel's covariance matrix must be a positive definite 7x7 matrix")
 
   for i = 1:n
     # Create and incremenet progress bar
@@ -585,7 +585,7 @@ function MCMC(n::Int64,
     ilm_trace.logposterior_1[end] = lp1b_proposal
 
     # Propose new network
-    network_proposal = propose_network(ilm_trace.network_rates[end], false, debug)
+    network_proposal = propose_network(ilm_trace.network_rates[end], ilm_trace.network[end], debug)
     lp2b_proposal += network_loglikelihood(obs, aug_proposal, network_proposal, jc69p([mutation_proposal]), debug)
 
     reject = true
@@ -835,7 +835,7 @@ function MCMC(n::Int64,
   Performs `n` data-augmented metropolis hastings within Gibbs MCMC iterations. Initiates a single chain by sampling from prior distribution
   """
 
-  @assert(size(transition_cov) == (6,6), "transition_cov must be a 6x6 matrix")
+  @assert(size(transition_cov) == (6,6), "Transition kernel's covariance matrix must be a positive definite 6x6 matrix")
 
   for i = 1:n
 
@@ -848,8 +848,7 @@ function MCMC(n::Int64,
       end
     end
 
-    # Step 2a: Metropolis-Hastings proposal
-    # Only generate valid proposals
+    # Only generate valid Metropolis-Hastings proposals
     step = rand(MvNormal(transition_cov))
     ilm_proposal = [ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.ρ[end], ilm_trace.γ[end]] .+ step[1:5]
     detection_proposal = [detection_trace.ν[end]] .+ step[6]
@@ -920,7 +919,7 @@ function MCMC(n::Int64,
     ilm_trace.logposterior_1[end] = lp1b_proposal
 
     # Propose new network
-    network_proposal = propose_network(ilm_trace.network_rates[end], false, debug)
+    network_proposal = propose_network(ilm_trace.network_rates[end], ilm_trace.network[end], debug)
     lp2_proposal = 0.
 
     reject = true
