@@ -500,7 +500,7 @@ function MCMC(n::Int64,
 
     lp1b_proposal = logprior(ilm_priors, ilm_proposal)
     lp1b_proposal += logprior(detection_priors, detection_proposal)
-    lp2_proposal = logprior(mutation_priors, mutation_proposal)
+    lp2b_proposal = logprior(mutation_priors, mutation_proposal)
 
     while lp1b_proposal + lp2b_proposal == -Inf
       step = rand(MvNormal(transition_cov))
@@ -575,21 +575,21 @@ function MCMC(n::Int64,
     lp2b_proposal += network_loglikelihood(obs, aug_proposal, network_proposal, jc69p([mutation_proposal]), debug)
 
     reject = true
-    if lp2_proposal >= ilm_trace.logposterior_2[end]
+    if lp2b_proposal >= ilm_trace.logposterior_2[end]
       reject = false
-    elseif exp(lp2_proposal - ilm_trace.logposterior_2[end]) >= rand()
+    elseif exp(lp2b_proposal - ilm_trace.logposterior_2[end]) >= rand()
       reject = false
     end
 
     if reject
       network_proposal = ilm_trace.network[end]
-      lp2_proposal = ilm_trace.logposterior_2[end]
+      lp2b_proposal = ilm_trace.logposterior_2[end]
       mutation_proposal = [mutation_trace.λ[end]]
     end
 
     push!(ilm_trace.network, network_proposal)
-    push!(ilm_trace.logposterior_2, lp2_proposal)
-    push!(mutation_trace.λ, mutation_proposal)
+    ilm_trace.logposterior_2[end] = lp2b_proposal
+    push!(mutation_trace.λ, mutation_proposal[1])
   end
   return ilm_trace, detection_trace, mutation_trace
 end
