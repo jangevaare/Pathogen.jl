@@ -428,7 +428,6 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
       println("INITIALIZATON")
       println("Failed to initialize after $count attempts (lp1 = $lp1, lp2 = $lp2)")
     end
-    println("")
   end
 end
 
@@ -483,7 +482,6 @@ function MCMC(n::Int64,
   @assert(size(transition_cov) == (7,7), "transition_cov must be a 7x7 matrix")
 
   for i = 1:n
-
     # Create and incremenet progress bar
     if progress
       if i == 1
@@ -493,54 +491,65 @@ function MCMC(n::Int64,
       end
     end
 
-    # Step 1a: Metropolis-Hastings proposal
+    # Step 2a: Metropolis-Hastings proposal
     # Only generate valid proposals
     step = rand(MvNormal(transition_cov))
     ilm_proposal = [ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.ρ[end], ilm_trace.γ[end]] .+ step[1:5]
     detection_proposal = [detection_trace.ν[end]] .+ step[6]
     mutation_proposal = [mutation_trace.λ[end]] .+ step[7]
 
-    lp1_proposal = logprior(ilm_priors, ilm_proposal)
-    lp1_proposal += logprior(detection_priors, detection_proposal)
+    lp1b_proposal = logprior(ilm_priors, ilm_proposal)
+    lp1b_proposal += logprior(detection_priors, detection_proposal)
     lp2_proposal = logprior(mutation_priors, mutation_proposal)
 
-    while lp1_proposal + lp2_proposal == -Inf
+    while lp1b_proposal + lp2b_proposal == -Inf
       step = rand(MvNormal(transition_cov))
       ilm_proposal = [ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.ρ[end], ilm_trace.γ[end]] .+ step[1:5]
       detection_proposal = [detection_trace.ν[end]] .+ step[6]
       mutation_proposal = [mutation_trace.λ[end]] .+ step[7]
-      lp1_proposal = logprior(ilm_priors, ilm_proposal)
-      lp1_proposal += logprior(detection_priors, detection_proposal)
-      lp2_proposal = logprior(mutation_priors, mutation_proposal)
+      lp1b_proposal = logprior(ilm_priors, ilm_proposal)
+      lp1b_proposal += logprior(detection_priors, detection_proposal)
+      lp2b_proposal = logprior(mutation_priors, mutation_proposal)
     end
 
-    # Step 1b: Gibbs within Metropolis data augmentation
-    aug_proposal = augment(ilm_proposal[4], detection_proposal[1], ilm_trace.network[end], obs, debug)
+    # Propose new augmented data
+    aug_proposal = augment(ilm_trace.ρ[end], detection_proposal[1], ilm_trace.network[end], obs, debug)
+    lp1a_proposal, network_rates_proposal = SEIR_loglikelihood(ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.ρ[end], ilm_trace.γ[end], aug_proposal, obs, debug, dist)
+    lp1a_proposal += logprior(ilm_priors, [ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.ρ[end], ilm_trace.γ[end]])
+    lp1a_proposal += logprior(detection_priors, [detection_proposal])
+    lp2a_proposal = network_loglikelihood(obs, aug_proposal, ilm_trace.network[end], jc69p([mutation_trace.λ[end]]), debug)
+    lp2a_proposal += logprior(mutation_priors, [mutation_trace.λ[end]])
 
-    # Step 1c: loglikelihood calculation for Metropolis-Hastings step
-    ll_proposal, network_rates_proposal = SEIR_loglikelihood(ilm_proposal[1], ilm_proposal[2], ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], aug_proposal, obs, debug, dist)
-    lp1_proposal += ll_proposal
-
-    # Step 1d: accept/reject based on logposterior comparison
     reject = true
-    if lp1_proposal > ilm_trace.logposterior_1[end]
+    if lp1a_proposal + lp2a_proposal >= ilm_trace.logposterior_1[end] + ilm_trace.logposterior_2[end]
       reject = false
-    elseif exp(lp1_proposal - ilm_trace.logposterior_1[end]) > rand()
+    elseif exp(lp1a_proposal + lp2a_proposal - ilm_trace.logposterior_1[end] + ilm_trace.logposterior_2[end]) >= rand()
       reject = false
     end
 
-    if debug
-      if lp1_proposal > ilm_trace.logposterior_1[end]
-        println("MCMC")
-        println("Accepted ILM proposal ($lp1_proposal > $(ilm_trace.logposterior_1[end])) on $(i)th iteration)")
-      elseif reject == false
-        println("MCMC")
-        println("Accepted ILM proposal (with probability $(exp(lp1_proposal - ilm_trace.logposterior_1[end])) on $(i)th iteration)")
-      else
-        println("MCMC")
-        println("Rejected ILM proposal (with probability $(1-exp(lp1_proposal - ilm_trace.logposterior_1[end])) on $(i)th iteration)")
-      end
-      println("")
+    if reject
+      aug_proposal = ilm_trace.aug[end]
+      network_rates_proposal = ilm_trace.network_rates[end]
+      lp1a_proposal = ilm_trace.logposterior_1[end]
+      lp2a_proposal = ilm_trace.logposterior_2[end]
+      detection_proposal = detection_trace.ν[end]
+    end
+
+    push!(ilm_trace.aug, aug_proposal)
+    push!(ilm_trace.network_rates, network_rates_proposal)
+    push!(ilm_trace.logposterior_1, lp1a_proposal)
+    push!(ilm_trace.logposterior_2, lp2a_proposal)
+    push!(detection_trace.ν, detection_proposal[1])
+
+    # Propose new disease model parameters
+    ll_proposal, network_rates_proposal = SEIR_loglikelihood(ilm_proposal[1], ilm_proposal[2], ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], ilm_trace.aug[end], obs, debug, dist)
+    lp1b_proposal += ll_proposal
+
+    reject = true
+    if lp1b_proposal >= ilm_trace.logposterior_1[end]
+      reject = false
+    elseif exp(lp1b_proposal - ilm_trace.logposterior_1[end]) >= rand()
+      reject = false
     end
 
     if reject
@@ -549,66 +558,186 @@ function MCMC(n::Int64,
       ilm_proposal[3] = ilm_trace.η[end]
       ilm_proposal[4] = ilm_trace.ρ[end]
       ilm_proposal[5] = ilm_trace.γ[end]
-      aug_proposal = ilm_trace.aug[end]
       network_rates_proposal = ilm_trace.network_rates[end]
-      lp1_proposal = ilm_trace.logposterior_1[end]
-      detection_proposal = detection_trace.ν[end]
+      lp1b_proposal = ilm_trace.logposterior_1[end]
     end
 
-    # Step 1e: Update chain
     push!(ilm_trace.α, ilm_proposal[1])
     push!(ilm_trace.β, ilm_proposal[2])
     push!(ilm_trace.η, ilm_proposal[3])
     push!(ilm_trace.ρ, ilm_proposal[4])
     push!(ilm_trace.γ, ilm_proposal[5])
-    push!(ilm_trace.aug, aug_proposal)
-    push!(ilm_trace.network_rates, network_rates_proposal)
-    push!(ilm_trace.logposterior_1, lp1_proposal)
-    push!(detection_trace.ν, detection_proposal[1])
+    ilm_trace.network_rates[end] = network_rates_proposal
+    ilm_trace.logposterior_1[end] = lp1b_proposal
 
-    # Step 3a: Independence sampling of network
+    # Propose new network
     network_proposal = propose_network(ilm_trace.network_rates[end], false, debug)
-    lp2_proposal += network_loglikelihood(obs, ilm_trace.aug[end], network_proposal, jc69p([mutation_proposal[1]]), debug)
+    lp2b_proposal += network_loglikelihood(obs, aug_proposal, network_proposal, jc69p([mutation_proposal]), debug)
 
-    lp2 = logprior(mutation_priors, [mutation_trace.λ[end]])
-    lp2 += network_loglikelihood(obs, ilm_trace.aug[end], ilm_trace.network[end], jc69p([mutation_trace.λ[end]]), debug)
-
-    # Step 3b: Accept/reject proposal
     reject = true
-    if lp2_proposal > lp2
+    if lp2_proposal >= ilm_trace.logposterior_2[end]
       reject = false
-    elseif exp(lp2_proposal - lp2) > rand()
+    elseif exp(lp2_proposal - ilm_trace.logposterior_2[end]) >= rand()
       reject = false
     end
 
     if reject
-      lp2_proposal = lp2
       network_proposal = ilm_trace.network[end]
-      mutation_proposal = mutation_trace.λ[end]
+      lp2_proposal = ilm_trace.logposterior_2[end]
+      mutation_proposal = [mutation_trace.λ[end]]
     end
 
-    if debug
-      if lp2_proposal > lp2
-        println("MCMC")
-        println("Accepted ILM proposal ($lp2_proposal > $lp2) on $(i)th iteration")
-      elseif reject == false
-        println("MCMC")
-        println("Accepted ILM proposal (with probability $(exp(lp2_proposal - lp2))) on $(i)th iteration")
-      else
-        println("MCMC")
-        println("Rejected ILM proposal (with probability $(1-exp(lp2_proposal - lp2))) on $(i)th iteration")
-      end
-      println("")
-    end
-
-    push!(ilm_trace.logposterior_2, lp2_proposal)
     push!(ilm_trace.network, network_proposal)
-    push!(mutation_trace.λ, mutation_proposal[1])
+    push!(ilm_trace.logposterior_2, lp2_proposal)
+    push!(mutation_trace.λ, mutation_proposal)
   end
-
   return ilm_trace, detection_trace, mutation_trace
 end
 
+# function MCMC(n::Int64,
+#               transition_cov::Array{Float64},
+#               ilm_trace::SEIR_trace,
+#               detection_trace::Lag_trace,
+#               mutation_trace::JC69_trace,
+#               ilm_priors::SEIR_priors,
+#               detection_priors::Lag_priors,
+#               mutation_priors::JC69_priors,
+#               obs::SEIR_observed,
+#               debug=false::Bool,
+#               progress=true::Bool,
+#               dist=Euclidean())
+#   """
+#   Performs `n` data-augmented metropolis hastings within Gibbs MCMC iterations. Initiates a single chain by sampling from prior distribution
+#   """
+
+#   @assert(size(transition_cov) == (7,7), "transition_cov must be a 7x7 matrix")
+
+#   for i = 1:n
+
+#     # Create and incremenet progress bar
+#     if progress
+#       if i == 1
+#         progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 30)
+#       else
+#         next!(progressbar)
+#       end
+#     end
+
+#     # Step 1a: Metropolis-Hastings proposal
+#     # Only generate valid proposals
+#     step = rand(MvNormal(transition_cov))
+#     ilm_proposal = [ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.ρ[end], ilm_trace.γ[end]] .+ step[1:5]
+#     detection_proposal = [detection_trace.ν[end]] .+ step[6]
+#     mutation_proposal = [mutation_trace.λ[end]] .+ step[7]
+
+#     lp1_proposal = logprior(ilm_priors, ilm_proposal)
+#     lp1_proposal += logprior(detection_priors, detection_proposal)
+#     lp2_proposal = logprior(mutation_priors, mutation_proposal)
+
+#     while lp1_proposal + lp2_proposal == -Inf
+#       step = rand(MvNormal(transition_cov))
+#       ilm_proposal = [ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.ρ[end], ilm_trace.γ[end]] .+ step[1:5]
+#       detection_proposal = [detection_trace.ν[end]] .+ step[6]
+#       mutation_proposal = [mutation_trace.λ[end]] .+ step[7]
+#       lp1_proposal = logprior(ilm_priors, ilm_proposal)
+#       lp1_proposal += logprior(detection_priors, detection_proposal)
+#       lp2_proposal = logprior(mutation_priors, mutation_proposal)
+#     end
+
+#     # Step 1b: Gibbs within Metropolis data augmentation
+#     aug_proposal = augment(ilm_proposal[4], detection_proposal[1], ilm_trace.network[end], obs, debug)
+
+#     # Step 1c: loglikelihood calculation for Metropolis-Hastings step
+#     ll_proposal, network_rates_proposal = SEIR_loglikelihood(ilm_proposal[1], ilm_proposal[2], ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], aug_proposal, obs, debug, dist)
+#     lp1_proposal += ll_proposal
+
+#     # Step 1d: accept/reject based on logposterior comparison
+#     reject = true
+#     if lp1_proposal > ilm_trace.logposterior_1[end]
+#       reject = false
+#     elseif exp(lp1_proposal - ilm_trace.logposterior_1[end]) > rand()
+#       reject = false
+#     end
+
+#     if debug
+#       if lp1_proposal > ilm_trace.logposterior_1[end]
+#         println("MCMC")
+#         println("Accepted ILM proposal ($lp1_proposal > $(ilm_trace.logposterior_1[end])) on $(i)th iteration)")
+#       elseif reject == false
+#         println("MCMC")
+#         println("Accepted ILM proposal (with probability $(exp(lp1_proposal - ilm_trace.logposterior_1[end])) on $(i)th iteration)")
+#       else
+#         println("MCMC")
+#         println("Rejected ILM proposal (with probability $(1-exp(lp1_proposal - ilm_trace.logposterior_1[end])) on $(i)th iteration)")
+#       end
+#       println("")
+#     end
+
+#     if reject
+#       ilm_proposal[1] = ilm_trace.α[end]
+#       ilm_proposal[2] = ilm_trace.β[end]
+#       ilm_proposal[3] = ilm_trace.η[end]
+#       ilm_proposal[4] = ilm_trace.ρ[end]
+#       ilm_proposal[5] = ilm_trace.γ[end]
+#       aug_proposal = ilm_trace.aug[end]
+#       network_rates_proposal = ilm_trace.network_rates[end]
+#       lp1_proposal = ilm_trace.logposterior_1[end]
+#       detection_proposal = detection_trace.ν[end]
+#     end
+
+#     # Step 1e: Update chain
+#     push!(ilm_trace.α, ilm_proposal[1])
+#     push!(ilm_trace.β, ilm_proposal[2])
+#     push!(ilm_trace.η, ilm_proposal[3])
+#     push!(ilm_trace.ρ, ilm_proposal[4])
+#     push!(ilm_trace.γ, ilm_proposal[5])
+#     push!(ilm_trace.aug, aug_proposal)
+#     push!(ilm_trace.network_rates, network_rates_proposal)
+#     push!(ilm_trace.logposterior_1, lp1_proposal)
+#     push!(detection_trace.ν, detection_proposal[1])
+
+#     # Step 3a: Independence sampling of network
+#     network_proposal = propose_network(ilm_trace.network_rates[end], false, debug)
+#     lp2_proposal += network_loglikelihood(obs, ilm_trace.aug[end], network_proposal, jc69p([mutation_proposal[1]]), debug)
+
+#     lp2 = logprior(mutation_priors, [mutation_trace.λ[end]])
+#     lp2 += network_loglikelihood(obs, ilm_trace.aug[end], ilm_trace.network[end], jc69p([mutation_trace.λ[end]]), debug)
+
+#     # Step 3b: Accept/reject proposal
+#     reject = true
+#     if lp2_proposal > lp2
+#       reject = false
+#     elseif exp(lp2_proposal - lp2) > rand()
+#       reject = false
+#     end
+
+#     if reject
+#       lp2_proposal = lp2
+#       network_proposal = ilm_trace.network[end]
+#       mutation_proposal = mutation_trace.λ[end]
+#     end
+
+#     if debug
+#       if lp2_proposal > lp2
+#         println("MCMC")
+#         println("Accepted ILM proposal ($lp2_proposal > $lp2) on $(i)th iteration")
+#       elseif reject == false
+#         println("MCMC")
+#         println("Accepted ILM proposal (with probability $(exp(lp2_proposal - lp2))) on $(i)th iteration")
+#       else
+#         println("MCMC")
+#         println("Rejected ILM proposal (with probability $(1-exp(lp2_proposal - lp2))) on $(i)th iteration")
+#       end
+#       println("")
+#     end
+
+#     push!(ilm_trace.logposterior_2, lp2_proposal)
+#     push!(ilm_trace.network, network_proposal)
+#     push!(mutation_trace.λ, mutation_proposal[1])
+#   end
+
+#   return ilm_trace, detection_trace, mutation_trace
+# end
 
 function MCMC(n::Int64,
               transition_cov::Array{Float64},
@@ -723,7 +852,7 @@ function MCMC(n::Int64,
     end
 
     # Propose new augmented data
-    aug_proposal = augment(ilm_trace.ρ[end], detection_proposal, ilm_trace.network[end], obs, debug)
+    aug_proposal = augment(ilm_trace.ρ[end], detection_proposal[1], ilm_trace.network[end], obs, debug)
     lp1a_proposal, network_rates_proposal = SEIR_loglikelihood(ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.ρ[end], ilm_trace.γ[end], aug_proposal, obs, debug, dist)
     lp1a_proposal += logprior(ilm_priors, [ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.ρ[end], ilm_trace.γ[end]])
     lp1a_proposal += logprior(detection_priors, [detection_proposal])
@@ -764,7 +893,7 @@ function MCMC(n::Int64,
       ilm_proposal[3] = ilm_trace.η[end]
       ilm_proposal[4] = ilm_trace.ρ[end]
       ilm_proposal[5] = ilm_trace.γ[end]
-      network_rates_proposal = network_rates
+      network_rates_proposal = ilm_trace.network_rates[end]
       lp1b_proposal = ilm_trace.logposterior_1[end]
     end
 
@@ -774,7 +903,7 @@ function MCMC(n::Int64,
     push!(ilm_trace.ρ, ilm_proposal[4])
     push!(ilm_trace.γ, ilm_proposal[5])
     ilm_trace.network_rates[end] = network_rates_proposal
-    ilm_trace.logposterior_1[end] = lp1_proposal
+    ilm_trace.logposterior_1[end] = lp1b_proposal
 
     # Propose new network
     network_proposal = propose_network(ilm_trace.network_rates[end], false, debug)
