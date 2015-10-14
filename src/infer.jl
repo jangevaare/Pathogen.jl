@@ -449,77 +449,65 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
   """
   Initiate an Trace object by sampling from specified prior distributions
   """
-  ilm_params = randprior(ilm_priors)
-  mutation_params = randprior(mutation_priors)
-  detection_params = randprior(detection_priors)
-  aug = propose_augment(ilm_params[4], detection_params[1], obs, debug)
-  lp1, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, debug, dist)
-  count = 1
+  lp == -Inf
+  count = 0
 
   # Retry initialization until non-negative infinity loglikelihood
-  while lp1 == -Inf && count < limit
+  while lp == -Inf && count < limit
     count += 1
     ilm_params = randprior(ilm_priors)
     mutation_params = randprior(mutation_priors)
     detection_params = randprior(detection_priors)
     aug = propose_augment(ilm_params[4], detection_params[1], obs, debug)
-    lp1, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, debug, dist)
-    lp1 += logprior(ilm_priors, ilm_params) + logprior(detection_priors, detection_params)
+    lp, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, debug, dist)
+    lp += logprior(ilm_priors, ilm_params)
+    lp += detection_loglikelihood(detection_params, obs, aug)
+    lp += logprior(detection_priors, detection_params)
+    if lp > -Inf
+      network = propose_network(network_rates, debug)
+      lp += phylogenetic_network_loglikelihood(obs, aug, network, jc69p([mutation_params[1]]), debug)
+      lp += exposure_network_loglikelihood(network, network_rates, debug)
+      lp += logprior(mutation_priors, mutation_params)
+    end
   end
 
-  if count < limit
-    network = propose_network(network_rates, debug)
-    lp2 = network_loglikelihood(obs, aug, network, jc69p([mutation_params[1]]), debug)
-    lp2 += logprior(mutation_priors, mutation_params)
-
-    while lp1 + lp2 == -Inf && count < limit
-      count += 1
-      lp1, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, debug, dist)
-      lp1 += logprior(ilm_priors, ilm_params) + logprior(detection_priors, detection_params)
-      network = propose_network(network_rates, debug)
-      lp2 = network_loglikelihood(obs, aug, network, jc69p([mutation_params[1]]), debug)
-      lp2 += logprior(mutation_priors, mutation_params)
-    end
-
-    if count < limit && lp1 + lp2 > -Inf
-      println("INITIALIZATON")
-      println("Successful on attempt $count (lp1 = $lp1, lp2 = $lp2)")
-      return SEIR_trace([ilm_params[1]], [ilm_params[2]], [ilm_params[3]], [ilm_params[4]], [ilm_params[5]], [aug], Array[network_rates], Array[network], [lp1], [lp2]), Lag_trace([detection_params[1]]), JC69_trace([mutation_params[1]])
-    else
-      println("INITIALIZATON")
-      println("Failed to initialize after $count attempts (lp1 = $lp1, lp2 = $lp2)")
-    end
+  if count < limit && lp > -Inf
+    println("Successful initialization on attempt $count (lp = $lp)")
+    return SEIR_trace([ilm_params[1]], [ilm_params[2]], [ilm_params[3]], [ilm_params[4]], [ilm_params[5]], [aug], Array[network_rates], Array[network], [lp1], [lp2]), Lag_trace([detection_params[1]]), JC69_trace([mutation_params[1]])
+  else
+    println("Failed to initialize after $count attempts (lp = $lp)")
   end
 end
 
 
-function initialize(ilm_priors::SEIR_priors, detection_priors::Lag_priors, obs::SEIR_observed, limit=500::Int, debug=false::Bool, dist=Euclidean())
+function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detection_priors::Lag_priors, obs::SEIR_observed, limit=500::Int, debug=false::Bool, dist=Euclidean())
   """
   Initiate an Trace object by sampling from specified prior distributions
   """
-  ilm_params = randprior(ilm_priors)
-  detection_params = randprior(detection_priors)
-  aug = propose_augment(ilm_params[4], detection_params[1], obs, debug)
-  lp1, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, debug, dist)
-  lp1 += logprior(ilm_priors, ilm_params) + logprior(detection_priors, detection_params)
-  count = 1
+  lp == -Inf
+  count = 0
 
   # Retry initialization until non-negative infinity loglikelihood
-  while lp1 == -Inf && count < limit
+  while lp == -Inf && count < limit
     count += 1
     ilm_params = randprior(ilm_priors)
     detection_params = randprior(detection_priors)
     aug = propose_augment(ilm_params[4], detection_params[1], obs, debug)
-    lp1, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, debug, dist)
-    lp1 += logprior(ilm_priors, ilm_params) + logprior(detection_priors, detection_params)
+    lp, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, debug, dist)
+    lp += logprior(ilm_priors, ilm_params)
+    lp += detection_loglikelihood(detection_params, obs, aug)
+    lp += logprior(detection_priors, detection_params)
+    if lp > -Inf
+      network = propose_network(network_rates, debug)
+      lp += exposure_network_loglikelihood(network, network_rates, debug)
+    end
   end
 
-  if count < limit
-    network = propose_network(network_rates, debug)
-    println("Successful initalization on attempt $count (marginal log posterior = $lp1)")
-    return SEIR_trace([ilm_params[1]], [ilm_params[2]], [ilm_params[3]], [ilm_params[4]], [ilm_params[5]], [aug], Array[network_rates], Array[network], [lp1], [0]), Lag_trace([detection_params[1]])
+  if count < limit && lp > -Inf
+    println("Successful initialization on attempt $count (lp = $lp)")
+    return SEIR_trace([ilm_params[1]], [ilm_params[2]], [ilm_params[3]], [ilm_params[4]], [ilm_params[5]], [aug], Array[network_rates], Array[network], [lp1], [lp2]), Lag_trace([detection_params[1]]), JC69_trace([mutation_params[1]])
   else
-    println("Failed to initialize after $count attempts (marginal log posterior = $lp1)")
+    println("Failed to initialize after $count attempts (lp = $lp)")
   end
 end
 
