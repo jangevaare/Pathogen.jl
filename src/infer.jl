@@ -62,16 +62,15 @@ end
 surveil(population, Inf) = surveil(population::Population)
 
 
-function augment(ρ::Float64, ν::Float64, network::Array{Bool, 2}, obs::SEIR_observed, debug=false::Bool)
+function propose_augment(changed_individuals::Vector{Int64}, ρ::Float64, ν::Float64, network::Array{Bool, 2}, previous_aug::SEIR_augmented, obs::SEIR_observed, debug=false::Bool)
   """
-  Augments surveilance data, organizes observations, based on ρ, ν, and a transmission network
+  Proposes augmented data for a specified vector of `changed_individuals`
   """
-  exposed_augmented = fill(NaN, length(obs.infectious))
-  infectious_augmented = fill(NaN, length(obs.infectious))
-  removed_augmented = fill(NaN, length(obs.removed))
-  augment_order = pathwayfrom(0, network)
+  exposed_augmented = copy(previous_aug.exposed)
+  infectious_augmented = copy(previous_aug.infectious)
+  removed_augmented = copy(previous_aug.removed)
 
-  for i = augment_order[2:end]
+  for i = changed_individuals
     if ν < Inf
       pathway_out = pathwayfrom(i, network)
       pathway_in = pathwayto(i, network)
@@ -114,10 +113,21 @@ function augment(ρ::Float64, ν::Float64, network::Array{Bool, 2}, obs::SEIR_ob
 end
 
 
-augment(ρ, Inf, network, obs, debug) = augment(ρ::Float64, network::array{Bool, 2}, obs::SEIR_observed, debug=false::Bool)
+function propose_augment(ρ::Float64, ν::Float64, network::Array{Bool, 2}, previous_aug::SEIR_augmented, obs::SEIR_observed, changes=1::Int64, debug=false::Bool)
+  """
+  Proposes augmented data by making random selection of individual `changes` to augmented data
+  """
+  if changes == 0
+    changed_individuals = pathwayfrom(0, network)
+  else
+    changed_individuals = sample(pathwayfrom(0, network), changes, replace=false)
+  end
+  return propose_augment(changed_individuals, ρ, ν, network, previous_aug, obs, debug)
+end
 
+propose_augment(ρ, Inf, network, previous_aug, obs, changes, debug) = propose_augment(ρ::Float64, network::Array{Bool, 2}, previous_aug::SEIR_augmented, obs::SEIR_observed, changes=1::Int64, debug=false::Bool)
 
-function augment(ρ::Float64, ν::Float64, obs::SEIR_observed, debug=false::Bool)
+function propose_augment(ρ::Float64, ν::Float64, obs::SEIR_observed, debug=false::Bool)
   """
   Augments surveilance data, organizes observations
   """
@@ -152,7 +162,7 @@ function augment(ρ::Float64, ν::Float64, obs::SEIR_observed, debug=false::Bool
 end
 
 
-augment(ρ, Inf, obs, debug) = augment(ρ::Float64, obs::SEIR_observed, debug=false::Bool)
+propose_augment(ρ, Inf, obs, debug) = propose_augment(ρ::Float64, obs::SEIR_observed, debug=false::Bool)
 
 
 function logprior(priors::Priors, params::Vector{Float64})
@@ -183,11 +193,23 @@ function propose_network(network_rates::Array{Float64, 2}, previous_network::Arr
   """
   Propose a network
   """
+  @assert(changes <= sum(rate_totals .> 0), "Attempting to make more network changes than there are exposure events")
+  if changes == 0
+    changed_individuals = find(rate_totals .> 0)
+  else
+    changed_individuals = sample(find(rate_totals .> 0), changes, replace=false)
+  end
+  return propose_network(changed_individuals, network_rates, previous_network, debug, method)
+end
+
+
+function propose_network(changed_individuals::Vector{Int64}, network_rates::Array{Float64, 2}, previous_network::Array{Bool, 2}, debug=false::Bool, method="multinomial"::String)
+  """
+  Propose a network
+  """
   @assert(any(method .== ["uniform", "multinomial"]), "Network proposal method must be 'uniform' or 'multinomial'.")
   network = copy(previous_network)
   rate_totals = sum(network_rates,1)
-  @assert(changes <= sum(rate_totals .> 0), "Attempting to make more network changes than there are exposure events")
-  changed_individuals = sample(find(rate_totals .> 0), changes, replace=false)
   network[:, changed_individuals] = false
   if method == "uniform"
     for i = changed_individuals

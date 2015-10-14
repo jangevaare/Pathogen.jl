@@ -53,7 +53,7 @@ export
 
   # infer.jl
   surveil,
-  augment,
+  propose_augment,
   logprior,
   rand_prior,
   propose_network,
