@@ -299,14 +299,13 @@ function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, network::Array{B
 end
 
 
-function network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmented, network::Array{Bool, 2}, p_matrix::Function, debug=false::Bool)
+function phylogenetic_network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmented, network::Array{Bool, 2}, p_matrix::Function, debug=false::Bool)
   """
-  Loglikelihood for an entire transmission network
+  Loglikelihood for a transmission network based on sequence data and event timing
   """
   ll = 0.
   infected = find(sum(network, 1))
   seq_dist = seq_distances(obs, aug, network, debug)
-
   for i = 1:length(infected)
     for j = 1:(i-1)
       ll += sum(log(p_matrix(seq_dist[infected[i],infected[j]]))[sub2ind((4,4), obs.seq[infected[i]], obs.seq[infected[j]])])
@@ -315,6 +314,30 @@ function network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmented, network:
   return ll
 end
 
+
+function exposure_network_loglikelihood(network::Array{Bool, 2}, network_rates::Array{Float64}, debug=false::Bool)
+  """
+  Loglikelihood for a transmission network based on exposure rates
+  """
+  ll = 0.
+  infected = find(sum(network, 1))
+  for i = infected
+     ll += log(network_rates[findfirst(network[:,i]),i]/sum(network_rates[:,i]))
+  end
+  return ll
+end
+
+function detection_loglikelihood(detection_params::Vector{Float64}, obs::SEIR_observed, aug::SEIR_augmented)
+  """
+  loglikelihood for detection...
+  """
+  ll = 0
+  if length(detection_params) == 1
+    ll += loglikelihood(Exponential(1/detection_params[1]), (aug.removed .- obs.removed)[!isnan(obs.removed)])
+    ll += loglikelihood(Exponential(1/detection_params[1]), (aug.infectious .- obs.infectious)[!isnan(obs.infectious)])
+  end
+  return ll
+end
 
 function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, γ::Float64, aug::SEIR_augmented, obs::SEIR_observed, debug=false::Bool, dist=Euclidean())
   """
@@ -427,7 +450,7 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
   ilm_params = randprior(ilm_priors)
   mutation_params = randprior(mutation_priors)
   detection_params = randprior(detection_priors)
-  aug = augment(ilm_params[4], detection_params[1], obs, debug)
+  aug = propose_augment(ilm_params[4], detection_params[1], obs, debug)
   lp1, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, debug, dist)
   count = 1
 
@@ -437,7 +460,7 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
     ilm_params = randprior(ilm_priors)
     mutation_params = randprior(mutation_priors)
     detection_params = randprior(detection_priors)
-    aug = augment(ilm_params[4], detection_params[1], obs, debug)
+    aug = propose_augment(ilm_params[4], detection_params[1], obs, debug)
     lp1, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, debug, dist)
     lp1 += logprior(ilm_priors, ilm_params) + logprior(detection_priors, detection_params)
   end
@@ -474,7 +497,7 @@ function initialize(ilm_priors::SEIR_priors, detection_priors::Lag_priors, obs::
   """
   ilm_params = randprior(ilm_priors)
   detection_params = randprior(detection_priors)
-  aug = augment(ilm_params[4], detection_params[1], obs, debug)
+  aug = propose_augment(ilm_params[4], detection_params[1], obs, debug)
   lp1, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, debug, dist)
   lp1 += logprior(ilm_priors, ilm_params) + logprior(detection_priors, detection_params)
   count = 1
@@ -484,7 +507,7 @@ function initialize(ilm_priors::SEIR_priors, detection_priors::Lag_priors, obs::
     count += 1
     ilm_params = randprior(ilm_priors)
     detection_params = randprior(detection_priors)
-    aug = augment(ilm_params[4], detection_params[1], obs, debug)
+    aug = propose_augment(ilm_params[4], detection_params[1], obs, debug)
     lp1, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, debug, dist)
     lp1 += logprior(ilm_priors, ilm_params) + logprior(detection_priors, detection_params)
   end

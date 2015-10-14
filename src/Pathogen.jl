@@ -58,7 +58,9 @@ export
   rand_prior,
   propose_network,
   seq_distances,
-  network_loglikelihood,
+  phylogenetic_network_loglikelihood,
+  exposure_network_loglikelihood,
+  detection_loglikelihood,
   SEIR_loglikelihood,
   initialize,
   MCMC
