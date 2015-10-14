@@ -327,6 +327,7 @@ function exposure_network_loglikelihood(network::Array{Bool, 2}, network_rates::
   return ll
 end
 
+
 function detection_loglikelihood(detection_params::Vector{Float64}, obs::SEIR_observed, aug::SEIR_augmented)
   """
   loglikelihood for detection...
@@ -338,6 +339,7 @@ function detection_loglikelihood(detection_params::Vector{Float64}, obs::SEIR_ob
   end
   return ll
 end
+
 
 function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, γ::Float64, aug::SEIR_augmented, obs::SEIR_observed, debug=false::Bool, dist=Euclidean())
   """
