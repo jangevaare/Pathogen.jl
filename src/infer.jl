@@ -469,14 +469,10 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
       lp += exposure_network_loglikelihood(network, network_rates, debug)
       lp += logprior(mutation_priors, mutation_params)
     end
+    @assert(!isnan(lp), "No events to model...")
   end
-
-  if count < limit && lp > -Inf
-    println("Successful initialization on attempt $count (lp = $lp)")
-    return SEIR_trace([ilm_params[1]], [ilm_params[2]], [ilm_params[3]], [ilm_params[4]], [ilm_params[5]], [aug], Array[network_rates], Array[network], [lp1], [lp2]), Lag_trace([detection_params[1]]), JC69_trace([mutation_params[1]])
-  else
-    println("Failed to initialize after $count attempts (lp = $lp)")
-  end
+ @assert(count < limit && lp > -Inf, "Failed to initialize after $count attempts (lp = $lp)")
+  return SEIR_trace([ilm_params[1]], [ilm_params[2]], [ilm_params[3]], [ilm_params[4]], [ilm_params[5]], [aug], Array[network_rates], Array[network], [lp1], [lp2]), Lag_trace([detection_params[1]]), JC69_trace([mutation_params[1]])
 end
 
 
@@ -501,14 +497,11 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
       network = propose_network(network_rates, debug)
       lp += exposure_network_loglikelihood(network, network_rates, debug)
     end
+    @assert(!isnan(lp), "No events to model...")
   end
 
-  if count < limit && lp > -Inf
-    println("Successful initialization on attempt $count (lp = $lp)")
-    return SEIR_trace([ilm_params[1]], [ilm_params[2]], [ilm_params[3]], [ilm_params[4]], [ilm_params[5]], [aug], Array[network_rates], Array[network], [lp1], [lp2]), Lag_trace([detection_params[1]]), JC69_trace([mutation_params[1]])
-  else
-    println("Failed to initialize after $count attempts (lp = $lp)")
-  end
+  @assert(count < limit && lp > -Inf, "Failed to initialize after $count attempts")
+  return SEIR_trace([ilm_params[1]], [ilm_params[2]], [ilm_params[3]], [ilm_params[4]], [ilm_params[5]], [aug], Array[network_rates], Array[network], [lp1], [lp2]), Lag_trace([detection_params[1]]), JC69_trace([mutation_params[1]])
 end
 
 
