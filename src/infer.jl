@@ -449,7 +449,7 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
   """
   Initiate an Trace object by sampling from specified prior distributions
   """
-  lp == -Inf
+  lp = -Inf
   count = 0
 
   # Retry initialization until non-negative infinity loglikelihood
@@ -484,7 +484,7 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
   """
   Initiate an Trace object by sampling from specified prior distributions
   """
-  lp == -Inf
+  lp = -Inf
   count = 0
 
   # Retry initialization until non-negative infinity loglikelihood
@@ -674,9 +674,8 @@ function MCMC(n::Int64,
   @assert(size(transition_cov) == (6,6), "Transition kernel's covariance matrix must be a positive definite 6x6 matrix")
 
   for i = 1:n
-
     # COMPLETE THIS PART #
-
+  end
   return ilm_trace, detection_trace
 end
 

@@ -65,7 +65,7 @@ MCMC(100000, opt_cov, ilm_trace, detection_trace, mutation_trace, ilm_priors, de
 
 # Simulation/Maximum posteriori visualization
 images = 500
-max_tracelp=findfirst(ilm_trace.logposterior_1 .+ ilm_trace.logposterior_2.==maximum(ilm_trace.logposterior_1 .+ ilm_trace.logposterior_2))
+max_tracelp=findfirst(ilm_trace.logposterior.==maximum(ilm_trace.logposterior))
 
 for time = 1:images
   states, routes = plotdata(pop, (time*maximum([maximum(ilm_trace.aug[max_tracelp]), maximum(obs)])/images))
