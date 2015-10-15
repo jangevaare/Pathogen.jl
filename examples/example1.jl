@@ -21,7 +21,7 @@ substitution = jc69q([0.001])
 
 ratearray = create_ratearray(pop, powerlaw, substitution)
 
-@time while length(pop.timeline[1]) < 300.
+while length(pop.timeline[1]) < 300.
   onestep!(ratearray, pop, powerlaw, latency, recovery, substitution)
 end
 
