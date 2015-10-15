@@ -429,7 +429,9 @@ function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, 
       # Update exposure rates for rest of susceptible population
       for j = 1:size(rate_array, 2)
         if j != id[1] && rate_array[1, j] > 0.
-          rate_array[id[1] + 1, j] = α*evaluate(dist, obs.covariates[id[1]], obs.covariates[j])^-β
+          rate_array[id[1] + 1, j] = α*evaluate(dist,
+                                                obs.covariates[id[1]],
+                                                obs.covariates[j])^-β
         end
       end
 
@@ -471,25 +473,51 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
     mutation_params = randprior(mutation_priors)
     detection_params = randprior(detection_priors)
     aug = propose_augment(ilm_params[4], detection_params[1], obs, debug)
-    lp, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, debug, dist)
+    lp, network_rates = SEIR_loglikelihood(ilm_params[1],
+                                           ilm_params[2],
+                                           ilm_params[3],
+                                           ilm_params[4],
+                                           ilm_params[5],
+                                           aug,
+                                           obs,
+                                           debug,
+                                           dist)
     lp += logprior(ilm_priors, ilm_params)
     lp += detection_loglikelihood(detection_params, obs, aug)
     lp += logprior(detection_priors, detection_params)
     if lp > -Inf
       network = propose_network(network_rates, debug)
-      lp += phylogenetic_network_loglikelihood(obs, aug, network, jc69p([mutation_params[1]]), debug)
+      lp += phylogenetic_network_loglikelihood(obs,
+                                               aug,
+                                               network,
+                                               jc69p([mutation_params[1]]),
+                                               debug)
       lp += exposure_network_loglikelihood(network, network_rates, debug)
       lp += logprior(mutation_priors, mutation_params)
     end
     if lp > -Inf
-      return SEIR_trace([ilm_params[1]], [ilm_params[2]], [ilm_params[3]], [ilm_params[4]], [ilm_params[5]], [aug], Array[network_rates], Array[network], [lp]), Lag_trace([detection_params[1]]), JC69_trace([mutation_params[1]])
+      return SEIR_trace([ilm_params[1]],
+                        [ilm_params[2]],
+                        [ilm_params[3]],
+                        [ilm_params[4]],
+                        [ilm_params[5]],
+                        [aug],
+                        Array[network_rates],
+                        Array[network], [lp]),
+              Lag_trace([detection_params[1]]),
+              JC69_trace([mutation_params[1]])
     end
     @assert(count < limit && lp > -Inf, "Failed to initialize")
   end
 end
 
 
-function initialize(ilm_priors::SEIR_priors, detection_priors::Lag_priors, obs::SEIR_observed, limit=500::Int, debug=false::Bool, dist=Euclidean())
+function initialize(ilm_priors::SEIR_priors,
+                    detection_priors::Lag_priors,
+                    obs::SEIR_observed,
+                    limit=500::Int,
+                    debug=false::Bool,
+                    dist=Euclidean())
   """
   Initiate an Trace object by sampling from specified prior distributions
   """
@@ -502,7 +530,15 @@ function initialize(ilm_priors::SEIR_priors, detection_priors::Lag_priors, obs::
     ilm_params = randprior(ilm_priors)
     detection_params = randprior(detection_priors)
     aug = propose_augment(ilm_params[4], detection_params[1], obs, debug)
-    lp, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, debug, dist)
+    lp, network_rates = SEIR_loglikelihood(ilm_params[1],
+                                           ilm_params[2],
+                                           ilm_params[3],
+                                           ilm_params[4],
+                                           ilm_params[5],
+                                           aug,
+                                           obs,
+                                           debug,
+                                           dist)
     lp += logprior(ilm_priors, ilm_params)
     lp += detection_loglikelihood(detection_params, obs, aug)
     lp += logprior(detection_priors, detection_params)
@@ -511,7 +547,15 @@ function initialize(ilm_priors::SEIR_priors, detection_priors::Lag_priors, obs::
       lp += exposure_network_loglikelihood(network, network_rates, debug)
     end
     if lp > -Inf
-      return SEIR_trace([ilm_params[1]], [ilm_params[2]], [ilm_params[3]], [ilm_params[4]], [ilm_params[5]], [aug], Array[network_rates], Array[network], [lp]), Lag_trace([detection_params[1]])
+      return SEIR_trace([ilm_params[1]],
+                        [ilm_params[2]],
+                        [ilm_params[3]],
+                        [ilm_params[4]],
+                        [ilm_params[5]],
+                        [aug],
+                        Array[network_rates],
+                        Array[network], [lp]),
+              Lag_trace([detection_params[1]])
     end
     @assert(count < limit && lp > -Inf, "Failed to initialize")
   end
@@ -549,7 +593,11 @@ function MCMC(n::Int64,
 
     while lp == -Inf
       step = rand(MvNormal(transition_cov))
-      ilm_proposal = [ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.ρ[end], ilm_trace.γ[end]] .+ step[1:5]
+      ilm_proposal = [ilm_trace.α[end],
+                      ilm_trace.β[end],
+                      ilm_trace.η[end],
+                      ilm_trace.ρ[end],
+                      ilm_trace.γ[end]] .+ step[1:5]
       detection_proposal = [detection_trace.ν[end]] .+ step[1]
       mutation_proposal = [mutation_trace.λ[end]] .+ step[2]
       lp = logprior(ilm_priors, ilm_proposal)
@@ -561,16 +609,37 @@ function MCMC(n::Int64,
     changed_individuals = sample(findn(ilm_trace.network[end])[2], 1, replace=false)
 
     # Generate data augmentation proposal
-    aug = propose_augment(changed_individuals, ilm_proposal[4], detection_proposal[1], ilm_trace.network[end], ilm_trace.aug[end], obs, debug)
+    aug = propose_augment(changed_individuals,
+                          ilm_proposal[4],
+                          detection_proposal[1],
+                          ilm_trace.network[end],
+                          ilm_trace.aug[end],
+                          obs,
+                          debug)
 
     # SEIR loglikelihood
-    ll, network_rates = SEIR_loglikelihood(ilm_proposal[1], ilm_proposal[2],ilm_proposal[3], ilm_proposal[4], ilm_proposal[5], aug, obs, debug, dist)
+    ll, network_rates = SEIR_loglikelihood(ilm_proposal[1],
+                                           ilm_proposal[2],
+                                           ilm_proposal[3],
+                                           ilm_proposal[4],
+                                           ilm_proposal[5],
+                                           aug,
+                                           obs,
+                                           debug,
+                                           dist)
     lp += ll
 
     # Generate network proposal
-    network = propose_network(changed_individuals, network_rates, ilm_trace.network[end], debug)
+    network = propose_network(changed_individuals,
+                              network_rates,
+                              ilm_trace.network[end],
+                              debug)
     lp += exposure_network_loglikelihood(network, network_rates, debug)
-    lp += phylogenetic_network_loglikelihood(obs, aug, network, jc69p(mutation_proposal), debug)
+    lp += phylogenetic_network_loglikelihood(obs,
+                                             aug,
+                                             network,
+                                             jc69p(mutation_proposal),
+                                             debug)
 
     # Acceptance/rejection
     reject = true
@@ -585,7 +654,11 @@ function MCMC(n::Int64,
       network_rates = ilm_trace.network_rates[end]
       network = ilm_trace.network[end]
       lp = ilm_trace.logposterior[end]
-      ilm_proposal = [ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.ρ[end], ilm_trace.γ[end]]
+      ilm_proposal = [ilm_trace.α[end],
+                      ilm_trace.β[end],
+                      ilm_trace.η[end],
+                      ilm_trace.ρ[end],
+                      ilm_trace.γ[end]]
       detection_proposal = [detection_trace.ν[end]]
       mutation_proposal = [mutation_trace.λ[end]]
     end
@@ -618,7 +691,13 @@ function MCMC(n::Int64,
               dist=Euclidean(),
               init_limit=500::Int64)
 
-  ilm_trace, detection_trace, mutation_trace = initialize(ilm_priors, mutation_priors, detection_priors, obs, init_limit, debug, dist)
+  ilm_trace, detection_trace, mutation_trace = initialize(ilm_priors,
+                                                          mutation_priors,
+                                                          detection_priors,
+                                                          obs,
+                                                          init_limit,
+                                                          debug,
+                                                          dist)
 
   return MCMC(n,
               transition_cov,
@@ -678,10 +757,99 @@ function MCMC(n::Int64,
               progress=true::Bool,
               dist=Euclidean())
 
-  @assert(size(transition_cov) == (6,6), "Transition kernel's covariance matrix must be a positive definite 6x6 matrix")
+  @assert(size(transition_cov) == (6,6),
+  "Transition kernel's covariance matrix must be a positive definite 6x6 matrix")
 
   for i = 1:n
-    # COMPLETE THIS PART #
+    # Create and increment progress bar
+    if progress
+      if i == 1
+        progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 30)
+      else
+        next!(progressbar)
+      end
+    end
+    lp = -Inf
+    while lp == -Inf
+      step = rand(MvNormal(transition_cov))
+      ilm_proposal = [ilm_trace.α[end],
+                      ilm_trace.β[end],
+                      ilm_trace.η[end],
+                      ilm_trace.ρ[end],
+                      ilm_trace.γ[end]] .+ step[1:5]
+      detection_proposal = [detection_trace.ν[end]] .+ step[1]
+      mutation_proposal = [mutation_trace.λ[end]] .+ step[2]
+      lp = logprior(ilm_priors, ilm_proposal)
+      lp += logprior(detection_priors, detection_proposal)
+      lp += logprior(mutation_priors, mutation_proposal)
+    end
+
+    # Randomly select individual(s)
+    changed_individuals = sample(findn(ilm_trace.network[end])[2],
+                                 1,
+                                 replace=false)
+
+    # Generate data augmentation proposal
+    aug = propose_augment(changed_individuals,
+                          ilm_proposal[4],
+                          detection_proposal[1],
+                          ilm_trace.network[end],
+                          ilm_trace.aug[end],
+                          obs,
+                          debug)
+
+    # SEIR loglikelihood
+    ll, network_rates = SEIR_loglikelihood(ilm_proposal[1],
+                                           ilm_proposal[2],
+                                           ilm_proposal[3],
+                                           ilm_proposal[4],
+                                           ilm_proposal[5],
+                                           aug,
+                                           obs,
+                                           debug,
+                                           dist)
+    lp += ll
+
+    # Generate network proposal
+    network = propose_network(changed_individuals,
+                              network_rates,
+                              ilm_trace.network[end],
+                              debug)
+    lp += exposure_network_loglikelihood(network,
+                                         network_rates,
+                                         debug)
+
+    # Acceptance/rejection
+    reject = true
+    if lp >= ilm_trace.logposterior[end]
+      reject = false
+    elseif exp(lp - ilm_trace.logposterior[end]) >= rand()
+      reject = false
+    end
+
+    if reject
+      aug = ilm_trace.aug[end]
+      network_rates = ilm_trace.network_rates[end]
+      network = ilm_trace.network[end]
+      lp = ilm_trace.logposterior[end]
+      ilm_proposal = [ilm_trace.α[end],
+                      ilm_trace.β[end],
+                      ilm_trace.η[end],
+                      ilm_trace.ρ[end],
+                      ilm_trace.γ[end]]
+      detection_proposal = [detection_trace.ν[end]]
+    end
+
+    push!(ilm_trace.aug, aug)
+    push!(ilm_trace.network_rates, network_rates)
+    push!(ilm_trace.network, network)
+    push!(ilm_trace.logposterior, lp)
+    push!(ilm_trace.α, ilm_proposal[1])
+    push!(ilm_trace.β, ilm_proposal[2])
+    push!(ilm_trace.η, ilm_proposal[3])
+    push!(ilm_trace.ρ, ilm_proposal[4])
+    push!(ilm_trace.γ, ilm_proposal[5])
+    push!(detection_trace.ν, detection_proposal[1])
   end
   return ilm_trace, detection_trace
 end
@@ -697,8 +865,12 @@ function MCMC(n::Int64,
               dist=Euclidean(),
               init_limit=500::Int64)
 
-  ilm_trace, detection_trace = initialize(ilm_priors, detection_priors, obs, init_limit, debug, dist)
-
+  ilm_trace, detection_trace = initialize(ilm_priors,
+                                          detection_priors,
+                                          obs,
+                                          init_limit,
+                                          debug,
+                                          dist)
   return MCMC(n,
               transition_cov,
               ilm_trace,
@@ -709,7 +881,6 @@ function MCMC(n::Int64,
               debug,
               progress,
               dist)
-
   end
 
 
@@ -728,7 +899,6 @@ function MCMC(n::Int64,
                           var(ilm_priors.ρ),
                           var(ilm_priors.γ),
                           var(detection_priors.ν)])
-
   return MCMC(n,
               transition_cov,
               ilm_priors,
