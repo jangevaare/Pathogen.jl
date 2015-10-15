@@ -334,8 +334,8 @@ function detection_loglikelihood(detection_params::Vector{Float64}, obs::SEIR_ob
   """
   ll = 0
   if length(detection_params) == 1
-    ll += loglikelihood(Exponential(1/detection_params[1]), (aug.removed .- obs.removed)[!isnan(obs.removed)])
-    ll += loglikelihood(Exponential(1/detection_params[1]), (aug.infectious .- obs.infectious)[!isnan(obs.infectious)])
+    ll += loglikelihood(Exponential(1/detection_params[1]), (obs.removed .- aug.removed)[!isnan(obs.removed)])
+    ll += loglikelihood(Exponential(1/detection_params[1]), (obs.infectious .- aug.infectious)[!isnan(obs.infectious)])
   end
   return ll
 end
