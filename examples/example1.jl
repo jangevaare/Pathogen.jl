@@ -126,7 +126,7 @@ draw(PNG("SEIR_traceplot.png", 20cm, 15cm),
 # logposterior plot (last 100k iterations)
 draw(PNG("SEIR_logposterior.png", 20cm, 15cm),
      plot(x=1:100000,
-          y=ilm_trace.logposterior_1[end-99999:end] .+ ilm_trace.logposterior_2[end-99999:end],
+          y=ilm_trace.logposterior[end-99999:end],
           Geom.line,
           Theme(panel_opacity=1.,
                 panel_fill=color("white"),

@@ -309,7 +309,11 @@ function phylogenetic_network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmen
   for i = 1:length(infected)
     for j = 1:(i-1)
       ll += sum(log(p_matrix(seq_dist[infected[i],infected[j]]))[sub2ind((4,4), obs.seq[infected[i]], obs.seq[infected[j]])])
+      ll == -Inf || isnan(ll) && break
     end
+  end
+  if isnan(ll)
+    ll = -Inf
   end
   return ll
 end
@@ -323,6 +327,10 @@ function exposure_network_loglikelihood(network::Array{Bool, 2}, network_rates::
   infected = find(sum(network, 1))
   for i = infected
      ll += log(network_rates[findfirst(network[:,i]),i]/sum(network_rates[:,i]))
+     ll == -Inf || isnan(ll) && break
+  end
+  if isnan(ll)
+    ll = -Inf
   end
   return ll
 end
@@ -336,6 +344,9 @@ function detection_loglikelihood(detection_params::Vector{Float64}, obs::SEIR_ob
   if length(detection_params) == 1
     ll += loglikelihood(Exponential(1/detection_params[1]), (obs.removed .- aug.removed)[!isnan(obs.removed)])
     ll += loglikelihood(Exponential(1/detection_params[1]), (obs.infectious .- aug.infectious)[!isnan(obs.infectious)])
+  end
+  if isnan(ll)
+    ll = -Inf
   end
   return ll
 end
@@ -375,6 +386,9 @@ function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, 
     isnan(event_times[event_order[i]]) && break
 
     # Stop loglikelihood calculation anytime the loglikelihood goes to -Inf
+    if isnan(ll)
+      ll = -Inf
+    end
     ll == -Inf && break
 
     # Convert linear index to an event tuple (individual, event type)
@@ -430,7 +444,6 @@ function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, 
 
     # Provide loop position when loglikelihood goes to -Inf when debugging
     if debug && ll == -Inf
-      println("SEIR LOGLIKELIHOOD")
       if id[2] == 1
         println("Event $i (exposure of individual $(id[1])) caused loglikelihood to go to -Inf")
       elseif id[2] == 2
@@ -438,7 +451,6 @@ function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, 
       elseif id[2] == 3
         println("Event $i (removal of individual $(id[1])) caused loglikelihood to go to -Inf")
       end
-      println("")
     end
   end
   return ll, network_rates
@@ -453,7 +465,7 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
   lp = -Inf
 
   # Retry initialization until non-negative infinity loglikelihood
-  while lp == -Inf && count <= limit
+  while lp == -Inf && count < limit
     count += 1
     ilm_params = randprior(ilm_priors)
     mutation_params = randprior(mutation_priors)
@@ -469,7 +481,6 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
       lp += exposure_network_loglikelihood(network, network_rates, debug)
       lp += logprior(mutation_priors, mutation_params)
     end
-    @assert(!isnan(lp), "Log posterior is NaN")
     if lp > -Inf
       return SEIR_trace([ilm_params[1]], [ilm_params[2]], [ilm_params[3]], [ilm_params[4]], [ilm_params[5]], [aug], Array[network_rates], Array[network], [lp]), Lag_trace([detection_params[1]]), JC69_trace([mutation_params[1]])
     end
@@ -499,7 +510,6 @@ function initialize(ilm_priors::SEIR_priors, detection_priors::Lag_priors, obs::
       network = propose_network(network_rates, debug)
       lp += exposure_network_loglikelihood(network, network_rates, debug)
     end
-    @assert(!isnan(lp), "Log posterior is NaN")
     if lp > -Inf
       return SEIR_trace([ilm_params[1]], [ilm_params[2]], [ilm_params[3]], [ilm_params[4]], [ilm_params[5]], [aug], Array[network_rates], Array[network], [lp]), Lag_trace([detection_params[1]])
     end
@@ -558,9 +568,9 @@ function MCMC(n::Int64,
     lp += ll
 
     # Generate network proposal
-    network = propose_network(changed_individuals, network_rates_proposal, ilm_trace.network[end], debug)
-    lp += exposure_network_loglikelihood(network_proposal, network_rates_proposal, debug)
-    lp += phylogenetic_network_loglikelihood(obs, aug, network_proposal, jc69p(mutation_proposal), debug)
+    network = propose_network(changed_individuals, network_rates, ilm_trace.network[end], debug)
+    lp += exposure_network_loglikelihood(network, network_rates, debug)
+    lp += phylogenetic_network_loglikelihood(obs, aug, network, jc69p(mutation_proposal), debug)
 
     # Acceptance/rejection
     reject = true
@@ -580,7 +590,7 @@ function MCMC(n::Int64,
       mutation_proposal = [mutation_trace.λ[end]]
     end
 
-    push!(ilm_trace.aug, aug_proposal)
+    push!(ilm_trace.aug, aug)
     push!(ilm_trace.network_rates, network_rates)
     push!(ilm_trace.network, network)
     push!(ilm_trace.logposterior, lp)
