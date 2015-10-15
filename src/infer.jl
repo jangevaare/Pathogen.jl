@@ -449,8 +449,21 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
   """
   Initiate an Trace object by sampling from specified prior distributions
   """
-  lp = -Inf
-  count = 0
+  count = 1
+  ilm_params = randprior(ilm_priors)
+  mutation_params = randprior(mutation_priors)
+  detection_params = randprior(detection_priors)
+  aug = propose_augment(ilm_params[4], detection_params[1], obs, debug)
+  lp, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, debug, dist)
+  lp += logprior(ilm_priors, ilm_params)
+  lp += detection_loglikelihood(detection_params, obs, aug)
+  lp += logprior(detection_priors, detection_params)
+  if lp > -Inf
+    network = propose_network(network_rates, debug)
+    lp += phylogenetic_network_loglikelihood(obs, aug, network, jc69p([mutation_params[1]]), debug)
+    lp += exposure_network_loglikelihood(network, network_rates, debug)
+    lp += logprior(mutation_priors, mutation_params)
+  end
 
   # Retry initialization until non-negative infinity loglikelihood
   while lp == -Inf && count < limit
@@ -476,12 +489,22 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
 end
 
 
-function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detection_priors::Lag_priors, obs::SEIR_observed, limit=500::Int, debug=false::Bool, dist=Euclidean())
+function initialize(ilm_priors::SEIR_priors, detection_priors::Lag_priors, obs::SEIR_observed, limit=500::Int, debug=false::Bool, dist=Euclidean())
   """
   Initiate an Trace object by sampling from specified prior distributions
   """
-  lp = -Inf
-  count = 0
+  count = 1
+  ilm_params = randprior(ilm_priors)
+  detection_params = randprior(detection_priors)
+  aug = propose_augment(ilm_params[4], detection_params[1], obs, debug)
+  lp, network_rates = SEIR_loglikelihood(ilm_params[1], ilm_params[2], ilm_params[3], ilm_params[4], ilm_params[5], aug, obs, debug, dist)
+  lp += logprior(ilm_priors, ilm_params)
+  lp += detection_loglikelihood(detection_params, obs, aug)
+  lp += logprior(detection_priors, detection_params)
+  if lp > -Inf
+    network = propose_network(network_rates, debug)
+    lp += exposure_network_loglikelihood(network, network_rates, debug)
+  end
 
   # Retry initialization until non-negative infinity loglikelihood
   while lp == -Inf && count < limit
@@ -501,7 +524,7 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
   end
 
   @assert(count < limit && lp > -Inf, "Failed to initialize after $count attempts")
-  return SEIR_trace([ilm_params[1]], [ilm_params[2]], [ilm_params[3]], [ilm_params[4]], [ilm_params[5]], [aug], Array[network_rates], Array[network], [lp1], [lp2]), Lag_trace([detection_params[1]]), JC69_trace([mutation_params[1]])
+  return SEIR_trace([ilm_params[1]], [ilm_params[2]], [ilm_params[3]], [ilm_params[4]], [ilm_params[5]], [aug], Array[network_rates], Array[network], [lp]), Lag_trace([detection_params[1]])
 end
 
 
