@@ -577,19 +577,10 @@ function MCMC(n::Int64,
 
   @assert(size(transition_cov) == (7,7), "Transition kernel's covariance matrix must be a positive definite 7x7 matrix")
 
+  progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 30)
   for i = 1:n
-
-    # Create and incremenet progress bar
-    if progress
-      if i == 1
-        progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 30)
-      else
-        next!(progressbar)
-      end
-    end
-
+    progress && next!(progressbar)
     lp = -Inf
-
     while lp == -Inf
       step = rand(MvNormal(transition_cov))
       ilm_proposal = [ilm_trace.α[end],
@@ -674,7 +665,6 @@ function MCMC(n::Int64,
     push!(detection_trace.ν, detection_proposal[1])
     push!(mutation_trace.λ, mutation_proposal[1])
   end
-
   return ilm_trace, detection_trace, mutation_trace
 end
 
@@ -758,16 +748,9 @@ function MCMC(n::Int64,
 
   @assert(size(transition_cov) == (6,6),
   "Transition kernel's covariance matrix must be a positive definite 6x6 matrix")
-
+progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 30)
   for i = 1:n
-    # Create and increment progress bar
-    if progress
-      if i == 1
-        progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 30)
-      else
-        next!(progressbar)
-      end
-    end
+    progress && next!(progressbar)
     lp = -Inf
     while lp == -Inf
       step = rand(MvNormal(transition_cov))

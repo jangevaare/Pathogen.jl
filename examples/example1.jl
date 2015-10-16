@@ -1,9 +1,3 @@
-"""
-Example 1
-SEIR simulation, visualization, and inference
-Justin Angevaare
-"""
-
 using Pathogen, Gadfly, DataFrames, Distributions, ProgressMeter
 
 cd("/Users/justin/Desktop/example1")
@@ -45,7 +39,7 @@ detection_priors = Lag_priors(Uniform(1,3))
 
 mutation_priors = JC69_priors(Uniform(0,0.003))
 
-ilm_trace, detection_trace, mutation_trace = MCMC(100000,
+ilm_trace, detection_trace, mutation_trace = MCMC(1000,
                                                   ilm_priors,
                                                   detection_priors,
                                                   mutation_priors,
