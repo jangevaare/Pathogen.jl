@@ -1,25 +1,21 @@
-"""
-utilities.jl
-"""
-
 import Base.convert
 
 
 import Base.maximum
 
 
+"""
+Add a conversion method to move from Nucleotide to an integer vector
+"""
 function convert(::Type{Vector{Int64}}, x::Nucleotide2bitSeq)
-  """
-  Add a conversion method to move from Nucleotide to an integer vector
-  """
   return sub2ind((2,2), x.b1 .+1, x.b2 .+1)
 end
 
 
+"""
+Add a conversion method to move from an integer vector to a nucleotide sequence
+"""
 function convert(::Type{Nucleotide2bitSeq}, x::Vector{Int64})
-  """
-  Add a conversion method to move from an integer vector to a nucleotide sequence
-  """
   b1,b2 = ind2sub((2,2), x)
   if length(x) == 1
     return Nucleotide2bitSeq(convert(BitArray, [b1 - 1]), convert(BitArray, [b2 - 1]))
@@ -29,27 +25,27 @@ function convert(::Type{Nucleotide2bitSeq}, x::Vector{Int64})
 end
 
 
+"""
+Add a conversion method to move from nucleotide base to an integer
+"""
 function convert(::Type{Int64}, x::Nucleotide2bitBase)
-  """
-  Add a conversion method to move from nucleotide base to an integer
-  """
   return sub2ind((2,2), x.b1 .+1, x.b2 .+1)
 end
 
 
+"""
+Add a conversion method to move from an integer to a nucleotide base
+"""
 function convert(::Type{Nucleotide2bitBase}, x::Int64)
-  """
-  Add a conversion method to move from an integer to a nucleotide base
-  """
   b1,b2 = ind2sub((2,2), x)
   return Nucleotide2bitBase(convert(Bool, b1 - 1), convert(Bool, b2 - 1))
 end
 
 
+"""
+Find the disease state of a specific individual
+"""
 function findstate(population::Population, individual::Int64, time::Float64)
-  """
-  Find the disease state of a specific individual
-  """
   if sum(population.events[individual][1] .< time) == 0
     return "S"
   elseif sum(population.events[individual][1] .< time) > sum(population.events[individual][3] .< time)
@@ -64,10 +60,10 @@ function findstate(population::Population, individual::Int64, time::Float64)
 end
 
 
+"""
+Find the disease state of a specific individual
+"""
 function findstate(trace::SEIR_trace, iteration::Int64, individual::Int64, time::Float64)
-  """
-  Find the disease state of a specific individual
-  """
   if isnan(trace.aug[iteration].exposed[individual]) || trace.aug[iteration].exposed[individual] > time
     return "S"
   elseif trace.aug[iteration].exposed[individual] < time && isnan(trace.aug[iteration].infectious[individual]) || trace.aug[iteration].infectious[individual] > time
@@ -82,10 +78,10 @@ function findstate(trace::SEIR_trace, iteration::Int64, individual::Int64, time:
 end
 
 
+"""
+Create dataframes with all necessary plotting information
+"""
 function plotdata(population::Population, time::Float64)
-  """
-  Create dataframes with all necessary plotting information
-  """
   states = DataFrame(id = fill(NaN,4), x = fill(NaN,4), y = fill(NaN,4), state = ["S", "E", "I", "S*"])
   routes = DataFrame(x = Float64[], y = Float64[], age = Float64[])
   for i = 2:length(population.events)
@@ -103,10 +99,10 @@ function plotdata(population::Population, time::Float64)
 end
 
 
+"""
+Create dataframes with all necessary plotting information
+"""
 function plotdata(obs::SEIR_observed, trace::SEIR_trace, iteration::Int64, time::Float64)
-  """
-  Create dataframes with all necessary plotting information
-  """
   states = DataFrame(id = fill(NaN,4), x = fill(NaN,4), y = fill(NaN,4), state = ["S", "E", "I", "R"])
   routes = DataFrame(x = Float64[], y = Float64[], age = Float64[])
   for i = 1:length(obs.infectious)
@@ -124,26 +120,26 @@ function plotdata(obs::SEIR_observed, trace::SEIR_trace, iteration::Int64, time:
 end
 
 
+"""
+Find maximum augmented event time
+"""
 function maximum(aug::SEIR_augmented)
-  """
-  Find maximum augmented event time
-  """
   return maximum([aug.exposed aug.infectious aug.removed])
 end
 
 
+"""
+Find maximum observed event time
+"""
 function maximum(obs::SEIR_observed)
-  """
-  Find maximum observed event time
-  """
   return maximum([obs.infectious obs.removed])
 end
 
 
+"""
+Return the transmission pathways leading to an individual
+"""
 function pathwayto(infection::Int64, network::Array{Bool,2})
-  """
-  Return the transmission pathways leading to an individual
-  """
   path = [infection]
   while path[end] > 0
     push!(path, findfirst(network[:, path[end]])-1)
@@ -152,10 +148,10 @@ function pathwayto(infection::Int64, network::Array{Bool,2})
 end
 
 
+"""
+Return all transmission pathways leading to specified individuals
+"""
 function pathwaysto(infections::Vector{Int64}, network::Array{Bool,2})
-  """
-  Return all transmission pathways leading to specified individuals
-  """
   paths = Array[Int64[]]
   for i = 1:length(infections)
     if i > 1
@@ -170,19 +166,19 @@ function pathwaysto(infections::Vector{Int64}, network::Array{Bool,2})
 end
 
 
+"""
+Return all transmission pathways
+"""
 function pathwaysto(network::Array{Bool,2})
-  """
-  Return all transmission pathways
-  """
   infections = find(sum(network,1))
   return pathwaysto(infections, network)
 end
 
 
+"""
+Return the transmission pathways leading from an individual
+"""
 function pathwayfrom(infection::Int64, network::Array{Bool,2})
-  """
-  Return the transmission pathways leading from an individual
-  """
   path = [infection]
   pathlengths = [0]
   while length(path) > pathlengths[end]
@@ -199,10 +195,10 @@ function pathwayfrom(infection::Int64, network::Array{Bool,2})
 end
 
 
+"""
+Return all transmission pathways leading from specified individuals
+"""
 function pathwaysfrom(infections::Vector{Int64}, network::Array{Bool,2})
-  """
-  Return all transmission pathways leading from specified individuals
-  """
   paths = Array[Int64[]]
   for i = 1:length(infections)
     if i > 1
@@ -225,10 +221,10 @@ function pathwaysfrom(infections::Vector{Int64}, network::Array{Bool,2})
 end
 
 
+"""
+Return all transmission pathways
+"""
 function pathwaysfrom(network::Array{Bool,2})
-  """
-  Return all transmission pathways
-  """
   infections = find(sum(network,1))
   return pathwaysfrom(infections, network)
 end

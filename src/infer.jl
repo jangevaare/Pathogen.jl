@@ -1,11 +1,7 @@
 """
-infer.jl
+Gather surveillance data on specific individuals in a population, with an exponentially distributed detection lag with rate ν
 """
-
 function surveil(population::Population, ν::Float64)
-  """
-  Gather surveillance data on specific individuals in a population, with an exponentially distributed detection lag with rate ν
-  """
   exposed_actual = fill(NaN, length(population.events)-1)
   infectious_actual = fill(NaN, length(population.events)-1)
   infectious_observed = fill(NaN, length(population.events)-1)
@@ -62,10 +58,10 @@ end
 surveil(population, Inf) = surveil(population::Population)
 
 
+"""
+Proposes augmented data for a specified vector of `changed_individuals`
+"""
 function propose_augment(changed_individuals::Vector{Int64}, ρ::Float64, ν::Float64, network::Array{Bool, 2}, previous_aug::SEIR_augmented, obs::SEIR_observed, debug=false::Bool)
-  """
-  Proposes augmented data for a specified vector of `changed_individuals`
-  """
   exposed_augmented = copy(previous_aug.exposed)
   infectious_augmented = copy(previous_aug.infectious)
   removed_augmented = copy(previous_aug.removed)
@@ -113,10 +109,10 @@ function propose_augment(changed_individuals::Vector{Int64}, ρ::Float64, ν::Fl
 end
 
 
+"""
+Proposes augmented data by making random selection of individual `changes` to augmented data
+"""
 function propose_augment(ρ::Float64, ν::Float64, network::Array{Bool, 2}, previous_aug::SEIR_augmented, obs::SEIR_observed, changes=1::Int64, debug=false::Bool)
-  """
-  Proposes augmented data by making random selection of individual `changes` to augmented data
-  """
   if changes == 0
     changed_individuals = pathwayfrom(0, network)
   else
@@ -127,10 +123,11 @@ end
 
 propose_augment(ρ, Inf, network, previous_aug, obs, changes, debug) = propose_augment(ρ::Float64, network::Array{Bool, 2}, previous_aug::SEIR_augmented, obs::SEIR_observed, changes=1::Int64, debug=false::Bool)
 
+
+"""
+Augments surveilance data, organizes observations
+"""
 function propose_augment(ρ::Float64, ν::Float64, obs::SEIR_observed, debug=false::Bool)
-  """
-  Augments surveilance data, organizes observations
-  """
   exposed_augmented = fill(NaN, length(obs.infectious))
   infectious_augmented = fill(NaN, length(obs.infectious))
   removed_augmented = fill(NaN, length(obs.removed))
@@ -165,10 +162,10 @@ end
 propose_augment(ρ, Inf, obs, debug) = propose_augment(ρ::Float64, obs::SEIR_observed, debug=false::Bool)
 
 
+"""
+Calculate the log prior from prior distributions and specified parameter values
+"""
 function logprior(priors::Priors, params::Vector{Float64})
-  """
-  Calculate the logprior from prior distributions
-  """
   lprior = 0.
   for i = 1:length(params)
     lprior += logpdf(priors.(names(priors)[i]), params[i])
@@ -177,10 +174,10 @@ function logprior(priors::Priors, params::Vector{Float64})
 end
 
 
+"""
+Randomly generate a parameter vector from specified priors
+"""
 function randprior(priors::Priors)
-  """
-  Randomly generate a parameter vector from specified priors
-  """
   params = [rand(priors.(names(priors)[1]))]
   for i = 2:length(names(priors))
     push!(params, rand(priors.(names(priors)[i])))
@@ -189,10 +186,10 @@ function randprior(priors::Priors)
 end
 
 
+"""
+Propose a network
+"""
 function propose_network(network_rates::Array{Float64, 2}, previous_network::Array{Bool, 2}, debug=false::Bool, changes=1::Int64, method="multinomial"::String)
-  """
-  Propose a network
-  """
   @assert(changes <= sum(rate_totals .> 0), "Attempting to make more network changes than there are exposure events")
   if changes == 0
     changed_individuals = find(rate_totals .> 0)
@@ -203,10 +200,10 @@ function propose_network(network_rates::Array{Float64, 2}, previous_network::Arr
 end
 
 
+"""
+Propose a network
+"""
 function propose_network(changed_individuals::Vector{Int64}, network_rates::Array{Float64, 2}, previous_network::Array{Bool, 2}, debug=false::Bool, method="multinomial"::String)
-  """
-  Propose a network
-  """
   @assert(any(method .== ["uniform", "multinomial"]), "Network proposal method must be 'uniform' or 'multinomial'.")
   network = copy(previous_network)
   rate_totals = sum(network_rates,1)
@@ -229,10 +226,10 @@ function propose_network(changed_individuals::Vector{Int64}, network_rates::Arra
 end
 
 
+"""
+Initial network proposal
+"""
 function propose_network(network_rates::Array{Float64, 2}, debug=false::Bool)
-  """
-  Initial network proposal
-  """
   network = fill(false, size(network_rates))
   rate_totals = sum(network_rates,1)
   exposures = find(rate_totals .> 0)
@@ -247,10 +244,10 @@ function propose_network(network_rates::Array{Float64, 2}, debug=false::Bool)
 end
 
 
+"""
+For a given transmission network, find the time between the pathogen sequences between every individuals i and j
+"""
 function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, network::Array{Bool, 2}, debug=false::Bool)
-  """
-  For a given transmission network, find the time between the pathogen sequences between every individuals i and j
-  """
   pathways = pathwaysto(network)
 
   seq_dist = fill(0., (size(network, 2), size(network, 2)))
@@ -299,10 +296,10 @@ function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, network::Array{B
 end
 
 
+"""
+Loglikelihood for a transmission network based on sequence data and event timing
+"""
 function phylogenetic_network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmented, network::Array{Bool, 2}, p_matrix::Function, debug=false::Bool)
-  """
-  Loglikelihood for a transmission network based on sequence data and event timing
-  """
   ll = 0.
   infected = find(sum(network, 1))
   seq_dist = seq_distances(obs, aug, network, debug)
@@ -319,10 +316,10 @@ function phylogenetic_network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmen
 end
 
 
+"""
+Loglikelihood for a transmission network based on exposure rates
+"""
 function exposure_network_loglikelihood(network::Array{Bool, 2}, network_rates::Array{Float64}, debug=false::Bool)
-  """
-  Loglikelihood for a transmission network based on exposure rates
-  """
   ll = 0.
   infected = find(sum(network, 1))
   for i = infected
@@ -336,10 +333,10 @@ function exposure_network_loglikelihood(network::Array{Bool, 2}, network_rates::
 end
 
 
+"""
+loglikelihood for detection...
+"""
 function detection_loglikelihood(detection_params::Vector{Float64}, obs::SEIR_observed, aug::SEIR_augmented)
-  """
-  loglikelihood for detection...
-  """
   ll = 0
   if length(detection_params) == 1
     ll += loglikelihood(Exponential(1/detection_params[1]), (obs.removed .- aug.removed)[!isnan(obs.removed)])
@@ -352,15 +349,15 @@ function detection_loglikelihood(detection_params::Vector{Float64}, obs::SEIR_ob
 end
 
 
-function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, γ::Float64, aug::SEIR_augmented, obs::SEIR_observed, debug=false::Bool, dist=Euclidean())
-  """
-  Calculate the loglikelihood and return an exposure network array under specified parameters values and observations
+"""
+Calculate the loglikelihood and return an exposure network array under specified parameters values and observations
 
-  α, β: powerlaw exposure kernel parameters
-  η: external pressure rate
-  ρ: infectivity rate (1/mean latent period)
-  γ: removal rate (1/mean infectious period)
-  """
+α, β: powerlaw exposure kernel parameters
+η: external pressure rate
+ρ: infectivity rate (1/mean latent period)
+γ: removal rate (1/mean infectious period)
+"""
+function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, γ::Float64, aug::SEIR_augmented, obs::SEIR_observed, debug=false::Bool, dist=Euclidean())
   # Initiate an exposure network
   network_rates = fill(0., (1 + length(obs.covariates), length(obs.covariates)))
 
@@ -459,10 +456,10 @@ function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, 
 end
 
 
+"""
+Initiate an Trace object by sampling from specified prior distributions
+"""
 function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detection_priors::Lag_priors, obs::SEIR_observed, limit=500::Int, debug=false::Bool, dist=Euclidean())
-  """
-  Initiate an Trace object by sampling from specified prior distributions
-  """
   count = 0
   lp = -Inf
 
@@ -512,15 +509,15 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
 end
 
 
+"""
+Initiate an Trace object by sampling from specified prior distributions
+"""
 function initialize(ilm_priors::SEIR_priors,
                     detection_priors::Lag_priors,
                     obs::SEIR_observed,
                     limit=500::Int,
                     debug=false::Bool,
                     dist=Euclidean())
-  """
-  Initiate an Trace object by sampling from specified prior distributions
-  """
   count = 0
   lp = -Inf
 

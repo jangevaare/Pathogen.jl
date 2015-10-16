@@ -1,23 +1,19 @@
 """
-simulate.jl
+Generate a nucleotide sequence of length `n`, with specific nucleotide frequencies
 """
-
 function create_seq(n::Int, π_A::Float64, π_T::Float64, π_C::Float64, π_G::Float64)
-  """
-  Generate a nucleotide sequence of length `n`, with specific nucleotide frequencies
-  """
   @assert(sum([π_A, π_T, π_C, π_G]) == 1, "Nucleotide frequencies must sum to 1")
   @assert(all(0 .< [π_A, π_T, π_C, π_G] .< 1), "Each nucleotide frequency must be between 0 and 1")
   return convert(Nucleotide2bitSeq, findn(rand(Multinomial(1, [π_A, π_T, π_C, π_G]),n))[1])
 end
 
 
-function create_population(init_seq::Nucleotide2bitSeq, init_var::Array)
 """
 Create an infection database.
 `init_seq` is assigned to the "external" infection source.
 Each column of the `init_var` is assigned to an individual
 """
+function create_population(init_seq::Nucleotide2bitSeq, init_var::Array)
   # exposure times, exposure source, infection times, recovery times, covariate times, sequence times
   events = Array[Array[[NaN], [NaN],  [NaN],  [NaN],  [NaN], [0.]]]
 
@@ -38,20 +34,14 @@ Each column of the `init_var` is assigned to an individual
 end
 
 
+"""
+This function creates a full parameterized power law function
+"""
 function create_powerlaw(α::Float64, β::Float64, η::Float64, dist=Euclidean()::Metric)
-  """
-  This function creates a full parameterized power law function
-  """
   @assert(α > 0, "invalid α specification")
   @assert(β > 0, "invalid β specification")
   @assert(η > 0, "invalid η specification")
-
   return function(population::Population, source::Int, target::Int)
-    """
-    This simple `susceptibility_fun` returns the rate parameter for a `target` individuals from `source` individuals using the power law kernel with parameters α and β. Location must be specified with matching but arbitrary dimensions for each individual; specifically, each individual is represented by a column in an array. Distance by default is Euclidean, but any of the distance calculations in the Distance.jl package may be used.
-
-    External source of infection is assigned a rate of η.
-    """
     # Ensure source is infectious that target hasn't been previously exposed (SIR model)
     if length(population.events[source][3]) > length(population.events[source][4]) && length(population.events[target][1]) == 0
     # Ensure source is infectious and that target is susceptible (SIS* model)
@@ -69,26 +59,23 @@ function create_powerlaw(α::Float64, β::Float64, η::Float64, dist=Euclidean()
 end
 
 
+"""
+Creates generic constant rate function
+"""
 function create_constantrate(τ::Float64)
-  """
-  Creates generic constant rate function
-  """
   @assert(τ > 0, "invalid τ specification")
   return function(population::Population, individual::Int)
-    """
-    Provides a constant rate for latency_fun or recovery_fun
-    """
     return τ
   end
 end
 
 
+"""
+Generate an array which contains rates (for exponential distribution) for movement from between disease states, and mutation.
+`susceptibility_fun` is a function which generates a rate for each pair of target
+`substitution_matrix` is a 4x4 array containing single nucleotide polymorphism substitution rates
+"""
 function create_ratearray(population::Population, susceptibility_fun::Function, substitution_matrix::Array)
-  """
-  Generate an array which contains rates (for exponential distribution) for movement from between disease states, and mutation.
-  `susceptibility_fun` is a function which generates a rate for each pair of target
-  `substitution_matrix` is a 4x4 array containing single nucleotide polymorphism substitution rates
-  """
   # Set up an array of zeros with rows for each potential source of exposure, for infection, recovery, and mutation at each base location, and columns for each individual...
   rate_array = RateArray(fill(0., (length(population.events)+2+length(population.history[1][2][1]), length(population.events))),
                          fill((0,0,0), (length(population.events)+2+length(population.history[1][2][1]), length(population.events))))
@@ -127,10 +114,10 @@ function create_ratearray(population::Population, susceptibility_fun::Function, 
 end
 
 
+"""
+One event occurs, and appropriate updates are made to the RateArray and Population
+"""
 function onestep!(rate_array::RateArray, population::Population, susceptibility_fun::Function, latency_fun::Function, recovery_fun::Function, substitution_matrix::Array)
-  """
-  One event occurs, and appropriate updates are made to the RateArray and Population
-  """
   rate_total = cumsum(rate_array.rates[:])
 
   if isinf(rate_total[end])
