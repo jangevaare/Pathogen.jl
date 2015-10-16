@@ -166,9 +166,11 @@ propose_augment(ρ, Inf, obs, debug) = propose_augment(ρ::Float64, obs::SEIR_ob
 Calculate the log prior from prior distributions and specified parameter values
 """
 function logprior(priors::Priors, params::Vector{Float64})
+  @assert(length(params) == length(fieldnames(priors)),
+          "Mismatch between parameter vector and prior")
   lprior = 0.
   for i = 1:length(params)
-    lprior += logpdf(priors.(names(priors)[i]), params[i])
+    lprior += logpdf(priors.(fieldnames(priors)[i]), params[i])
   end
   return lprior
 end
@@ -178,9 +180,9 @@ end
 Randomly generate a parameter vector from specified priors
 """
 function randprior(priors::Priors)
-  params = [rand(priors.(names(priors)[1]))]
-  for i = 2:length(names(priors))
-    push!(params, rand(priors.(names(priors)[i])))
+  params = [rand(priors.(fieldnames(priors)[1]))]
+  for i = 2:length(fieldnames(priors))
+    push!(params, rand(priors.(fieldnames(priors)[i])))
   end
   return params
 end
