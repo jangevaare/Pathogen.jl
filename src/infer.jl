@@ -580,56 +580,57 @@ function MCMC(n::Int64,
   progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 30)
   for i = 1:n
     progress && next!(progressbar)
-    lp = -Inf
-    while lp == -Inf
-      step = rand(MvNormal(transition_cov))
-      ilm_proposal = [ilm_trace.α[end],
-                      ilm_trace.β[end],
-                      ilm_trace.η[end],
-                      ilm_trace.ρ[end],
-                      ilm_trace.γ[end]] .+ step[1:5]
-      detection_proposal = [detection_trace.ν[end]] .+ step[1]
-      mutation_proposal = [mutation_trace.λ[end]] .+ step[2]
-      lp = logprior(ilm_priors, ilm_proposal)
-      lp += logprior(detection_priors, detection_proposal)
-      lp += logprior(mutation_priors, mutation_proposal)
+    step = rand(MvNormal(transition_cov))
+    ilm_proposal = [ilm_trace.α[end],
+                    ilm_trace.β[end],
+                    ilm_trace.η[end],
+                    ilm_trace.ρ[end],
+                    ilm_trace.γ[end]] .+ step[1:5]
+    detection_proposal = [detection_trace.ν[end]] .+ step[1]
+    mutation_proposal = [mutation_trace.λ[end]] .+ step[2]
+    lp = logprior(ilm_priors, ilm_proposal)
+    lp += logprior(detection_priors, detection_proposal)
+    lp += logprior(mutation_priors, mutation_proposal)
+
+    if lp > -Inf
+      # Randomly select individual(s)
+      changed_individuals = sample(findn(ilm_trace.network[end])[2], 1, replace=false)
+
+      # Generate data augmentation proposal
+      aug = propose_augment(changed_individuals,
+                            ilm_proposal[4],
+                            detection_proposal[1],
+                            ilm_trace.network[end],
+                            ilm_trace.aug[end],
+                            obs,
+                            debug)
+
+      # SEIR loglikelihood
+      ll, network_rates = SEIR_loglikelihood(ilm_proposal[1],
+                                             ilm_proposal[2],
+                                             ilm_proposal[3],
+                                             ilm_proposal[4],
+                                             ilm_proposal[5],
+                                             aug,
+                                             obs,
+                                             debug,
+                                             dist)
+      lp += ll
     end
 
-    # Randomly select individual(s)
-    changed_individuals = sample(findn(ilm_trace.network[end])[2], 1, replace=false)
-
-    # Generate data augmentation proposal
-    aug = propose_augment(changed_individuals,
-                          ilm_proposal[4],
-                          detection_proposal[1],
-                          ilm_trace.network[end],
-                          ilm_trace.aug[end],
-                          obs,
-                          debug)
-
-    # SEIR loglikelihood
-    ll, network_rates = SEIR_loglikelihood(ilm_proposal[1],
-                                           ilm_proposal[2],
-                                           ilm_proposal[3],
-                                           ilm_proposal[4],
-                                           ilm_proposal[5],
-                                           aug,
-                                           obs,
-                                           debug,
-                                           dist)
-    lp += ll
-
-    # Generate network proposal
-    network = propose_network(changed_individuals,
-                              network_rates,
-                              ilm_trace.network[end],
-                              debug)
-    lp += exposure_network_loglikelihood(network, network_rates, debug)
-    lp += phylogenetic_network_loglikelihood(obs,
-                                             aug,
-                                             network,
-                                             jc69p(mutation_proposal),
-                                             debug)
+    if lp > -Inf
+      # Generate network proposal
+      network = propose_network(changed_individuals,
+                                network_rates,
+                                ilm_trace.network[end],
+                                debug)
+      lp += exposure_network_loglikelihood(network, network_rates, debug)
+      lp += phylogenetic_network_loglikelihood(obs,
+                                               aug,
+                                               network,
+                                               jc69p(mutation_proposal),
+                                               debug)
+    end
 
     # Acceptance/rejection
     reject = true
@@ -748,58 +749,59 @@ function MCMC(n::Int64,
 
   @assert(size(transition_cov) == (6,6),
   "Transition kernel's covariance matrix must be a positive definite 6x6 matrix")
-progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 30)
+  progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 30)
   for i = 1:n
     progress && next!(progressbar)
-    lp = -Inf
-    while lp == -Inf
-      step = rand(MvNormal(transition_cov))
-      ilm_proposal = [ilm_trace.α[end],
-                      ilm_trace.β[end],
-                      ilm_trace.η[end],
-                      ilm_trace.ρ[end],
-                      ilm_trace.γ[end]] .+ step[1:5]
-      detection_proposal = [detection_trace.ν[end]] .+ step[1]
-      mutation_proposal = [mutation_trace.λ[end]] .+ step[2]
-      lp = logprior(ilm_priors, ilm_proposal)
-      lp += logprior(detection_priors, detection_proposal)
-      lp += logprior(mutation_priors, mutation_proposal)
+    step = rand(MvNormal(transition_cov))
+    ilm_proposal = [ilm_trace.α[end],
+                    ilm_trace.β[end],
+                    ilm_trace.η[end],
+                    ilm_trace.ρ[end],
+                    ilm_trace.γ[end]] .+ step[1:5]
+    detection_proposal = [detection_trace.ν[end]] .+ step[1]
+    mutation_proposal = [mutation_trace.λ[end]] .+ step[2]
+    lp = logprior(ilm_priors, ilm_proposal)
+    lp += logprior(detection_priors, detection_proposal)
+    lp += logprior(mutation_priors, mutation_proposal)
+
+    if lp > -Inf
+      # Randomly select individual(s)
+      changed_individuals = sample(findn(ilm_trace.network[end])[2],
+                                   1,
+                                   replace=false)
+
+      # Generate data augmentation proposal
+      aug = propose_augment(changed_individuals,
+                            ilm_proposal[4],
+                            detection_proposal[1],
+                            ilm_trace.network[end],
+                            ilm_trace.aug[end],
+                            obs,
+                            debug)
+
+      # SEIR loglikelihood
+      ll, network_rates = SEIR_loglikelihood(ilm_proposal[1],
+                                             ilm_proposal[2],
+                                             ilm_proposal[3],
+                                             ilm_proposal[4],
+                                             ilm_proposal[5],
+                                             aug,
+                                             obs,
+                                             debug,
+                                             dist)
+      lp += ll
     end
 
-    # Randomly select individual(s)
-    changed_individuals = sample(findn(ilm_trace.network[end])[2],
-                                 1,
-                                 replace=false)
-
-    # Generate data augmentation proposal
-    aug = propose_augment(changed_individuals,
-                          ilm_proposal[4],
-                          detection_proposal[1],
-                          ilm_trace.network[end],
-                          ilm_trace.aug[end],
-                          obs,
-                          debug)
-
-    # SEIR loglikelihood
-    ll, network_rates = SEIR_loglikelihood(ilm_proposal[1],
-                                           ilm_proposal[2],
-                                           ilm_proposal[3],
-                                           ilm_proposal[4],
-                                           ilm_proposal[5],
-                                           aug,
-                                           obs,
-                                           debug,
-                                           dist)
-    lp += ll
-
-    # Generate network proposal
-    network = propose_network(changed_individuals,
-                              network_rates,
-                              ilm_trace.network[end],
-                              debug)
-    lp += exposure_network_loglikelihood(network,
-                                         network_rates,
-                                         debug)
+    if lp > -Inf
+      # Generate network proposal
+      network = propose_network(changed_individuals,
+                                network_rates,
+                                ilm_trace.network[end],
+                                debug)
+      lp += exposure_network_loglikelihood(network,
+                                           network_rates,
+                                           debug)
+    end
 
     # Acceptance/rejection
     reject = true
