@@ -29,17 +29,17 @@ end
 
 actual, obs = surveil(pop, 2.)
 
-ilm_priors = SEIR_priors(Uniform(1,7),
-                         Uniform(2,8),
+ilm_priors = SEIR_priors(Gamma(5),
+                         Gamma(3),
                          Gamma(0.001),
-                         Uniform(0.1,1),
-                         Uniform(0.1,1))
+                         Gamma(1/3),
+                         Gamma(1/5))
 
-detection_priors = Lag_priors(Uniform(1,3))
+detection_priors = Lag_priors(Gamma(2))
 
-mutation_priors = JC69_priors(Uniform(0,0.003))
+mutation_priors = JC69_priors(Gamma(0.001))
 
-ilm_trace, detection_trace, mutation_trace = MCMC(1000,
+ilm_trace, detection_trace, mutation_trace = MCMC(100000,
                                                   ilm_priors,
                                                   detection_priors,
                                                   mutation_priors,
