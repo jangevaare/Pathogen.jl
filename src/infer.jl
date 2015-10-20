@@ -191,22 +191,36 @@ end
 """
 Propose a network
 """
-function propose_network(network_rates::Array{Float64, 2}, previous_network::Array{Bool, 2}, debug=false::Bool, changes=1::Int64, method="multinomial"::String)
-  @assert(changes <= sum(rate_totals .> 0), "Attempting to make more network changes than there are exposure events")
+function propose_network(network_rates::Array{Float64, 2},
+                         previous_network::Array{Bool, 2},
+                         debug=false::Bool,
+                         changes=1::Int64,
+                         method="multinomial"::String)
+  @assert(changes <= sum(rate_totals .> 0),
+          "Attempting to make more network changes than there are exposure events")
   if changes == 0
     changed_individuals = find(rate_totals .> 0)
   else
     changed_individuals = sample(find(rate_totals .> 0), changes, replace=false)
   end
-  return propose_network(changed_individuals, network_rates, previous_network, debug, method)
+  return propose_network(changed_individuals,
+                         network_rates,
+                        previous_network,
+                        debug,
+                        method)
 end
 
 
 """
 Propose a network
 """
-function propose_network(changed_individuals::Vector{Int64}, network_rates::Array{Float64, 2}, previous_network::Array{Bool, 2}, debug=false::Bool, method="multinomial"::String)
-  @assert(any(method .== ["uniform", "multinomial"]), "Network proposal method must be 'uniform' or 'multinomial'.")
+function propose_network(changed_individuals::Vector{Int64},
+                         network_rates::Array{Float64, 2},
+                         previous_network::Array{Bool, 2},
+                         debug=false::Bool,
+                         method="multinomial"::String)
+  @assert(any(method .== ["uniform", "multinomial"]),
+          "Network proposal method must be 'uniform' or 'multinomial'.")
   network = copy(previous_network)
   rate_totals = sum(network_rates,1)
   network[:, changed_individuals] = false
@@ -215,7 +229,8 @@ function propose_network(changed_individuals::Vector{Int64}, network_rates::Arra
       network[sample(find(network_rates[:,i] .> 0.)), i] = true
     end
   elseif method == "multinomial"
-    @assert(size(network_rates) == size(previous_network), "A mismatch in the previous network and network rates dimensions was detected in the network proposal function")
+    @assert(size(network_rates) == size(previous_network),
+            "A mismatch in the previous network and network rates dimensions was detected in the network proposal function")
     for i = changed_individuals
       network[findfirst(rand(Multinomial(1, network_rates[:,i]/rate_totals[i]))), i] = true
     end
@@ -481,18 +496,27 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
                                            obs,
                                            debug,
                                            dist)
-    lp += logprior(ilm_priors, ilm_params)
-    lp += detection_loglikelihood(detection_params, obs, aug)
-    lp += logprior(detection_priors, detection_params)
+    lp += logprior(ilm_priors,
+                   ilm_params)
+    lp += detection_loglikelihood(detection_params,
+                                  obs,
+                                  aug)
+    lp += logprior(detection_priors,
+                   detection_params)
     if lp > -Inf
-      network = propose_network(network_rates, debug)
+      network = propose_network(network_rates,
+                                debug,
+                                "uniform")
       lp += phylogenetic_network_loglikelihood(obs,
                                                aug,
                                                network,
                                                jc69p([mutation_params[1]]),
                                                debug)
-      lp += exposure_network_loglikelihood(network, network_rates, debug)
-      lp += logprior(mutation_priors, mutation_params)
+      lp += exposure_network_loglikelihood(network,
+                                           network_rates,
+                                           debug)
+      lp += logprior(mutation_priors,
+                     mutation_params)
     end
     if lp > -Inf
       return SEIR_trace([ilm_params[1]],
@@ -575,35 +599,49 @@ function MCMC(n::Int64,
               progress=true::Bool,
               dist=Euclidean())
 
-  @assert(size(transition_cov) == (7,7), "Transition kernel's covariance matrix must be a positive definite 7x7 matrix")
-
+  @assert(size(transition_cov) == (7,7),
+          "Transition kernel's covariance matrix must be a positive definite 7x7 matrix")
   progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 30)
   for i = 1:n
     progress && next!(progressbar)
-    step = rand(MvNormal(transition_cov))
-    ilm_proposal = [ilm_trace.α[end],
-                    ilm_trace.β[end],
-                    ilm_trace.η[end],
-                    ilm_trace.ρ[end],
-                    ilm_trace.γ[end]] .+ step[1:5]
-    detection_proposal = [detection_trace.ν[end]] .+ step[1]
-    mutation_proposal = [mutation_trace.λ[end]] .+ step[2]
+    if mod(n, 2) == 1
+      step = rand(MvNormal(transition_cov))
+      ilm_proposal = [ilm_trace.α[end],
+                      ilm_trace.β[end],
+                      ilm_trace.η[end],
+                      ilm_trace.ρ[end],
+                      ilm_trace.γ[end]] .+ step[1:5]
+      detection_proposal = [detection_trace.ν[end]] .+ step[6]
+      mutation_proposal = [mutation_trace.λ[end]] .+ step[7]
+    else
+      ilm_proposal = [ilm_trace.α[end],
+                      ilm_trace.β[end],
+                      ilm_trace.η[end],
+                      ilm_trace.ρ[end],
+                      ilm_trace.γ[end]]
+      detection_proposal = [detection_trace.ν[end]]
+      mutation_proposal = [mutation_trace.λ[end]]
+    end
     lp = logprior(ilm_priors, ilm_proposal)
     lp += logprior(detection_priors, detection_proposal)
     lp += logprior(mutation_priors, mutation_proposal)
 
     if lp > -Inf
-      # Randomly select individual(s)
-      changed_individuals = sample(findn(ilm_trace.network[end])[2], 1, replace=false)
+      if mod(n, 2) == 0
+        # Randomly select individual(s)
+        changed_individuals = sample(findn(ilm_trace.network[end])[2], 1, replace=false)
 
-      # Generate data augmentation proposal
-      aug = propose_augment(changed_individuals,
-                            ilm_proposal[4],
-                            detection_proposal[1],
-                            ilm_trace.network[end],
-                            ilm_trace.aug[end],
-                            obs,
-                            debug)
+        # Generate data augmentation proposal
+        aug = propose_augment(changed_individuals,
+                              ilm_proposal[4],
+                              detection_proposal[1],
+                              ilm_trace.network[end],
+                              ilm_trace.aug[end],
+                              obs,
+                              debug)
+      else
+        aug = ilm_trace.aug[end]
+      end
 
       # SEIR loglikelihood
       ll, network_rates = SEIR_loglikelihood(ilm_proposal[1],
@@ -619,12 +657,19 @@ function MCMC(n::Int64,
     end
 
     if lp > -Inf
-      # Generate network proposal
-      network = propose_network(changed_individuals,
-                                network_rates,
-                                ilm_trace.network[end],
-                                debug)
-      lp += exposure_network_loglikelihood(network, network_rates, debug)
+      if mod(n, 2) == 0
+        # Generate network proposal
+        network = propose_network(changed_individuals,
+                                  network_rates,
+                                  ilm_trace.network[end],
+                                  debug,
+                                  "uniform")
+      else
+        network = ilm_trace.network[end]
+      end
+      lp += exposure_network_loglikelihood(network,
+                                           network_rates,
+                                           debug)
       lp += phylogenetic_network_loglikelihood(obs,
                                                aug,
                                                network,
@@ -752,32 +797,46 @@ function MCMC(n::Int64,
   progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 30)
   for i = 1:n
     progress && next!(progressbar)
-    step = rand(MvNormal(transition_cov))
-    ilm_proposal = [ilm_trace.α[end],
-                    ilm_trace.β[end],
-                    ilm_trace.η[end],
-                    ilm_trace.ρ[end],
-                    ilm_trace.γ[end]] .+ step[1:5]
-    detection_proposal = [detection_trace.ν[end]] .+ step[1]
-    mutation_proposal = [mutation_trace.λ[end]] .+ step[2]
-    lp = logprior(ilm_priors, ilm_proposal)
-    lp += logprior(detection_priors, detection_proposal)
-    lp += logprior(mutation_priors, mutation_proposal)
+    if mod(n, 2) == 1
+      step = rand(MvNormal(transition_cov))
+      ilm_proposal = [ilm_trace.α[end],
+                      ilm_trace.β[end],
+                      ilm_trace.η[end],
+                      ilm_trace.ρ[end],
+                      ilm_trace.γ[end]] .+ step[1:5]
+      detection_proposal = [detection_trace.ν[end]] .+ step[6]
+      lp = logprior(ilm_priors, ilm_proposal)
+      lp += logprior(detection_priors, detection_proposal)
+      lp += logprior(mutation_priors, mutation_proposal)
+    else
+      ilm_proposal = [ilm_trace.α[end],
+                      ilm_trace.β[end],
+                      ilm_trace.η[end],
+                      ilm_trace.ρ[end],
+                      ilm_trace.γ[end]]
+      detection_proposal = [detection_trace.ν[end]]
+      lp = logprior(ilm_priors, ilm_proposal)
+      lp += logprior(detection_priors, detection_proposal)
+    end
 
     if lp > -Inf
-      # Randomly select individual(s)
-      changed_individuals = sample(findn(ilm_trace.network[end])[2],
-                                   1,
-                                   replace=false)
+      if mod(n, 2) == 0
+        # Randomly select individual(s)
+        changed_individuals = sample(findn(ilm_trace.network[end])[2],
+                                     1,
+                                     replace=false)
 
-      # Generate data augmentation proposal
-      aug = propose_augment(changed_individuals,
-                            ilm_proposal[4],
-                            detection_proposal[1],
-                            ilm_trace.network[end],
-                            ilm_trace.aug[end],
-                            obs,
-                            debug)
+        # Generate data augmentation proposal
+        aug = propose_augment(changed_individuals,
+                              ilm_proposal[4],
+                              detection_proposal[1],
+                              ilm_trace.network[end],
+                              ilm_trace.aug[end],
+                              obs,
+                              debug)
+      else
+        aug = ilm_trace.aug[end]
+      end
 
       # SEIR loglikelihood
       ll, network_rates = SEIR_loglikelihood(ilm_proposal[1],
@@ -794,13 +853,16 @@ function MCMC(n::Int64,
 
     if lp > -Inf
       # Generate network proposal
-      network = propose_network(changed_individuals,
-                                network_rates,
-                                ilm_trace.network[end],
-                                debug)
-      lp += exposure_network_loglikelihood(network,
-                                           network_rates,
-                                           debug)
+      if mod(n, 2) == 0
+        network = propose_network(changed_individuals,
+                                  network_rates,
+                                  ilm_trace.network[end],
+                                  debug,
+                                  "uniform")
+      else
+        network = ilm_trace.network[end]
+      end
+      lp += exposure_network_loglikelihood(network, network_rates, debug)
     end
 
     # Acceptance/rejection
