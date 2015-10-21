@@ -61,9 +61,9 @@ surveil(population, Inf) = surveil(population::Population)
 Proposes augmented data for a specified vector of `changed_individuals`
 """
 function propose_augment(changed_individuals::Vector{Int64}, ρ::Float64, ν::Float64, network::Array{Bool, 2}, previous_aug::SEIR_augmented, obs::SEIR_observed, debug=false::Bool)
-  exposed_augmented = deepcopy(previous_aug.exposed)
-  infectious_augmented = deepcopy(previous_aug.infectious)
-  removed_augmented = deepcopy(previous_aug.removed)
+  exposed_augmented = previous_aug.exposed
+  infectious_augmented = previous_aug.infectious
+  removed_augmented = previous_aug.removed
   for i in changed_individuals
     if ν < Inf
       pathway_out = pathwayfrom(i, network)
@@ -111,9 +111,9 @@ Proposes augmented data by making random selection of individual `changes` to au
 """
 function propose_augment(ρ::Float64, ν::Float64, network::Array{Bool, 2}, previous_aug::SEIR_augmented, obs::SEIR_observed, changes=1::Int64, debug=false::Bool)
   if changes == 0
-    changed_individuals = pathwayfrom(0, network)
+    changed_individuals = pathwayfrom(0, network)[2:end]
   else
-    changed_individuals = sample(pathwayfrom(0, network), changes, replace=false)
+    changed_individuals = sample(pathwayfrom(0, network)[2:end], changes, replace=false)
   end
   return propose_augment(changed_individuals, ρ, ν, network, previous_aug, obs, debug)
 end
@@ -645,6 +645,10 @@ function MCMC(n::Int64,
     debug && println("Performing the $(i)th MCMC iteration")
     if mod(i, 3) == 1
       step = rand(MvNormal(transition_cov))
+      step[6] = 0.
+    elseif mod(i, 3) == 2
+      step = rand(MvNormal(transition_cov))
+      step[[1,2,3,4,5,7]] = 0.
     else
       step = fill(0., 7)
     end
