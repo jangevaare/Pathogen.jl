@@ -239,7 +239,7 @@ function propose_network(changed_individuals::Vector{Int64},
     end
   end
   if debug
-    println("Network proposal ($(sum(network)) infections total, up to $(length(changed_individuals)) change(s) from previous network):")
+    # println("Network proposal ($(sum(network)) infections total, up to $(length(changed_individuals)) change(s) from previous network):")
     # println("$(0 + network)")
   end
   return network
@@ -257,8 +257,8 @@ function propose_network(network_rates::Array{Float64, 2}, debug=false::Bool)
     network[findfirst(rand(Multinomial(1, network_rates[:,i]/rate_totals[i]))), i] = true
   end
   if debug
-    println("Network proposal ($(sum(network)) infections total):")
-    println("$(0 + network)")
+    # println("Network proposal ($(sum(network)) infections total):")
+    # println("$(0 + network)")
   end
   return network
 end
@@ -308,8 +308,8 @@ function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, network::Array{B
   end
   seq_dist += transpose(seq_dist)
   if debug
-    println("Sequence distances:")
-    println(round(seq_dist, 3))
+    # println("Sequence distances:")
+    # println(round(seq_dist, 3))
   end
   return seq_dist
 end
@@ -507,7 +507,7 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
                                            obs,
                                            debug,
                                            dist)
-    lp = logprior(ilm_priors,
+    lp += logprior(ilm_priors,
                    ilm_params,
                    debug)
     lp += detection_loglikelihood(detection_params,
@@ -533,6 +533,7 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
                      debug)
     end
     if lp > -Inf
+      @assert(lp < Inf, "Detected infinite log posterior")
       return SEIR_trace([ilm_params[1]],
                         [ilm_params[2]],
                         [ilm_params[3]],
@@ -587,6 +588,7 @@ function initialize(ilm_priors::SEIR_priors,
       lp += exposure_network_loglikelihood(network, network_rates, debug)
     end
     if lp > -Inf
+      assert(lp < Inf, "Detected infinite log posterior")
       return SEIR_trace([ilm_params[1]],
                         [ilm_params[2]],
                         [ilm_params[3]],
@@ -610,13 +612,13 @@ function MHreject(lp1::Float64, lp2::Float64, debug=false::Bool)
   @assert(lp1 < Inf && lp2 < Inf, "Infinite log posterior detected")
   reject = true
   if lp1 >= lp2
-    debug && println("Proposal accepted")
+    debug && println("MCMC proposal accepted")
     reject = false
   elseif exp(lp1 - lp2) >= rand()
-    debug && println("Proposal probabilistically accepted")
+    debug && println("MCMC proposal probabilistically accepted")
     reject = false
   end
-  debug && reject && println("Proposal rejected")
+  debug && reject && println("MCMC Proposal rejected")
   return reject
 end
 
@@ -637,7 +639,8 @@ function MCMC(n::Int64,
           "Transition kernel's covariance matrix must be a positive definite 7x7 matrix")
   progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 30)
   for i = 1:n
-    progress && next!(progressbar)
+    progress && !debug && next!(progressbar)
+    debug && println("Performing the $(i)th MCMC iteration")
     if mod(n, 2) == 1
       step = rand(MvNormal(transition_cov))
       ilm_proposal = [ilm_trace.α[end],
@@ -829,7 +832,8 @@ function MCMC(n::Int64,
   "Transition kernel's covariance matrix must be a positive definite 6x6 matrix")
   progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 30)
   for i = 1:n
-    progress && next!(progressbar)
+    progress && !debug && next!(progressbar)
+    debug && println("Performing the $(i)th MCMC iteration")
     if mod(n, 2) == 1
       step = rand(MvNormal(transition_cov))
       ilm_proposal = [ilm_trace.α[end],
