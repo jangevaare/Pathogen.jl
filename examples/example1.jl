@@ -39,7 +39,7 @@ detection_priors = Lag_priors(Gamma(2))
 
 mutation_priors = JC69_priors(Gamma(0.001))
 
-ilm_trace, detection_trace, mutation_trace = MCMC(100000,
+ilm_trace, detection_trace, mutation_trace = MCMC(10000,
                                                   ilm_priors,
                                                   detection_priors,
                                                   mutation_priors,

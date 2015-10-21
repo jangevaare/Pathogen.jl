@@ -97,7 +97,6 @@ function propose_augment(changed_individuals::Vector{Int64}, ρ::Float64, ν::Fl
     end
   end
   if debug
-    println("DATA AUGMENTATION")
     println("$(sum(!isnan(exposed_augmented))), $(sum(!isnan(infectious_augmented))), and $(sum(!isnan(removed_augmented))) augmented exposure, infection, and removal times respectively")
     for i = 1:length(obs.infectious)
       @assert(!(isnan(exposed_augmented[i]) && !isnan(obs.infectious[i])), "Data augmentation error: could not generate exposure event $i")
@@ -149,11 +148,12 @@ function propose_augment(ρ::Float64, ν::Float64, obs::SEIR_observed, debug=fal
     end
   end
   if debug
-    println("DATA AUGMENTATION")
-    println("Augmented exposure times ($(sum(!isnan(exposed_augmented))) total): $(round(exposed_augmented,3))")
-    println("Augmented infection times ($(sum(!isnan(removed_augmented))) total): $(round(infectious_augmented,3))")
-    println("Augmented removal times ($(sum(!isnan(removed_augmented))) total): $(round(removed_augmented,3))")
-    println("")
+    println("$(sum(!isnan(exposed_augmented))), $(sum(!isnan(infectious_augmented))), and $(sum(!isnan(removed_augmented))) augmented exposure, infection, and removal times respectively")
+    for i = 1:length(obs.infectious)
+      @assert(!(isnan(exposed_augmented[i]) && !isnan(obs.infectious[i])), "Data augmentation error: could not generate exposure event $i")
+      @assert(!(isnan(infectious_augmented[i]) && !isnan(obs.infectious[i])), "Data augmentation error: could not generate infectious event $i")
+      @assert(!(isnan(removed_augmented[i]) && !isnan(obs.removed[i])), "Data augmentation error: could not generate exposure event $i")
+    end
   end
   return SEIR_augmented(exposed_augmented, infectious_augmented, removed_augmented)
 end
@@ -165,13 +165,15 @@ propose_augment(ρ, Inf, obs, debug) = propose_augment(ρ::Float64, obs::SEIR_ob
 """
 Calculate the log prior from prior distributions and specified parameter values
 """
-function logprior(priors::Priors, params::Vector{Float64})
+function logprior(priors::Priors, params::Vector{Float64}, debug=false::Bool)
   @assert(length(params) == length(fieldnames(priors)),
           "Mismatch between parameter vector and prior")
   lprior = 0.
   for i = 1:length(params)
     lprior += logpdf(priors.(fieldnames(priors)[i]), params[i])
   end
+  if debug
+    println("$(typeof(priors)) log prior: $lprior")
   return lprior
 end
 
@@ -205,9 +207,9 @@ function propose_network(network_rates::Array{Float64, 2},
   end
   return propose_network(changed_individuals,
                          network_rates,
-                        previous_network,
-                        debug,
-                        method)
+                         previous_network,
+                         debug,
+                         method)
 end
 
 
@@ -270,27 +272,25 @@ function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, network::Array{B
   seq_dist = fill(0., (size(network, 2), size(network, 2)))
 
   for i = 1:length(pathways)
-    if debug
-      println("")
-      println("SEQUENCE DISTANCES")
-      println("Infection of individual $(pathways[i][1]) observed at $(obs.infectious[pathways[i][1]])")
-      println("Infection pathway of individual $(pathways[i][1]) is $(pathways[i])")
-    end
+    # if debug
+    #   println("Infection of individual $(pathways[i][1]) observed at $(obs.infectious[pathways[i][1]])")
+    #   println("Infection pathway of individual $(pathways[i][1]) is $(pathways[i])")
+    # end
     for j = 1:(i-1)
       k = 1
       while length(pathways[i]) > k && length(pathways[j]) > k && pathways[i][end - k] == pathways[j][end - k]
         k += 1
       end
-      if debug
-        println("Infection of individual $(pathways[j][1]) observed at $(obs.infectious[pathways[j][1]])")
-        println("Infection pathway of individual $(pathways[j][1]) is $(pathways[j])")
-        if k == length(pathways[i]) || k == length(pathways[j])
-          println("Linear infection pathway between individual $(pathways[i][1]) and individual $(pathways[j][1])")
-        else
-          println("Most recent common infection source of individuals $(pathways[i][1]) and $(pathways[j][1]) is $(pathways[i][end - k + 1])")
-          println("The infection pathway of $(pathways[i][1]) and $(pathways[j][1]) diverged with $(pathways[i][end - k]) and $(pathways[j][end - k])")
-        end
-      end
+      # if debug
+      #   println("Infection of individual $(pathways[j][1]) observed at $(obs.infectious[pathways[j][1]])")
+      #   println("Infection pathway of individual $(pathways[j][1]) is $(pathways[j])")
+      #   if k == length(pathways[i]) || k == length(pathways[j])
+      #     println("Linear infection pathway between individual $(pathways[i][1]) and individual $(pathways[j][1])")
+      #   else
+      #     println("Most recent common infection source of individuals $(pathways[i][1]) and $(pathways[j][1]) is $(pathways[i][end - k + 1])")
+      #     println("The infection pathway of $(pathways[i][1]) and $(pathways[j][1]) diverged with $(pathways[i][end - k]) and $(pathways[j][end - k])")
+      #   end
+      # end
 
       if k == length(pathways[i])
         seq_dist[pathways[i][1],pathways[j][1]] += obs.infectious[pathways[j][1]] - aug.exposed[pathways[j][end - k]]
@@ -304,11 +304,7 @@ function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, network::Array{B
         seq_dist[pathways[i][1],pathways[j][1]] += abs(aug.exposed[pathways[j][end - k]] - aug.exposed[pathways[i][end - k]])
       end
     end
-    if debug
-      println("")
-    end
   end
-
   return seq_dist += transpose(seq_dist)
 end
 
@@ -329,6 +325,9 @@ function phylogenetic_network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmen
   if isnan(ll)
     ll = -Inf
   end
+  if debug
+    println("Phylogenetic network log likelihood: $ll")
+  end
   return ll
 end
 
@@ -346,6 +345,9 @@ function exposure_network_loglikelihood(network::Array{Bool, 2}, network_rates::
   if isnan(ll)
     ll = -Inf
   end
+  if debug
+    println("Exposure network log likelihood: $ll")
+  end
   return ll
 end
 
@@ -353,7 +355,7 @@ end
 """
 loglikelihood for detection...
 """
-function detection_loglikelihood(detection_params::Vector{Float64}, obs::SEIR_observed, aug::SEIR_augmented)
+function detection_loglikelihood(detection_params::Vector{Float64}, obs::SEIR_observed, aug::SEIR_augmented, debug=false::Bool)
   ll = 0
   if length(detection_params) == 1
     ll += loglikelihood(Exponential(1/detection_params[1]), (obs.removed .- aug.removed)[!isnan(obs.removed)])
@@ -361,6 +363,9 @@ function detection_loglikelihood(detection_params::Vector{Float64}, obs::SEIR_ob
   end
   if isnan(ll)
     ll = -Inf
+  end
+  if debug
+    println("Detection log likelihood: $ll")
   end
   return ll
 end
@@ -497,16 +502,18 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
                                            debug,
                                            dist)
     lp += logprior(ilm_priors,
-                   ilm_params)
+                   ilm_params,
+                   debug)
     lp += detection_loglikelihood(detection_params,
                                   obs,
-                                  aug)
+                                  aug,
+                                  debug)
     lp += logprior(detection_priors,
-                   detection_params)
+                   detection_params,
+                   debug)
     if lp > -Inf
       network = propose_network(network_rates,
-                                debug,
-                                "uniform")
+                                debug)
       lp += phylogenetic_network_loglikelihood(obs,
                                                aug,
                                                network,
@@ -516,7 +523,8 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
                                            network_rates,
                                            debug)
       lp += logprior(mutation_priors,
-                     mutation_params)
+                     mutation_params,
+                     debug)
     end
     if lp > -Inf
       return SEIR_trace([ilm_params[1]],
@@ -552,7 +560,10 @@ function initialize(ilm_priors::SEIR_priors,
     count += 1
     ilm_params = randprior(ilm_priors)
     detection_params = randprior(detection_priors)
-    aug = propose_augment(ilm_params[4], detection_params[1], obs, debug)
+    aug = propose_augment(ilm_params[4],
+                          detection_params[1],
+                          obs,
+                          debug)
     lp, network_rates = SEIR_loglikelihood(ilm_params[1],
                                            ilm_params[2],
                                            ilm_params[3],
@@ -562,8 +573,8 @@ function initialize(ilm_priors::SEIR_priors,
                                            obs,
                                            debug,
                                            dist)
-    lp += logprior(ilm_priors, ilm_params)
-    lp += detection_loglikelihood(detection_params, obs, aug)
+    lp += logprior(ilm_priors, ilm_params, debug)
+    lp += detection_loglikelihood(detection_params, obs, aug, debug)
     lp += logprior(detection_priors, detection_params)
     if lp > -Inf
       network = propose_network(network_rates, debug)
@@ -577,7 +588,8 @@ function initialize(ilm_priors::SEIR_priors,
                         [ilm_params[5]],
                         [aug],
                         Array[network_rates],
-                        Array[network], [lp]),
+                        Array[network],
+                        [lp]),
               Lag_trace([detection_params[1]])
     end
     @assert(count < limit && lp > -Inf, "Failed to initialize")
@@ -622,9 +634,9 @@ function MCMC(n::Int64,
       detection_proposal = [detection_trace.ν[end]]
       mutation_proposal = [mutation_trace.λ[end]]
     end
-    lp = logprior(ilm_priors, ilm_proposal)
-    lp += logprior(detection_priors, detection_proposal)
-    lp += logprior(mutation_priors, mutation_proposal)
+    lp = logprior(ilm_priors, ilm_proposal, debug)
+    lp += logprior(detection_priors, detection_proposal, debug)
+    lp += logprior(mutation_priors, mutation_proposal, debug)
 
     if lp > -Inf
       if mod(n, 2) == 0
@@ -642,6 +654,10 @@ function MCMC(n::Int64,
       else
         aug = ilm_trace.aug[end]
       end
+      lp += detection_loglikelihood(detection_proposal,
+                                    obs,
+                                    aug,
+                                    debug)
 
       # SEIR loglikelihood
       ll, network_rates = SEIR_loglikelihood(ilm_proposal[1],
@@ -805,9 +821,8 @@ function MCMC(n::Int64,
                       ilm_trace.ρ[end],
                       ilm_trace.γ[end]] .+ step[1:5]
       detection_proposal = [detection_trace.ν[end]] .+ step[6]
-      lp = logprior(ilm_priors, ilm_proposal)
-      lp += logprior(detection_priors, detection_proposal)
-      lp += logprior(mutation_priors, mutation_proposal)
+      lp = logprior(ilm_priors, ilm_proposal, debug)
+      lp += logprior(detection_priors, detection_proposal, debug)
     else
       ilm_proposal = [ilm_trace.α[end],
                       ilm_trace.β[end],
@@ -815,8 +830,8 @@ function MCMC(n::Int64,
                       ilm_trace.ρ[end],
                       ilm_trace.γ[end]]
       detection_proposal = [detection_trace.ν[end]]
-      lp = logprior(ilm_priors, ilm_proposal)
-      lp += logprior(detection_priors, detection_proposal)
+      lp = logprior(ilm_priors, ilm_proposal, debug)
+      lp += logprior(detection_priors, detection_proposal, debug)
     end
 
     if lp > -Inf
@@ -837,7 +852,10 @@ function MCMC(n::Int64,
       else
         aug = ilm_trace.aug[end]
       end
-
+      lp += detection_loglikelihood(detection_proposal,
+                                    obs,
+                                    aug,
+                                    debug)
       # SEIR loglikelihood
       ll, network_rates = SEIR_loglikelihood(ilm_proposal[1],
                                              ilm_proposal[2],
@@ -852,8 +870,8 @@ function MCMC(n::Int64,
     end
 
     if lp > -Inf
-      # Generate network proposal
       if mod(n, 2) == 0
+        # Generate network proposal
         network = propose_network(changed_individuals,
                                   network_rates,
                                   ilm_trace.network[end],
