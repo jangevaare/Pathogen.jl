@@ -636,35 +636,37 @@ function MCMC(n::Int64,
               dist=Euclidean())
 
   @assert(size(transition_cov) == (7,7),
-          "Transition kernel's covariance matrix must be a positive definite 7x7 matrix")
+          "Transition kernel covariance matrix must be a positive definite 7x7 matrix")
   progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 30)
+  debug && println("MCMC transition kernel covariance matrix:")
+  debug && println(round(transition_cov, 3))
   for i = 1:n
     progress && !debug && next!(progressbar)
+    debug && println("")
     debug && println("Performing the $(i)th MCMC iteration")
-    if mod(n, 2) == 1
+    if mod(i, 2) == 1
       step = rand(MvNormal(transition_cov))
-      ilm_proposal = [ilm_trace.α[end],
-                      ilm_trace.β[end],
-                      ilm_trace.η[end],
-                      ilm_trace.ρ[end],
-                      ilm_trace.γ[end]] .+ step[1:5]
-      detection_proposal = [detection_trace.ν[end]] .+ step[6]
-      mutation_proposal = [mutation_trace.λ[end]] .+ step[7]
     else
-      ilm_proposal = [ilm_trace.α[end],
-                      ilm_trace.β[end],
-                      ilm_trace.η[end],
-                      ilm_trace.ρ[end],
-                      ilm_trace.γ[end]]
-      detection_proposal = [detection_trace.ν[end]]
-      mutation_proposal = [mutation_trace.λ[end]]
+      step = fill(0., 7)
     end
+    ilm_proposal = [ilm_trace.α[end],
+                    ilm_trace.β[end],
+                    ilm_trace.η[end],
+                    ilm_trace.ρ[end],
+                    ilm_trace.γ[end]] .+ step[1:5]
+    detection_proposal = [detection_trace.ν[end]] .+ step[6]
+    mutation_proposal = [mutation_trace.λ[end]] .+ step[7]
+
+    debug && println("Proposed parameter changes: $step")
+    debug && println("ILM proposal: $ilm_proposal")
+    debug && println("Detection proposal: $detection_proposal")
+    debug && println("Mutation proposal: $mutation_proposal")
     lp = logprior(ilm_priors, ilm_proposal, debug)
     lp += logprior(detection_priors, detection_proposal, debug)
     lp += logprior(mutation_priors, mutation_proposal, debug)
 
     if lp > -Inf
-      if mod(n, 2) == 0
+      if mod(i, 2) == 0
         # Randomly select individual(s)
         changed_individuals = sample(findn(ilm_trace.network[end])[2], 1, replace=false)
 
@@ -698,7 +700,7 @@ function MCMC(n::Int64,
     end
 
     if lp > -Inf
-      if mod(n, 2) == 0
+      if mod(i, 2) == 0
         # Generate network proposal
         network = propose_network(changed_individuals,
                                   network_rates,
@@ -829,12 +831,12 @@ function MCMC(n::Int64,
               dist=Euclidean())
 
   @assert(size(transition_cov) == (6,6),
-  "Transition kernel's covariance matrix must be a positive definite 6x6 matrix")
+  "Transition kernel covariance matrix must be a positive definite 6x6 matrix")
   progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 30)
   for i = 1:n
     progress && !debug && next!(progressbar)
     debug && println("Performing the $(i)th MCMC iteration")
-    if mod(n, 2) == 1
+    if mod(i, 2) == 1
       step = rand(MvNormal(transition_cov))
       ilm_proposal = [ilm_trace.α[end],
                       ilm_trace.β[end],
@@ -855,7 +857,7 @@ function MCMC(n::Int64,
       lp += logprior(detection_priors, detection_proposal, debug)
     end
     if lp > -Inf
-      if mod(n, 2) == 0
+      if mod(i, 2) == 0
         # Randomly select individual(s)
         changed_individuals = sample(findn(ilm_trace.network[end])[2],
                                      1,
@@ -890,7 +892,7 @@ function MCMC(n::Int64,
     end
 
     if lp > -Inf
-      if mod(n, 2) == 0
+      if mod(i, 2) == 0
         # Generate network proposal
         network = propose_network(changed_individuals,
                                   network_rates,
