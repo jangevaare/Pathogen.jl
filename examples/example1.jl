@@ -39,31 +39,22 @@ detection_priors = Lag_priors(Gamma(2))
 
 mutation_priors = JC69_priors(Uniform(0., 0.002))
 
-ilm_trace, detection_trace, mutation_trace = MCMC(10000,
+ilm_trace, detection_trace, mutation_trace = MCMC(100000,
                                                   ilm_priors,
                                                   detection_priors,
                                                   mutation_priors,
-                                                  obs)
+                                                  obs, true, true)
 
 # Tune the transition kernel's covariance matrix
 n = 100
+progressbar = Progress(n, 5, "Performing $n tuning MCMC stages...", 30)
 for i = 1:n
 
   # Progress bar
-  if i == 1
-    progressbar = Progress(n, 5, "Performing $n tuning MCMC stages...", 30)
-  else
-    next!(progressbar)
-  end
+  i > 1 && next!(progressbar)
 
   # Tune transition matrix
-  opt_cov = cov([ilm_trace.α
-                 ilm_trace.β
-                 ilm_trace.ρ
-                 ilm_trace.γ
-                 ilm_trace.η
-                 detection_trace.ν
-                 mutation_trace.λ])*(2.38^2)/7.
+  opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.ρ ilm_trace.γ ilm_trace.η detection_trace.ν mutation_trace.λ])*(2.38^2)/7.
 
   # Perform 1000 MCMC iterations
   MCMC(1000,
@@ -79,13 +70,7 @@ for i = 1:n
        false)
 end
 
-opt_cov = cov([ilm_trace.α
-               ilm_trace.β
-               ilm_trace.ρ
-               ilm_trace.γ
-               ilm_trace.η
-               detection_trace.ν
-               mutation_trace.λ])*(2.38^2)/7.
+opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.ρ ilm_trace.γ ilm_trace.η detection_trace.ν mutation_trace.λ])*(2.38^2)/7.
 
 MCMC(100000,
      opt_cov,

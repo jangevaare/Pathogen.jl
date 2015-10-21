@@ -66,7 +66,7 @@ function propose_augment(changed_individuals::Vector{Int64}, ρ::Float64, ν::Fl
   infectious_augmented = copy(previous_aug.infectious)
   removed_augmented = copy(previous_aug.removed)
 
-  for i = changed_individuals
+  for i in changed_individuals
     if ν < Inf
       pathway_out = pathwayfrom(i, network)
       pathway_in = pathwayto(i, network)
@@ -228,13 +228,13 @@ function propose_network(changed_individuals::Vector{Int64},
   rate_totals = sum(network_rates,1)
   network[:, changed_individuals] = false
   if method == "uniform"
-    for i = changed_individuals
+    for i in changed_individuals
       network[sample(find(network_rates[:,i] .> 0.)), i] = true
     end
   elseif method == "multinomial"
     @assert(size(network_rates) == size(previous_network),
             "A mismatch in the previous network and network rates dimensions was detected in the network proposal function")
-    for i = changed_individuals
+    for i in changed_individuals
       network[findfirst(rand(Multinomial(1, network_rates[:,i]/rate_totals[i]))), i] = true
     end
   end
@@ -253,7 +253,7 @@ function propose_network(network_rates::Array{Float64, 2}, debug=false::Bool)
   network = fill(false, size(network_rates))
   rate_totals = sum(network_rates,1)
   exposures = find(rate_totals .> 0)
-  for i = exposures
+  for i in exposures
     network[findfirst(rand(Multinomial(1, network_rates[:,i]/rate_totals[i]))), i] = true
   end
   if debug
@@ -344,7 +344,7 @@ Loglikelihood for a transmission network based on exposure rates
 function exposure_network_loglikelihood(network::Array{Bool, 2}, network_rates::Array{Float64}, debug=false::Bool)
   ll = 0.
   infected = find(sum(network, 1))
-  for i = infected
+  for i in infected
      ll += log(network_rates[findfirst(network[:,i]),i]/sum(network_rates[:,i]))
      ll == -Inf || isnan(ll) && break
   end
@@ -510,10 +510,10 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
     lp += logprior(ilm_priors,
                    ilm_params,
                    debug)
-    lp += detection_loglikelihood(detection_params,
-                                  obs,
-                                  aug,
-                                  debug)
+    # lp += detection_loglikelihood(detection_params,
+    #                               obs,
+    #                               aug,
+    #                               debug)
     lp += logprior(detection_priors,
                    detection_params,
                    debug)
@@ -581,7 +581,7 @@ function initialize(ilm_priors::SEIR_priors,
                                            debug,
                                            dist)
     lp += logprior(ilm_priors, ilm_params, debug)
-    lp += detection_loglikelihood(detection_params, obs, aug, debug)
+    # lp += detection_loglikelihood(detection_params, obs, aug, debug)
     lp += logprior(detection_priors, detection_params)
     if lp > -Inf
       network = propose_network(network_rates, debug)
@@ -644,7 +644,7 @@ function MCMC(n::Int64,
     progress && !debug && next!(progressbar)
     debug && println("")
     debug && println("Performing the $(i)th MCMC iteration")
-    if mod(i, 2) == 1
+    if mod(i, 3) == 1
       step = rand(MvNormal(transition_cov))
     else
       step = fill(0., 7)
@@ -666,11 +666,9 @@ function MCMC(n::Int64,
     lp += logprior(mutation_priors, mutation_proposal, debug)
 
     if lp > -Inf
-      if mod(i, 2) == 0
-        # Randomly select individual(s)
-        changed_individuals = sample(findn(ilm_trace.network[end])[2], 1, replace=false)
-
+      if mod(i, 3) == 2
         # Generate data augmentation proposal
+        changed_individuals = pathwayfrom(0, ilm_trace.network[end])
         aug = propose_augment(changed_individuals,
                               ilm_proposal[4],
                               detection_proposal[1],
@@ -681,10 +679,10 @@ function MCMC(n::Int64,
       else
         aug = ilm_trace.aug[end]
       end
-      lp += detection_loglikelihood(detection_proposal,
-                                    obs,
-                                    aug,
-                                    debug)
+      # lp += detection_loglikelihood(detection_proposal,
+      #                               obs,
+      #                               aug,
+      #                               debug)
 
       # SEIR loglikelihood
       ll, network_rates = SEIR_loglikelihood(ilm_proposal[1],
@@ -700,10 +698,9 @@ function MCMC(n::Int64,
     end
 
     if lp > -Inf
-      if mod(i, 2) == 0
+      if mod(i, 3) == 0
         # Generate network proposal
-        network = propose_network(changed_individuals,
-                                  network_rates,
+        network = propose_network(network_rates,
                                   ilm_trace.network[end],
                                   debug,
                                   "uniform")
@@ -804,7 +801,7 @@ function MCMC(n::Int64,
                           var(ilm_priors.ρ),
                           var(ilm_priors.γ),
                           var(detection_priors.ν),
-                          var(mutation_priors.λ)])
+                          var(mutation_priors.λ)])*(2.38^2)/7.
 
   return MCMC(n,
               transition_cov,
@@ -979,7 +976,7 @@ function MCMC(n::Int64,
                           var(ilm_priors.η),
                           var(ilm_priors.ρ),
                           var(ilm_priors.γ),
-                          var(detection_priors.ν)])
+                          var(detection_priors.ν)])*(2.38^2)/6.
   return MCMC(n,
               transition_cov,
               ilm_priors,
