@@ -57,15 +57,13 @@ end
 
 surveil(population, Inf) = surveil(population::Population)
 
-
 """
 Proposes augmented data for a specified vector of `changed_individuals`
 """
 function propose_augment(changed_individuals::Vector{Int64}, ρ::Float64, ν::Float64, network::Array{Bool, 2}, previous_aug::SEIR_augmented, obs::SEIR_observed, debug=false::Bool)
-  exposed_augmented = copy(previous_aug.exposed)
-  infectious_augmented = copy(previous_aug.infectious)
-  removed_augmented = copy(previous_aug.removed)
-
+  exposed_augmented = deepcopy(previous_aug.exposed)
+  infectious_augmented = deepcopy(previous_aug.infectious)
+  removed_augmented = deepcopy(previous_aug.removed)
   for i in changed_individuals
     if ν < Inf
       pathway_out = pathwayfrom(i, network)
@@ -194,29 +192,6 @@ end
 """
 Propose a network
 """
-function propose_network(network_rates::Array{Float64, 2},
-                         previous_network::Array{Bool, 2},
-                         debug=false::Bool,
-                         changes=1::Int64,
-                         method="multinomial"::String)
-  @assert(changes <= sum(rate_totals .> 0),
-          "Attempting to make more network changes than there are exposure events")
-  if changes == 0
-    changed_individuals = find(rate_totals .> 0)
-  else
-    changed_individuals = sample(find(rate_totals .> 0), changes, replace=false)
-  end
-  return propose_network(changed_individuals,
-                         network_rates,
-                         previous_network,
-                         debug,
-                         method)
-end
-
-
-"""
-Propose a network
-"""
 function propose_network(changed_individuals::Vector{Int64},
                          network_rates::Array{Float64, 2},
                          previous_network::Array{Bool, 2},
@@ -224,7 +199,7 @@ function propose_network(changed_individuals::Vector{Int64},
                          method="multinomial"::String)
   @assert(any(method .== ["uniform", "multinomial"]),
           "Network proposal method must be 'uniform' or 'multinomial'.")
-  network = copy(previous_network)
+  network = previous_network
   rate_totals = sum(network_rates,1)
   network[:, changed_individuals] = false
   if method == "uniform"
@@ -243,6 +218,30 @@ function propose_network(changed_individuals::Vector{Int64},
     # println("$(0 + network)")
   end
   return network
+end
+
+
+"""
+Propose a network
+"""
+function propose_network(network_rates::Array{Float64, 2},
+                         previous_network::Array{Bool, 2},
+                         debug=false::Bool,
+                         changes=1::Int64,
+                         method="multinomial"::String)
+  rate_totals = sum(network_rates, 1)
+  @assert(changes <= sum(rate_totals .> 0),
+          "Attempting to make more network changes than there are exposure events")
+  if changes == 0
+    changed_individuals = find(rate_totals .> 0)
+  else
+    changed_individuals = sample(find(rate_totals .> 0), changes, replace=false)
+  end
+  return propose_network(changed_individuals,
+                         network_rates,
+                         previous_network,
+                         debug,
+                         method)
 end
 
 
@@ -702,6 +701,7 @@ function MCMC(n::Int64,
         network = propose_network(network_rates,
                                   ilm_trace.network[end],
                                   debug,
+                                  1,
                                   "uniform")
       else
         network = ilm_trace.network[end]
