@@ -174,6 +174,7 @@ function logprior(priors::Priors, params::Vector{Float64}, debug=false::Bool)
   end
   if debug
     println("$(typeof(priors)) log prior: $lprior")
+  end
   return lprior
 end
 
@@ -238,8 +239,8 @@ function propose_network(changed_individuals::Vector{Int64},
     end
   end
   if debug
-    println("Network proposal ($(sum(network)) infections total, up to $(length(changed_individuals)) changes from previous network):")
-    println("$(0 + network)")
+    println("Network proposal ($(sum(network)) infections total, up to $(length(changed_individuals)) change(s) from previous network):")
+    # println("$(0 + network)")
   end
   return network
 end
@@ -305,7 +306,12 @@ function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, network::Array{B
       end
     end
   end
-  return seq_dist += transpose(seq_dist)
+  seq_dist += transpose(seq_dist)
+  if debug
+    println("Sequence distances:")
+    println(round(seq_dist, 3))
+  end
+  return seq_dist
 end
 
 
@@ -501,7 +507,7 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
                                            obs,
                                            debug,
                                            dist)
-    lp += logprior(ilm_priors,
+    lp = logprior(ilm_priors,
                    ilm_params,
                    debug)
     lp += detection_loglikelihood(detection_params,
@@ -597,6 +603,22 @@ function initialize(ilm_priors::SEIR_priors,
 end
 
 
+"""
+A simple function for Metropolis-Hastings rejection using log posteriors
+"""
+function MHreject(lp1::Float64, lp2::Float64, debug=false::Bool)
+  @assert(lp1 < Inf && lp2 < Inf, "Infinite log posterior detected")
+  reject = true
+  if lp1 >= lp2
+    debug && println("Proposal accepted")
+    reject = false
+  elseif exp(lp1 - lp2) >= rand()
+    debug && println("Proposal probabilistically accepted")
+    reject = false
+  end
+  debug && reject && println("Proposal rejected")
+  return reject
+end
 
 function MCMC(n::Int64,
               transition_cov::Array{Float64},
@@ -694,12 +716,7 @@ function MCMC(n::Int64,
     end
 
     # Acceptance/rejection
-    reject = true
-    if lp >= ilm_trace.logposterior[end]
-      reject = false
-    elseif exp(lp - ilm_trace.logposterior[end]) >= rand()
-      reject = false
-    end
+    reject = MHreject(lp, ilm_trace.logposterior[end], debug)
 
     if reject
       aug = ilm_trace.aug[end]
@@ -833,7 +850,6 @@ function MCMC(n::Int64,
       lp = logprior(ilm_priors, ilm_proposal, debug)
       lp += logprior(detection_priors, detection_proposal, debug)
     end
-
     if lp > -Inf
       if mod(n, 2) == 0
         # Randomly select individual(s)
@@ -884,12 +900,7 @@ function MCMC(n::Int64,
     end
 
     # Acceptance/rejection
-    reject = true
-    if lp >= ilm_trace.logposterior[end]
-      reject = false
-    elseif exp(lp - ilm_trace.logposterior[end]) >= rand()
-      reject = false
-    end
+    reject = MHreject(lp, ilm_trace.logposterior[end], debug)
 
     if reject
       aug = ilm_trace.aug[end]

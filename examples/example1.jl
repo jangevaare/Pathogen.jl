@@ -15,7 +15,7 @@ substitution = jc69q([0.001])
 
 ratearray = create_ratearray(pop, powerlaw, substitution)
 
-while length(pop.timeline[1]) < 300.
+while length(pop.timeline[1]) < 500.
   onestep!(ratearray, pop, powerlaw, latency, recovery, substitution)
 end
 
@@ -31,19 +31,19 @@ actual, obs = surveil(pop, 2.)
 
 ilm_priors = SEIR_priors(Gamma(5),
                          Gamma(3),
-                         Gamma(0.001),
+                         Uniform(0., 0.002),
                          Gamma(1/3),
                          Gamma(1/5))
 
 detection_priors = Lag_priors(Gamma(2))
 
-mutation_priors = JC69_priors(Gamma(0.001))
+mutation_priors = JC69_priors(Uniform(0., 0.002))
 
-ilm_trace, detection_trace, mutation_trace = MCMC(10000,
+ilm_trace, detection_trace, mutation_trace = MCMC(1000,
                                                   ilm_priors,
                                                   detection_priors,
                                                   mutation_priors,
-                                                  obs)
+                                                  obs, true, true)
 
 # Tune the transition kernel's covariance matrix
 n = 100
