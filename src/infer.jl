@@ -668,13 +668,12 @@ function MCMC(n::Int64,
     if lp > -Inf
       if mod(i, 3) == 2
         # Generate data augmentation proposal
-        changed_individuals = pathwayfrom(0, ilm_trace.network[end])
-        aug = propose_augment(changed_individuals,
-                              ilm_proposal[4],
+        aug = propose_augment(ilm_proposal[4],
                               detection_proposal[1],
                               ilm_trace.network[end],
                               ilm_trace.aug[end],
                               obs,
+                              0,
                               debug)
       else
         aug = ilm_trace.aug[end]
