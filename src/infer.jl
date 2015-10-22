@@ -69,7 +69,7 @@ function propose_augment(changed_individuals::Vector{Int64}, network::Array{Bool
     pathway_out = pathwayfrom(i, network)
     pathway_in = pathwayto(i, network)
     if length(pathway_in) > 2
-      infectious_augmented[i] = rand(Uniform(minimum(infectious_augmented[pathway_in[2]]), obs.infectious[pathway_out]))
+      infectious_augmented[i] = rand(Uniform(infectious_augmented[pathway_in[2]], minimum(obs.infectious[pathway_out])))
       if isnan(obs.removed[pathway_in[2]])
         exposed_augmented[i] = rand(Uniform(infectious_augmented[pathway_in[2]], infectious_augmented[i]))
       else
@@ -80,7 +80,7 @@ function propose_augment(changed_individuals::Vector{Int64}, network::Array{Bool
       exposed_augmented[i] = rand(Uniform(0., infectious_augmented[i]))
     end
     if !isnan(obs.removed[i])
-      removed_augmented[i] = rand(Uniform(obs.infectious[i], obs.removed[i])
+      removed_augmented[i] = rand(Uniform(obs.infectious[i], obs.removed[i]))
     end
   end
   if debug
@@ -696,10 +696,6 @@ function MCMC(n::Int64,
     debug && println("Performing the $(i)th MCMC iteration")
     if mod(i, 3) == 1
       step = rand(MvNormal(transition_cov))
-      step[6] = 0.
-    elseif mod(i, 3) == 2
-      step = rand(MvNormal(transition_cov))
-      step[[1,2,3,4,5,7]] = 0.
     else
       step = fill(0., 7)
     end
@@ -725,7 +721,7 @@ function MCMC(n::Int64,
         aug = propose_augment(ilm_trace.network[end],
                               ilm_trace.aug[end],
                               obs,
-                              0,
+                              1,
                               debug)
       else
         aug = ilm_trace.aug[end]
@@ -754,11 +750,12 @@ function MCMC(n::Int64,
         network = propose_network(network_rates,
                                   ilm_trace.network[end],
                                   debug,
-                                  0.,
-                                  "multinomial")
+                                  1,
+                                  "uniform")
       else
         network = ilm_trace.network[end]
       end
+      lp += exposure_network_loglikelihood(network, network_rates, debug)
       lp += phylogenetic_network_loglikelihood(obs,
                                                aug,
                                                network,
