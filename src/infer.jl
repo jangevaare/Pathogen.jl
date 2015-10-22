@@ -255,17 +255,19 @@ function propose_network(changed_individuals::Vector{Int64},
   network[:, changed_individuals] = false
   if method == "uniform"
     for i in changed_individuals
+      network[:,i] = false
       network[sample(find(network_rates[:,i] .> 0.)), i] = true
     end
   elseif method == "multinomial"
     @assert(size(network_rates) == size(previous_network),
             "A mismatch in the previous network and network rates dimensions was detected in the network proposal function")
     for i in changed_individuals
+      network[:,i] = false
       network[findfirst(rand(Multinomial(1, network_rates[:,i]/rate_totals[i]))), i] = true
     end
   end
   if debug
-    # println("Network proposal ($(sum(network)) infections total, up to $(length(changed_individuals)) change(s) from previous network):")
+    println("Network proposal contains $(sum(network)) total exposure events, with up to $(length(changed_individuals)) change(s) from the previous network")
     # println("$(0 + network)")
   end
   return network
