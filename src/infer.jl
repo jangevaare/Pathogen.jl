@@ -57,6 +57,57 @@ end
 
 surveil(population, Inf) = surveil(population::Population)
 
+
+"""
+Proposes augmented data for a specified vector of `changed_individuals`
+"""
+function propose_augment(changed_individuals::Vector{Int64}, network::Array{Bool, 2}, previous_aug::SEIR_augmented, obs::SEIR_observed, debug=false::Bool)
+  exposed_augmented = previous_aug.exposed
+  infectious_augmented = previous_aug.infectious
+  removed_augmented = previous_aug.removed
+  for i in changed_individuals
+    pathway_out = pathwayfrom(i, network)
+    pathway_in = pathwayto(i, network)
+    if length(pathway_in) > 2
+      infectious_augmented[i] = rand(Uniform(minimum(infectious_augmented[pathway_in[2]]), obs.infectious[pathway_out]))
+      if isnan(obs.removed[pathway_in[2]])
+        exposed_augmented[i] = rand(Uniform(infectious_augmented[pathway_in[2]], infectious_augmented[i]))
+      else
+        exposed_augmented[i] = rand(Uniform(infectious_augmented[pathway_in[2]], minimum([infectious_augmented[i], removed_augmented[pathway_in[2]]])))
+      end
+    else
+      infectious_augmented[i] = rand(Uniform(0., minimum(obs.infectious[pathway_out])))
+      exposed_augmented[i] = rand(Uniform(0., infectious_augmented[i]))
+    end
+    if !isnan(obs.removed[i])
+      removed_augmented[i] = rand(Uniform(obs.infectious[i], obs.removed[i])
+    end
+  end
+  if debug
+    println("$(sum(!isnan(exposed_augmented))), $(sum(!isnan(infectious_augmented))), and $(sum(!isnan(removed_augmented))) augmented exposure, infection, and removal times respectively")
+    for i = 1:length(obs.infectious)
+      @assert(!(isnan(exposed_augmented[i]) && !isnan(obs.infectious[i])), "Data augmentation error: could not generate exposure event $i")
+      @assert(!(isnan(infectious_augmented[i]) && !isnan(obs.infectious[i])), "Data augmentation error: could not generate infectious event $i")
+      @assert(!(isnan(removed_augmented[i]) && !isnan(obs.removed[i])), "Data augmentation error: could not generate exposure event $i")
+    end
+  end
+  return SEIR_augmented(exposed_augmented, infectious_augmented, removed_augmented)
+end
+
+
+"""
+Proposes augmented data by making random selection of individual `changes` to augmented data
+"""
+function propose_augment(network::Array{Bool, 2}, previous_aug::SEIR_augmented, obs::SEIR_observed, changes=1::Int64, debug=false::Bool)
+  if changes == 0
+    changed_individuals = pathwayfrom(0, network)[2:end]
+  else
+    changed_individuals = sample(pathwayfrom(0, network)[2:end], changes, replace=false)
+  end
+  return propose_augment(changed_individuals, network, previous_aug, obs, debug)
+end
+
+
 """
 Proposes augmented data for a specified vector of `changed_individuals`
 """
@@ -509,10 +560,10 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
     lp += logprior(ilm_priors,
                    ilm_params,
                    debug)
-    # lp += detection_loglikelihood(detection_params,
-    #                               obs,
-    #                               aug,
-    #                               debug)
+    lp += detection_loglikelihood(detection_params,
+                                  obs,
+                                  aug,
+                                  debug)
     lp += logprior(detection_priors,
                    detection_params,
                    debug)
@@ -580,7 +631,7 @@ function initialize(ilm_priors::SEIR_priors,
                                            debug,
                                            dist)
     lp += logprior(ilm_priors, ilm_params, debug)
-    # lp += detection_loglikelihood(detection_params, obs, aug, debug)
+    lp += detection_loglikelihood(detection_params, obs, aug, debug)
     lp += logprior(detection_priors, detection_params)
     if lp > -Inf
       network = propose_network(network_rates, debug)
@@ -671,9 +722,7 @@ function MCMC(n::Int64,
     if lp > -Inf
       if mod(i, 3) == 2
         # Generate data augmentation proposal
-        aug = propose_augment(ilm_proposal[4],
-                              detection_proposal[1],
-                              ilm_trace.network[end],
+        aug = propose_augment(ilm_trace.network[end],
                               ilm_trace.aug[end],
                               obs,
                               0,
@@ -681,10 +730,10 @@ function MCMC(n::Int64,
       else
         aug = ilm_trace.aug[end]
       end
-      # lp += detection_loglikelihood(detection_proposal,
-      #                               obs,
-      #                               aug,
-      #                               debug)
+      lp += detection_loglikelihood(detection_proposal,
+                                    obs,
+                                    aug,
+                                    debug)
 
       # SEIR loglikelihood
       ll, network_rates = SEIR_loglikelihood(ilm_proposal[1],
@@ -705,14 +754,11 @@ function MCMC(n::Int64,
         network = propose_network(network_rates,
                                   ilm_trace.network[end],
                                   debug,
-                                  1,
-                                  "uniform")
+                                  0.,
+                                  "multinomial")
       else
         network = ilm_trace.network[end]
       end
-      lp += exposure_network_loglikelihood(network,
-                                           network_rates,
-                                           debug)
       lp += phylogenetic_network_loglikelihood(obs,
                                                aug,
                                                network,
