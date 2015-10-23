@@ -66,7 +66,7 @@ function propose_augment(changed_individuals::Vector{Int64}, network::Array{Bool
   infectious_augmented = previous_aug.infectious
   removed_augmented = previous_aug.removed
   for i in changed_individuals
-    pathway_out = pathwayfrom(i, network)
+    pathway_out = pathwayfrom(i, network, debug)
     pathway_in = pathwayto(i, network, debug)
     if length(pathway_in) > 2
       infectious_augmented[i] = rand(Uniform(infectious_augmented[pathway_in[2]], minimum(obs.infectious[pathway_out])))
@@ -100,9 +100,9 @@ Proposes augmented data by making random selection of individual `changes` to au
 """
 function propose_augment(network::Array{Bool, 2}, previous_aug::SEIR_augmented, obs::SEIR_observed, changes=1::Int64, debug=false::Bool)
   if changes == 0
-    changed_individuals = pathwayfrom(0, network)[2:end]
+    changed_individuals = pathwayfrom(0, network, debug)[2:end]
   else
-    changed_individuals = sample(pathwayfrom(0, network)[2:end], changes, replace=false)
+    changed_individuals = sample(pathwayfrom(0, network, debug)[2:end], changes, replace=false)
   end
   return propose_augment(changed_individuals, network, previous_aug, obs, debug)
 end
@@ -117,7 +117,7 @@ function propose_augment(changed_individuals::Vector{Int64}, ρ::Float64, ν::Fl
   removed_augmented = previous_aug.removed
   for i in changed_individuals
     if ν < Inf
-      pathway_out = pathwayfrom(i, network)
+      pathway_out = pathwayfrom(i, network, debug)
       pathway_in = pathwayto(i, network, debug)
       if length(pathway_in) > 2
         infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - minimum(obs.infectious[pathway_out]), obs.infectious[i] - infectious_augmented[pathway_in[2]]))
@@ -162,9 +162,9 @@ Proposes augmented data by making random selection of individual `changes` to au
 """
 function propose_augment(ρ::Float64, ν::Float64, network::Array{Bool, 2}, previous_aug::SEIR_augmented, obs::SEIR_observed, changes=1::Int64, debug=false::Bool)
   if changes == 0
-    changed_individuals = pathwayfrom(0, network)[2:end]
+    changed_individuals = pathwayfrom(0, network, debug)[2:end]
   else
-    changed_individuals = sample(pathwayfrom(0, network)[2:end], changes, replace=false)
+    changed_individuals = sample(pathwayfrom(0, network, debug)[2:end], changes, replace=false)
   end
   return propose_augment(changed_individuals, ρ, ν, network, previous_aug, obs, debug)
 end
