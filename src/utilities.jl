@@ -139,10 +139,13 @@ end
 """
 Return the transmission pathways leading to an individual
 """
-function pathwayto(infection::Int64, network::Array{Bool,2})
+function pathwayto(infection::Int64, network::Array{Bool,2}, debug=false::Bool)
   path = [infection]
   while path[end] > 0
     push!(path, findfirst(network[:, path[end]])-1)
+  end
+  if debug
+    println("Pathway to: $path")
   end
   return path
 end
@@ -151,7 +154,7 @@ end
 """
 Return all transmission pathways leading to specified individuals
 """
-function pathwaysto(infections::Vector{Int64}, network::Array{Bool,2})
+function pathwaysto(infections::Vector{Int64}, network::Array{Bool,2}, debug=false::Bool)
   paths = Array[Int64[]]
   for i = 1:length(infections)
     if i > 1
@@ -161,6 +164,9 @@ function pathwaysto(infections::Vector{Int64}, network::Array{Bool,2})
     while paths[i][end] > 0
       push!(paths[i], findfirst(network[:, paths[i][end]])-1)
     end
+    if debug
+      println("Pathway to: $(paths[i])")
+    end
   end
   return paths
 end
@@ -169,16 +175,16 @@ end
 """
 Return all transmission pathways
 """
-function pathwaysto(network::Array{Bool,2})
+function pathwaysto(network::Array{Bool,2}, debug=false::Bool)
   infections = find(sum(network,1))
-  return pathwaysto(infections, network)
+  return pathwaysto(infections, network, debug)
 end
 
 
 """
 Return the transmission pathways leading from an individual
 """
-function pathwayfrom(infection::Int64, network::Array{Bool,2})
+function pathwayfrom(infection::Int64, network::Array{Bool,2}, debug=false::Bool)
   path = [infection]
   pathlengths = [0]
   while length(path) > pathlengths[end]
@@ -191,6 +197,9 @@ function pathwayfrom(infection::Int64, network::Array{Bool,2})
       end
     end
   end
+  if debug
+    println("Pathway to: $path")
+  end
   return path
 end
 
@@ -198,7 +207,7 @@ end
 """
 Return all transmission pathways leading from specified individuals
 """
-function pathwaysfrom(infections::Vector{Int64}, network::Array{Bool,2})
+function pathwaysfrom(infections::Vector{Int64}, network::Array{Bool,2}, debug=false::Bool)
   paths = Array[Int64[]]
   for i = 1:length(infections)
     if i > 1
@@ -216,6 +225,9 @@ function pathwaysfrom(infections::Vector{Int64}, network::Array{Bool,2})
         end
       end
     end
+    if debug
+      println("Pathway from: $(paths[i])")
+    end
   end
   return paths
 end
@@ -224,7 +236,7 @@ end
 """
 Return all transmission pathways
 """
-function pathwaysfrom(network::Array{Bool,2})
+function pathwaysfrom(network::Array{Bool,2}, debug=false::Bool)
   infections = find(sum(network,1))
-  return pathwaysfrom(infections, network)
+  return pathwaysfrom(infections, network, debug)
 end

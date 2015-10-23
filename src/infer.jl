@@ -67,7 +67,7 @@ function propose_augment(changed_individuals::Vector{Int64}, network::Array{Bool
   removed_augmented = previous_aug.removed
   for i in changed_individuals
     pathway_out = pathwayfrom(i, network)
-    pathway_in = pathwayto(i, network)
+    pathway_in = pathwayto(i, network, debug)
     if length(pathway_in) > 2
       infectious_augmented[i] = rand(Uniform(infectious_augmented[pathway_in[2]], minimum(obs.infectious[pathway_out])))
       if isnan(obs.removed[pathway_in[2]])
@@ -118,7 +118,7 @@ function propose_augment(changed_individuals::Vector{Int64}, ρ::Float64, ν::Fl
   for i in changed_individuals
     if ν < Inf
       pathway_out = pathwayfrom(i, network)
-      pathway_in = pathwayto(i, network)
+      pathway_in = pathwayto(i, network, debug)
       if length(pathway_in) > 2
         infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - minimum(obs.infectious[pathway_out]), obs.infectious[i] - infectious_augmented[pathway_in[2]]))
         if isnan(obs.removed[pathway_in[2]])
@@ -309,8 +309,8 @@ function propose_network(network_rates::Array{Float64, 2}, debug=false::Bool)
     network[findfirst(rand(Multinomial(1, network_rates[:,i]/rate_totals[i]))), i] = true
   end
   if debug
-    # println("Network proposal ($(sum(network)) infections total):")
-    # println("$(0 + network)")
+    println("Network proposal ($(sum(network)) infections total):")
+    println("$(0 + network)")
   end
   return network
 end
@@ -320,10 +320,8 @@ end
 For a given transmission network, find the time between the pathogen sequences between every individuals i and j
 """
 function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, network::Array{Bool, 2}, debug=false::Bool)
-  pathways = pathwaysto(network)
-
+  pathways = pathwaysto(network, debug)
   seq_dist = fill(0., (size(network, 2), size(network, 2)))
-
   for i = 1:length(pathways)
     # if debug
     #   println("Infection of individual $(pathways[i][1]) observed at $(obs.infectious[pathways[i][1]])")
@@ -360,8 +358,8 @@ function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, network::Array{B
   end
   seq_dist += transpose(seq_dist)
   if debug
-    # println("Sequence distances:")
-    # println(round(seq_dist, 3))
+    println("Sequence distances:")
+    println(round(seq_dist, 3))
   end
   return seq_dist
 end
