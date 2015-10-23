@@ -357,10 +357,10 @@ function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, network::Array{B
     end
   end
   seq_dist += transpose(seq_dist)
-  if debug
-    println("Sequence distances:")
-    println(round(seq_dist, 3))
-  end
+  # if debug
+  #   println("Sequence distances:")
+  #   println(round(seq_dist, 3))
+  # end
   return seq_dist
 end
 
@@ -542,7 +542,7 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
   lp = -Inf
 
   # Retry initialization until non-negative infinity loglikelihood
-  while lp == -Inf && count < limit
+  while lp == -Inf || lp == Inf && count < limit
     count += 1
     ilm_params = randprior(ilm_priors)
     mutation_params = randprior(mutation_priors)
@@ -567,23 +567,26 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
     lp += logprior(detection_priors,
                    detection_params,
                    debug)
-    if lp > -Inf
+    if Inf > lp > -Inf
       network = propose_network(network_rates,
                                 debug)
+      lp += exposure_network_loglikelihood(network,
+                                           network_rates,
+                                           debug)
+    end
+    if Inf > lp > -Inf
+      lp += logprior(mutation_priors,
+                     mutation_params,
+                     debug)
+    end
+    if Inf > lp > -Inf
       lp += phylogenetic_network_loglikelihood(obs,
                                                aug,
                                                network,
                                                jc69p([mutation_params[1]]),
                                                debug)
-      lp += exposure_network_loglikelihood(network,
-                                           network_rates,
-                                           debug)
-      lp += logprior(mutation_priors,
-                     mutation_params,
-                     debug)
     end
-    if lp > -Inf
-      @assert(lp < Inf, "Detected infinite log posterior")
+    if Inf > lp > -Inf
       return SEIR_trace([ilm_params[1]],
                         [ilm_params[2]],
                         [ilm_params[3]],
@@ -595,7 +598,7 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
               Lag_trace([detection_params[1]]),
               JC69_trace([mutation_params[1]])
     end
-    @assert(count < limit && lp > -Inf, "Failed to initialize")
+    @assert(count < limit && Inf > lp > -Inf, "Failed to initialize")
   end
 end
 
@@ -613,7 +616,7 @@ function initialize(ilm_priors::SEIR_priors,
   lp = -Inf
 
   # Retry initialization until non-negative infinity loglikelihood
-  while lp == -Inf && count < limit
+  while lp == -Inf || lp == Inf && count < limit
     count += 1
     ilm_params = randprior(ilm_priors)
     detection_params = randprior(detection_priors)
@@ -633,12 +636,11 @@ function initialize(ilm_priors::SEIR_priors,
     lp += logprior(ilm_priors, ilm_params, debug)
     lp += detection_loglikelihood(detection_params, obs, aug, debug)
     lp += logprior(detection_priors, detection_params)
-    if lp > -Inf
+    if Inf > lp > -Inf
       network = propose_network(network_rates, debug)
       lp += exposure_network_loglikelihood(network, network_rates, debug)
     end
-    if lp > -Inf
-      assert(lp < Inf, "Detected infinite log posterior")
+    if Inf > lp > -Inf
       return SEIR_trace([ilm_params[1]],
                         [ilm_params[2]],
                         [ilm_params[3]],
@@ -650,7 +652,7 @@ function initialize(ilm_priors::SEIR_priors,
                         [lp]),
               Lag_trace([detection_params[1]])
     end
-    @assert(count < limit && lp > -Inf, "Failed to initialize")
+    @assert(count < limit && Inf > lp > -Inf, "Failed to initialize")
   end
 end
 
@@ -730,7 +732,8 @@ function MCMC(n::Int64,
                                     obs,
                                     aug,
                                     debug)
-
+    end
+    if lp > -Inf
       # SEIR loglikelihood
       ll, network_rates = SEIR_loglikelihood(ilm_proposal[1],
                                              ilm_proposal[2],
@@ -743,7 +746,6 @@ function MCMC(n::Int64,
                                              dist)
       lp += ll
     end
-
     if lp > -Inf
       if mod(i, 3) == 0
         # Generate network proposal
@@ -756,6 +758,8 @@ function MCMC(n::Int64,
         network = ilm_trace.network[end]
       end
       lp += exposure_network_loglikelihood(network, network_rates, debug)
+    end
+    if lp > -Inf
       lp += phylogenetic_network_loglikelihood(obs,
                                                aug,
                                                network,
