@@ -76,8 +76,9 @@ function propose_augment(changed_individuals::Vector{Int64}, network::Array{Bool
         exposed_augmented[i] = rand(Uniform(infectious_augmented[pathway_in[2]], minimum([infectious_augmented[i], removed_augmented[pathway_in[2]]])))
       end
     else
-      infectious_augmented[i] = rand(Uniform(0., minimum(obs.infectious[pathway_out])))
-      exposed_augmented[i] = rand(Uniform(0., infectious_augmented[i]))
+      exposed_augmented[i], infectious_augmented[i]  = sort(rand(Uniform(0., minimum(obs.infectious[pathway_out])), 2))
+      # infectious_augmented[i] = rand(Uniform(0., minimum(obs.infectious[pathway_out])))
+      # exposed_augmented[i] = rand(Uniform(0., infectious_augmented[i]))
     end
     if !isnan(obs.removed[i])
       removed_augmented[i] = rand(Uniform(obs.infectious[i], obs.removed[i]))
@@ -709,10 +710,10 @@ function MCMC(n::Int64,
     detection_proposal = [detection_trace.ν[end]] .+ step[6]
     mutation_proposal = [mutation_trace.λ[end]] .+ step[7]
 
-    debug && println("Proposed parameter changes: $step")
-    debug && println("ILM proposal: $ilm_proposal")
-    debug && println("Detection proposal: $detection_proposal")
-    debug && println("Mutation proposal: $mutation_proposal")
+    debug && println("Proposed parameter changes: $(round(step, 3))")
+    debug && println("ILM proposal: $(round(ilm_proposal, 3))")
+    debug && println("Detection proposal: $(round(detection_proposal, 3))")
+    debug && println("Mutation proposal: $(round(mutation_proposal, 3))")
     lp = logprior(ilm_priors, ilm_proposal, debug)
     lp += logprior(detection_priors, detection_proposal, debug)
     lp += logprior(mutation_priors, mutation_proposal, debug)
