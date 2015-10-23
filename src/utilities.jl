@@ -198,7 +198,7 @@ function pathwayfrom(infection::Int64, network::Array{Bool,2}, debug=false::Bool
     end
   end
   if debug
-    println("Pathway to: $path")
+    println("Pathway from: $path")
   end
   return path
 end

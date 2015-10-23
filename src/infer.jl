@@ -223,7 +223,7 @@ function logprior(priors::Priors, params::Vector{Float64}, debug=false::Bool)
     lprior += logpdf(priors.(fieldnames(priors)[i]), params[i])
   end
   if debug
-    println("$(typeof(priors)) log prior: $lprior")
+    println("$(typeof(priors)) log prior: $(round(lprior,3))")
   end
   return lprior
 end
@@ -383,7 +383,7 @@ function phylogenetic_network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmen
     ll = -Inf
   end
   if debug
-    println("Phylogenetic network log likelihood: $ll")
+    println("Phylogenetic network log likelihood: $(round(ll,3))")
   end
   return ll
 end
@@ -403,7 +403,7 @@ function exposure_network_loglikelihood(network::Array{Bool, 2}, network_rates::
     ll = -Inf
   end
   if debug
-    println("Exposure network log likelihood: $ll")
+    println("Exposure network log likelihood: $(round(ll,3))")
   end
   return ll
 end
@@ -422,7 +422,7 @@ function detection_loglikelihood(detection_params::Vector{Float64}, obs::SEIR_ob
     ll = -Inf
   end
   if debug
-    println("Detection log likelihood: $ll")
+    println("Detection log likelihood: $(round(ll,3))")
   end
   return ll
 end
