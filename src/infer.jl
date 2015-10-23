@@ -269,7 +269,7 @@ function propose_network(changed_individuals::Vector{Int64},
   end
   if debug
     println("Network proposal contains $(sum(network)) total exposure events, with up to $(length(changed_individuals)) change(s) from the previous network")
-    # println("$(0 + network)")
+    spy(network)
   end
   return network
 end
@@ -311,7 +311,7 @@ function propose_network(network_rates::Array{Float64, 2}, debug=false::Bool)
   end
   if debug
     println("Network proposal ($(sum(network)) infections total):")
-    println("$(0 + network)")
+    spy(network)
   end
   return network
 end

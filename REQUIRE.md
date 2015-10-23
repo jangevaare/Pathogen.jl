@@ -5,3 +5,4 @@ Gadfly
 BioSeq
 Distances
 ProgressMeter
+UnicodePlots

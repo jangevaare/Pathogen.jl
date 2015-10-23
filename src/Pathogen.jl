@@ -1,7 +1,7 @@
 module Pathogen
 
 
-using Distributions, Distances, DataFrames, BioSeq, ProgressMeter
+using Distributions, Distances, DataFrames, BioSeq, ProgressMeter, UnicodePlots
 
 
 export
