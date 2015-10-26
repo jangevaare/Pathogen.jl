@@ -69,14 +69,27 @@ function propose_augment(changed_individuals::Vector{Int64}, network::Array{Bool
     pathway_out = pathwayfrom(i, network, debug)
     pathway_in = pathwayto(i, network, debug)
     if length(pathway_in) > 2
-      infectious_augmented[i] = rand(Uniform(maximum(infectious_augmented[pathway_in[2:(end-1)]]), minimum(obs.infectious[pathway_out])))
+      if debug
+        println("Observed infection times (pathway from $i): $(obs.infectious[pathway_out])")
+        println("Augmented infection times (pathway from $i): $(infectious_augmented[pathway_out])")
+        println("Augmented infection time (exposer of $i): $(infectious_augmented[pathway_in[2]])")
+        println("Augmented removal time (exposer of $i): $(removed_augmented[pathway_in[2]])")
+      end
+      infectious_augmented[i] = rand(Uniform(infectious_augmented[pathway_in[2]], minimum([obs.infectious[i]; infectious_augmented[pathway_out[2:end]]])))
+      # infectious_augmented[i] = rand(Uniform(maximum(infectious_augmented[pathway_in[2:(end-1)]]), minimum(obs.infectious[pathway_out])))
       if isnan(obs.removed[pathway_in[2]])
-        exposed_augmented[i] = rand(Uniform(maximum(infectious_augmented[pathway_in[2:(end-1)]]), infectious_augmented[i]))
+        exposed_augmented[i] = rand(Uniform(infectious_augmented[pathway_in[2]], infectious_augmented[i]))
+        # exposed_augmented[i] = rand(Uniform(maximum(infectious_augmented[pathway_in[2:(end-1)]]), infectious_augmented[i]))
       else
-        exposed_augmented[i] = rand(Uniform(maximum(infectious_augmented[pathway_in[2:(end-1)]]), minimum([infectious_augmented[i], removed_augmented[pathway_in[2]]])))
+        exposed_augmented[i] = rand(Uniform(infectious_augmented[pathway_in[2]], minimum([infectious_augmented[i]; removed_augmented[pathway_in[2]]])))
+        # exposed_augmented[i] = rand(Uniform(maximum(infectious_augmented[pathway_in[2:(end-1)]]), minimum([infectious_augmented[i], removed_augmented[pathway_in[2]]])))
       end
     else
-      exposed_augmented[i], infectious_augmented[i]  = sort(rand(Uniform(0., minimum(obs.infectious[pathway_out])), 2))
+      if debug
+        println("Observed infection times (pathway from $i): $(obs.infectious[pathway_out])")
+        println("Augmented infection times (pathway from $i): $(infectious_augmented[pathway_out])")
+      end
+      exposed_augmented[i], infectious_augmented[i]  = sort(rand(Uniform(0., minimum([obs.infectious[i]; infectious_augmented[pathway_out[2:end]]])), 2))
       # infectious_augmented[i] = rand(Uniform(0., minimum(obs.infectious[pathway_out])))
       # exposed_augmented[i] = rand(Uniform(0., infectious_augmented[i]))
     end
@@ -84,14 +97,14 @@ function propose_augment(changed_individuals::Vector{Int64}, network::Array{Bool
       removed_augmented[i] = rand(Uniform(obs.infectious[i], obs.removed[i]))
     end
   end
-  if debug
-    println("$(sum(!isnan(exposed_augmented))), $(sum(!isnan(infectious_augmented))), and $(sum(!isnan(removed_augmented))) augmented exposure, infection, and removal times respectively")
-    for i = 1:length(obs.infectious)
-      @assert(!(isnan(exposed_augmented[i]) && !isnan(obs.infectious[i])), "Data augmentation error: could not generate exposure event $i")
-      @assert(!(isnan(infectious_augmented[i]) && !isnan(obs.infectious[i])), "Data augmentation error: could not generate infectious event $i")
-      @assert(!(isnan(removed_augmented[i]) && !isnan(obs.removed[i])), "Data augmentation error: could not generate exposure event $i")
-    end
-  end
+  # if debug
+  #   println("$(sum(!isnan(exposed_augmented))), $(sum(!isnan(infectious_augmented))), and $(sum(!isnan(removed_augmented))) augmented exposure, infection, and removal times respectively")
+  #   for i = 1:length(obs.infectious)
+  #     @assert(!(isnan(exposed_augmented[i]) && !isnan(obs.infectious[i])), "Data augmentation error: could not generate exposure event $i")
+  #     @assert(!(isnan(infectious_augmented[i]) && !isnan(obs.infectious[i])), "Data augmentation error: could not generate infectious event $i")
+  #     @assert(!(isnan(removed_augmented[i]) && !isnan(obs.removed[i])), "Data augmentation error: could not generate exposure event $i")
+  #   end
+  # end
   return SEIR_augmented(exposed_augmented, infectious_augmented, removed_augmented)
 end
 
