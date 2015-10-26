@@ -69,11 +69,11 @@ function propose_augment(changed_individuals::Vector{Int64}, network::Array{Bool
     pathway_out = pathwayfrom(i, network, debug)
     pathway_in = pathwayto(i, network, debug)
     if length(pathway_in) > 2
-      infectious_augmented[i] = rand(Uniform(infectious_augmented[pathway_in[2]], minimum(obs.infectious[pathway_out])))
+      infectious_augmented[i] = rand(Uniform(maximum(infectious_augmented[pathway_in[2:(end-1)]]), minimum(obs.infectious[pathway_out])))
       if isnan(obs.removed[pathway_in[2]])
-        exposed_augmented[i] = rand(Uniform(infectious_augmented[pathway_in[2]], infectious_augmented[i]))
+        exposed_augmented[i] = rand(Uniform(maximum(infectious_augmented[pathway_in[2:(end-1)]]), infectious_augmented[i]))
       else
-        exposed_augmented[i] = rand(Uniform(infectious_augmented[pathway_in[2]], minimum([infectious_augmented[i], removed_augmented[pathway_in[2]]])))
+        exposed_augmented[i] = rand(Uniform(maximum(infectious_augmented[pathway_in[2:(end-1)]]), minimum([infectious_augmented[i], removed_augmented[pathway_in[2]]])))
       end
     else
       exposed_augmented[i], infectious_augmented[i]  = sort(rand(Uniform(0., minimum(obs.infectious[pathway_out])), 2))
