@@ -189,12 +189,8 @@ function pathwayfrom(infection::Int64, network::Array{Bool,2}, debug=false::Bool
   pathlengths = [0]
   while length(path) > pathlengths[end]
     push!(pathlengths, length(path))
-    if pathlengths[end] == 1
-      append!(path, find(network[path[1]+1,:]))
-    else
-      for j in path[pathlengths[end-1]:pathlengths[end]]
-        append!(path, find(network[j+1,:]))
-      end
+    for j in path[(pathlengths[end-1]+1):pathlengths[end]]
+      append!(path, find(network[j+1,:]))
     end
   end
   if debug
@@ -217,12 +213,8 @@ function pathwaysfrom(infections::Vector{Int64}, network::Array{Bool,2}, debug=f
     pathlengths = [0]
     while length(paths[i]) > pathlengths[end]
       push!(pathlengths, length(paths[i]))
-      if pathlengths[end] == 1
-        append!(paths[i], find(network[paths[i][1]+1,:]))
-      else
-        for j in paths[i][pathlengths[end-1]:pathlengths[end]]
-          append!(paths[i], find(network[j+1,:]))
-        end
+      for j in paths[i][(pathlengths[end-1]+1):pathlengths[end]]
+        append!(paths[i], find(network[j+1,:]))
       end
     end
     if debug
