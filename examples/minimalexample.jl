@@ -81,7 +81,7 @@ ilm_trace, detection_trace, mutation_trace = MCMC(100000,
 #      obs)
 
 using Gadfly, DataFrames
-cd("/Users/justin/Desktop/example1")
+cd("/Users/justin/Desktop/pathogen")
 
 # Simulation/Maximum posteriori visualization
 images = 500
@@ -113,7 +113,7 @@ for time = 1:images
 end
 
 # Assemble into animation
-run(`convert -delay 10 -loop 0 -layers optimize SEIR_simulation_*.png SEIR_animation_combined.gif`)
+run(`convert -delay 10 -loop 0 -layers optimize SEIR_simulation_*.png Phylogenetic_SEIR_animation_combined.gif`)
 
 # Remove frames
 for time = 1:images
@@ -142,7 +142,7 @@ plotdf = DataFrame(iteration = rep(1:100000,7),
                                 rep("ν",100000);
                                 rep("λ",100000)])
 
-draw(PNG("SEIR_traceplot.png", 20cm, 15cm),
+draw(PNG("Phylogenetic_SEIR_traceplot.png", 20cm, 15cm),
      plot(plotdf,
           x="iteration",
           y="value",
@@ -154,7 +154,7 @@ draw(PNG("SEIR_traceplot.png", 20cm, 15cm),
 
 
 # logposterior plot (last 100k iterations)
-draw(PNG("SEIR_logposterior.png", 20cm, 15cm),
+draw(PNG("Phylogenetic_SEIR_logposterior.png", 20cm, 15cm),
      plot(x=1:100000,
           y=ilm_trace.logposterior[end-99999:end],
           Geom.line,
