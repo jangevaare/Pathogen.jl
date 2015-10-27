@@ -703,7 +703,7 @@ function MCMC(n::Int64,
 
   @assert(size(transition_cov) == (7,7),
           "Transition kernel covariance matrix must be a positive definite 7x7 matrix")
-  progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 30)
+  progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 25)
   debug && println("MCMC transition kernel covariance matrix:")
   debug && println(round(transition_cov, 3))
   for i = 1:n
@@ -737,7 +737,7 @@ function MCMC(n::Int64,
         aug = propose_augment(ilm_trace.network[end],
                               ilm_trace.aug[end],
                               obs,
-                              1,
+                              0,
                               debug)
       else
         aug = ilm_trace.aug[end]
@@ -893,7 +893,7 @@ function MCMC(n::Int64,
 
   @assert(size(transition_cov) == (6,6),
   "Transition kernel covariance matrix must be a positive definite 6x6 matrix")
-  progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 30)
+  progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 25)
   for i = 1:n
     progress && !debug && next!(progressbar)
     debug && println("Performing the $(i)th MCMC iteration")
