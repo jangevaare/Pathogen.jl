@@ -1,7 +1,7 @@
 using Pathogen, DataFrames, Distributions, ProgressMeter
 
 # Simulate
-init_seq = create_seq(100, 0.25, 0.25, 0.25, 0.25)
+init_seq = create_seq(200, 0.25, 0.25, 0.25, 0.25)
 init_var = rand(Uniform(0,25), (2,100))
 
 pop = create_population(init_seq, init_var)
@@ -13,7 +13,7 @@ substitution = jc69q([0.001])
 
 ratearray = create_ratearray(pop, powerlaw, substitution)
 
-while length(pop.timeline[1]) < 500
+while length(pop.timeline[1]) < 1000
   onestep!(ratearray, pop, powerlaw, latency, recovery, substitution)
 end
 

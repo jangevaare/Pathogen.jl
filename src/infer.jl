@@ -766,8 +766,8 @@ function MCMC(n::Int64,
         network = propose_network(network_rates,
                                   ilm_trace.network[end],
                                   debug,
-                                  1,
-                                  "uniform")
+                                  0,
+                                  "multinomial")
       else
         network = ilm_trace.network[end]
       end
@@ -892,45 +892,39 @@ function MCMC(n::Int64,
               dist=Euclidean())
 
   @assert(size(transition_cov) == (6,6),
-  "Transition kernel covariance matrix must be a positive definite 6x6 matrix")
+          "Transition kernel covariance matrix must be a positive definite 6x6 matrix")
   progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 25)
+  debug && println("MCMC transition kernel covariance matrix:")
+  debug && println(round(transition_cov, 3))
   for i = 1:n
     progress && !debug && next!(progressbar)
+    debug && println("")
     debug && println("Performing the $(i)th MCMC iteration")
-    if mod(i, 2) == 1
+    if mod(i, 3) == 1
       step = rand(MvNormal(transition_cov))
-      ilm_proposal = [ilm_trace.α[end],
-                      ilm_trace.β[end],
-                      ilm_trace.η[end],
-                      ilm_trace.ρ[end],
-                      ilm_trace.γ[end]] .+ step[1:5]
-      detection_proposal = [detection_trace.ν[end]] .+ step[6]
-      lp = logprior(ilm_priors, ilm_proposal, debug)
-      lp += logprior(detection_priors, detection_proposal, debug)
     else
-      ilm_proposal = [ilm_trace.α[end],
-                      ilm_trace.β[end],
-                      ilm_trace.η[end],
-                      ilm_trace.ρ[end],
-                      ilm_trace.γ[end]]
-      detection_proposal = [detection_trace.ν[end]]
-      lp = logprior(ilm_priors, ilm_proposal, debug)
-      lp += logprior(detection_priors, detection_proposal, debug)
+      step = fill(0., 7)
     end
-    if lp > -Inf
-      if mod(i, 2) == 0
-        # Randomly select individual(s)
-        changed_individuals = sample(findn(ilm_trace.network[end])[2],
-                                     1,
-                                     replace=false)
+    ilm_proposal = [ilm_trace.α[end],
+                    ilm_trace.β[end],
+                    ilm_trace.η[end],
+                    ilm_trace.ρ[end],
+                    ilm_trace.γ[end]] .+ step[1:5]
+    detection_proposal = [detection_trace.ν[end]] .+ step[6]
 
+    debug && println("Proposed parameter changes: $(round(step, 3))")
+    debug && println("ILM proposal: $(round(ilm_proposal, 3))")
+    debug && println("Detection proposal: $(round(detection_proposal, 3))")
+    lp = logprior(ilm_priors, ilm_proposal, debug)
+    lp += logprior(detection_priors, detection_proposal, debug)
+
+    if lp > -Inf
+      if mod(i, 3) == 2
         # Generate data augmentation proposal
-        aug = propose_augment(changed_individuals,
-                              ilm_proposal[4],
-                              detection_proposal[1],
-                              ilm_trace.network[end],
+        aug = propose_augment(ilm_trace.network[end],
                               ilm_trace.aug[end],
                               obs,
+                              0,
                               debug)
       else
         aug = ilm_trace.aug[end]
@@ -939,6 +933,8 @@ function MCMC(n::Int64,
                                     obs,
                                     aug,
                                     debug)
+    end
+    if lp > -Inf
       # SEIR loglikelihood
       ll, network_rates = SEIR_loglikelihood(ilm_proposal[1],
                                              ilm_proposal[2],
@@ -951,15 +947,14 @@ function MCMC(n::Int64,
                                              dist)
       lp += ll
     end
-
     if lp > -Inf
-      if mod(i, 2) == 0
+      if mod(i, 3) == 0
         # Generate network proposal
-        network = propose_network(changed_individuals,
-                                  network_rates,
+        network = propose_network(network_rates,
                                   ilm_trace.network[end],
                                   debug,
-                                  "uniform")
+                                  0,
+                                  "multinomial")
       else
         network = ilm_trace.network[end]
       end
