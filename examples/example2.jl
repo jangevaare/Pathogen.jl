@@ -1,22 +1,19 @@
-"""
-Example 2
-SEIR simulation, visualization, and inference
-Justin Angevaare
-"""
-
 using Pathogen, DataFrames, Distributions, ProgressMeter
 
 # Simulate
-init_seq = create_seq(400, 0.25, 0.25, 0.25, 0.25)
+init_seq = create_seq(100, 0.25, 0.25, 0.25, 0.25)
 init_var = rand(Uniform(0,25), (2,100))
 
 pop = create_population(init_seq, init_var)
 
 powerlaw = create_powerlaw(3., 5., 0.001)
-latency = create_constantrate(1/3.)
-recovery = create_constantrate(1/5.)
+latency = create_constantrate(1/7.)
+recovery = create_constantrate(1/7.)
+substitution = jc69q([0.001])
 
-@time while length(pop.timeline[1]) < 300
+ratearray = create_ratearray(pop, powerlaw, substitution)
+
+while length(pop.timeline[1]) < 300
   onestep!(ratearray, pop, powerlaw, latency, recovery, substitution)
 end
 
@@ -30,27 +27,18 @@ end
 
 actual, obs = surveil(pop, 2.)
 
-ilm_priors = SEIR_priors(Uniform(1,5), Uniform(2,8), Gamma(0.001), Uniform(0.1,1), Uniform(0.1,1))
-detection_priors = Lag_priors(Uniform(1,3))
+ilm_priors = SEIR_priors(Gamma(5.),
+                         Gamma(3.),
+                         Uniform(0., 0.002),
+                         Gamma(1/7),
+                         Gamma(1/7))
 
-ilm_trace, detection_trace = MCMC(100000, ilm_priors, detection_priors, obs)
-substitution = jc69q([0.001])
+detection_priors = Lag_priors(Gamma(2.))
 
-ratearray = create_ratearray(pop, powerlaw, substitution)
-
-@time while length(pop.timeline[1]) < 300
-  onestep!(ratearray, pop, powerlaw, latency, recovery, substitution)
-end
-
-actual, obs = surveil(pop, 2.)
-
-ilm_priors = SEIR_priors(Uniform(1,5), Uniform(2,8), Gamma(0.001), Uniform(0.1,1), Uniform(0.1,1))
-detection_priors = Lag_priors(Uniform(1,3))
-
-ilm_trace, detection_trace = MCMC(100000, ilm_priors, detection_priors, obs)
+ilm_trace, detection_trace = MCMC(100000, ilm_priors, detection_priors, obs, true, true)
 
 # # Tune the transition kernel's covariance matrix
-# n = 200
+# n = 300
 # for i = 1:n
 #   # Progress bar
 #   if i == 1

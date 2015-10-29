@@ -737,7 +737,7 @@ function MCMC(n::Int64,
         aug = propose_augment(ilm_trace.network[end],
                               ilm_trace.aug[end],
                               obs,
-                              0,
+                              1,
                               debug)
       else
         aug = ilm_trace.aug[end]
@@ -903,7 +903,7 @@ function MCMC(n::Int64,
     if mod(i, 3) == 1
       step = rand(MvNormal(transition_cov))
     else
-      step = fill(0., 7)
+      step = fill(0., 6)
     end
     ilm_proposal = [ilm_trace.α[end],
                     ilm_trace.β[end],
@@ -924,7 +924,7 @@ function MCMC(n::Int64,
         aug = propose_augment(ilm_trace.network[end],
                               ilm_trace.aug[end],
                               obs,
-                              0,
+                              1,
                               debug)
       else
         aug = ilm_trace.aug[end]
@@ -953,8 +953,8 @@ function MCMC(n::Int64,
         network = propose_network(network_rates,
                                   ilm_trace.network[end],
                                   debug,
-                                  0,
-                                  "multinomial")
+                                  1,
+                                  "uniform")
       else
         network = ilm_trace.network[end]
       end

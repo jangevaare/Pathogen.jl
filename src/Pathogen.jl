@@ -27,6 +27,7 @@ export
       Lag_trace,
     Mutation_trace,
       JC69_trace,
+    Posterior_trace
 
   # utilities.jl
   findstate,
