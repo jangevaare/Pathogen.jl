@@ -210,7 +210,7 @@ function pathwayfrom(infection::Int64, network::Array{Bool,2}, depth=0::Int64, d
 end
 
 
-pathwayfrom(infection, network, 0, debug) = pathwayfrom(infection::Int64, network::Array{Bool,2}, debug=false::Bool)
+pathwayfrom(infection::Int64, network::Array{Bool,2}, debug=false::Bool) = pathwayfrom(infection, network, 0, debug)
 
 
 """
@@ -255,4 +255,4 @@ function pathwaysfrom(network::Array{Bool,2}, depth=0::Int64, debug=false::Bool)
   return pathwaysfrom(infections, network, depth, debug)
 end
 
-pathwaysfrom(network, 0, debug) = pathwaysfrom(network::Array{Bool,2}, debug::Bool)
+pathwaysfrom(network::Array{Bool,2}, debug::Bool) = pathwaysfrom(network, 0, debug)
