@@ -35,7 +35,7 @@ ilm_priors = SEIR_priors(Gamma(5.),
 
 detection_priors = Lag_priors(Gamma(2.))
 
-ilm_trace, detection_trace = MCMC(100000, ilm_priors, detection_priors, obs, true, true)
+ilm_trace, detection_trace = MCMC(100000, ilm_priors, detection_priors, obs)
 
 # # Tune the transition kernel's covariance matrix
 # n = 300

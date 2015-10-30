@@ -740,7 +740,7 @@ function MCMC(n::Int64,
         aug = propose_augment(ilm_trace.network[end],
                               ilm_trace.aug[end],
                               obs,
-                              1,
+                              rand(Poisson(1))+1,
                               debug)
       else
         aug = ilm_trace.aug[end]
@@ -769,7 +769,7 @@ function MCMC(n::Int64,
         network = propose_network(network_rates,
                                   ilm_trace.network[end],
                                   debug,
-                                  0,
+                                  rand(Poisson(1))+1,
                                   "multinomial")
       else
         network = ilm_trace.network[end]
@@ -927,7 +927,7 @@ function MCMC(n::Int64,
         aug = propose_augment(ilm_trace.network[end],
                               ilm_trace.aug[end],
                               obs,
-                              1,
+                              rand(Poisson(1))+1,
                               debug)
       else
         aug = ilm_trace.aug[end]
@@ -956,8 +956,8 @@ function MCMC(n::Int64,
         network = propose_network(network_rates,
                                   ilm_trace.network[end],
                                   debug,
-                                  1,
-                                  "uniform")
+                                  rand(Poisson(1))+1,
+                                  "multinomial")
       else
         network = ilm_trace.network[end]
       end
