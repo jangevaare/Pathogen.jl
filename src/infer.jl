@@ -235,9 +235,7 @@ function logprior(priors::Priors, params::Vector{Float64}, debug=false::Bool)
   for i = 1:length(params)
     lprior += logpdf(priors.(fieldnames(priors)[i]), params[i])
   end
-  if debug
-    println("$(typeof(priors)) log prior: $(round(lprior,3))")
-  end
+  debug && println("$(typeof(priors)) log prior: $(round(lprior,3))")
   return lprior
 end
 
@@ -389,7 +387,7 @@ function phylogenetic_network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmen
   for i = 1:length(infected)
     for j = 1:(i-1)
       ll += sum(log(p_matrix(seq_dist[infected[i],infected[j]]))[sub2ind((4,4), obs.seq[infected[i]], obs.seq[infected[j]])])
-      ll == -Inf || isnan(ll) && break
+      (ll == -Inf || isnan(ll)) && break
     end
   end
   if isnan(ll)
@@ -410,7 +408,11 @@ function exposure_network_loglikelihood(network::Array{Bool, 2}, network_rates::
   infected = find(sum(network, 1))
   for i in infected
      ll += log(network_rates[findfirst(network[:,i]),i]/sum(network_rates[:,i]))
-     ll == -Inf || isnan(ll) && break
+     if debug
+       ll == -Inf && println("Exposure of individual $i caused network -Inf log likelihood")
+       isnan(ll) && println("Exposure of individual $i caused network NaN log likelihood")
+     end
+     (ll == -Inf || isnan(ll)) && break
   end
   if isnan(ll)
     ll = -Inf
@@ -544,6 +546,7 @@ function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, 
       end
     end
   end
+  debug && println("SEIR loglikelihood: $ll")
   return ll, network_rates
 end
 
@@ -556,7 +559,7 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
   lp = -Inf
 
   # Retry initialization until non-negative infinity loglikelihood
-  while lp == -Inf || lp == Inf && count < limit
+  while (lp == -Inf || lp == Inf) && count < limit
     count += 1
     ilm_params = randprior(ilm_priors)
     mutation_params = randprior(mutation_priors)
@@ -630,7 +633,7 @@ function initialize(ilm_priors::SEIR_priors,
   lp = -Inf
 
   # Retry initialization until non-negative infinity loglikelihood
-  while lp == -Inf || lp == Inf && count < limit
+  while (lp == -Inf || lp == Inf) && count < limit
     count += 1
     ilm_params = randprior(ilm_priors)
     detection_params = randprior(detection_priors)
