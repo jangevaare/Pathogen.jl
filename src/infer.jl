@@ -66,7 +66,7 @@ function propose_augment(changed_individuals::Vector{Int64}, network::Array{Bool
   infectious_augmented = previous_aug.infectious
   removed_augmented = previous_aug.removed
   for i in changed_individuals
-    pathway_out = pathwayfrom(i, network, debug)
+    pathway_out = pathwayfrom(i, network, 1, debug)
     pathway_in = pathwayto(i, network, debug)
     if length(pathway_in) > 2
       if debug
@@ -75,7 +75,7 @@ function propose_augment(changed_individuals::Vector{Int64}, network::Array{Bool
         println("Augmented infection time (exposer of $i): $(infectious_augmented[pathway_in[2]])")
         println("Augmented removal time (exposer of $i): $(removed_augmented[pathway_in[2]])")
       end
-      infectious_augmented[i] = rand(Uniform(infectious_augmented[pathway_in[2]], minimum([obs.infectious[i]; infectious_augmented[pathway_out[2:end]]])))
+      infectious_augmented[i] = rand(Uniform(infectious_augmented[pathway_in[2]], minimum([obs.infectious[i]; exposed_augmented[pathway_out[2:end]]])))
       # infectious_augmented[i] = rand(Uniform(maximum(infectious_augmented[pathway_in[2:(end-1)]]), minimum(obs.infectious[pathway_out])))
       if isnan(obs.removed[pathway_in[2]])
         exposed_augmented[i] = rand(Uniform(infectious_augmented[pathway_in[2]], infectious_augmented[i]))
@@ -89,12 +89,12 @@ function propose_augment(changed_individuals::Vector{Int64}, network::Array{Bool
         println("Observed infection times (pathway from $i): $(obs.infectious[pathway_out])")
         println("Augmented infection times (pathway from $i): $(infectious_augmented[pathway_out])")
       end
-      exposed_augmented[i], infectious_augmented[i]  = sort(rand(Uniform(0., minimum([obs.infectious[i]; infectious_augmented[pathway_out[2:end]]])), 2))
+      exposed_augmented[i], infectious_augmented[i]  = sort(rand(Uniform(0., minimum([obs.infectious[i]; exposed_augmented[pathway_out[2:end]]])), 2))
       # infectious_augmented[i] = rand(Uniform(0., minimum(obs.infectious[pathway_out])))
       # exposed_augmented[i] = rand(Uniform(0., infectious_augmented[i]))
     end
     if !isnan(obs.removed[i])
-      removed_augmented[i] = rand(Uniform(obs.infectious[i], obs.removed[i]))
+      removed_augmented[i] = rand(Uniform(maximum([obs.infectious[i]; exposed_augmented[pathway_out[2:end]]]), obs.removed[i]))
     end
   end
   # if debug
@@ -437,7 +437,7 @@ function detection_loglikelihood(detection_params::Vector{Float64}, obs::SEIR_ob
     ll = -Inf
   end
   if debug
-    println("Detection log likelihood: $(round(ll,3))")
+    println("Detection log likelihood: $(round(ll, 3))")
   end
   return ll
 end
