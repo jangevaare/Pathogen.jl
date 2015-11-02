@@ -35,7 +35,7 @@ ilm_priors = SEIR_priors(Gamma(3.),
 
 detection_priors = Lag_priors(Gamma(2.))
 
-ilm_trace, detection_trace = MCMC(300000, ilm_priors, detection_priors, obs)
+ilm_trace, detection_trace = MCMC(100000, ilm_priors, detection_priors, obs)
 
 # # Tune the transition kernel's covariance matrix
 # n = 300
@@ -54,7 +54,7 @@ ilm_trace, detection_trace = MCMC(300000, ilm_priors, detection_priors, obs)
 # #   opt_cov = diagm(diag(cov([ilm_trace.α ilm_trace.β ilm_trace.ρ ilm_trace.γ ilm_trace.η detection_trace.ν])*(2.38^2)/6.))
 #
 # MCMC(100000, opt_cov, ilm_trace, detection_trace, ilm_priors, detection_priors, obs)
-#
+
 using Gadfly, DataFrames
 cd("/Users/justin/Desktop/pathogen")
 
