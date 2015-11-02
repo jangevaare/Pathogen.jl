@@ -96,14 +96,6 @@ function propose_augment(changed_individuals::Vector{Int64}, network::Array{Bool
       removed_augmented[i] = rand(Uniform(maximum([obs.infectious[i]; exposed_augmented[pathway_out[2:end]]]), obs.removed[i]))
     end
   end
-  # if debug
-  #   println("$(sum(!isnan(exposed_augmented))), $(sum(!isnan(infectious_augmented))), and $(sum(!isnan(removed_augmented))) augmented exposure, infection, and removal times respectively")
-  #   for i = 1:length(obs.infectious)
-  #     @assert(!(isnan(exposed_augmented[i]) && !isnan(obs.infectious[i])), "Data augmentation error: could not generate exposure event $i")
-  #     @assert(!(isnan(infectious_augmented[i]) && !isnan(obs.infectious[i])), "Data augmentation error: could not generate infectious event $i")
-  #     @assert(!(isnan(removed_augmented[i]) && !isnan(obs.removed[i])), "Data augmentation error: could not generate exposure event $i")
-  #   end
-  # end
   return SEIR_augmented(exposed_augmented, infectious_augmented, removed_augmented)
 end
 
@@ -152,7 +144,7 @@ function propose_augment(changed_individuals::Vector{Int64}, ρ::Float64, ν::Fl
           println("Augmented infection times (pathway from $i): $(infectious_augmented[pathway_out])")
           println("Augmented exposure times (pathway from $i): $(exposed_augmented[pathway_out])")
         end
-        infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - minimum([obs.infectious[i]; exposed_augmented[pathway_out[2:end]]]), Inf))
+        infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - minimum([obs.infectious[i]; exposed_augmented[pathway_out[2:end]]]), obs.infectious[i]))
         exposed_augmented[i] = infectious_augmented[i] - rand(Exponential(1/ρ))
       end
       if !isnan(obs.removed[i])
@@ -170,14 +162,6 @@ function propose_augment(changed_individuals::Vector{Int64}, ρ::Float64, ν::Fl
       end
     end
   end
-  # if debug
-  #   println("$(sum(!isnan(exposed_augmented))), $(sum(!isnan(infectious_augmented))), and $(sum(!isnan(removed_augmented))) augmented exposure, infection, and removal times respectively")
-  #   for i = 1:length(obs.infectious)
-  #     @assert(!(isnan(exposed_augmented[i]) && !isnan(obs.infectious[i])), "Data augmentation error: could not generate exposure event $i")
-  #     @assert(!(isnan(infectious_augmented[i]) && !isnan(obs.infectious[i])), "Data augmentation error: could not generate infectious event $i")
-  #     @assert(!(isnan(removed_augmented[i]) && !isnan(obs.removed[i])), "Data augmentation error: could not generate exposure event $i")
-  #   end
-  # end
   return SEIR_augmented(exposed_augmented, infectious_augmented, removed_augmented)
 end
 
