@@ -41,7 +41,7 @@ ilm_trace, detection_trace, mutation_trace = MCMC(100000,
                                                   ilm_priors,
                                                   detection_priors,
                                                   mutation_priors,
-                                                  obs)
+                                                  obs, true, true)
 
 # Tune the transition kernel's covariance matrix
 # n = 100

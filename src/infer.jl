@@ -72,6 +72,7 @@ function propose_augment(changed_individuals::Vector{Int64}, network::Array{Bool
       if debug
         println("Observed infection times (pathway from $i): $(obs.infectious[pathway_out])")
         println("Augmented infection times (pathway from $i): $(infectious_augmented[pathway_out])")
+        println("Augmented exposure times (pathway from $i): $(exposed_augmented[pathway_out])")
         println("Augmented infection time (exposer of $i): $(infectious_augmented[pathway_in[2]])")
         println("Augmented removal time (exposer of $i): $(removed_augmented[pathway_in[2]])")
       end
@@ -85,6 +86,7 @@ function propose_augment(changed_individuals::Vector{Int64}, network::Array{Bool
       if debug
         println("Observed infection times (pathway from $i): $(obs.infectious[pathway_out])")
         println("Augmented infection times (pathway from $i): $(infectious_augmented[pathway_out])")
+        println("Augmented exposure times (pathway from $i): $(exposed_augmented[pathway_out])")
       end
       exposed_augmented[i], infectious_augmented[i]  = sort(rand(Uniform(0., minimum([obs.infectious[i]; exposed_augmented[pathway_out[2:end]]])), 2))
       # infectious_augmented[i] = rand(Uniform(0., minimum(obs.infectious[pathway_out])))
@@ -134,6 +136,7 @@ function propose_augment(changed_individuals::Vector{Int64}, ρ::Float64, ν::Fl
         if debug
           println("Observed infection times (pathway from $i): $(obs.infectious[pathway_out])")
           println("Augmented infection times (pathway from $i): $(infectious_augmented[pathway_out])")
+          println("Augmented exposure times (pathway from $i): $(exposed_augmented[pathway_out])")
           println("Augmented infection time (exposer of $i): $(infectious_augmented[pathway_in[2]])")
           println("Augmented removal time (exposer of $i): $(removed_augmented[pathway_in[2]])")
         end
@@ -147,6 +150,7 @@ function propose_augment(changed_individuals::Vector{Int64}, ρ::Float64, ν::Fl
         if debug
           println("Observed infection times (pathway from $i): $(obs.infectious[pathway_out])")
           println("Augmented infection times (pathway from $i): $(infectious_augmented[pathway_out])")
+          println("Augmented exposure times (pathway from $i): $(exposed_augmented[pathway_out])")
         end
         infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - minimum([obs.infectious[i]; exposed_augmented[pathway_out[2:end]]]), Inf))
         exposed_augmented[i] = infectious_augmented[i] - rand(Exponential(1/ρ))
