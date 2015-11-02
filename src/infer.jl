@@ -311,7 +311,7 @@ Initial network proposal
 """
 function propose_network(network_rates::Array{Float64, 2}, debug=false::Bool)
   network = fill(false, size(network_rates))
-  rate_totals = sum(network_rates,1)
+  rate_totals = sum(network_rates, 1)
   exposures = find(rate_totals .> 0)
   for i in exposures
     network[findfirst(rand(Multinomial(1, network_rates[:,i]/rate_totals[i]))), i] = true
@@ -382,7 +382,7 @@ function phylogenetic_network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmen
   seq_dist = seq_distances(obs, aug, network, debug)
   for i = 1:length(infected)
     for j = 1:(i-1)
-      ll += sum(log(p_matrix(seq_dist[infected[i],infected[j]]))[sub2ind((4,4), obs.seq[infected[i]], obs.seq[infected[j]])])
+      ll += sum(log(p_matrix(seq_dist[infected[i],infected[j]]))[sub2ind((4, 4), obs.seq[infected[i]], obs.seq[infected[j]])])
       (ll == -Inf || isnan(ll)) && break
     end
   end
@@ -414,29 +414,10 @@ function exposure_network_loglikelihood(network::Array{Bool, 2}, network_rates::
     ll = -Inf
   end
   if debug
-    println("Exposure network log likelihood: $(round(ll,3))")
+    println("Exposure network log likelihood: $(round(ll, 3))")
   end
   return ll
 end
-
-
-# """
-# loglikelihood for detection...
-# """
-# function detection_loglikelihood(detection_params::Vector{Float64}, obs::SEIR_observed, aug::SEIR_augmented, debug=false::Bool)
-#   ll = 0.
-#   if length(detection_params) == 1
-#     ll += loglikelihood(Exponential(1/detection_params[1]), (obs.removed .- aug.removed)[!isnan(obs.removed)])
-#     ll += loglikelihood(Exponential(1/detection_params[1]), (obs.infectious .- aug.infectious)[!isnan(obs.infectious)])
-#   end
-#   if isnan(ll)
-#     ll = -Inf
-#   end
-#   if debug
-#     println("Detection log likelihood: $(round(ll, 3))")
-#   end
-#   return ll
-# end
 
 
 """
@@ -454,7 +435,7 @@ function detection_loglikelihood(ν::Float64, aug::SEIR_augmented, network::Arra
     if length(pathway_in) > 2
       ll += logpdf(Truncated(Exponential(1/ν), obs.infectious[i] - minimum([obs.infectious[i]; exposed_augmented[pathway_out[2:end]]]), obs.infectious[i] - infectious_augmented[pathway_in[2]]), obs.infectious[i] - infectious_augmented[i])
     else
-      ll += logpdf(Truncated(Exponential(1/ν), obs.infectious[i] - minimum([obs.infectious[i]; exposed_augmented[pathway_out[2:end]]]), Inf), obs.infectious[i] - infectious_augmented[i])
+      ll += logpdf(Truncated(Exponential(1/ν), obs.infectious[i] - minimum([obs.infectious[i]; exposed_augmented[pathway_out[2:end]]]), obs.infectious[i]), obs.infectious[i] - infectious_augmented[i])
     end
     if !isnan(obs.removed[i])
       ll += logpdf(Truncated(Exponential(1/ν), 0., obs.removed[i] - maximum([obs.infectious[i]; exposed_augmented[pathway_out[2:end]]])), obs.removed[i] - removed_augmented[i])
