@@ -457,6 +457,9 @@ loglikelihood for detection...
 function detection_loglikelihood(ν::Float64, aug::SEIR_augmented, network::Array{Bool, 2}, obs::SEIR_observed, debug=false::Bool)
   ll = 0.
   individuals = find(!isnan(obs.infectious))
+  exposed_augmented = aug.exposed
+  infectious_augmented = aug.infectious
+  removed_augmented = aug.removed 
   for i in individuals
     pathway_out = pathwayfrom(i, network, 1, debug)
     pathway_in = pathwayto(i, network, debug)
