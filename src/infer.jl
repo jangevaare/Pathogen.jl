@@ -76,13 +76,10 @@ function propose_augment(changed_individuals::Vector{Int64}, network::Array{Bool
         println("Augmented removal time (exposer of $i): $(removed_augmented[pathway_in[2]])")
       end
       infectious_augmented[i] = rand(Uniform(infectious_augmented[pathway_in[2]], minimum([obs.infectious[i]; exposed_augmented[pathway_out[2:end]]])))
-      # infectious_augmented[i] = rand(Uniform(maximum(infectious_augmented[pathway_in[2:(end-1)]]), minimum(obs.infectious[pathway_out])))
       if isnan(obs.removed[pathway_in[2]])
         exposed_augmented[i] = rand(Uniform(infectious_augmented[pathway_in[2]], infectious_augmented[i]))
-        # exposed_augmented[i] = rand(Uniform(maximum(infectious_augmented[pathway_in[2:(end-1)]]), infectious_augmented[i]))
       else
         exposed_augmented[i] = rand(Uniform(infectious_augmented[pathway_in[2]], minimum([infectious_augmented[i]; removed_augmented[pathway_in[2]]])))
-        # exposed_augmented[i] = rand(Uniform(maximum(infectious_augmented[pathway_in[2:(end-1)]]), minimum([infectious_augmented[i], removed_augmented[pathway_in[2]]])))
       end
     else
       if debug
@@ -130,43 +127,53 @@ function propose_augment(changed_individuals::Vector{Int64}, ρ::Float64, ν::Fl
   infectious_augmented = previous_aug.infectious
   removed_augmented = previous_aug.removed
   for i in changed_individuals
+    pathway_out = pathwayfrom(i, network, 1, debug)
+    pathway_in = pathwayto(i, network, debug)
     if ν < Inf
-      pathway_out = pathwayfrom(i, network, debug)
-      pathway_in = pathwayto(i, network, debug)
       if length(pathway_in) > 2
-        infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - minimum(obs.infectious[pathway_out]), obs.infectious[i] - infectious_augmented[pathway_in[2]]))
+        if debug
+          println("Observed infection times (pathway from $i): $(obs.infectious[pathway_out])")
+          println("Augmented infection times (pathway from $i): $(infectious_augmented[pathway_out])")
+          println("Augmented infection time (exposer of $i): $(infectious_augmented[pathway_in[2]])")
+          println("Augmented removal time (exposer of $i): $(removed_augmented[pathway_in[2]])")
+        end
+        infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - minimum([obs.infectious[i]; exposed_augmented[pathway_out[2:end]]]), obs.infectious[i] - infectious_augmented[pathway_in[2]]))
         if isnan(obs.removed[pathway_in[2]])
-          exposed_augmented[i] = infectious_augmented[i] - rand(Truncated(Exponential(1/ρ), 0., infectious_augmented[i]-infectious_augmented[pathway_in[2]]))
+          exposed_augmented[i] = infectious_augmented[i] - rand(Truncated(Exponential(1/ρ), 0., infectious_augmented[i] - infectious_augmented[pathway_in[2]]))
         else
-          exposed_augmented[i] = infectious_augmented[i] - rand(Truncated(Exponential(1/ρ), infectious_augmented[i]-removed_augmented[pathway_in[2]], infectious_augmented[i]-infectious_augmented[pathway_in[2]]))
+          exposed_augmented[i] = infectious_augmented[i] - rand(Truncated(Exponential(1/ρ), infectious_augmented[i] - minimum([infectious_augmented[i]; removed_augmented[pathway_in[2]]]), infectious_augmented[i] - infectious_augmented[pathway_in[2]]))
         end
       else
-        infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - minimum(obs.infectious[pathway_out]), Inf))
+        if debug
+          println("Observed infection times (pathway from $i): $(obs.infectious[pathway_out])")
+          println("Augmented infection times (pathway from $i): $(infectious_augmented[pathway_out])")
+        end
+        infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - minimum([obs.infectious[i]; exposed_augmented[pathway_out[2:end]]]), Inf))
         exposed_augmented[i] = infectious_augmented[i] - rand(Exponential(1/ρ))
       end
       if !isnan(obs.removed[i])
-        removed_augmented[i] = obs.removed[i] - rand(Truncated(Exponential(1/ν), 0., obs.removed[i] - obs.infectious[i]))
+        removed_augmented[i] = rand(Uniform(maximum([obs.infectious[i]; exposed_augmented[pathway_out[2:end]]]), obs.removed[i]))
       end
     elseif ν == Inf
       infectious_augmented[i] = obs.infectious[i]
       if isnan(obs.removed[pathway_in[2]])
         exposed_augmented[i] = infectious_augmented[i] - rand(Truncated(Exponential(1/ρ), 0., infectious_augmented[i]-infectious_augmented[pathway_in[2]]))
       else
-        exposed_augmented[i] = infectious_augmented[i] - rand(Truncated(Exponential(1/ρ), infectious_augmented[i]-removed_augmented[pathway_in[2]], infectious_augmented[i]-infectious_augmented[pathway_in[2]]))
+        exposed_augmented[i] = infectious_augmented[i] - rand(Truncated(Exponential(1/ρ), infectious_augmented[i] - minimum([infectious_augmented[i]; removed_augmented[pathway_in[2]]]), infectious_augmented[i] - infectious_augmented[pathway_in[2]]))
       end
       if !isnan(obs.removed[i])
         removed_augmented[i] = obs.removed[i]
       end
     end
   end
-  if debug
-    println("$(sum(!isnan(exposed_augmented))), $(sum(!isnan(infectious_augmented))), and $(sum(!isnan(removed_augmented))) augmented exposure, infection, and removal times respectively")
-    for i = 1:length(obs.infectious)
-      @assert(!(isnan(exposed_augmented[i]) && !isnan(obs.infectious[i])), "Data augmentation error: could not generate exposure event $i")
-      @assert(!(isnan(infectious_augmented[i]) && !isnan(obs.infectious[i])), "Data augmentation error: could not generate infectious event $i")
-      @assert(!(isnan(removed_augmented[i]) && !isnan(obs.removed[i])), "Data augmentation error: could not generate exposure event $i")
-    end
-  end
+  # if debug
+  #   println("$(sum(!isnan(exposed_augmented))), $(sum(!isnan(infectious_augmented))), and $(sum(!isnan(removed_augmented))) augmented exposure, infection, and removal times respectively")
+  #   for i = 1:length(obs.infectious)
+  #     @assert(!(isnan(exposed_augmented[i]) && !isnan(obs.infectious[i])), "Data augmentation error: could not generate exposure event $i")
+  #     @assert(!(isnan(infectious_augmented[i]) && !isnan(obs.infectious[i])), "Data augmentation error: could not generate infectious event $i")
+  #     @assert(!(isnan(removed_augmented[i]) && !isnan(obs.removed[i])), "Data augmentation error: could not generate exposure event $i")
+  #   end
+  # end
   return SEIR_augmented(exposed_augmented, infectious_augmented, removed_augmented)
 end
 
@@ -182,6 +189,7 @@ function propose_augment(ρ::Float64, ν::Float64, network::Array{Bool, 2}, prev
   end
   return propose_augment(changed_individuals, ρ, ν, network, previous_aug, obs, debug)
 end
+
 
 propose_augment(ρ, Inf, network, previous_aug, obs, changes, debug) = propose_augment(ρ::Float64, network::Array{Bool, 2}, previous_aug::SEIR_augmented, obs::SEIR_observed, changes=1::Int64, debug=false::Bool)
 
@@ -709,6 +717,7 @@ function MCMC(n::Int64,
   progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 25)
   debug && println("MCMC transition kernel covariance matrix:")
   debug && println(round(transition_cov, 3))
+  rejects = 0
   for i = 1:n
     progress && !debug && next!(progressbar)
     debug && println("")
@@ -770,7 +779,7 @@ function MCMC(n::Int64,
                                   ilm_trace.network[end],
                                   debug,
                                   rand(Poisson(1))+1,
-                                  "multinomial")
+                                  "uniform")
       else
         network = ilm_trace.network[end]
       end
@@ -799,6 +808,7 @@ function MCMC(n::Int64,
                       ilm_trace.γ[end]]
       detection_proposal = [detection_trace.ν[end]]
       mutation_proposal = [mutation_trace.λ[end]]
+      rejects += 1
     end
 
     push!(ilm_trace.aug, aug)
@@ -813,6 +823,7 @@ function MCMC(n::Int64,
     push!(detection_trace.ν, detection_proposal[1])
     push!(mutation_trace.λ, mutation_proposal[1])
   end
+  println("MCMC acceptance rate: $(round(1.0-(rejects/n),3))")
   return ilm_trace, detection_trace, mutation_trace
 end
 
@@ -899,6 +910,7 @@ function MCMC(n::Int64,
   progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 25)
   debug && println("MCMC transition kernel covariance matrix:")
   debug && println(round(transition_cov, 3))
+  rejects = 0
   for i = 1:n
     progress && !debug && next!(progressbar)
     debug && println("")
@@ -978,6 +990,7 @@ function MCMC(n::Int64,
                       ilm_trace.ρ[end],
                       ilm_trace.γ[end]]
       detection_proposal = [detection_trace.ν[end]]
+      rejects += 1
     end
 
     push!(ilm_trace.aug, aug)
@@ -991,6 +1004,7 @@ function MCMC(n::Int64,
     push!(ilm_trace.γ, ilm_proposal[5])
     push!(detection_trace.ν, detection_proposal[1])
   end
+  println("MCMC acceptance rate: $(round(1.0-(rejects/n),3))")
   return ilm_trace, detection_trace
 end
 

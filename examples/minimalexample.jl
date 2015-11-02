@@ -27,8 +27,8 @@ end
 
 actual, obs = surveil(pop, 2.)
 
-ilm_priors = SEIR_priors(Gamma(5.),
-                         Gamma(3.),
+ilm_priors = SEIR_priors(Gamma(3.),
+                         Gamma(5.),
                          Uniform(0., 0.002),
                          Gamma(1/7),
                          Gamma(1/7))

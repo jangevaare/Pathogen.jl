@@ -6,7 +6,7 @@ init_var = rand(Uniform(0,25), (2,100))
 
 pop = create_population(init_seq, init_var)
 
-powerlaw = create_powerlaw(3., 5., 0.001)
+powerlaw = create_powerlaw(3., 4., 0.001)
 latency = create_constantrate(1/7.)
 recovery = create_constantrate(1/7.)
 substitution = jc69q([0.001])
@@ -27,39 +27,34 @@ end
 
 actual, obs = surveil(pop, 2.)
 
-ilm_priors = SEIR_priors(Gamma(5.),
-                         Gamma(3.),
+ilm_priors = SEIR_priors(Gamma(3.),
+                         Gamma(4.),
                          Uniform(0., 0.002),
                          Gamma(1/7),
                          Gamma(1/7))
 
 detection_priors = Lag_priors(Gamma(2.))
 
-ilm_trace, detection_trace = MCMC(100000, ilm_priors, detection_priors, obs)
+ilm_trace, detection_trace = MCMC(300000, ilm_priors, detection_priors, obs)
 
 # # Tune the transition kernel's covariance matrix
 # n = 300
+# progressbar = Progress(n, 5, "Performing $n tuning MCMC stages...", 25)
 # for i = 1:n
-#   # Progress bar
-#   if i == 1
-#     progressbar = Progress(n, 5, "Performing $n tuning MCMC stages...", 30)
-#   else
-#     next!(progressbar)
-#   end
 #
 #   # Tune transition matrix
 #   opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.ρ ilm_trace.γ ilm_trace.η detection_trace.ν])*(2.38^2)/6.
-# #   opt_cov = diagm(diag(cov([ilm_trace.α ilm_trace.β ilm_trace.ρ ilm_trace.γ ilm_trace.η detection_trace.ν])*(2.38^2)/6.))
 #
 #   # Perform 1000 MCMC iterations
 #   MCMC(1000, opt_cov, ilm_trace, detection_trace, ilm_priors, detection_priors, obs, false, false)
+#   next!(progressbar)
 # end
 #
 #   opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.ρ ilm_trace.γ ilm_trace.η detection_trace.ν])*(2.38^2)/6.
 # #   opt_cov = diagm(diag(cov([ilm_trace.α ilm_trace.β ilm_trace.ρ ilm_trace.γ ilm_trace.η detection_trace.ν])*(2.38^2)/6.))
 #
 # MCMC(100000, opt_cov, ilm_trace, detection_trace, ilm_priors, detection_priors, obs)
-
+#
 using Gadfly, DataFrames
 cd("/Users/justin/Desktop/pathogen")
 
