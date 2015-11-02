@@ -432,23 +432,23 @@ function exposure_network_loglikelihood(network::Array{Bool, 2}, network_rates::
 end
 
 
-"""
-loglikelihood for detection...
-"""
-function detection_loglikelihood(detection_params::Vector{Float64}, obs::SEIR_observed, aug::SEIR_augmented, debug=false::Bool)
-  ll = 0.
-  if length(detection_params) == 1
-    ll += loglikelihood(Exponential(1/detection_params[1]), (obs.removed .- aug.removed)[!isnan(obs.removed)])
-    ll += loglikelihood(Exponential(1/detection_params[1]), (obs.infectious .- aug.infectious)[!isnan(obs.infectious)])
-  end
-  if isnan(ll)
-    ll = -Inf
-  end
-  if debug
-    println("Detection log likelihood: $(round(ll, 3))")
-  end
-  return ll
-end
+# """
+# loglikelihood for detection...
+# """
+# function detection_loglikelihood(detection_params::Vector{Float64}, obs::SEIR_observed, aug::SEIR_augmented, debug=false::Bool)
+#   ll = 0.
+#   if length(detection_params) == 1
+#     ll += loglikelihood(Exponential(1/detection_params[1]), (obs.removed .- aug.removed)[!isnan(obs.removed)])
+#     ll += loglikelihood(Exponential(1/detection_params[1]), (obs.infectious .- aug.infectious)[!isnan(obs.infectious)])
+#   end
+#   if isnan(ll)
+#     ll = -Inf
+#   end
+#   if debug
+#     println("Detection log likelihood: $(round(ll, 3))")
+#   end
+#   return ll
+# end
 
 
 """
@@ -614,10 +614,7 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
     lp += logprior(ilm_priors,
                    ilm_params,
                    debug)
-    lp += detection_loglikelihood(detection_params,
-                                  obs,
-                                  aug,
-                                  debug)
+
     lp += logprior(detection_priors,
                    detection_params,
                    debug)
@@ -627,6 +624,11 @@ function initialize(ilm_priors::SEIR_priors, mutation_priors::JC69_priors, detec
       lp += exposure_network_loglikelihood(network,
                                            network_rates,
                                            debug)
+      lp += detection_loglikelihood(detection_params[1],
+                                   aug,
+                                   network,
+                                   obs,
+                                   debug)
     end
     if Inf > lp > -Inf
       lp += logprior(mutation_priors,
@@ -688,10 +690,14 @@ function initialize(ilm_priors::SEIR_priors,
                                            debug,
                                            dist)
     lp += logprior(ilm_priors, ilm_params, debug)
-    lp += detection_loglikelihood(detection_params, obs, aug, debug)
     lp += logprior(detection_priors, detection_params)
     if Inf > lp > -Inf
       network = propose_network(network_rates, debug)
+      lp += detection_loglikelihood(detection_params[1],
+                                   aug,
+                                   network,
+                                   obs,
+                                   debug)
       lp += exposure_network_loglikelihood(network, network_rates, debug)
     end
     if Inf > lp > -Inf
@@ -775,7 +781,9 @@ function MCMC(n::Int64,
     if lp > -Inf
       if mod(i, 3) == 2
         # Generate data augmentation proposal
-        aug = propose_augment(ilm_trace.network[end],
+        aug = propose_augment(ilm_proposal[4],
+                              detection_proposal[1],
+                              ilm_trace.network[end],
                               ilm_trace.aug[end],
                               obs,
                               rand(Poisson(1))+1,
@@ -783,10 +791,6 @@ function MCMC(n::Int64,
       else
         aug = ilm_trace.aug[end]
       end
-      lp += detection_loglikelihood(detection_proposal,
-                                    obs,
-                                    aug,
-                                    debug)
     end
     if lp > -Inf
       # SEIR loglikelihood
@@ -821,7 +825,13 @@ function MCMC(n::Int64,
                                                jc69p(mutation_proposal),
                                                debug)
     end
-
+    if lp > -Inf
+      lp += detection_loglikelihood(detection_proposal[1],
+                                    aug,
+                                    network,
+                                    obs,
+                                    debug)
+    end
     # Acceptance/rejection
     reject = MHreject(lp, ilm_trace.logposterior[end], debug)
 
@@ -965,7 +975,9 @@ function MCMC(n::Int64,
     if lp > -Inf
       if mod(i, 3) == 2
         # Generate data augmentation proposal
-        aug = propose_augment(ilm_trace.network[end],
+        aug = propose_augment(ilm_proposal[4],
+                              detection_proposal[1],
+                              ilm_trace.network[end],
                               ilm_trace.aug[end],
                               obs,
                               rand(Poisson(1))+1,
@@ -973,10 +985,6 @@ function MCMC(n::Int64,
       else
         aug = ilm_trace.aug[end]
       end
-      lp += detection_loglikelihood(detection_proposal,
-                                    obs,
-                                    aug,
-                                    debug)
     end
     if lp > -Inf
       # SEIR loglikelihood
@@ -1003,6 +1011,13 @@ function MCMC(n::Int64,
         network = ilm_trace.network[end]
       end
       lp += exposure_network_loglikelihood(network, network_rates, debug)
+    end
+    if lp > -Inf
+      lp += detection_loglikelihood(detection_proposal[1],
+                                   aug,
+                                   network,
+                                   obs,
+                                   debug)
     end
 
     # Acceptance/rejection
