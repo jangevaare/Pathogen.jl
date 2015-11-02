@@ -171,8 +171,8 @@ Proposes augmented data for a specified vector of `changed_individuals`
 """
 function propose_augment(ρ::Float64, ν::Float64, network::Array{Bool, 2}, obs::SEIR_observed, debug=false::Bool)
   individuals = pathwayfrom(0, network, debug)[2:end]
-  exposed_augmented = fill(NaN, length(obs.infected))
-  infectious_augmented = fill(NaN, length(obs.infected))
+  exposed_augmented = fill(NaN, length(obs.infectious))
+  infectious_augmented = fill(NaN, length(obs.infectious))
   removed_augmented = fill(NaN, length(obs.removed))
   for i in individuals
     pathway_out = pathwayfrom(i, network, 1, debug)
@@ -841,7 +841,7 @@ function MCMC(n::Int64,
                                   ilm_trace.network[end],
                                   debug,
                                   rand(Poisson(1))+1,
-                                  "uniform")
+                                  "multinomial")
       else
         network = ilm_trace.network[end]
       end
