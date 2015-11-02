@@ -152,7 +152,7 @@ function propose_augment(changed_individuals::Vector{Int64}, ρ::Float64, ν::Fl
         exposed_augmented[i] = infectious_augmented[i] - rand(Exponential(1/ρ))
       end
       if !isnan(obs.removed[i])
-        removed_augmented[i] = rand(Uniform(maximum([obs.infectious[i]; exposed_augmented[pathway_out[2:end]]]), obs.removed[i]))
+        removed_augmented[i] = obs.removed[i] - rand(Truncated(Exponential(1/ν), 0., obs.removed[i] - maximum([obs.infectious[i]; exposed_augmented[pathway_out[2:end]]])))
       end
     elseif ν == Inf
       infectious_augmented[i] = obs.infectious[i]
@@ -436,13 +436,42 @@ end
 loglikelihood for detection...
 """
 function detection_loglikelihood(detection_params::Vector{Float64}, obs::SEIR_observed, aug::SEIR_augmented, debug=false::Bool)
-  ll = 0
+  ll = 0.
   if length(detection_params) == 1
     ll += loglikelihood(Exponential(1/detection_params[1]), (obs.removed .- aug.removed)[!isnan(obs.removed)])
     ll += loglikelihood(Exponential(1/detection_params[1]), (obs.infectious .- aug.infectious)[!isnan(obs.infectious)])
   end
   if isnan(ll)
     ll = -Inf
+  end
+  if debug
+    println("Detection log likelihood: $(round(ll, 3))")
+  end
+  return ll
+end
+
+
+"""
+loglikelihood for detection...
+"""
+function detection_loglikelihood(ν::Float64, aug::SEIR_augmented, network::Array{Bool, 2}, obs::SEIR_observed, debug=false::Bool)
+  ll = 0.
+  individuals = find(!isnan(obs.infectious))
+  for i in individuals
+    pathway_out = pathwayfrom(i, network, 1, debug)
+    pathway_in = pathwayto(i, network, debug)
+    if length(pathway_in) > 2
+      ll += logpdf(Truncated(Exponential(1/ν), obs.infectious[i] - minimum([obs.infectious[i]; exposed_augmented[pathway_out[2:end]]]), obs.infectious[i] - infectious_augmented[pathway_in[2]]), obs.infectious[i] - infectious_augmented[i])
+    else
+      ll += logpdf(Truncated(Exponential(1/ν), obs.infectious[i] - minimum([obs.infectious[i]; exposed_augmented[pathway_out[2:end]]]), Inf), obs.infectious[i] - infectious_augmented[i])
+    end
+    if !isnan(obs.removed[i])
+      ll += logpdf(Truncated(Exponential(1/ν), 0., obs.removed[i] - maximum([obs.infectious[i]; exposed_augmented[pathway_out[2:end]]])), obs.removed[i] - removed_augmented[i])
+    end
+    if isnan(ll)
+      ll = -Inf
+    end
+    ll == -Inf && break
   end
   if debug
     println("Detection log likelihood: $(round(ll, 3))")
