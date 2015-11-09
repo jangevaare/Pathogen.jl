@@ -41,7 +41,6 @@ ilm_trace, detection_trace = MCMC(100000, ilm_priors, detection_priors, obs)
 n = 300
 progressbar = Progress(n, 5, "Performing $n tuning MCMC stages...", 25)
 for i = 1:n
-
   # Tune transition matrix
   opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.ρ ilm_trace.γ ilm_trace.η detection_trace.ν])*(2.38^2)/6.
 
@@ -50,7 +49,7 @@ for i = 1:n
   next!(progressbar)
 end
 
-  opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.ρ ilm_trace.γ ilm_trace.η detection_trace.ν])*(2.38^2)/6.
+opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.ρ ilm_trace.γ ilm_trace.η detection_trace.ν])*(2.38^2)/6.
 #   opt_cov = diagm(diag(cov([ilm_trace.α ilm_trace.β ilm_trace.ρ ilm_trace.γ ilm_trace.η detection_trace.ν])*(2.38^2)/6.))
 
 MCMC(100000, opt_cov, ilm_trace, detection_trace, ilm_priors, detection_priors, obs)
