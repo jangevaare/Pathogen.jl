@@ -124,18 +124,19 @@ function propose_augment(changed_individuals::Vector{Int64}, network::Array{Bool
       end
     end
     # Randomize augmentation order
-    for j in sample([1,2,3], 3, replace=false)
+    aug_order = sample([1,2,3], 3, replace=false)
+    for j in aug_order
       # Exposure time augmentation
-      infectious_augmented[i] = rand(Uniform(infectious_augmented[pathway_in[2]], minimum([obs.infectious[i]; exposed_augmented[pathway_out[2:end]]])))
+      infectious_augmented[i] = rand(Uniform(exposed_augmented[i], minimum([obs.infectious[i]; exposed_augmented[pathway_out[2:end]]])))
       if j == 1
         if length(pathway_in) > 2
           if isnan(obs.removed[pathway_in[2]])
-            exposed_augmented[i] = rand(Uniform(infectious_augmented[pathway_in[2]], minimum([infectious_augmented[i]; exposed_augmented[pathway_out[2:end]])))
+            exposed_augmented[i] = rand(Uniform(infectious_augmented[pathway_in[2]], infectious_augmented[i])))
           else
-            exposed_augmented[i] = rand(Uniform(infectious_augmented[pathway_in[2]], minimum([infectious_augmented[i]; exposed_augmented[pathway_out[2:end]]; removed_augmented[pathway_in[2]]])))
+            exposed_augmented[i] = rand(Uniform(infectious_augmented[pathway_in[2]], minimum([infectious_augmented[i]; removed_augmented[pathway_in[2]]])))
           end
         else
-          exposed_augmented[i] = rand(Uniform(0., minimum([infectious_augmented[i]; exposed_augmented[pathway_out[2:end]])))
+          exposed_augmented[i] = rand(Uniform(0., infectious_augmented[i])))
         end
       # Infection time augmentation
       elseif j == 2
@@ -187,17 +188,21 @@ function propose_augment(changed_individuals::Vector{Int64}, ρ::Float64, ν::Fl
       end
     end
     # Randomize augmentation order
-    for j in sample([1,2,3], 3, replace=false)
+    aug_order = sample([1,2,3], 3, replace=false)
+    for j in aug_order
       # Exposure time augmentation
       if j == 1
         if length(pathway_in) > 2
           if isnan(obs.removed[pathway_in[2]])
-            exposed_augmented[i] = infectious_augmented[i] - rand(Truncated(Exponential(ρ), infectious_augmented[i] - minimum([infectious_augmented[i]; exposed_augmented[pathway_out[2:end]]), infectious_augmented[i] - infectious_augmented[pathway_in[2]]))
+            exposed_augmented[i] = infectious_augmented[i] - rand(Truncated(Exponential(ρ), 0, infectious_augmented[i] - infectious_augmented[pathway_in[2]]))
+            # exposed_augmented[i] = infectious_augmented[i] - rand(Truncated(Exponential(ρ), infectious_augmented[i] - minimum([infectious_augmented[i]; exposed_augmented[pathway_out[2:end]]]), infectious_augmented[i] - infectious_augmented[pathway_in[2]]))
           else
-            exposed_augmented[i] = infectious_augmented[i] - rand(Truncated(Exponential(ρ), infectious_augmented[i] - minimum([infectious_augmented[i]; exposed_augmented[pathway_out[2:end]]; removed_augmented[pathway_in[2]]]), infectious_augmented[i] - infectious_augmented[pathway_in[2]]))
+            exposed_augmented[i] = infectious_augmented[i] - rand(Truncated(Exponential(ρ), infectious_augmented[i] - minimum([infectious_augmented[i]; removed_augmented[pathway_in[2]]]), infectious_augmented[i] - infectious_augmented[pathway_in[2]]))
+            # exposed_augmented[i] = infectious_augmented[i] - rand(Truncated(Exponential(ρ), infectious_augmented[i] - minimum([infectious_augmented[i]; exposed_augmented[pathway_out[2:end]]; removed_augmented[pathway_in[2]]]), infectious_augmented[i] - infectious_augmented[pathway_in[2]]))
           end
         else
-          exposed_augmented[i] = infectious_augmented[i] - rand(Truncated(Exponential(ρ), infectious_augmented[i] - minimum([infectious_augmented[i]; exposed_augmented[pathway_out[2:end]]), Inf))
+          exposed_augmented[i] = infectious_augmented[i] - rand(Exponential(ρ))
+          # exposed_augmented[i] = infectious_augmented[i] - rand(Truncated(Exponential(ρ), infectious_augmented[i] - minimum([infectious_augmented[i]; exposed_augmented[pathway_out[2:end]]]), Inf))
         end
       # Infection time augmentation
       elseif j == 2
@@ -1096,7 +1101,7 @@ function MCMC(n::Int64,
     lp += logprior(detection_priors, detection_proposal, debug)
 
     if lp > -Inf
-      if mod(i, 1) == 0
+      if mod(i, 2) == 1
         # Generate data augmentation proposal
         aug = propose_augment(ilm_proposal[4],
                               detection_proposal[1],
@@ -1123,13 +1128,13 @@ function MCMC(n::Int64,
       lp += ll
     end
     if lp > -Inf
-      if mod(i, 1) == 0
+      if mod(i, 2) == 0
         # Generate network proposal
         network = propose_network(network_rates,
                                   ilm_trace.network[end],
                                   debug,
                                   rand(Poisson(2)),
-                                  "multinomial")
+                                  "uniform")
       else
         network = ilm_trace.network[end]
       end
