@@ -22,10 +22,9 @@ end
 # η: external pressure rate
 # ρ: infectivity rate (1/mean latent period)
 # γ: recovery rate (1/mean infectious period)
-# ν: detection rate (1/mean detection lag)
 # λ: JC69 transition/transversion rate
 
-actual, obs = surveil(pop, 2.)
+actual, obs = surveil(pop)
 
 ilm_priors = SEIR_priors(Gamma(3.),
                          Gamma(4.),
@@ -33,26 +32,22 @@ ilm_priors = SEIR_priors(Gamma(3.),
                          Gamma(1/7),
                          Gamma(1/7))
 
-detection_priors = Lag_priors(Gamma(2.))
-
-ilm_trace, detection_trace = MCMC(200000, ilm_priors, detection_priors, obs)
+ilm_trace = MCMC(200000, ilm_priors, obs)
 
 # # Tune the transition kernel's covariance matrix
 # n = 300
 # progressbar = Progress(n, 5, "Performing $n tuning MCMC stages...", 25)
 # for i = 1:n
 #   # Tune transition matrix
-#   opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.ρ ilm_trace.γ ilm_trace.η detection_trace.ν])*(2.38^2)/6.
+#   opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.ρ ilm_trace.γ ilm_trace.η])*(2.38^2)/5.
 #
 #   # Perform 1000 MCMC iterations
-#   MCMC(1000, opt_cov, ilm_trace, detection_trace, ilm_priors, detection_priors, obs, false, false)
+#   MCMC(1000, opt_cov, ilm_trace, ilm_priors, obs, false, false)
 #   next!(progressbar)
 # end
 #
-# opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.ρ ilm_trace.γ ilm_trace.η detection_trace.ν])*(2.38^2)/6.
-# #   opt_cov = diagm(diag(cov([ilm_trace.α ilm_trace.β ilm_trace.ρ ilm_trace.γ ilm_trace.η detection_trace.ν])*(2.38^2)/6.))
-#
-# MCMC(100000, opt_cov, ilm_trace, detection_trace, ilm_priors, detection_priors, obs)
+# opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.ρ ilm_trace.γ ilm_trace.η])*(2.38^2)/5.
+# MCMC(100000, opt_cov, ilm_trace, ilm_priors, obs)
 
 using Gadfly, DataFrames
 cd("/Users/justin/Desktop/pathogen")
@@ -100,19 +95,17 @@ end
 
 # Inference visualization
 # Joint trace plots (last 100k iterations)
-plotdf = DataFrame(iteration = rep(1:200000,6),
+plotdf = DataFrame(iteration = rep(1:200000,5),
                    value = [ilm_trace.α[end-199999:end];
                             ilm_trace.β[end-199999:end];
                             ilm_trace.η[end-199999:end];
                             ilm_trace.ρ[end-199999:end];
-                            ilm_trace.γ[end-199999:end];
-                            detection_trace.ν[end-199999:end]],
+                            ilm_trace.γ[end-199999:end]],
                    parameter = [rep("α",200000);
                                 rep("β",200000);
                                 rep("η",200000);
                                 rep("ρ",200000);
-                                rep("γ",200000);
-                                rep("ν",200000)])
+                                rep("γ",200000)])
 
 draw(PNG("SEIR_traceplot.png", 20cm, 15cm),
      plot(plotdf,
