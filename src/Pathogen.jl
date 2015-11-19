@@ -51,7 +51,7 @@ export
   create_ratearray,
   onestep!,
 
-  # infer.jl
+  # inference
   surveil,
   propose_augment,
   logprior,
@@ -70,7 +70,10 @@ include("types.jl")
 include("utilities.jl")
 include("mutate.jl")
 include("simulate.jl")
-include("infer.jl")
+include("inference/eventtimes.jl")
+include("inference/ilm.jl")
+include("inference/network.jl")
+include("inference/mcmc.jl")
 
 
 end
