@@ -11,4 +11,4 @@ evolution. Pathogen genomic sequences are used in conjunction with the covariate
 and disease state information of individuals to infer disease transmission
 pathways, external disease pressure, and infectivity parameters.
 
-![Epidemic simulation](http://i.imgur.com/XImyJHE.gif)
+<!-- ![Epidemic simulation](http://i.imgur.com/XImyJHE.gif) -->
