@@ -10,3 +10,5 @@ et al. (2010), to simultaneously model infectious disease transmission and
 evolution. Pathogen genomic sequences are used in conjunction with the covariate
 and disease state information of individuals to infer disease transmission
 pathways, external disease pressure, and infectivity parameters.
+
+![Epidemic simulation](http://i.imgur.com/XImyJHE.gif)
