@@ -1,6 +1,6 @@
-# Pathogen
+# Pathogen.jl
 
-[![Build Status](https://travis-ci.org/jangevaa/Pathogen.jl.svg?branch=master)](https://travis-ci.org/jangevaa/Pathogen.jl)
+<!-- [![Build Status](https://travis-ci.org/jangevaa/Pathogen.jl.svg?branch=master)](https://travis-ci.org/jangevaa/Pathogen.jl) -->
 
 Pathogen.jl is a package that provides utilities for the simulation and
 inference of pathogen phylodynamics, built in the [Julia
