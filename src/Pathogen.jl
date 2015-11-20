@@ -74,6 +74,7 @@ export
   exposure_network_loglikelihood,
   detection_loglikelihood,
   SEIR_loglikelihood,
+  SIR_loglikelihood,
   initialize,
   MCMC
 
