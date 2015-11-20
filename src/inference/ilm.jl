@@ -1,12 +1,21 @@
 """
-Calculate the loglikelihood and return an exposure network array under specified parameters values and observations
+Calculate the log likelihood and return an exposure network array under specified parameters values and observations
 
 α, β: powerlaw exposure kernel parameters
 η: external pressure rate
 ρ: infectivity rate (1/mean latent period)
 γ: removal rate (1/mean infectious period)
 """
-function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, γ::Float64, aug::SEIR_augmented, obs::SEIR_observed, debug=false::Bool, dist=Euclidean())
+function SEIR_loglikelihood(α::Float64,
+                            β::Float64,
+                            η::Float64,
+                            ρ::Float64,
+                            γ::Float64,
+                            aug::SEIR_augmented,
+                            obs::SEIR_observed,
+                            debug=false::Bool,
+                            dist=Euclidean())
+
   # Initiate an exposure network
   network_rates = fill(0., (1 + length(obs.covariates), length(obs.covariates)))
 
@@ -23,15 +32,15 @@ function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, 
   rate_array = fill(0., (1 + length(obs.covariates) + 2, length(obs.covariates)))
 
   # First row is external pressure rate
-  rate_array[1,:] = η
+  rate_array[1, :] = η
 
-  # Loglikelihood of events that have been observed
+  # Sum the log likelihood of each event, taking histories into account
   for i = 1:length(event_order)
 
-    # Stop loglikelihood calculation after last event considered
+    # Stop log likelihood calculation after the last event
     isnan(event_times[event_order[i]]) && break
 
-    # Stop loglikelihood calculation anytime the loglikelihood goes to -Inf
+    # Stop log likelihood calculation anytime the loglikelihood goes to -Inf
     if isnan(ll)
       ll = -Inf
     end
@@ -40,32 +49,37 @@ function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, 
     # Convert linear index to an event tuple (individual, event type)
     id = ind2sub(size(event_times), event_order[i])
 
-    # Don't consider likelilihood contribution of first event
+    # Find the "master rate" through the sum of rate_array
+    master_rate = sum(rate_array)
+
+    # Don't consider likelilihood contribution of first event time
     if i > 1
-      # Find the "master rate" through the sum of rate_array
-      master_rate = sum(rate_array)
-
       # loglikelihood of event time with master rate
-      ll += logpdf(Exponential(1/master_rate), event_times[event_order[i]] - event_times[event_order[i-1]])
-
-      # loglikelihood of the one event that did occur
-      ll += log(sum(rate_array[:, id[1]]) / master_rate)
+      ll += logpdf(Exponential(1.0/master_rate), event_times[event_order[i]] - event_times[event_order[i-1]])
     end
+
+    # loglikelihood of the one event that did occur
+    ll += log(sum(rate_array[:, id[1]])/master_rate)
+
+    # if debug
+    #   println("Probability of event $i: $(sum(rate_array[:, id[1]])/master_rate)")
+    # end
 
     # Exposure event
     if id[2] == 1
 
       # Record exposure rates at time of exposure
-      network_rates[:, id[1]] = copy(rate_array[1:(length(obs.covariates)+1), id[1]])
+      network_rates[:, id[1]] = rate_array[1:(size(rate_array, 2) + 1), id[1]]
 
       # Update exposure rates
-      rate_array[1:(1 + size(rate_array, 2)), id[1]] = 0.
+      rate_array[1:(size(rate_array, 2) + 1), id[1]] = 0.
 
       # Update infectivity rate
       rate_array[1 + size(rate_array, 2) + 1, id[1]] = ρ
 
     # Infectiousness event
     elseif id[2] == 2
+
       # Update infectivity rate
       rate_array[1 + size(rate_array, 2) + 1, id[1]] = 0.
 
@@ -83,6 +97,7 @@ function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, 
 
     # Removal event
     elseif id[2] == 3
+
       # Update removal rate
       rate_array[1 + size(rate_array, 2) + 2, id[1]] = 0.
 
@@ -93,11 +108,11 @@ function SEIR_loglikelihood(α::Float64, β::Float64, η::Float64, ρ::Float64, 
     # Provide loop position when loglikelihood goes to -Inf when debugging
     if debug && ll == -Inf
       if id[2] == 1
-        println("Event $i (exposure of individual $(id[1])) caused loglikelihood to go to -Inf")
+        println("Event $i (exposure of individual $(id[1])) caused log likelihood to go to -Inf")
       elseif id[2] == 2
-        println("Event $i (infection of individual $(id[1])) caused loglikelihood to go to -Inf")
+        println("Event $i (infection of individual $(id[1])) caused log likelihood to go to -Inf")
       elseif id[2] == 3
-        println("Event $i (removal of individual $(id[1])) caused loglikelihood to go to -Inf")
+        println("Event $i (removal of individual $(id[1])) caused log likelihood to go to -Inf")
       end
     end
   end

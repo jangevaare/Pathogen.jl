@@ -347,7 +347,7 @@ function MCMC(n::Int64,
     push!(detection_trace.ν, detection_proposal[1])
     push!(mutation_trace.λ, mutation_proposal[1])
   end
-  println("MCMC acceptance rate: $(round(1.0-(rejects/n),3))")
+  println("MCMC acceptance rate: $(round(1.0-(rejects/n),4))")
   return ilm_trace, detection_trace, mutation_trace
 end
 
@@ -533,7 +533,7 @@ function MCMC(n::Int64,
     push!(ilm_trace.γ, ilm_proposal[5])
     push!(detection_trace.ν, detection_proposal[1])
   end
-  println("MCMC acceptance rate: $(round(1.0-(rejects/n),3))")
+  println("MCMC acceptance rate: $(round(1.0-(rejects/n),4))")
   return ilm_trace, detection_trace
 end
 
@@ -661,7 +661,7 @@ function MCMC(n::Int64,
                                   ilm_trace.network[end],
                                   debug,
                                   rand(Poisson(2.)),
-                                  "multinomial")
+                                  "uniform")
       else
         network = ilm_trace.network[end]
       end
@@ -694,7 +694,7 @@ function MCMC(n::Int64,
     push!(ilm_trace.ρ, ilm_proposal[4])
     push!(ilm_trace.γ, ilm_proposal[5])
   end
-  println("MCMC acceptance rate: $(round(1.0-(rejects/n),3))")
+  println("MCMC acceptance rate: $(round(1.0-(rejects/n),4))")
   return ilm_trace
 end
 

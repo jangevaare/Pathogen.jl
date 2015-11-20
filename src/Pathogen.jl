@@ -7,14 +7,25 @@ using Distributions, Distances, DataFrames, BioSeq, ProgressMeter, UnicodePlots
 export
   # types.jl
   Population,
+
   RateArray,
-  SEIR_actual,
-  SEIR_observed,
-  SEIR_augmented,
+
+  Actual,
+    SEIR_actual,
+    SIR_actual,
+
+  Observed,
+    SEIR_observed,
+    SIR_observed,
+
+  Augmented,
+    SEIR_augmented,
+    SIR_augmented,
 
   Priors,
     ILM_priors,
       SEIR_priors,
+      SIR_priors,
     Detection_priors,
       Lag_priors,
     Mutation_priors,
@@ -23,6 +34,7 @@ export
   Trace,
     ILM_trace,
       SEIR_trace,
+      SIR_trace,
     Detection_trace,
       Lag_trace,
     Mutation_trace,

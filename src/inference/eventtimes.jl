@@ -1,4 +1,86 @@
 """
+Initial augmented data proposal
+* For SEIR models, with infectivity rate, `ρ`
+* With detection rate, `ν`
+* Proposals made with exponential distributions
+"""
+function propose_augment(ρ::Float64, ν::Float64, obs::SEIR_observed, debug=false::Bool)
+  exposed_augmented = fill(NaN, length(obs.infectious))
+  infectious_augmented = fill(NaN, length(obs.infectious))
+  removed_augmented = fill(NaN, length(obs.removed))
+  for i = 1:length(obs.infectious)
+    if !isnan(obs.infectious[i])
+      infectious_augmented[i] = obs.infectious[i] - rand(Exponential(1/ν))
+      exposed_augmented[i] = infectious_augmented[i] - rand(Exponential(1/ρ))
+      if !isnan(obs.removed[i])
+        removed_augmented[i] = obs.removed[i] - rand(Truncated(Exponential(1/ν), 0., obs.removed[i] - obs.infectious[i]))
+      end
+    end
+  end
+  return SEIR_augmented(exposed_augmented, infectious_augmented, removed_augmented)
+end
+
+
+"""
+Initial augmented data proposal
+* For SEIR models, with infectivity rate, `ρ`
+* With detection rate, `ν`
+* Proposals made with uniform distributions
+"""
+function propose_augment(obs::SEIR_observed, debug=false::Bool)
+  exposed_augmented = fill(NaN, length(obs.infectious))
+  infectious_augmented = fill(NaN, length(obs.infectious))
+  removed_augmented = fill(NaN, length(obs.removed))
+  for i = 1:length(obs.infectious)
+    if !isnan(obs.infectious[i])
+      infectious_augmented[i] = rand(Uniform(0, obs.infectious[i]))
+      exposed_augmented[i] = rand(Uniform(0, infectious_augmented[i]))
+      if !isnan(obs.removed[i])
+        removed_augmented[i] = rand(Uniform(obs.infectious[i], obs.removed[i]))
+      end
+    end
+  end
+  return SEIR_augmented(exposed_augmented, infectious_augmented, removed_augmented)
+end
+
+
+"""
+Initial augmented data proposal
+* For SEIR models, with infectivity rate, `ρ`
+* Proposals made with exponential distributions
+"""
+function propose_augment(obs::SEIR_observed, debug=false::Bool)
+  infectious_augmented = obs.infectious
+  removed_augmented = obs.removed
+  exposed_augmented = fill(NaN, length(infectious_augmented))
+  for i = 1:length(obs.infectious)
+    if !isnan(infectious_augmented[i])
+      exposed_augmented[i] = infectious_augmented[i] - rand(Exponential(1/ρ))
+    end
+  end
+  return SEIR_augmented(exposed_augmented, infectious_augmented, removed_augmented)
+end
+
+
+"""
+Initial augmented data proposal
+* For SEIR models, with infectivity rate, `ρ`
+* Proposals made with uniform distributions
+"""
+function propose_augment(obs::SEIR_observed, debug=false::Bool)
+  infectious_augmented = obs.infectious
+  removed_augmented = obs.removed
+  exposed_augmented = fill(NaN, length(infectious_augmented))
+  for i = 1:length(obs.infectious)
+    if !isnan(infectious_augmented[i])
+      exposed_augmented[i] = rand(Uniform(0, infectious_augmented[i]))
+    end
+  end
+  return SEIR_augmented(exposed_augmented, infectious_augmented, removed_augmented)
+end
+
+
+"""
 Proposes new augmented data
 * For SEIR models with detection lag
 * Requires `network` information
@@ -275,47 +357,6 @@ function propose_augment(ρ::Float64, network::Array{Bool, 2}, previous_aug::SEI
     changed_individuals = sample(exposures, changes, replace=false)
   end
   return propose_augment(changed_individuals, ρ, network, previous_aug, obs, debug)
-end
-
-
-"""
-Initial augmented data proposal
-* For SEIR models, with infectivity rate, `ρ`
-* With detection rate, `ν`
-* Proposals made with exponential distributions
-"""
-function propose_augment(ρ::Float64, ν::Float64, obs::SEIR_observed, debug=false::Bool)
-  exposed_augmented = fill(NaN, length(obs.infectious))
-  infectious_augmented = fill(NaN, length(obs.infectious))
-  removed_augmented = fill(NaN, length(obs.removed))
-  for i = 1:length(obs.infectious)
-    if !isnan(obs.infectious[i])
-      infectious_augmented[i] = obs.infectious[i] - rand(Exponential(1/ν))
-      exposed_augmented[i] = infectious_augmented[i] - rand(Exponential(1/ρ))
-      if !isnan(obs.removed[i])
-        removed_augmented[i] = obs.removed[i] - rand(Truncated(Exponential(1/ν), 0., obs.removed[i] - obs.infectious[i]))
-      end
-    end
-  end
-  return SEIR_augmented(exposed_augmented, infectious_augmented, removed_augmented)
-end
-
-
-"""
-Initial augmented data proposal
-* For SEIR models, with infectivity rate, `ρ`
-* Proposals made with exponential distributions
-"""
-function propose_augment(ρ::Float64, obs::SEIR_observed, debug=false::Bool)
-  infectious_augmented = obs.infectious
-  removed_augmented = obs.removed
-  exposed_augmented = fill(NaN, length(infectious_augmented))
-  for i = 1:length(obs.infectious)
-    if !isnan(infectious_augmented[i])
-      exposed_augmented[i] = infectious_augmented[i] - rand(Exponential(1/ρ))
-    end
-  end
-  return SEIR_augmented(exposed_augmented, infectious_augmented, removed_augmented)
 end
 
 

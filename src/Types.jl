@@ -19,11 +19,16 @@ type RateArray
   events::Array
 end
 
+abstract Actual
+
+abstract Observed
+
+abstract Augmented
 
 """
 Contains the actual event times
 """
-type SEIR_actual
+type SEIR_actual <: Actual
   exposed::Vector{Float64}
   infectious::Vector{Float64}
   removed::Vector{Float64}
@@ -35,7 +40,7 @@ end
 """
 Contains event observations
 """
-type SEIR_observed
+type SEIR_observed <: Observed
   infectious::Vector{Float64}
   removed::Vector{Float64}
   covariates::Vector{Vector{Float64}}
@@ -46,8 +51,39 @@ end
 """
 Contains augmented event times
 """
-type SEIR_augmented
+type SEIR_augmented <: Augmented
   exposed::Vector{Float64}
+  infectious::Vector{Float64}
+  removed::Vector{Float64}
+end
+
+
+"""
+Contains the actual event times
+"""
+type SIR_actual <: Actual
+  infectious::Vector{Float64}
+  removed::Vector{Float64}
+  covariates::Vector{Vector{Float64}}
+  seq::Vector{Any}
+end
+
+
+"""
+Contains event observations
+"""
+type SIR_observed <: Observed
+  infectious::Vector{Float64}
+  removed::Vector{Float64}
+  covariates::Vector{Vector{Float64}}
+  seq::Vector{Any}
+end
+
+
+"""
+Contains augmented event times
+"""
+type SIR_augmented <: Augmented
   infectious::Vector{Float64}
   removed::Vector{Float64}
 end
@@ -73,6 +109,17 @@ type SEIR_priors <: ILM_priors
   β::UnivariateDistribution
   η::UnivariateDistribution
   ρ::UnivariateDistribution
+  γ::UnivariateDistribution
+end
+
+
+"""
+Prior distributions for SEIR model inference
+"""
+type SIR_priors <: ILM_priors
+  α::UnivariateDistribution
+  β::UnivariateDistribution
+  η::UnivariateDistribution
   γ::UnivariateDistribution
 end
 
@@ -108,13 +155,28 @@ abstract Mutation_trace <: Trace
 """
 Contains an MCMC trace for an SEIR model
 """
-type SEIR_trace <: Trace
+type SEIR_trace <: ILM_trace
   α::Vector{Float64}
   β::Vector{Float64}
   η::Vector{Float64}
   ρ::Vector{Float64}
   γ::Vector{Float64}
   aug::Vector{SEIR_augmented}
+  network_rates::Vector{Array{Float64}}
+  network::Vector{Array{Bool}}
+  logposterior::Vector{Float64}
+end
+
+
+"""
+Contains an MCMC trace for an SIR model
+"""
+type SIR_trace <: ILM_trace
+  α::Vector{Float64}
+  β::Vector{Float64}
+  η::Vector{Float64}
+  γ::Vector{Float64}
+  aug::Vector{SIR_augmented}
   network_rates::Vector{Array{Float64}}
   network::Vector{Array{Bool}}
   logposterior::Vector{Float64}
