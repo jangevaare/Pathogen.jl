@@ -157,7 +157,7 @@ Proposes new augmented data
 function propose_augment(network::Array{Bool, 2},
                          previous_aug::SEIR_augmented,
                          obs::SEIR_observed,
-                         changes=1::Int64,
+                         changes=rand(Poisson(1.))::Int64,
                          debug=false::Bool)
   exposures = pathwayfrom(0, network, debug)[2:end]
   if changes == 0 || changes > length(exposures)
@@ -334,7 +334,7 @@ function propose_augment(ρ::Float64,
                          network::Array{Bool, 2},
                          previous_aug::SEIR_augmented,
                          obs::SEIR_observed,
-                         changes=1::Int64,
+                         changes=rand(Poisson(1.))::Int64,
                          debug=false::Bool)
   exposures = pathwayfrom(0, network, debug)[2:end]
   if changes == 0 || changes > length(exposures)
@@ -389,7 +389,7 @@ function propose_augment(ρ::Float64,
                          network::Array{Bool, 2},
                          previous_aug::SEIR_augmented,
                          obs::SEIR_observed,
-                         changes=1::Int64,
+                         changes=rand(Poisson(1.))::Int64,
                          debug=false::Bool)
   exposures = pathwayfrom(0, network, debug)[2:end]
   if changes == 0 || changes > length(exposures)
@@ -402,7 +402,7 @@ end
 
 
 """
-Log likelihood for detection rate, `ν`
+Log likelihood for detection rate, `ν` for SEIR models
 * Requires `network` information
 """
 function detection_loglikelihood(ν::Float64,
