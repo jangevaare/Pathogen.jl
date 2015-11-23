@@ -113,7 +113,7 @@ end
 """
 Create dataframes with all necessary plotting information
 """
-function plotdata(obs::ILM_observed, trace::ILM_trace, iteration::Int64, time::Float64)
+function plotdata(obs::Observed, trace::ILM_trace, iteration::Int64, time::Float64)
   states = DataFrame(id = fill(NaN,4),
                      x = fill(NaN,4),
                      y = fill(NaN,4),
