@@ -120,6 +120,7 @@ function SEIR_loglikelihood(α::Float64,
   return ll, network_rates
 end
 
+
 """
 Calculate the log likelihood and return an exposure network array under specified parameters values and observations
 
@@ -128,13 +129,13 @@ Calculate the log likelihood and return an exposure network array under specifie
 γ: removal rate (1/mean infectious period)
 """
 function SIR_loglikelihood(α::Float64,
-                            β::Float64,
-                            η::Float64,
-                            γ::Float64,
-                            aug::SEIR_augmented,
-                            obs::SEIR_observed,
-                            debug=false::Bool,
-                            dist=Euclidean())
+                           β::Float64,
+                           η::Float64,
+                           γ::Float64,
+                           aug::SIR_augmented,
+                           obs::SIR_observed,
+                           debug=false::Bool,
+                           dist=Euclidean())
 
   # Initiate an exposure network
   network_rates = fill(0., (1 + length(obs.covariates), length(obs.covariates)))
