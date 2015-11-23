@@ -87,7 +87,9 @@ include("inference/eventtimes/seir.jl")
 include("inference/eventtimes/sir.jl")
 include("inference/ilm.jl")
 include("inference/network.jl")
-include("inference/mcmc.jl")
+include("inference/mcmc/common.jl")
+include("inference/mcmc/seir.jl")
+include("inference/mcmc/sir.jl")
 
 
 end
