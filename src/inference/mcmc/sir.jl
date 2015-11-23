@@ -167,7 +167,7 @@ function initialize(ilm_priors::SIR_priors,
                        [aug],
                        Array[network_rates],
                        Array[network],
-                       [lp]),
+                       [lp])
     end
     @assert(count < limit && Inf > lp > -Inf, "Failed to initialize")
   end
@@ -569,18 +569,8 @@ function MCMC(n::Int64,
     debug && println("Proposed parameter changes: $(round(step, 3))")
     debug && println("ILM proposal: $(round(ilm_proposal, 3))")
     lp = logprior(ilm_priors, ilm_proposal, debug)
-
     if lp > -Inf
-      if mod(i, 2) == 1
-        # Generate data augmentation proposal
-        aug = propose_augment(ilm_trace.network[end],
-                              ilm_trace.aug[end],
-                              obs,
-                              rand(Poisson(2.)),
-                              debug)
-      else
-        aug = ilm_trace.aug[end]
-      end
+      aug = ilm_trace.aug[end]
     end
     if lp > -Inf
       # SIR loglikelihood
