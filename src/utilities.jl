@@ -119,7 +119,7 @@ function plotdata(obs::Observed, trace::ILM_trace, iteration::Int64, time::Float
                      y = fill(NaN,4),
                      state = ["S", "E", "I", "R"])
   routes = DataFrame(x = Float64[],
-                     y = Float64[], 
+                     y = Float64[],
                      age = Float64[])
   for i = 1:length(obs.infectious)
     states = vcat(states, DataFrame(x = obs.covariates[i][1],
@@ -151,9 +151,17 @@ end
 
 
 """
+Find maximum augmented event time
+"""
+function maximum(aug::SIR_augmented)
+  return maximum([aug.infectious aug.removed])
+end
+
+
+"""
 Find maximum observed event time
 """
-function maximum(obs::SEIR_observed)
+function maximum(obs::Observed)
   return maximum([obs.infectious obs.removed])
 end
 
