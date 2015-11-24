@@ -556,7 +556,7 @@ function MCMC(n::Int64,
     progress && !debug && next!(progressbar)
     debug && println("")
     debug && println("Performing the $(i)th MCMC iteration")
-    if mod(i, 1) == 0
+    if mod(i, 2) == 1
       step = rand(MvNormal(transition_cov))
     else
       step = fill(0., 4)
@@ -591,7 +591,7 @@ function MCMC(n::Int64,
                                   ilm_trace.network[end],
                                   debug,
                                   rand(Poisson(2.)),
-                                  "uniform")
+                                  "multinomial")
       else
         network = ilm_trace.network[end]
       end
