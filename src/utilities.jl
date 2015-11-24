@@ -82,7 +82,7 @@ end
 Find the disease state of a specific individual
 """
 function findstate(trace::SIR_trace, iteration::Int64, individual::Int64, time::Float64)
-  if isnan(trace.aug[iteration].exposed[individual]) || trace.aug[iteration].exposed[individual] > time
+  if isnan(trace.aug[iteration].infectious[individual]) || trace.aug[iteration].infectious[individual] > time
     return "S"
   elseif trace.aug[iteration].infectious[individual] < time && isnan(trace.aug[iteration].removed[individual]) || trace.aug[iteration].removed[individual] > time
     return "I"
