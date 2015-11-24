@@ -26,10 +26,10 @@ end
 
 actual, obs = surveil(pop)
 
-ilm_priors = SEIR_priors(Gamma(3.),
-                         Gamma(4.),
-                         Uniform(0., 0.002),
-                         Gamma(1/7))
+ilm_priors = SIR_priors(Gamma(3.),
+                        Gamma(4.),
+                        Uniform(0., 0.002),
+                        Gamma(1/7))
 
 ilm_trace = MCMC(200000, ilm_priors, obs)
 

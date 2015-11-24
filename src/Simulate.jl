@@ -247,7 +247,11 @@ function surveil(population::Population, ν::Float64)
       end
     end
   end
-  return SEIR_actual(exposed_actual, infectious_actual, removed_actual, covariates_actual, seq_actual), SEIR_observed(infectious_observed, removed_observed, covariates_observed, seq_observed)
+  if exposed_actual == infectious_actual
+    return SIR_actual(infectious_actual, removed_actual, covariates_actual, seq_actual), SIR_observed(infectious_observed, removed_observed, covariates_observed, seq_observed)
+  else
+    return SEIR_actual(exposed_actual, infectious_actual, removed_actual, covariates_actual, seq_actual), SEIR_observed(infectious_observed, removed_observed, covariates_observed, seq_observed)
+  end
 end
 
 
