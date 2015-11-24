@@ -221,7 +221,7 @@ function surveil(population::Population, ν::Float64)
     # Infectious time (observed with latency)
     if length(population.events[i][3]) > 0
       infectious_actual[i-1] = population.events[i][3][1]
-      seq_actual[i-1] = convert(Vector{Int64}, population.history[i][2][find(infectious_actual[i-1] .>= population.events[i][6])[end]])
+      seq_actual[i-1] = convert(Vector{Int64}, population.history[i][2][findlast(infectious_actual[i-1] .>= population.events[i][6])])
       if ν < Inf
         infectious_observed[i-1] = infectious_actual[i-1] + rand(Exponential(1/ν))
       elseif ν == Inf
@@ -231,7 +231,7 @@ function surveil(population::Population, ν::Float64)
       if length(population.events[i][4]) > 0 && infectious_observed[i-1] >= population.events[i][4][1]
         infectious_observed[i-1] = NaN
       else
-        seq_observed[i-1] = convert(Vector{Int64}, population.history[i][2][find(infectious_observed[i-1] .>= population.events[i][6])[end]])
+        seq_observed[i-1] = convert(Vector{Int64}, population.history[i][2][findlast(infectious_observed[i-1] .>= population.events[i][6])])
       end
     end
 
