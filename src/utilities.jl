@@ -53,7 +53,7 @@ function findstate(population::Population, individual::Int64, time::Float64)
   elseif sum(population.events[individual][3] .< time) > sum(population.events[individual][4] .< time)
     return "I"
   elseif sum(population.events[individual][1] .< time) == sum(population.events[individual][4] .< time)
-    return "S*"
+    return "R"
   else
     return "unknown"
   end
@@ -63,11 +63,27 @@ end
 """
 Find the disease state of a specific individual
 """
-function findstate(trace::ILM_trace, iteration::Int64, individual::Int64, time::Float64)
+function findstate(trace::SEIR_trace, iteration::Int64, individual::Int64, time::Float64)
   if isnan(trace.aug[iteration].exposed[individual]) || trace.aug[iteration].exposed[individual] > time
     return "S"
   elseif trace.aug[iteration].exposed[individual] < time && isnan(trace.aug[iteration].infectious[individual]) || trace.aug[iteration].infectious[individual] > time
     return "E"
+  elseif trace.aug[iteration].infectious[individual] < time && isnan(trace.aug[iteration].removed[individual]) || trace.aug[iteration].removed[individual] > time
+    return "I"
+  elseif trace.aug[iteration].removed[individual] < time
+    return "R"
+  else
+    return "unknown"
+  end
+end
+
+
+"""
+Find the disease state of a specific individual
+"""
+function findstate(trace::SIR_trace, iteration::Int64, individual::Int64, time::Float64)
+  if isnan(trace.aug[iteration].exposed[individual]) || trace.aug[iteration].exposed[individual] > time
+    return "S"
   elseif trace.aug[iteration].infectious[individual] < time && isnan(trace.aug[iteration].removed[individual]) || trace.aug[iteration].removed[individual] > time
     return "I"
   elseif trace.aug[iteration].removed[individual] < time
