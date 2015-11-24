@@ -129,7 +129,10 @@ end
 """
 Create dataframes with all necessary plotting information
 """
-function plotdata(obs::Observed, trace::ILM_trace, iteration::Int64, time::Float64)
+function plotdata(obs::SEIR_observed,
+                  trace::SEIR_trace,
+                  iteration::Int64,
+                  time::Float64)
   states = DataFrame(id = fill(NaN,4),
                      x = fill(NaN,4),
                      y = fill(NaN,4),
@@ -144,6 +147,41 @@ function plotdata(obs::Observed, trace::ILM_trace, iteration::Int64, time::Float
     if states[:state][end] != "S"
       source = findfirst(trace.network[iteration][:,i])-1
       age = time - trace.aug[iteration].exposed[i]
+        if source > 1
+        routes = vcat(routes, DataFrame(x = obs.covariates[i][1],
+                                        y = obs.covariates[i][2],
+                                        age = "$age"))
+        routes = vcat(routes, DataFrame(x = obs.covariates[source][1],
+                                        y = obs.covariates[source][2],
+                                        age = "$age"))
+      end
+    end
+  end
+  return states, routes
+end
+
+
+"""
+Create dataframes with all necessary plotting information
+"""
+function plotdata(obs::SIR_observed,
+                  trace::SIR_trace,
+                  iteration::Int64,
+                  time::Float64)
+  states = DataFrame(id = fill(NaN,3),
+                     x = fill(NaN,3),
+                     y = fill(NaN,3),
+                     state = ["S", "I", "R"])
+  routes = DataFrame(x = Float64[],
+                     y = Float64[],
+                     age = Float64[])
+  for i = 1:length(obs.infectious)
+    states = vcat(states, DataFrame(x = obs.covariates[i][1],
+                                    y = obs.covariates[i][2],
+                                    state = findstate(trace, iteration, i, time)))
+    if states[:state][end] != "S"
+      source = findfirst(trace.network[iteration][:,i])-1
+      age = time - trace.aug[iteration].infectious[i]
         if source > 1
         routes = vcat(routes, DataFrame(x = obs.covariates[i][1],
                                         y = obs.covariates[i][2],
