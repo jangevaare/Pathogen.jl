@@ -33,20 +33,20 @@ ilm_priors = SIR_priors(Gamma(3.),
 
 ilm_trace = MCMC(200000, ilm_priors, obs)
 
-# # Tune the transition kernel's covariance matrix
-# n = 300
-# progressbar = Progress(n, 5, "Performing $n tuning MCMC stages...", 25)
-# for i = 1:n
-#   # Tune transition matrix
-#   opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.γ ilm_trace.η])*(2.38^2)/4.
-#
-#   # Perform 1000 MCMC iterations
-#   MCMC(1000, opt_cov, ilm_trace, ilm_priors, obs, false, false)
-#   next!(progressbar)
-# end
-#
-# opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.γ ilm_trace.η])*(2.38^2)/4.
-# MCMC(100000, opt_cov, ilm_trace, ilm_priors, obs)
+# Tune the transition kernel's covariance matrix
+n = 300
+progressbar = Progress(n, 5, "Performing $n tuning MCMC stages...", 25)
+for i = 1:n
+  # Tune transition matrix
+  opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.γ ilm_trace.η])*(2.38^2)/4.
+
+  # Perform 1000 MCMC iterations
+  MCMC(1000, opt_cov, ilm_trace, ilm_priors, obs, false, false)
+  next!(progressbar)
+end
+
+opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.γ ilm_trace.η])*(2.38^2)/4.
+MCMC(100000, opt_cov, ilm_trace, ilm_priors, obs)
 
 using Gadfly, DataFrames
 cd("/Users/justin/Desktop/pathogen")
@@ -102,10 +102,10 @@ plotdf = DataFrame(iteration = rep(1:200000,4),
                             ilm_trace.β[end-199999:end];
                             ilm_trace.η[end-199999:end];
                             ilm_trace.γ[end-199999:end]],
-                   parameter = [rep("α",200000);
-                                rep("β",200000);
-                                rep("η",200000);
-                                rep("γ",200000)])
+                   parameter = [rep("alpha",200000);
+                                rep("beta",200000);
+                                rep("eta",200000);
+                                rep("gamma",200000)])
 
 draw(PNG("SEIR_traceplot.png", 20cm, 15cm),
      plot(plotdf,

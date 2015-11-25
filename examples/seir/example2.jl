@@ -82,7 +82,7 @@ for time = 1:images
                   panel_fill=colorant"white",
                   default_color=colorant"black",
                   background_color=colorant"white"))
-                  
+
   filenumber = time/images
   filenumber = prod(split("$filenumber", ".", limit=2))
   filenumber *= prod(fill("0", 5-length(filenumber)))
@@ -110,12 +110,12 @@ plotdf = DataFrame(iteration = rep(1:200000,6),
                             ilm_trace.ρ[end-199999:end];
                             ilm_trace.γ[end-199999:end];
                             detection_trace.ν[end-199999:end]],
-                   parameter = [rep("α",200000);
-                                rep("β",200000);
-                                rep("η",200000);
-                                rep("ρ",200000);
-                                rep("γ",200000);
-                                rep("ν",200000)])
+                   parameter = [rep("alpha",200000);
+                                rep("beta",200000);
+                                rep("eta",200000);
+                                rep("rho",200000);
+                                rep("gamma",200000);
+                                rep("nu",200000)])
 
 draw(PNG("SEIR_traceplot.png", 20cm, 15cm),
      plot(plotdf,

@@ -137,13 +137,13 @@ plotdf = DataFrame(iteration = rep(1:100000,7),
                             ilm_trace.γ[end-99999:end];
                             detection_trace.ν[end-99999:end];
                             mutation_trace.λ[end-99999:end]],
-                   parameter = [rep("α",100000);
-                                rep("β",100000);
-                                rep("η",100000);
-                                rep("ρ",100000);
-                                rep("γ",100000);
-                                rep("ν",100000);
-                                rep("λ",100000)])
+                   parameter = [rep("alpha",100000);
+                                rep("beta",100000);
+                                rep("eta",100000);
+                                rep("rho",100000);
+                                rep("gamma",100000);
+                                rep("nu",100000);
+                                rep("lambda",100000)])
 
 draw(PNG("Phylogenetic_SEIR_traceplot.png", 20cm, 15cm),
      plot(plotdf,

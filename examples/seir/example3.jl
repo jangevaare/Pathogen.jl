@@ -98,17 +98,17 @@ end
 
 # Inference visualization
 # Joint trace plots (last 100k iterations)
-plotdf = DataFrame(iteration = rep(1:200000,5),
-                   value = [ilm_trace.α[end-199999:end];
-                            ilm_trace.β[end-199999:end];
-                            ilm_trace.η[end-199999:end];
-                            ilm_trace.ρ[end-199999:end];
-                            ilm_trace.γ[end-199999:end]],
-                   parameter = [rep("α",200000);
-                                rep("β",200000);
-                                rep("η",200000);
-                                rep("ρ",200000);
-                                rep("γ",200000)])
+plotdf = DataFrame(iteration = rep(1:100000,5),
+                   value = [ilm_trace.α[end-99999:end];
+                            ilm_trace.β[end-99999:end];
+                            ilm_trace.η[end-99999:end];
+                            ilm_trace.ρ[end-99999:end];
+                            ilm_trace.γ[end-99999:end]],
+                   parameter = [rep("alpha",100000);
+                                rep("beta",100000);
+                                rep("eta",100000);
+                                rep("rho",100000);
+                                rep("gamma",100000)])
 
 draw(PNG("SEIR_traceplot.png", 20cm, 15cm),
      plot(plotdf,

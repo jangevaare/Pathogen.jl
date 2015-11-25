@@ -261,7 +261,7 @@ function plotdata(actual::SEIR_actual,
                                     y = actual.covariates[i][2],
                                     state = findstate(actual, i, time)))
     if states[:state][end] != "S"
-      source = population.events[i+1][2][1]
+      source = population.events[i+1][2][1] - 1
       age = time - actual.exposed[i]
       if source > 1
         linecount += 1
@@ -299,7 +299,7 @@ function plotdata(actual::SIR_actual,
                                     y = actual.covariates[i][2],
                                     state = findstate(actual, i, time)))
     if states[:state][end] != "S"
-      source = population.events[i+1][2][1]
+      source = population.events[i+1][2][1] - 1
       age = time - actual.infectious[i]
       if source > 1
         linecount += 1
