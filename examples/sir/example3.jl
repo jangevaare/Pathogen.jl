@@ -33,20 +33,20 @@ ilm_priors = SIR_priors(Gamma(3.),
 
 ilm_trace = MCMC(200000, ilm_priors, obs)
 
-# Tune the transition kernel's covariance matrix
-n = 300
-progressbar = Progress(n, 5, "Performing $n tuning MCMC stages...", 25)
-for i = 1:n
-  # Tune transition matrix
-  opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.γ ilm_trace.η])*(2.38^2)/4.
-
-  # Perform 1000 MCMC iterations
-  MCMC(1000, opt_cov, ilm_trace, ilm_priors, obs, false, false)
-  next!(progressbar)
-end
-
-opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.γ ilm_trace.η])*(2.38^2)/4.
-MCMC(100000, opt_cov, ilm_trace, ilm_priors, obs)
+# # Tune the transition kernel's covariance matrix
+# n = 300
+# progressbar = Progress(n, 5, "Performing $n tuning MCMC stages...", 25)
+# for i = 1:n
+#   # Tune transition matrix
+#   opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.γ ilm_trace.η])*(2.38^2)/4.
+#
+#   # Perform 1000 MCMC iterations
+#   MCMC(1000, opt_cov, ilm_trace, ilm_priors, obs, false, false)
+#   next!(progressbar)
+# end
+#
+# opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.γ ilm_trace.η])*(2.38^2)/4.
+# MCMC(100000, opt_cov, ilm_trace, ilm_priors, obs)
 
 using Gadfly, DataFrames
 cd("/Users/justin/Desktop/pathogen")
@@ -60,7 +60,7 @@ for time = 1:images
                             pop,
                             (time*maximum([maximum(ilm_trace.aug[max_tracelp]), maximum(obs)])/images))
   p1 = plot(layer(states, x="x", y="y", color="state", Geom.point),
-            layer(routes, x="x", y="y", group="age", Geom.polygon),
+            layer(routes, x="x", y="y", group="line", Geom.polygon),
             Theme(panel_opacity=1.,
                   panel_fill=colorant"white",
                   default_color=colorant"black",
@@ -71,7 +71,7 @@ for time = 1:images
                             max_tracelp,
                             (time*maximum([maximum(ilm_trace.aug[max_tracelp]), pop.timeline[1][end]])/images))
   p2 = plot(layer(states, x="x", y="y", color="state", Geom.point),
-            layer(routes, x="x", y="y", group="age", Geom.polygon),
+            layer(routes, x="x", y="y", group="line", Geom.polygon),
             Theme(panel_opacity=1.,
                   panel_fill=colorant"white",
                   default_color=colorant"black",

@@ -132,13 +132,14 @@ end
 Create dataframes with all necessary plotting information
 """
 function plotdata(population::Population, time::Float64)
-  states = DataFrame(id = fill(NaN,4),
-                     x = fill(NaN,4),
+  states = DataFrame(x = fill(NaN,4),
                      y = fill(NaN,4),
                      state = ["S", "E", "I", "R"])
+  linecount = 0
   routes = DataFrame(x = Float64[],
-                     y = Float64[],
-                     age = Float64[])
+                    y = Float64[],
+                    line = ASCIIString[],
+                    age = Float64[])
   for i = 2:length(population.events)
     states = vcat(states, DataFrame(x = population.history[i][1][find(time .> population.events[i][5])[end]][1],
                                     y = population.history[i][1][find(time .> population.events[i][5])[end]][2],
@@ -147,12 +148,15 @@ function plotdata(population::Population, time::Float64)
       source = population.events[i][2][j]
       age = time - population.events[i][1][j]
       if source > 1
+        linecount += 1
         routes = vcat(routes, DataFrame(x = population.history[i][1][find(time .> population.events[i][5])[end]][1],
                                         y = population.history[i][1][find(time .> population.events[i][5])[end]][2],
-                                        age = "$age"))
+                                        line = "$linecount",
+                                        age = age))
         routes = vcat(routes, DataFrame(x = population.history[source][1][find(time .> population.events[source][5])[end]][1],
                                         y = population.history[source][1][find(time .> population.events[source][5])[end]][2],
-                                        age = "$age"))
+                                        line = "$linecount",
+                                        age = age))
       end
     end
   end
@@ -167,12 +171,13 @@ function plotdata(obs::SEIR_observed,
                   trace::SEIR_trace,
                   iteration::Int64,
                   time::Float64)
-  states = DataFrame(id = fill(NaN,4),
-                     x = fill(NaN,4),
+  states = DataFrame(x = fill(NaN,4),
                      y = fill(NaN,4),
                      state = ["S", "E", "I", "R"])
+  linecount = 0
   routes = DataFrame(x = Float64[],
                      y = Float64[],
+                     line = ASCIIString[],
                      age = Float64[])
   for i = 1:length(obs.infectious)
     states = vcat(states, DataFrame(x = obs.covariates[i][1],
@@ -181,13 +186,16 @@ function plotdata(obs::SEIR_observed,
     if states[:state][end] != "S"
       source = findfirst(trace.network[iteration][:,i])-1
       age = time - trace.aug[iteration].exposed[i]
-        if source > 1
+      if source > 1
+        linecount += 1
         routes = vcat(routes, DataFrame(x = obs.covariates[i][1],
                                         y = obs.covariates[i][2],
-                                        age = "$age"))
+                                        line = "$linecount",
+                                        age = age))
         routes = vcat(routes, DataFrame(x = obs.covariates[source][1],
                                         y = obs.covariates[source][2],
-                                        age = "$age"))
+                                        line = "$linecount",
+                                        age = age))
       end
     end
   end
@@ -202,12 +210,13 @@ function plotdata(obs::SIR_observed,
                   trace::SIR_trace,
                   iteration::Int64,
                   time::Float64)
-  states = DataFrame(id = fill(NaN,3),
-                     x = fill(NaN,3),
+  states = DataFrame(x = fill(NaN,3),
                      y = fill(NaN,3),
                      state = ["S", "I", "R"])
+  linecount = 0
   routes = DataFrame(x = Float64[],
                      y = Float64[],
+                     line = ASCIIString[],
                      age = Float64[])
   for i = 1:length(obs.infectious)
     states = vcat(states, DataFrame(x = obs.covariates[i][1],
@@ -217,12 +226,15 @@ function plotdata(obs::SIR_observed,
       source = findfirst(trace.network[iteration][:,i])-1
       age = time - trace.aug[iteration].infectious[i]
         if source > 1
-        routes = vcat(routes, DataFrame(x = obs.covariates[i][1],
-                                        y = obs.covariates[i][2],
-                                        age = "$age"))
-        routes = vcat(routes, DataFrame(x = obs.covariates[source][1],
-                                        y = obs.covariates[source][2],
-                                        age = "$age"))
+          linecount += 1
+          routes = vcat(routes, DataFrame(x = obs.covariates[i][1],
+                                          y = obs.covariates[i][2],
+                                          line = "$linecount",
+                                          age = age))
+          routes = vcat(routes, DataFrame(x = obs.covariates[source][1],
+                                          y = obs.covariates[source][2],
+                                          line = "$linecount",
+                                          age = age))
       end
     end
   end
@@ -236,27 +248,31 @@ Create dataframes with all necessary plotting information
 function plotdata(actual::SEIR_actual,
                   population::Population,
                   time::Float64)
-  states = DataFrame(id = fill(NaN, 4),
-                     x = fill(NaN, 4),
+  states = DataFrame(x = fill(NaN, 4),
                      y = fill(NaN, 4),
                      state = ["S", "E", "I", "R"])
+  linecount = 0
   routes = DataFrame(x = Float64[],
                      y = Float64[],
+                     line = ASCIIString[],
                      age = Float64[])
   for i = 1:length(actual.infectious)
     states = vcat(states, DataFrame(x = actual.covariates[i][1],
                                     y = actual.covariates[i][2],
                                     state = findstate(actual, i, time)))
     if states[:state][end] != "S"
-      source = population.events[i][2][j]
+      source = population.events[i+1][2][1]
       age = time - actual.exposed[i]
-        if source > 1
+      if source > 1
+        linecount += 1
         routes = vcat(routes, DataFrame(x = actual.covariates[i][1],
                                         y = actual.covariates[i][2],
-                                        age = "$age"))
+                                        line = "$linecount",
+                                        age = age))
         routes = vcat(routes, DataFrame(x = actual.covariates[source][1],
                                         y = actual.covariates[source][2],
-                                        age = "$age"))
+                                        line = "$linecount",
+                                        age = age))
       end
     end
   end
@@ -270,27 +286,31 @@ Create dataframes with all necessary plotting information
 function plotdata(actual::SIR_actual,
                   population::Population,
                   time::Float64)
-  states = DataFrame(id = fill(NaN, 3),
-                     x = fill(NaN, 3),
+  states = DataFrame(x = fill(NaN, 3),
                      y = fill(NaN, 3),
                      state = ["S", "I", "R"])
+  linecount = 0
   routes = DataFrame(x = Float64[],
                      y = Float64[],
+                     line = ASCIIString[],
                      age = Float64[])
   for i = 1:length(actual.infectious)
     states = vcat(states, DataFrame(x = actual.covariates[i][1],
                                     y = actual.covariates[i][2],
                                     state = findstate(actual, i, time)))
     if states[:state][end] != "S"
-      source = population.events[i][2][j]
-      age = time - actual.exposed[i]
-        if source > 1
+      source = population.events[i+1][2][1]
+      age = time - actual.infectious[i]
+      if source > 1
+        linecount += 1
         routes = vcat(routes, DataFrame(x = actual.covariates[i][1],
                                         y = actual.covariates[i][2],
-                                        age = "$age"))
+                                        line = "$linecount",
+                                        age = age))
         routes = vcat(routes, DataFrame(x = actual.covariates[source][1],
                                         y = actual.covariates[source][2],
-                                        age = "$age"))
+                                        line = "$linecount",
+                                        age = age))
       end
     end
   end

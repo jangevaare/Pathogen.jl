@@ -66,7 +66,7 @@ for time = 1:images
                             pop,
                             (time*maximum([maximum(ilm_trace.aug[max_tracelp]), maximum(obs)])/images))
   p1 = plot(layer(states, x="x", y="y", color="state", Geom.point),
-            layer(routes, x="x", y="y", group="age", Geom.polygon),
+            layer(routes, x="x", y="y", group="line", Geom.polygon),
             Theme(panel_opacity=1.,
                   panel_fill=colorant"white",
                   default_color=colorant"black",
@@ -77,12 +77,12 @@ for time = 1:images
                             max_tracelp,
                             (time*maximum([maximum(ilm_trace.aug[max_tracelp]), pop.timeline[1][end]])/images))
   p2 = plot(layer(states, x="x", y="y", color="state", Geom.point),
-            layer(routes, x="x", y="y", group="age", Geom.polygon),
+            layer(routes, x="x", y="y", group="line", Geom.polygon),
             Theme(panel_opacity=1.,
                   panel_fill=colorant"white",
                   default_color=colorant"black",
                   background_color=colorant"white"))
-
+                  
   filenumber = time/images
   filenumber = prod(split("$filenumber", ".", limit=2))
   filenumber *= prod(fill("0", 5-length(filenumber)))
