@@ -95,6 +95,40 @@ end
 
 
 """
+Find the disease state of a specific individual
+"""
+function findstate(actual::SEIR_actual, individual::Int64, time::Float64)
+  if isnan(actual.exposed[individual]) || actual.exposed[individual] > time
+    return "S"
+  elseif actual.exposed[individual] < time && isnan(actual.infectious[individual]) || actual.infectious[individual] > time
+    return "E"
+  elseif actual.infectious[individual] < time && isnan(actual.removed[individual]) || actual.removed[individual] > time
+    return "I"
+  elseif actual.removed[individual] < time
+    return "R"
+  else
+    return "unknown"
+  end
+end
+
+
+"""
+Find the disease state of a specific individual
+"""
+function findstate(actual::SIR_actual, individual::Int64, time::Float64)
+  if isnan(actual.infectious[individual]) || actual.infectious[individual] > time
+    return "S"
+  elseif actual.infectious[individual] < time && isnan(actual.removed[individual]) || actual.removed[individual] > time
+    return "I"
+  elseif actual.removed[individual] < time
+    return "R"
+  else
+    return "unknown"
+  end
+end
+
+
+"""
 Create dataframes with all necessary plotting information
 """
 function plotdata(population::Population, time::Float64)
@@ -188,6 +222,74 @@ function plotdata(obs::SIR_observed,
                                         age = "$age"))
         routes = vcat(routes, DataFrame(x = obs.covariates[source][1],
                                         y = obs.covariates[source][2],
+                                        age = "$age"))
+      end
+    end
+  end
+  return states, routes
+end
+
+
+"""
+Create dataframes with all necessary plotting information
+"""
+function plotdata(actual::SEIR_actual,
+                  population::Population,
+                  time::Float64)
+  states = DataFrame(id = fill(NaN, 4),
+                     x = fill(NaN, 4),
+                     y = fill(NaN, 4),
+                     state = ["S", "E", "I", "R"])
+  routes = DataFrame(x = Float64[],
+                     y = Float64[],
+                     age = Float64[])
+  for i = 1:length(actual.infectious)
+    states = vcat(states, DataFrame(x = actual.covariates[i][1],
+                                    y = actual.covariates[i][2],
+                                    state = findstate(actual, i, time)))
+    if states[:state][end] != "S"
+      source = population.events[i][2][j]
+      age = time - actual.exposed[i]
+        if source > 1
+        routes = vcat(routes, DataFrame(x = actual.covariates[i][1],
+                                        y = actual.covariates[i][2],
+                                        age = "$age"))
+        routes = vcat(routes, DataFrame(x = actual.covariates[source][1],
+                                        y = actual.covariates[source][2],
+                                        age = "$age"))
+      end
+    end
+  end
+  return states, routes
+end
+
+
+"""
+Create dataframes with all necessary plotting information
+"""
+function plotdata(actual::SIR_actual,
+                  population::Population,
+                  time::Float64)
+  states = DataFrame(id = fill(NaN, 3),
+                     x = fill(NaN, 3),
+                     y = fill(NaN, 3),
+                     state = ["S", "I", "R"])
+  routes = DataFrame(x = Float64[],
+                     y = Float64[],
+                     age = Float64[])
+  for i = 1:length(actual.infectious)
+    states = vcat(states, DataFrame(x = actual.covariates[i][1],
+                                    y = actual.covariates[i][2],
+                                    state = findstate(actual, i, time)))
+    if states[:state][end] != "S"
+      source = population.events[i][2][j]
+      age = time - actual.exposed[i]
+        if source > 1
+        routes = vcat(routes, DataFrame(x = actual.covariates[i][1],
+                                        y = actual.covariates[i][2],
+                                        age = "$age"))
+        routes = vcat(routes, DataFrame(x = actual.covariates[source][1],
+                                        y = actual.covariates[source][2],
                                         age = "$age"))
       end
     end

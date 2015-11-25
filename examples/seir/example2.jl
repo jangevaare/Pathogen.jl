@@ -62,9 +62,9 @@ images = 500
 max_tracelp=findfirst(ilm_trace.logposterior.==maximum(ilm_trace.logposterior))
 
 for time = 1:images
-  states, routes = plotdata(pop,
-                            (time*maximum([maximum(ilm_trace.aug[max_tracelp]),
-                            maximum(obs)])/images))
+  states, routes = plotdata(actual,
+                            pop,
+                            (time*maximum([maximum(ilm_trace.aug[max_tracelp]), maximum(obs)])/images))
   p1 = plot(layer(states, x="x", y="y", color="state", Geom.point),
             layer(routes, x="x", y="y", group="age", Geom.polygon),
             Theme(panel_opacity=1.,
@@ -72,7 +72,10 @@ for time = 1:images
                   default_color=colorant"black",
                   background_color=colorant"white"))
 
-  states, routes = plotdata(obs, ilm_trace, max_tracelp, (time*maximum([maximum(ilm_trace.aug[max_tracelp]), pop.timeline[1][end]])/images))
+  states, routes = plotdata(obs,
+                            ilm_trace,
+                            max_tracelp,
+                            (time*maximum([maximum(ilm_trace.aug[max_tracelp]), pop.timeline[1][end]])/images))
   p2 = plot(layer(states, x="x", y="y", color="state", Geom.point),
             layer(routes, x="x", y="y", group="age", Geom.polygon),
             Theme(panel_opacity=1.,
