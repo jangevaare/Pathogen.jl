@@ -78,7 +78,7 @@ end
 For a given transmission network, find the time between the pathogen sequences between every individuals i and j
 """
 function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, network::Array{Bool, 2}, debug=false::Bool)
-  pathways = pathwaysto(network, debug)
+  pathways = pathwaysto(find(isseq(obs.seq)), network, debug)
   seq_dist = fill(0., (size(network, 2), size(network, 2)))
   for i = 1:length(pathways)
     # if debug
@@ -127,7 +127,7 @@ end
 For a given transmission network, find the time between the pathogen sequences between every individuals i and j
 """
 function seq_distances(obs::SIR_observed, aug::SIR_augmented, network::Array{Bool, 2}, debug=false::Bool)
-  pathways = pathwaysto(network, debug)
+  pathways = pathwaysto(find(isseq(obs.seq)), network, debug)
   seq_dist = fill(0., (size(network, 2), size(network, 2)))
   for i = 1:length(pathways)
     for j = 1:(i-1)
@@ -166,7 +166,7 @@ function phylogenetic_network_loglikelihood(obs::Observed,
                                             p_matrix::Function,
                                             debug=false::Bool)
   ll = 0.
-  infected = find(!isnan(obs.seq))
+  infected = find(isseq(obs.seq))
   seq_dist = seq_distances(obs, aug, network, debug)
   for i = 1:length(infected)
     for j = 1:(i-1)
@@ -189,7 +189,7 @@ Loglikelihood for a transmission network based on exposure rates
 """
 function exposure_network_loglikelihood(network::Array{Bool, 2}, network_rates::Array{Float64}, debug=false::Bool)
   ll = 0.
-  infected = find(isseq(obs.seq))
+  infected = find(sum(network, 1))
   for i in infected
      ll += log(network_rates[findfirst(network[:,i]),i]/sum(network_rates[:,i]))
      if debug
