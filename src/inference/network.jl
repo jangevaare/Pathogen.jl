@@ -189,7 +189,7 @@ Loglikelihood for a transmission network based on exposure rates
 """
 function exposure_network_loglikelihood(network::Array{Bool, 2}, network_rates::Array{Float64}, debug=false::Bool)
   ll = 0.
-  infected = find(sum(network, 1))
+  infected = find(isseq(obs.seq))
   for i in infected
      ll += log(network_rates[findfirst(network[:,i]),i]/sum(network_rates[:,i]))
      if debug

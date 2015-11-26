@@ -462,3 +462,17 @@ function pathwaysfrom(network::Array{Bool,2}, depth=0::Int64, debug=false::Bool)
 end
 
 pathwaysfrom(network::Array{Bool,2}, debug::Bool) = pathwaysfrom(network, 0, debug)
+
+
+"""
+Identifies the pressence of a Vector{Int64} in a Vector{Any}
+"""
+function isseq(x::Vector{Any})
+  seq = fill(false, length(x))
+  for i = 1:length(x)
+    if typeof(x[i]) == Vector{Int64}
+      seq[i] = true
+    end
+  end
+  return seq
+end
