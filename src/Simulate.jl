@@ -249,9 +249,9 @@ function surveil(population::Population, ν::Float64)
   end
   @assert(sum(!isnan(exposed_actual)) > 0, "No disease transmission has occurred within the population")
   if exposed_actual[!isnan(exposed_actual)] == infectious_actual[!isnan(infectious_actual)]
-    return SIR_actual(infectious_actual, removed_actual, covariates_actual, seq_actual), SIR_observed(infectious_observed, removed_observed, covariates_observed, seq_observed)
+    return SIR_actual(infectious_actual, removed_actual, covariates_actual, seq_actual), SIR_observed(infectious_observed, removed_observed, covariates_observed, seq_observed, isseq(seq_observed))
   else
-    return SEIR_actual(exposed_actual, infectious_actual, removed_actual, covariates_actual, seq_actual), SEIR_observed(infectious_observed, removed_observed, covariates_observed, seq_observed)
+    return SEIR_actual(exposed_actual, infectious_actual, removed_actual, covariates_actual, seq_actual), SEIR_observed(infectious_observed, removed_observed, covariates_observed, seq_observed, isseq(seq_observed))
   end
 end
 

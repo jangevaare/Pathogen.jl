@@ -45,6 +45,7 @@ type SEIR_observed <: Observed
   removed::Vector{Float64}
   covariates::Vector{Vector{Float64}}
   seq::Vector{Any}
+  sequenced::Vector{Bool}
 end
 
 
@@ -77,6 +78,7 @@ type SIR_observed <: Observed
   removed::Vector{Float64}
   covariates::Vector{Vector{Float64}}
   seq::Vector{Any}
+  sequenced::Vector{Bool}
 end
 
 
