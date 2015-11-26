@@ -36,14 +36,14 @@ function initialize(ilm_priors::SIR_priors,
     if Inf > lp > -Inf
       network = propose_network(network_rates,
                                 debug)
-      lp += exposure_network_loglikelihood(network,
-                                           network_rates,
-                                           debug)
-      lp += detection_loglikelihood(detection_params[1],
-                                    aug,
-                                    network,
-                                    obs,
-                                    debug)
+      # lp += exposure_network_loglikelihood(network,
+      #                                      network_rates,
+      #                                      debug)
+      # lp += detection_loglikelihood(detection_params[1],
+      #                               aug,
+      #                               network,
+      #                               obs,
+      #                               debug)
     end
     if Inf > lp > -Inf
       lp += logprior(mutation_priors,
@@ -163,11 +163,11 @@ function initialize(ilm_priors::SIR_priors,
     lp += logprior(detection_priors, detection_params)
     if Inf > lp > -Inf
       network = propose_network(network_rates, debug)
-      lp += detection_loglikelihood(detection_params[1],
-                                   aug,
-                                   network,
-                                   obs,
-                                   debug)
+      # lp += detection_loglikelihood(detection_params[1],
+      #                              aug,
+      #                              network,
+      #                              obs,
+      #                              debug)
       # lp += exposure_network_loglikelihood(network, network_rates, debug)
     end
     if Inf > lp > -Inf
@@ -281,7 +281,7 @@ function MCMC(n::Int64,
                               ilm_trace.network[end],
                               ilm_trace.aug[end],
                               obs,
-                              rand(Poisson(1)),
+                              0,
                               debug)
       else
         aug = ilm_trace.aug[end]
@@ -305,7 +305,7 @@ function MCMC(n::Int64,
         network = propose_network(network_rates,
                                   ilm_trace.network[end],
                                   debug,
-                                  rand(Poisson(1)),
+                                  0,
                                   "multinomial")
       else
         network = ilm_trace.network[end]
@@ -445,10 +445,10 @@ function MCMC(n::Int64,
     progress && !debug && next!(progressbar)
     debug && println("")
     debug && println("Performing the $(i)th MCMC iteration")
-    if mod(i, 1) == 0
-      step = rand(MvNormal(transition_cov))
+    if mod(i, 2) == 0
+      step = [rand(MvNormal(transition_cov))[1:4]; 0.]
     else
-      step = fill(0., 5)
+      step = [fill(0., 4); rand(MvNormal(transition_cov))[5]]
     end
     ilm_proposal = [ilm_trace.α[end],
                     ilm_trace.β[end],
@@ -461,7 +461,6 @@ function MCMC(n::Int64,
     debug && println("Mutation proposal: $(round(mutation_proposal, 3))")
     lp = logprior(ilm_priors, ilm_proposal, debug)
     lp += logprior(mutation_priors, mutation_proposal, debug)
-
     aug = ilm_trace.aug[end]
 
     if lp > -Inf
@@ -482,7 +481,7 @@ function MCMC(n::Int64,
         network = propose_network(network_rates,
                                   ilm_trace.network[end],
                                   debug,
-                                  rand(Poisson(1)),
+                                  0,
                                   "multinomial")
       else
         network = ilm_trace.network[end]
@@ -655,7 +654,7 @@ function MCMC(n::Int64,
         network = propose_network(network_rates,
                                   ilm_trace.network[end],
                                   debug,
-                                  rand(Poisson(1)),
+                                  0,
                                   "multinomial")
       else
         network = ilm_trace.network[end]
@@ -788,9 +787,7 @@ function MCMC(n::Int64,
     debug && println("Proposed parameter changes: $(round(step, 3))")
     debug && println("ILM proposal: $(round(ilm_proposal, 3))")
     lp = logprior(ilm_priors, ilm_proposal, debug)
-    if lp > -Inf
-      aug = ilm_trace.aug[end]
-    end
+    aug = ilm_trace.aug[end]
     if lp > -Inf
       # SIR loglikelihood
       ll, network_rates = SIR_loglikelihood(ilm_proposal[1],
