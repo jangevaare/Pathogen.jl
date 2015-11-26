@@ -556,7 +556,7 @@ function MCMC(n::Int64,
     progress && !debug && next!(progressbar)
     debug && println("")
     debug && println("Performing the $(i)th MCMC iteration")
-    if mod(i, 2) == 1
+    if mod(i, 1) == 0
       step = rand(MvNormal(transition_cov))
     else
       step = fill(0., 4)
@@ -585,17 +585,17 @@ function MCMC(n::Int64,
       lp += ll
     end
     if lp > -Inf
-      if mod(i, 2) == 0
+      if mod(i, 1) == 0
         # Generate network proposal
         network = propose_network(network_rates,
                                   ilm_trace.network[end],
                                   debug,
-                                  rand(Poisson(3.)),
+                                  0,
                                   "multinomial")
       else
         network = ilm_trace.network[end]
       end
-      lp += exposure_network_loglikelihood(network, network_rates, debug)
+      # lp += exposure_network_loglikelihood(network, network_rates, debug)
     end
 
     # Acceptance/rejection
