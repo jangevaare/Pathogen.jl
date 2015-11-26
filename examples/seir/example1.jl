@@ -116,7 +116,7 @@ for time = 1:images
 end
 
 # Assemble into animation
-run(`convert -delay 10 -loop 0 -layers optimize SEIR_simulation_*.png SEIR_animation_combined.gif`)
+run(`convert -delay 10 -loop 0 -layers optimize SEIR_simulation_*.png SEIR1_animation_combined.gif`)
 
 # Remove frames
 for time = 1:images
@@ -145,7 +145,7 @@ plotdf = DataFrame(iteration = rep(1:100000,7),
                                 rep("nu",100000);
                                 rep("lambda",100000)])
 
-draw(PNG("Phylogenetic_SEIR_traceplot.png", 20cm, 15cm),
+draw(PNG("SEIR1_traceplot.png", 20cm, 15cm),
      plot(plotdf,
           x="iteration",
           y="value",
@@ -157,7 +157,7 @@ draw(PNG("Phylogenetic_SEIR_traceplot.png", 20cm, 15cm),
 
 
 # logposterior plot (last 100k iterations)
-draw(PNG("Phylogenetic_SEIR_logposterior.png", 20cm, 15cm),
+draw(PNG("SEIR1_logposterior.png", 20cm, 15cm),
      plot(x=1:100000,
           y=ilm_trace.logposterior[end-99999:end],
           Geom.line,

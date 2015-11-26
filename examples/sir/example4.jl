@@ -20,9 +20,7 @@ end
 # Inference
 # α, β: powerlaw exposure kernel parameters
 # η: external pressure rate
-# ρ: infectivity rate (1/mean latent period)
 # γ: recovery rate (1/mean infectious period)
-# λ: JC69 transition/transversion rate
 
 actual, obs = surveil(pop)
 
@@ -84,7 +82,7 @@ for time = 1:images
 end
 
 # Assemble into animation
-run(`convert -delay 10 -loop 0 -layers optimize SIR_simulation_*.png SIR_animation_combined.gif`)
+run(`convert -delay 10 -loop 0 -layers optimize SIR_simulation_*.png SIR4_animation_combined.gif`)
 
 # Remove frames
 for time = 1:images
@@ -107,7 +105,7 @@ plotdf = DataFrame(iteration = rep(1:200000,4),
                                 rep("eta",200000);
                                 rep("gamma",200000)])
 
-draw(PNG("SEIR_traceplot.png", 20cm, 15cm),
+draw(PNG("SIR4_traceplot.png", 20cm, 15cm),
      plot(plotdf,
           x="iteration",
           y="value",
@@ -119,7 +117,7 @@ draw(PNG("SEIR_traceplot.png", 20cm, 15cm),
 
 
 # logposterior plot (last 100k iterations)
-draw(PNG("SEIR_logposterior.png", 20cm, 15cm),
+draw(PNG("SIR4_logposterior.png", 20cm, 15cm),
      plot(x=1:200000,
           y=ilm_trace.logposterior[end-199999:end],
           Geom.line,

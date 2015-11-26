@@ -20,7 +20,6 @@ end
 # Inference
 # α, β: powerlaw exposure kernel parameters
 # η: external pressure rate
-# ρ: infectivity rate (1/mean latent period)
 # γ: recovery rate (1/mean infectious period)
 # λ: JC69 transition/transversion rate
 
@@ -35,20 +34,20 @@ mutation_priors = JC69_priors(Uniform(0., 0.002))
 
 ilm_trace, mutation_trace = MCMC(200000, ilm_priors, mutation_priors, obs)
 
-# Tune the transition kernel's covariance matrix
-n = 300
-progressbar = Progress(n, 5, "Performing $n tuning MCMC stages...", 25)
-for i = 1:n
-  # Tune transition matrix
-  opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.γ ilm_trace.η mutation_trace.λ])*(2.38^2)/5.
-
-  # Perform 1000 MCMC iterations
-  MCMC(1000, opt_cov, ilm_trace, mutation_trace, ilm_priors, mutation_priors, obs, false, false)
-  next!(progressbar)
-end
-
-opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.γ ilm_trace.η mutation_trace.λ])*(2.38^2)/5.
-MCMC(100000, opt_cov, ilm_trace, ilm_priors, obs)
+# # Tune the transition kernel's covariance matrix
+# n = 300
+# progressbar = Progress(n, 5, "Performing $n tuning MCMC stages...", 25)
+# for i = 1:n
+#   # Tune transition matrix
+#   opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.γ ilm_trace.η mutation_trace.λ])*(2.38^2)/5.
+#
+#   # Perform 1000 MCMC iterations
+#   MCMC(1000, opt_cov, ilm_trace, mutation_trace, ilm_priors, mutation_priors, obs, false, false)
+#   next!(progressbar)
+# end
+#
+# opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.γ ilm_trace.η mutation_trace.λ])*(2.38^2)/5.
+# MCMC(100000, opt_cov, ilm_trace, ilm_priors, obs)
 
 using Gadfly, DataFrames
 cd("/Users/justin/Desktop/pathogen")
@@ -86,7 +85,7 @@ for time = 1:images
 end
 
 # Assemble into animation
-run(`convert -delay 10 -loop 0 -layers optimize SIR_simulation_*.png SIR_animation_combined.gif`)
+run(`convert -delay 10 -loop 0 -layers optimize SIR_simulation_*.png SIR3_animation_combined.gif`)
 
 # Remove frames
 for time = 1:images
@@ -111,7 +110,7 @@ plotdf = DataFrame(iteration = rep(1:200000, 5),
                                 rep("gamma", 200000);
                                 rep("lambda", 200000)])
 
-draw(PNG("SEIR_traceplot.png", 20cm, 15cm),
+draw(PNG("SIR3_traceplot.png", 20cm, 15cm),
      plot(plotdf,
           x="iteration",
           y="value",
@@ -123,10 +122,10 @@ draw(PNG("SEIR_traceplot.png", 20cm, 15cm),
 
 
 # logposterior plot (last 100k iterations)
-draw(PNG("SEIR_logposterior.png", 20cm, 15cm),
+draw(PNG("SIR3_logposterior.png", 20cm, 15cm),
      plot(x=1:200000,
           y=ilm_trace.logposterior[end-199999:end],
           Geom.line,
           Theme(panel_opacity=1.,
                 panel_fill=colorant"white",
-                background_color=colorant"white")))s
+                background_color=colorant"white")))

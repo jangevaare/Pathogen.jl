@@ -103,7 +103,7 @@ function initialize(ilm_priors::SIR_priors,
     lp += logprior(ilm_priors, ilm_params, debug)
     if Inf > lp > -Inf
       network = propose_network(network_rates, debug)
-      lp += exposure_network_loglikelihood(network, network_rates, debug)
+      # lp += exposure_network_loglikelihood(network, network_rates, debug)
     end
     if Inf > lp > -Inf
       lp += logprior(mutation_priors, mutation_params, debug)
@@ -310,7 +310,7 @@ function MCMC(n::Int64,
       else
         network = ilm_trace.network[end]
       end
-      lp += exposure_network_loglikelihood(network, network_rates, debug)
+      # lp += exposure_network_loglikelihood(network, network_rates, debug)
     end
     if lp > -Inf
       lp += phylogenetic_network_loglikelihood(obs,
@@ -319,13 +319,13 @@ function MCMC(n::Int64,
                                                jc69p(mutation_proposal),
                                                debug)
     end
-    if lp > -Inf
-      lp += detection_loglikelihood(detection_proposal[1],
-                                    aug,
-                                    network,
-                                    obs,
-                                    debug)
-    end
+    # if lp > -Inf
+    #   lp += detection_loglikelihood(detection_proposal[1],
+    #                                 aug,
+    #                                 network,
+    #                                 obs,
+    #                                 debug)
+    # end
     # Acceptance/rejection
     reject = MHreject(lp, ilm_trace.logposterior[end], debug)
 
@@ -662,13 +662,13 @@ function MCMC(n::Int64,
       end
       # lp += exposure_network_loglikelihood(network, network_rates, debug)
     end
-    if lp > -Inf
-      lp += detection_loglikelihood(detection_proposal[1],
-                                    aug,
-                                    network,
-                                    obs,
-                                    debug)
-    end
+    # if lp > -Inf
+    #   lp += detection_loglikelihood(detection_proposal[1],
+    #                                 aug,
+    #                                 network,
+    #                                 obs,
+    #                                 debug)
+    # end
 
     # Acceptance/rejection
     reject = MHreject(lp, ilm_trace.logposterior[end], debug)
