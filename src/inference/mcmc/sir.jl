@@ -100,20 +100,13 @@ function initialize(ilm_priors::SIR_priors,
                                           obs,
                                           debug,
                                           dist)
-    lp += logprior(ilm_priors,
-                   ilm_params,
-                   debug)
+    lp += logprior(ilm_priors, ilm_params, debug)
     if Inf > lp > -Inf
-      network = propose_network(network_rates,
-                                debug)
-      lp += exposure_network_loglikelihood(network,
-                                           network_rates,
-                                           debug)
+      network = propose_network(network_rates, debug)
+      lp += exposure_network_loglikelihood(network, network_rates, debug)
     end
     if Inf > lp > -Inf
-      lp += logprior(mutation_priors,
-                     mutation_params,
-                     debug)
+      lp += logprior(mutation_priors, mutation_params, debug)
     end
     if Inf > lp > -Inf
       lp += phylogenetic_network_loglikelihood(obs,
@@ -175,7 +168,7 @@ function initialize(ilm_priors::SIR_priors,
                                    network,
                                    obs,
                                    debug)
-      lp += exposure_network_loglikelihood(network, network_rates, debug)
+      # lp += exposure_network_loglikelihood(network, network_rates, debug)
     end
     if Inf > lp > -Inf
       return SIR_trace([ilm_params[1]],
@@ -221,7 +214,7 @@ function initialize(ilm_priors::SIR_priors,
     lp += logprior(ilm_priors, ilm_params, debug)
     if Inf > lp > -Inf
       network = propose_network(network_rates, debug)
-      lp += exposure_network_loglikelihood(network, network_rates, debug)
+      # lp += exposure_network_loglikelihood(network, network_rates, debug)
     end
     if Inf > lp > -Inf
       return SIR_trace([ilm_params[1]],
@@ -434,10 +427,8 @@ end
 function MCMC(n::Int64,
               transition_cov::Array{Float64},
               ilm_trace::SIR_trace,
-              detection_trace::Lag_trace,
               mutation_trace::JC69_trace,
               ilm_priors::SIR_priors,
-              detection_priors::Lag_priors,
               mutation_priors::JC69_priors,
               obs::SIR_observed,
               debug=false::Bool,
@@ -669,7 +660,7 @@ function MCMC(n::Int64,
       else
         network = ilm_trace.network[end]
       end
-      lp += exposure_network_loglikelihood(network, network_rates, debug)
+      # lp += exposure_network_loglikelihood(network, network_rates, debug)
     end
     if lp > -Inf
       lp += detection_loglikelihood(detection_proposal[1],

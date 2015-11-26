@@ -31,23 +31,21 @@ ilm_priors = SIR_priors(Gamma(3.),
                         Uniform(0., 0.002),
                         Gamma(1/7))
 
-mutation_priors = JC69_priors(Uniform(0., 0.002))
-
-ilm_trace, mutation_trace = MCMC(200000, ilm_priors, mutation_priors, obs)
+ilm_trace = MCMC(200000, ilm_priors, obs)
 
 # Tune the transition kernel's covariance matrix
 n = 300
 progressbar = Progress(n, 5, "Performing $n tuning MCMC stages...", 25)
 for i = 1:n
   # Tune transition matrix
-  opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.γ ilm_trace.η mutation_trace.λ])*(2.38^2)/5.
+  opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.γ ilm_trace.η])*(2.38^2)/4.
 
   # Perform 1000 MCMC iterations
-  MCMC(1000, opt_cov, ilm_trace, mutation_trace, ilm_priors, mutation_priors, obs, false, false)
+  MCMC(1000, opt_cov, ilm_trace, ilm_priors, obs, false, false)
   next!(progressbar)
 end
 
-opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.γ ilm_trace.η mutation_trace.λ])*(2.38^2)/5.
+opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.γ ilm_trace.η])*(2.38^2)/4.
 MCMC(100000, opt_cov, ilm_trace, ilm_priors, obs)
 
 using Gadfly, DataFrames
@@ -99,17 +97,15 @@ end
 
 # Inference visualization
 # Joint trace plots (last 100k iterations)
-plotdf = DataFrame(iteration = rep(1:200000, 5),
+plotdf = DataFrame(iteration = rep(1:200000,4),
                    value = [ilm_trace.α[end-199999:end];
                             ilm_trace.β[end-199999:end];
                             ilm_trace.η[end-199999:end];
-                            ilm_trace.γ[end-199999:end];
-                            mutation_trace.λ[end-199999:end]],
-                   parameter = [rep("alpha", 200000);
-                                rep("beta", 200000);
-                                rep("eta", 200000);
-                                rep("gamma", 200000);
-                                rep("lambda", 200000)])
+                            ilm_trace.γ[end-199999:end]],
+                   parameter = [rep("alpha",200000);
+                                rep("beta",200000);
+                                rep("eta",200000);
+                                rep("gamma",200000)])
 
 draw(PNG("SEIR_traceplot.png", 20cm, 15cm),
      plot(plotdf,
@@ -129,4 +125,4 @@ draw(PNG("SEIR_logposterior.png", 20cm, 15cm),
           Geom.line,
           Theme(panel_opacity=1.,
                 panel_fill=colorant"white",
-                background_color=colorant"white")))s
+                background_color=colorant"white")))
