@@ -115,10 +115,44 @@ function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, network::Array{B
     end
   end
   seq_dist += transpose(seq_dist)
-  # if debug
-  #   println("Sequence distances:")
-  #   println(round(seq_dist, 3))
-  # end
+  if debug
+    println("Sequence distances:")
+    println(round(seq_dist, 3))
+  end
+  return seq_dist
+end
+
+
+"""
+For a given transmission network, find the time between the pathogen sequences between every individuals i and j
+"""
+function seq_distances(obs::SIR_observed, aug::SIR_augmented, network::Array{Bool, 2}, debug=false::Bool)
+  pathways = pathwaysto(network, debug)
+  seq_dist = fill(0., (size(network, 2), size(network, 2)))
+  for i = 1:length(pathways)
+    for j = 1:(i-1)
+      k = 1
+      while length(pathways[i]) > k && length(pathways[j]) > k && pathways[i][end - k] == pathways[j][end - k]
+        k += 1
+      end
+      if k == length(pathways[i])
+        seq_dist[pathways[i][1],pathways[j][1]] += obs.infectious[pathways[j][1]] - aug.infectious[pathways[j][end - k]]
+        seq_dist[pathways[i][1],pathways[j][1]] += abs(aug.infectious[pathways[j][end - k]] - obs.infectious[pathways[i][1]])
+      elseif k == length(pathways[j])
+        seq_dist[pathways[i][1],pathways[j][1]] += obs.infectious[pathways[i][1]] - aug.infectious[pathways[i][end - k]]
+        seq_dist[pathways[i][1],pathways[j][1]] += abs(aug.infectious[pathways[i][end - k]] - obs.infectious[pathways[j][1]])
+      else
+        seq_dist[pathways[i][1],pathways[j][1]] += obs.infectious[pathways[i][1]] - aug.infectious[pathways[i][end - k]]
+        seq_dist[pathways[i][1],pathways[j][1]] += obs.infectious[pathways[j][1]] - aug.infectious[pathways[j][end - k]]
+        seq_dist[pathways[i][1],pathways[j][1]] += abs(aug.infectious[pathways[j][end - k]] - aug.infectious[pathways[i][end - k]])
+      end
+    end
+  end
+  seq_dist += transpose(seq_dist)
+  if debug
+    println("Sequence distances:")
+    println(round(seq_dist, 3))
+  end
   return seq_dist
 end
 
