@@ -160,9 +160,13 @@ end
 """
 Loglikelihood for a transmission network based on sequence data and event timing
 """
-function phylogenetic_network_loglikelihood(obs::SEIR_observed, aug::SEIR_augmented, network::Array{Bool, 2}, p_matrix::Function, debug=false::Bool)
+function phylogenetic_network_loglikelihood(obs::Observed,
+                                            aug::Augmented,
+                                            network::Array{Bool, 2},
+                                            p_matrix::Function,
+                                            debug=false::Bool)
   ll = 0.
-  infected = find(sum(network, 1))
+  infected = find(!isnan(obs.seq))
   seq_dist = seq_distances(obs, aug, network, debug)
   for i = 1:length(infected)
     for j = 1:(i-1)
