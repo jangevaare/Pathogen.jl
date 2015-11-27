@@ -254,17 +254,19 @@ function MCMC(n::Int64,
     progress && !debug && next!(progressbar)
     debug && println("")
     debug && println("Performing the $(i)th MCMC iteration")
+
     if mod(i, 1) == 0
-      step = rand(MvNormal(transition_cov))
+      param_proposal = rand(TruncatedMvNormal([ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.γ[end], detection_trace.ν[end], mutation_trace.λ[end]],
+                                              transition_cov,
+                                              [0.,0.,0.,0.,0.,0.],
+                                              [Inf, Inf, Inf, Inf, Inf, Inf]))
     else
-      step = fill(0., 6)
+      param_proposal = [ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.γ[end], detection_trace.ν[end], mutation_trace.λ[end]]
     end
-    ilm_proposal = [ilm_trace.α[end],
-                    ilm_trace.β[end],
-                    ilm_trace.η[end],
-                    ilm_trace.γ[end]] .+ step[1:4]
-    detection_proposal = [detection_trace.ν[end]] .+ step[5]
-    mutation_proposal = [mutation_trace.λ[end]] .+ step[6]
+
+    ilm_proposal = param_proposal[1:4]
+    detection_proposal = param_proposal[5]
+    mutation_proposal = param_proposal[6]
 
     debug && println("Proposed parameter changes: $(round(step, 3))")
     debug && println("ILM proposal: $(round(ilm_proposal, 3))")
@@ -445,16 +447,17 @@ function MCMC(n::Int64,
     progress && !debug && next!(progressbar)
     debug && println("")
     debug && println("Performing the $(i)th MCMC iteration")
-    if mod(i, 2) == 0
-      step = [rand(MvNormal(transition_cov))[1:4]; 0.]
+    if mod(i, 1) == 0
+      param_proposal = rand(TruncatedMvNormal([ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.γ[end], mutation_trace.λ[end]],
+                                              transition_cov,
+                                              [0.,0.,0.,0.,0.],
+                                              [Inf, Inf, Inf, Inf, Inf]))
     else
-      step = [fill(0., 4); rand(MvNormal(transition_cov))[5]]
+      param_proposal = [ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.γ[end], mutation_trace.λ[end]]
     end
-    ilm_proposal = [ilm_trace.α[end],
-                    ilm_trace.β[end],
-                    ilm_trace.η[end],
-                    ilm_trace.γ[end]] .+ step[1:4]
-    mutation_proposal = [mutation_trace.λ[end]] .+ step[5]
+
+    ilm_proposal = param_proposal[1:4]
+    mutation_proposal = param_proposal[5]
 
     debug && println("Proposed parameter changes: $(round(step, 3))")
     debug && println("ILM proposal: $(round(ilm_proposal, 3))")
@@ -607,15 +610,16 @@ function MCMC(n::Int64,
     debug && println("")
     debug && println("Performing the $(i)th MCMC iteration")
     if mod(i, 1) == 0
-      step = rand(MvNormal(transition_cov))
+      param_proposal = rand(TruncatedMvNormal([ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.γ[end], detection_trace.ν[end]],
+                                              transition_cov,
+                                              [0.,0.,0.,0.,0.],
+                                              [Inf, Inf, Inf, Inf, Inf]))
     else
-      step = fill(0., 6)
+      param_proposal = [ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.γ[end], detection_trace.ν[end]]
     end
-    ilm_proposal = [ilm_trace.α[end],
-                    ilm_trace.β[end],
-                    ilm_trace.η[end],
-                    ilm_trace.γ[end]] .+ step[1:4]
-    detection_proposal = [detection_trace.ν[end]] .+ step[5]
+
+    ilm_proposal = param_proposal[1:4]
+    detection_proposal = param_proposal[5]
 
     debug && println("Proposed parameter changes: $(round(step, 3))")
     debug && println("ILM proposal: $(round(ilm_proposal, 3))")
@@ -775,14 +779,17 @@ function MCMC(n::Int64,
     debug && println("")
     debug && println("Performing the $(i)th MCMC iteration")
     if mod(i, 1) == 0
-      step = rand(MvNormal(transition_cov))
+      param_proposal = rand(TruncatedMvNormal([ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.γ[end]],
+                                              transition_cov,
+                                              [0.,0.,0.,0.],
+                                              [Inf, Inf, Inf, Inf]))
     else
-      step = fill(0., 4)
+      param_proposal = [ilm_trace.α[end],
+                        ilm_trace.β[end],
+                        ilm_trace.η[end],
+                        ilm_trace.γ[end]]
     end
-    ilm_proposal = [ilm_trace.α[end],
-                    ilm_trace.β[end],
-                    ilm_trace.η[end],
-                    ilm_trace.γ[end]] .+ step[1:4]
+    ilm_proposal = param_proposal[1:4]
 
     debug && println("Proposed parameter changes: $(round(step, 3))")
     debug && println("ILM proposal: $(round(ilm_proposal, 3))")

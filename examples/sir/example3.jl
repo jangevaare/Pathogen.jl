@@ -34,20 +34,20 @@ mutation_priors = JC69_priors(Uniform(0., 0.002))
 
 ilm_trace, mutation_trace = MCMC(200000, ilm_priors, mutation_priors, obs)
 
-# # Tune the transition kernel's covariance matrix
-# n = 300
-# progressbar = Progress(n, 5, "Performing $n tuning MCMC stages...", 25)
-# for i = 1:n
-#   # Tune transition matrix
-#   opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.γ ilm_trace.η mutation_trace.λ])*(2.38^2)/5.
-#
-#   # Perform 1000 MCMC iterations
-#   MCMC(1000, opt_cov, ilm_trace, mutation_trace, ilm_priors, mutation_priors, obs, false, false)
-#   next!(progressbar)
-# end
-#
-# opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.γ ilm_trace.η mutation_trace.λ])*(2.38^2)/5.
-# MCMC(100000, opt_cov, ilm_trace, ilm_priors, obs)
+# Tune the transition kernel's covariance matrix
+n = 300
+progressbar = Progress(n, 5, "Performing $n tuning MCMC stages...", 25)
+for i = 1:n
+  # Tune transition matrix
+  opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.γ ilm_trace.η mutation_trace.λ])*(2.38^2)/5.
+
+  # Perform 1000 MCMC iterations
+  MCMC(1000, opt_cov, ilm_trace, mutation_trace, ilm_priors, mutation_priors, obs, false, false)
+  next!(progressbar)
+end
+
+opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.γ ilm_trace.η mutation_trace.λ])*(2.38^2)/5.
+MCMC(100000, opt_cov, ilm_trace, mutation_trace, ilm_priors, mutation_priors, obs)
 
 using Gadfly, DataFrames
 cd("/Users/justin/Desktop/pathogen")
