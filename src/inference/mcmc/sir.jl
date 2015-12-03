@@ -256,17 +256,19 @@ function MCMC(n::Int64,
     debug && println("Performing the $(i)th MCMC iteration")
 
     if mod(i, 1) == 0
-      param_proposal = rand(TruncatedMvNormal([ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.γ[end], detection_trace.ν[end], mutation_trace.λ[end]],
-                                              transition_cov,
-                                              [0.,0.,0.,0.,0.,0.],
-                                              [Inf, Inf, Inf, Inf, Inf, Inf]))
+      param_proposal = rand(MvNormal([ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.γ[end], detection_trace.ν[end], mutation_trace.λ[end]],
+                                     transition_cov))
+      while any(param_proposal .<= 0)
+        param_proposal = rand(MvNormal([ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.γ[end], detection_trace.ν[end], mutation_trace.λ[end]],
+                                       transition_cov))
+      end
     else
       param_proposal = [ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.γ[end], detection_trace.ν[end], mutation_trace.λ[end]]
     end
 
     ilm_proposal = param_proposal[1:4]
-    detection_proposal = param_proposal[5]
-    mutation_proposal = param_proposal[6]
+    detection_proposal = [param_proposal[5]]
+    mutation_proposal = [param_proposal[6]]
 
     debug && println("Proposed parameter changes: $(round(step, 3))")
     debug && println("ILM proposal: $(round(ilm_proposal, 3))")
@@ -283,7 +285,7 @@ function MCMC(n::Int64,
                               ilm_trace.network[end],
                               ilm_trace.aug[end],
                               obs,
-                              0,
+                              rand(Poisson(1.)),
                               debug)
       else
         aug = ilm_trace.aug[end]
@@ -307,7 +309,7 @@ function MCMC(n::Int64,
         network = propose_network(network_rates,
                                   ilm_trace.network[end],
                                   debug,
-                                  0,
+                                  rand(Poisson(1.)),
                                   "multinomial")
       else
         network = ilm_trace.network[end]
@@ -448,16 +450,18 @@ function MCMC(n::Int64,
     debug && println("")
     debug && println("Performing the $(i)th MCMC iteration")
     if mod(i, 1) == 0
-      param_proposal = rand(TruncatedMvNormal([ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.γ[end], mutation_trace.λ[end]],
-                                              transition_cov,
-                                              [0.,0.,0.,0.,0.],
-                                              [Inf, Inf, Inf, Inf, Inf]))
+      param_proposal = rand(MvNormal([ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.γ[end], mutation_trace.λ[end]],
+                                              transition_cov))
+      while any(param_proposal .<= 0)
+        param_proposal = rand(MvNormal([ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.γ[end], mutation_trace.λ[end]],
+                                                transition_cov))
+      end
     else
       param_proposal = [ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.γ[end], mutation_trace.λ[end]]
     end
 
     ilm_proposal = param_proposal[1:4]
-    mutation_proposal = param_proposal[5]
+    mutation_proposal = [param_proposal[5]]
 
     debug && println("Proposed parameter changes: $(round(step, 3))")
     debug && println("ILM proposal: $(round(ilm_proposal, 3))")
@@ -484,7 +488,7 @@ function MCMC(n::Int64,
         network = propose_network(network_rates,
                                   ilm_trace.network[end],
                                   debug,
-                                  0,
+                                  rand(Poisson(1.)),
                                   "multinomial")
       else
         network = ilm_trace.network[end]
@@ -610,16 +614,19 @@ function MCMC(n::Int64,
     debug && println("")
     debug && println("Performing the $(i)th MCMC iteration")
     if mod(i, 1) == 0
-      param_proposal = rand(TruncatedMvNormal([ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.γ[end], detection_trace.ν[end]],
-                                              transition_cov,
-                                              [0.,0.,0.,0.,0.],
-                                              [Inf, Inf, Inf, Inf, Inf]))
+      param_proposal = rand(MvNormal([ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.γ[end], detection_trace.ν[end]],
+                                              transition_cov))
+      while any(param_proposal .<= 0)
+        param_proposal = rand(MvNormal([ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.γ[end], detection_trace.ν[end]],
+                                                transition_cov))
+      end
+
     else
       param_proposal = [ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.γ[end], detection_trace.ν[end]]
     end
 
     ilm_proposal = param_proposal[1:4]
-    detection_proposal = param_proposal[5]
+    detection_proposal = [param_proposal[5]]
 
     debug && println("Proposed parameter changes: $(round(step, 3))")
     debug && println("ILM proposal: $(round(ilm_proposal, 3))")
@@ -658,7 +665,7 @@ function MCMC(n::Int64,
         network = propose_network(network_rates,
                                   ilm_trace.network[end],
                                   debug,
-                                  0,
+                                  rand(Poisson(1.)),
                                   "multinomial")
       else
         network = ilm_trace.network[end]
@@ -779,10 +786,12 @@ function MCMC(n::Int64,
     debug && println("")
     debug && println("Performing the $(i)th MCMC iteration")
     if mod(i, 1) == 0
-      param_proposal = rand(TruncatedMvNormal([ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.γ[end]],
-                                              transition_cov,
-                                              [0.,0.,0.,0.],
-                                              [Inf, Inf, Inf, Inf]))
+      param_proposal = rand(MvNormal([ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.γ[end]],
+                                              transition_cov))
+      while any(param_proposal .<= 0)
+        param_proposal = rand(MvNormal([ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.γ[end]],
+                                                transition_cov))
+      end
     else
       param_proposal = [ilm_trace.α[end],
                         ilm_trace.β[end],
@@ -813,7 +822,7 @@ function MCMC(n::Int64,
         network = propose_network(network_rates,
                                   ilm_trace.network[end],
                                   debug,
-                                  0,
+                                  rand(Poisson(1.)),
                                   "multinomial")
       else
         network = ilm_trace.network[end]
