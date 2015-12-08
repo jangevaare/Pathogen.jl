@@ -111,30 +111,6 @@ Proposes new augmented data
 * Requires `network` information
 * Uses previous augmented data
 * Proposals made with truncated exponential distributions
-* Generates new event times for a specified amount of `changes`
-"""
-function propose_augment(network::Array{Bool, 2},
-                         previous_aug::SIR_augmented,
-                         obs::SIR_observed,
-                         changes=rand(Poisson(1.))::Int64,
-                         debug=false::Bool)
-  exposures = pathwayfrom(0, network, debug)[2:end]
-  if changes == 0 || changes > length(exposures)
-    changed_individuals = sample(exposures, length(exposures), replace=false)
-  else
-    changed_individuals = sample(exposures, changes, replace=false)
-  end
-  return propose_augment(changed_individuals, network, previous_aug, obs, debug)
-end
-
-
-"""
-Proposes new augmented data
-* For SIR models
-* With detection rate, `ν`
-* Requires `network` information
-* Uses previous augmented data
-* Proposals made with truncated exponential distributions
 * Generates new event times for a specified `changed_individuals`
 """
 function propose_augment(changed_individuals::Vector{Int64},
@@ -186,59 +162,6 @@ end
 """
 Proposes new augmented data
 * For SIR models
-* Requires `network` information
-* Uses previous augmented data
-* Generates new event times for a specified `changed_individuals`
-"""
-function propose_augment(changed_individuals::Vector{Int64},
-                         network::Array{Bool, 2},
-                         previous_aug::SIR_augmented,
-                         obs::SIR_observed,
-                         debug=false::Bool)
-  infectious_augmented = previous_aug.infectious
-  removed_augmented = previous_aug.removed
-  return SIR_augmented(infectious_augmented, removed_augmented)
-end
-
-
-"""
-Proposes augmented data
-* For SIR models
-* With detection rate, `ν`
-* Requires `network` information
-* Proposals made with truncated exponential distributions
-"""
-function propose_augment(ν::Float64,
-                         network::Array{Bool, 2},
-                         obs::SIR_observed,
-                         debug=false::Bool)
-  individuals = pathwayfrom(0, network, debug)[2:end]
-  infectious_augmented = fill(NaN, length(obs.infectious))
-  removed_augmented = fill(NaN, length(obs.removed))
-  for i in individuals
-    pathway_out = pathwayfrom(i, network, 1, debug)
-    pathway_in = pathwayto(i, network, debug)
-    if length(pathway_in) > 2
-      if isnan(obs.removed[pathway_in[2]])
-        infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - minimum(obs.infectious[pathway_out]), obs.infectious[i] - infectious_augmented[pathway_in[2]]))
-      else
-        infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - minimum([obs.infectious[pathway_out]; removed_augmented[pathway_in[2]]]), obs.infectious[i] - infectious_augmented[pathway_in[2]]))
-      end
-    else
-      infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - minimum([obs.infectious[pathway_out]]), Inf))
-    end
-    # Removal time augmentation
-    if !isnan(obs.removed[i])
-      removed_augmented[i] = obs.removed[i] - rand(Truncated(Exponential(1/ν), 0., obs.removed[i] - maximum(obs.infectious[pathway_out])))
-    end
-  end
-  return SIR_augmented(infectious_augmented, removed_augmented)
-end
-
-
-"""
-Proposes new augmented data
-* For SIR models
 * With detection rate, `ν`
 * Requires `network` information
 * Uses previous augmented data
@@ -253,27 +176,11 @@ function propose_augment(ν::Float64,
                          debug=false::Bool)
   exposures = pathwayfrom(0, network, debug)[2:end]
   if changes == 0 || changes > length(exposures)
-    changed_individuals = sample(exposures, length(exposures), replace=false)
+    return propose_augment(ν, obs, debug)
   else
     changed_individuals = sample(exposures, changes, replace=false)
+    return propose_augment(changed_individuals, ν, network, previous_aug, obs, debug)
   end
-  return propose_augment(changed_individuals, ν, network, previous_aug, obs, debug)
-end
-
-
-"""
-Proposes augmented data
-* For SIR models
-* Requires `network` information
-* Proposals made with truncated exponential distributions
-"""
-function propose_augment(network::Array{Bool, 2},
-                         obs::SIR_observed,
-                         debug=false::Bool)
-  individuals = pathwayfrom(0, network, debug)[2:end]
-  infectious_augmented = obs.infectious
-  removed_augmented = obs.removed
-  return SIR_augmented(infectious_augmented, removed_augmented)
 end
 
 
@@ -282,7 +189,6 @@ Proposes new augmented data
 * For SIR models
 * Requires `network` information
 * Uses previous augmented data
-* Proposals made with truncated exponential distributions
 * Generates new event times for a specified amount of `changes`
 """
 function propose_augment(network::Array{Bool, 2},
@@ -292,11 +198,11 @@ function propose_augment(network::Array{Bool, 2},
                          debug=false::Bool)
   exposures = pathwayfrom(0, network, debug)[2:end]
   if changes == 0 || changes > length(exposures)
-    changed_individuals = sample(exposures, length(exposures), replace=false)
+    return propose_augment(obs, debug)
   else
     changed_individuals = sample(exposures, changes, replace=false)
+    return propose_augment(changed_individuals, network, previous_aug, obs, debug)
   end
-  return propose_augment(changed_individuals, network, previous_aug, obs, debug)
 end
 
 
