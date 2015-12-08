@@ -29,7 +29,9 @@ ilm_priors = SIR_priors(Gamma(3.),
                         Uniform(0., 0.002),
                         Gamma(1/7))
 
-ilm_trace = MCMC(200000, ilm_priors, obs)
+ilm_trace = MCMC(100000,
+                 ilm_priors,
+                 obs)
 
 # Tune the transition kernel's covariance matrix
 n = 300

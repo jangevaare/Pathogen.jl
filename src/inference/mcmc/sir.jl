@@ -270,7 +270,6 @@ function MCMC(n::Int64,
     detection_proposal = [param_proposal[5]]
     mutation_proposal = [param_proposal[6]]
 
-    debug && println("Proposed parameter changes: $(round(step, 3))")
     debug && println("ILM proposal: $(round(ilm_proposal, 3))")
     debug && println("Detection proposal: $(round(detection_proposal, 3))")
     debug && println("Mutation proposal: $(round(mutation_proposal, 3))")
@@ -463,7 +462,6 @@ function MCMC(n::Int64,
     ilm_proposal = param_proposal[1:4]
     mutation_proposal = [param_proposal[5]]
 
-    debug && println("Proposed parameter changes: $(round(step, 3))")
     debug && println("ILM proposal: $(round(ilm_proposal, 3))")
     debug && println("Mutation proposal: $(round(mutation_proposal, 3))")
     lp = logprior(ilm_priors, ilm_proposal, debug)
@@ -628,7 +626,6 @@ function MCMC(n::Int64,
     ilm_proposal = param_proposal[1:4]
     detection_proposal = [param_proposal[5]]
 
-    debug && println("Proposed parameter changes: $(round(step, 3))")
     debug && println("ILM proposal: $(round(ilm_proposal, 3))")
     debug && println("Detection proposal: $(round(detection_proposal, 3))")
     lp = logprior(ilm_priors, ilm_proposal, debug)
@@ -800,7 +797,6 @@ function MCMC(n::Int64,
     end
     ilm_proposal = param_proposal[1:4]
 
-    debug && println("Proposed parameter changes: $(round(step, 3))")
     debug && println("ILM proposal: $(round(ilm_proposal, 3))")
     lp = logprior(ilm_priors, ilm_proposal, debug)
     aug = ilm_trace.aug[end]

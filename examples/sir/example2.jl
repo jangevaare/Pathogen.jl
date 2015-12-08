@@ -25,10 +25,10 @@ end
 
 actual, obs = surveil(pop, 2.)
 
-ilm_priors = SEIR_priors(Gamma(3.),
-                         Gamma(5.),
-                         Uniform(0., 0.002),
-                         Gamma(1/7))
+ilm_priors = SIR_priors(Gamma(3.),
+                        Gamma(5.),
+                        Uniform(0., 0.002),
+                        Gamma(1/7))
 
 detection_priors = Lag_priors(Gamma(2.))
 
@@ -90,7 +90,7 @@ for time = 1:images
 end
 
 # Assemble into animation
-run(`convert -delay 10 -loop 0 -layers optimize SIR_simulation_*.png SIR1_animation_combined.gif`)
+run(`convert -delay 10 -loop 0 -layers optimize SIR_simulation_*.png SIR2_animation_combined.gif`)
 
 # Remove frames
 for time = 1:images
@@ -115,7 +115,7 @@ plotdf = DataFrame(iteration = rep(1:200000, 5),
                                 rep("gamma", 200000);
                                 rep("nu", 200000)])
 
-draw(PNG("SIR1_traceplot.png", 20cm, 15cm),
+draw(PNG("SIR2_traceplot.png", 20cm, 15cm),
      plot(plotdf,
           x="iteration",
           y="value",
@@ -127,7 +127,7 @@ draw(PNG("SIR1_traceplot.png", 20cm, 15cm),
 
 
 # logposterior plot (last 100k iterations)
-draw(PNG("SIR1_logposterior.png", 20cm, 15cm),
+draw(PNG("SIR2_logposterior.png", 20cm, 15cm),
      plot(x=1:200000,
           y=ilm_trace.logposterior[end-199999:end],
           Geom.line,

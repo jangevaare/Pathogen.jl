@@ -25,10 +25,10 @@ end
 
 actual, obs = surveil(pop, 2.)
 
-ilm_priors = SEIR_priors(Gamma(3.),
-                         Gamma(5.),
-                         Uniform(0., 0.002),
-                         Gamma(1/7))
+ilm_priors = SIR_priors(Gamma(3.),
+                        Gamma(5.),
+                        Uniform(0., 0.002),
+                        Gamma(1/7))
 
 detection_priors = Lag_priors(Gamma(2.))
 
@@ -38,7 +38,7 @@ ilm_trace, detection_trace, mutation_trace = MCMC(100000,
                                                   ilm_priors,
                                                   detection_priors,
                                                   mutation_priors,
-                                                  obs)
+                                                  obs, true, true)
 
 # Tune the transition kernel's covariance matrix
 n = 300
