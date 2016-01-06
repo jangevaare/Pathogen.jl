@@ -13,7 +13,7 @@ substitution = jc69q([0.001])
 
 ratearray = create_ratearray(pop, powerlaw, substitution)
 
-while length(pop.timeline[1]) < 300
+while length(pop.timeline[1]) < 500
   onestep!(ratearray, pop, powerlaw, latency, recovery, substitution)
 end
 
@@ -53,7 +53,7 @@ for i = 1:n
 end
 
 opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.γ ilm_trace.η detection_trace.ν mutation_trace.λ])*(2.38^2)/6.
-MCMC(100000, opt_cov, ilm_trace, detection_trace, mutation_trace, ilm_priors, detection_priors, mutation_priors, obs,)
+MCMC(100000, opt_cov, ilm_trace, detection_trace, mutation_trace, ilm_priors, detection_priors, mutation_priors, obs)
 
 using Gadfly, DataFrames
 cd("/Users/justin/Desktop/pathogen")

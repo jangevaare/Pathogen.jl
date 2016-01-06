@@ -21,7 +21,6 @@ end
 # α, β: powerlaw exposure kernel parameters
 # η: external pressure rate
 # γ: recovery rate (1/mean infectious period)
-# λ: JC69 transition/transversion rate
 
 actual, obs = surveil(pop, 2.)
 
@@ -31,8 +30,6 @@ ilm_priors = SIR_priors(Gamma(3.),
                         Gamma(1/7))
 
 detection_priors = Lag_priors(Gamma(2.))
-
-mutation_priors = JC69_priors(Uniform(0., 0.002))
 
 ilm_trace, detection_trace = MCMC(100000,
                                   ilm_priors,
