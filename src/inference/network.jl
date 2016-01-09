@@ -8,19 +8,17 @@ function propose_network(changed_individuals::Vector{Int64},
                          method="multinomial"::String)
   @assert(any(method .== ["uniform", "multinomial"]),
           "Network proposal method must be 'uniform' or 'multinomial'.")
-  network = previous_network
+  network = copy(previous_network)
   rate_totals = sum(network_rates,1)
   network[:, changed_individuals] = false
   if method == "uniform"
     for i in changed_individuals
-      network[:,i] = false
       network[sample(find(network_rates[:,i] .> 0.)), i] = true
     end
   elseif method == "multinomial"
     @assert(size(network_rates) == size(previous_network),
             "A mismatch in the previous network and network rates dimensions was detected in the network proposal function")
     for i in changed_individuals
-      network[:,i] = false
       network[findfirst(rand(Multinomial(1, network_rates[:,i]/rate_totals[i]))), i] = true
     end
   end
@@ -38,7 +36,7 @@ Propose a network
 function propose_network(network_rates::Array{Float64, 2},
                          previous_network::Array{Bool, 2},
                          debug=false::Bool,
-                         changes=1::Int64,
+                         changes=0::Int64,
                          method="multinomial"::String)
   rate_totals = sum(network_rates, 1)
   @assert(changes <= sum(rate_totals .> 0),
@@ -59,7 +57,8 @@ end
 """
 Initial network proposal
 """
-function propose_network(network_rates::Array{Float64, 2}, debug=false::Bool)
+function propose_network(network_rates::Array{Float64, 2},
+                         debug=false::Bool)
   network = fill(false, size(network_rates))
   rate_totals = sum(network_rates, 1)
   exposures = find(rate_totals .> 0)

@@ -13,7 +13,7 @@ substitution = jc69q([0.001])
 
 ratearray = create_ratearray(pop, powerlaw, substitution)
 
-while length(pop.timeline[1]) < 300
+while length(pop.timeline[1]) < 1000
   onestep!(ratearray, pop, powerlaw, latency, recovery, substitution)
 end
 
@@ -101,17 +101,17 @@ end
 
 # Inference visualization
 # Joint trace plots (last 100k iterations)
-plotdf = DataFrame(iteration = rep(1:200000, 5),
-                   value = [ilm_trace.α[end-199999:end];
-                            ilm_trace.β[end-199999:end];
-                            ilm_trace.η[end-199999:end];
-                            ilm_trace.γ[end-199999:end];
-                            mutation_trace.λ[end-199999:end]],
-                   parameter = [rep("alpha", 200000);
-                                rep("beta", 200000);
-                                rep("eta", 200000);
-                                rep("gamma", 200000);
-                                rep("lambda", 200000)])
+plotdf = DataFrame(iteration = rep(1:100000, 5),
+                   value = [ilm_trace.α[end-99999:end];
+                            ilm_trace.β[end-99999:end];
+                            ilm_trace.η[end-99999:end];
+                            ilm_trace.γ[end-99999:end];
+                            mutation_trace.λ[end-99999:end]],
+                   parameter = [rep("alpha", 100000);
+                                rep("beta", 100000);
+                                rep("eta", 100000);
+                                rep("gamma", 100000);
+                                rep("lambda", 100000)])
 
 draw(PNG("SIR3_traceplot.png", 20cm, 15cm),
      plot(plotdf,
@@ -126,8 +126,8 @@ draw(PNG("SIR3_traceplot.png", 20cm, 15cm),
 
 # logposterior plot (last 100k iterations)
 draw(PNG("SIR3_logposterior.png", 20cm, 15cm),
-     plot(x=1:200000,
-          y=ilm_trace.logposterior[end-199999:end],
+     plot(x=1:100000,
+          y=ilm_trace.logposterior[end-99999:end],
           Geom.line,
           Theme(panel_opacity=1.,
                 panel_fill=colorant"white",

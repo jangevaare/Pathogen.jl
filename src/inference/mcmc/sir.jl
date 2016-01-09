@@ -17,7 +17,9 @@ function initialize(ilm_priors::SIR_priors,
     ilm_params = randprior(ilm_priors)
     mutation_params = randprior(mutation_priors)
     detection_params = randprior(detection_priors)
-    aug = propose_augment(detection_params[1], obs, debug)
+    aug = propose_augment(detection_params[1],
+                          obs,
+                          debug)
     lp, network_rates = SIR_loglikelihood(ilm_params[1],
                                           ilm_params[2],
                                           ilm_params[3],
@@ -36,14 +38,6 @@ function initialize(ilm_priors::SIR_priors,
     if Inf > lp > -Inf
       network = propose_network(network_rates,
                                 debug)
-      # lp += exposure_network_loglikelihood(network,
-      #                                      network_rates,
-      #                                      debug)
-      # lp += detection_loglikelihood(detection_params[1],
-      #                               aug,
-      #                               network,
-      #                               obs,
-      #                               debug)
     end
     if Inf > lp > -Inf
       lp += logprior(mutation_priors,
@@ -91,7 +85,8 @@ function initialize(ilm_priors::SIR_priors,
     count += 1
     ilm_params = randprior(ilm_priors)
     mutation_params = randprior(mutation_priors)
-    aug = propose_augment(obs, debug)
+    aug = propose_augment(obs,
+                          debug)
     lp, network_rates = SIR_loglikelihood(ilm_params[1],
                                           ilm_params[2],
                                           ilm_params[3],
@@ -102,8 +97,8 @@ function initialize(ilm_priors::SIR_priors,
                                           dist)
     lp += logprior(ilm_priors, ilm_params, debug)
     if Inf > lp > -Inf
-      network = propose_network(network_rates, debug)
-      # lp += exposure_network_loglikelihood(network, network_rates, debug)
+      network = propose_network(network_rates,
+                                debug)
     end
     if Inf > lp > -Inf
       lp += logprior(mutation_priors, mutation_params, debug)
@@ -161,15 +156,12 @@ function initialize(ilm_priors::SIR_priors,
                                           dist)
     lp += logprior(ilm_priors, ilm_params, debug)
     lp += logprior(detection_priors, detection_params)
+
     if Inf > lp > -Inf
-      network = propose_network(network_rates, debug)
-      # lp += detection_loglikelihood(detection_params[1],
-      #                              aug,
-      #                              network,
-      #                              obs,
-      #                              debug)
-      # lp += exposure_network_loglikelihood(network, network_rates, debug)
+      network = propose_network(network_rates,
+                                debug)
     end
+
     if Inf > lp > -Inf
       return SIR_trace([ilm_params[1]],
                        [ilm_params[2]],
@@ -213,8 +205,8 @@ function initialize(ilm_priors::SIR_priors,
                                           dist)
     lp += logprior(ilm_priors, ilm_params, debug)
     if Inf > lp > -Inf
-      network = propose_network(network_rates, debug)
-      # lp += exposure_network_loglikelihood(network, network_rates, debug)
+      network = propose_network(network_rates,
+                                debug)
     end
     if Inf > lp > -Inf
       return SIR_trace([ilm_params[1]],
@@ -295,14 +287,8 @@ function MCMC(n::Int64,
     if lp > -Inf
       if mod(i, 1) == 0
         # Generate data augmentation proposal
-        # aug_changes = rand(Poisson(1.))
-        # aug = propose_augment(detection_proposal[1],
-        #                       ilm_trace.network[end],
-        #                       ilm_trace.aug[end],
-        #                       obs,
-        #                       aug_changes,
-        #                       debug)
         aug = propose_augment(detection_proposal[1],
+                              # ilm_trace.network[end],
                               obs,
                               debug)
       else
@@ -324,25 +310,12 @@ function MCMC(n::Int64,
     if lp > -Inf
       if mod(i, 1) == 0
         # Generate network proposal
-        # if aug_changes > 0
-        #   network = propose_network(network_rates,
-        #                             ilm_trace.network[end],
-        #                             debug,
-        #                             rand(Poisson(1.)),
-        #                             "multinomial")
-        # else
-        #   network = propose_network(network_rates,
-        #                             ilm_trace.network[end],
-        #                             debug,
-        #                             0,
-        #                             "multinomial")
-        # end
         network = propose_network(network_rates,
+                                  # ilm_trace.network[end],
                                   debug)
       else
         network = ilm_trace.network[end]
       end
-      # lp += exposure_network_loglikelihood(network, network_rates, debug)
     end
     if lp > -Inf
       lp += phylogenetic_network_loglikelihood(obs,
@@ -351,13 +324,7 @@ function MCMC(n::Int64,
                                                jc69p(mutation_proposal),
                                                debug)
     end
-    # if lp > -Inf
-    #   lp += detection_loglikelihood(detection_proposal[1],
-    #                                 aug,
-    #                                 network,
-    #                                 obs,
-    #                                 debug)
-    # end
+
     # Acceptance/rejection
     reject = MHreject(lp, ilm_trace.logposterior[end], debug)
 
@@ -513,14 +480,11 @@ function MCMC(n::Int64,
       if mod(i, 1) == 0
         # Generate network proposal
         network = propose_network(network_rates,
-                                  ilm_trace.network[end],
-                                  debug,
-                                  rand(Poisson(1.)),
-                                  "multinomial")
+                                  # ilm_trace.network[end],
+                                  debug)
       else
         network = ilm_trace.network[end]
       end
-      # lp += exposure_network_loglikelihood(network, network_rates, debug)
     end
     if lp > -Inf
       lp += phylogenetic_network_loglikelihood(obs,
@@ -663,12 +627,9 @@ function MCMC(n::Int64,
     if lp > -Inf
       if mod(i, 1) == 0
         # Generate data augmentation proposal
-        aug_changes = rand(Poisson(1.))
         aug = propose_augment(detection_proposal[1],
-                              ilm_trace.network[end],
-                              ilm_trace.aug[end],
+                              # ilm_trace.network[end],
                               obs,
-                              aug_changes,
                               debug)
       else
         aug = ilm_trace.aug[end]
@@ -689,31 +650,13 @@ function MCMC(n::Int64,
     if lp > -Inf
       if mod(i, 1) == 0
         # Generate network proposal
-        if aug_changes > 0
-          network = propose_network(network_rates,
-                                    ilm_trace.network[end],
-                                    debug,
-                                    rand(Poisson(1.)),
-                                    "multinomial")
-        else
-          network = propose_network(network_rates,
-                                    ilm_trace.network[end],
-                                    debug,
-                                    0,
-                                    "multinomial")
-        end
+        network = propose_network(network_rates,
+                                  # ilm_trace.network[end],
+                                  debug)
       else
         network = ilm_trace.network[end]
       end
-      # lp += exposure_network_loglikelihood(network, network_rates, debug)
     end
-    # if lp > -Inf
-    #   lp += detection_loglikelihood(detection_proposal[1],
-    #                                 aug,
-    #                                 network,
-    #                                 obs,
-    #                                 debug)
-    # end
 
     # Acceptance/rejection
     reject = MHreject(lp, ilm_trace.logposterior[end], debug)
@@ -854,14 +797,11 @@ function MCMC(n::Int64,
       if mod(i, 1) == 0
         # Generate network proposal
         network = propose_network(network_rates,
-                                  ilm_trace.network[end],
-                                  debug,
-                                  rand(Poisson(1.)),
-                                  "multinomial")
+                                  # ilm_trace.network[end],
+                                  debug)
       else
         network = ilm_trace.network[end]
       end
-      # lp += exposure_network_loglikelihood(network, network_rates, debug)
     end
 
     # Acceptance/rejection
