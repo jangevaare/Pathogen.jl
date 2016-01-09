@@ -600,11 +600,12 @@ function MCMC(n::Int64,
   debug && println("MCMC transition kernel covariance matrix:")
   debug && println(round(transition_cov, 3))
   rejects = 0
+  infectious = pathwayfrom(0, ilm_trace.network[end])
   for i = 1:n
     progress && !debug && next!(progressbar)
     debug && println("")
     debug && println("Performing the $(i)th MCMC iteration")
-    if mod(i, 1) == 0
+    if mod(i, 2) == 1
       param_proposal = rand(MvNormal([ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.γ[end], detection_trace.ν[end]],
                                               transition_cov))
       while any(param_proposal .<= 0)
@@ -624,15 +625,20 @@ function MCMC(n::Int64,
     lp = logprior(ilm_priors, ilm_proposal, debug)
     lp += logprior(detection_priors, detection_proposal, debug)
 
+
     if lp > -Inf
-      if mod(i, 1) == 0
+      if mod(i, 2) == 0
         # Generate data augmentation proposal
-        aug = propose_augment(detection_proposal[1],
-                              # ilm_trace.network[end],
+        changed_individual = sample(infectious)
+        aug = propose_augment(changed_individual,
+                              detection_proposal[1],
+                              ilm_trace.network[end],
                               obs,
                               debug)
       else
-        aug = ilm_trace.aug[end]
+        aug = propose_augment(detection_proposal[1],
+                              obs,
+                              debug)
       end
     end
     if lp > -Inf
@@ -648,13 +654,15 @@ function MCMC(n::Int64,
       lp += ll
     end
     if lp > -Inf
-      if mod(i, 1) == 0
+      if mod(i, 2) == 0
         # Generate network proposal
-        network = propose_network(network_rates,
-                                  # ilm_trace.network[end],
+        network = propose_network([changed_individual],
+                                  network_rates,
+                                  ilm_trace.network[end],
                                   debug)
       else
-        network = ilm_trace.network[end]
+        network = propose_network(network_rates,
+                                  debug)
       end
     end
 

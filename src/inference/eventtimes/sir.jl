@@ -79,13 +79,52 @@ Proposes new augmented data
 * For SIR models
 * With detection rate, `ν`
 * Requires `network` information
+* Uses previous augmented data
+* Proposals made with truncated exponential distributions
+* Generates new event times for a specified `changed_individual`
+"""
+function propose_augment(i::Int64,
+                         ν::Float64,
+                         network::Array{Bool, 2},
+                         previous_aug::SIR_augmented,
+                         obs::SIR_observed,
+                         debug=false::Bool)
+  infectious_augmented = previous_aug.infectious
+  removed_augmented = previous_aug.removed
+  pathway_out = pathwayfrom(i, network, 1, debug)
+  pathway_in = pathwayto(i, network, debug)
+  if debug
+    println("Observed infection times (pathway from $i): $(obs.infectious[pathway_out])")
+    println("Augmented infection times (pathway from $i): $(infectious_augmented[pathway_out])")
+  end
+  # Exposure time augmentation
+  infectious_augmented[i] = obs.infectious[i] - rand(Exponential(1/ν))
+  difference = infectious_augmented[i] - previous_aug[i]
+  for j in pathway_out[2:end]
+    infectious_augmented[j] += difference
+    removed_augmented[j] += difference
+  end
+
+  # Removal time augmentation
+  if !isnan(obs.removed[i])
+    removed_augmented[i] = obs.removed[i] - rand(Truncated(Exponential(1/ν), 0., obs.removed[i] - maximum([obs.infectious[i]; infectious_augmented[pathway_out[2:end]]])))
+  end
+  return SIR_augmented(infectious_augmented, removed_augmented)
+end
+
+
+"""
+Proposes new augmented data
+* For SIR models
+* With detection rate, `ν`
+* Requires `network` information
 * Proposals made with truncated exponential distributions
 """
 function propose_augment(ν::Float64,
                          network::Array{Bool, 2},
                          obs::SIR_observed,
                          debug=false::Bool)
-                         
+
   infectious_augmented = obs.infectious
   removed_augmented = obs.removed
   exposures = pathwayfrom(0, network, debug)[2:end]
