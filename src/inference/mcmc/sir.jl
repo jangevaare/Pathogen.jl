@@ -293,6 +293,7 @@ function MCMC(n::Int64,
         aug = propose_augment(changed_individual,
                               detection_proposal[1],
                               ilm_trace.network[end],
+                              ilm_trace.aug[end],
                               obs,
                               debug)
       else
@@ -609,7 +610,7 @@ function MCMC(n::Int64,
   debug && println(round(transition_cov, 3))
   rejects = 0
   infectious = pathwayfrom(0, ilm_trace.network[end])
-  
+
   for i = 1:n
     progress && !debug && next!(progressbar)
     debug && println("")
@@ -641,6 +642,7 @@ function MCMC(n::Int64,
         aug = propose_augment(changed_individual,
                               detection_proposal[1],
                               ilm_trace.network[end],
+                              ilm_trace.aug[end],
                               obs,
                               debug)
       else
