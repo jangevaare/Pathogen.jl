@@ -98,7 +98,7 @@ function propose_augment(i::Int64,
     println("Augmented infection times (pathway from $i): $(infectious_augmented[pathway_out])")
   end
   # Exposure time augmentation
-  infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - (infectious_augmented[i] + (obs.recovered[i] - maximum(infectious_augmented[pathwayfrom(i, network, 1, debug)])), Inf))
+  infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - (infectious_augmented[i] + (obs.recovered[i] - maximum(infectious_augmented[pathwayfrom(i, network, 1, debug)[2:end]]))), Inf))
 
   difference = infectious_augmented[i] - previous_aug.infectious[i]
   for j in pathway_out[2:end]
