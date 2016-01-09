@@ -91,14 +91,15 @@ function propose_augment(i::Int64,
                          debug=false::Bool)
   infectious_augmented = previous_aug.infectious
   removed_augmented = previous_aug.removed
-  pathway_out = pathwayfrom(i, network, 1, debug)
+  pathway_out = pathwayfrom(i, network, debug)
   pathway_in = pathwayto(i, network, debug)
   if debug
     println("Observed infection times (pathway from $i): $(obs.infectious[pathway_out])")
     println("Augmented infection times (pathway from $i): $(infectious_augmented[pathway_out])")
   end
   # Exposure time augmentation
-  infectious_augmented[i] = obs.infectious[i] - rand(Exponential(1/ν))
+  infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - (infectious_augmented[i] + (obs.recovered[i] - maximum(infectious_augmented[pathwayfrom(i, network, 1, debug)])), Inf))
+
   difference = infectious_augmented[i] - previous_aug.infectious[i]
   for j in pathway_out[2:end]
     infectious_augmented[j] += difference

@@ -249,7 +249,7 @@ function MCMC(n::Int64,
     debug && println("")
     debug && println("Performing the $(i)th MCMC iteration")
 
-    if mod(i, 2) == 1
+    if mod(i, 1) == 0
       param_proposal = rand(MvNormal([ilm_trace.α[end],
                                       ilm_trace.β[end],
                                       ilm_trace.η[end],
@@ -287,7 +287,7 @@ function MCMC(n::Int64,
     lp += logprior(mutation_priors, mutation_proposal, debug)
 
     if lp > -Inf
-      if mod(i, 2) == 0
+      if mod(i, 1) == 0
         # Generate data augmentation proposal
         changed_individual = sample(infected)
         aug = propose_augment(changed_individual,
@@ -315,7 +315,7 @@ function MCMC(n::Int64,
       lp += ll
     end
     if lp > -Inf
-      if mod(i, 2) == 0
+      if mod(i, 1) == 0
         # Generate network proposal
         network = propose_network([changed_individual],
                                   network_rates,
