@@ -242,6 +242,8 @@ function MCMC(n::Int64,
   debug && println("MCMC transition kernel covariance matrix:")
   debug && println(round(transition_cov, 3))
   rejects = 0
+  infectious = pathwayfrom(0, ilm_trace.network[end])
+
   for i = 1:n
     progress && !debug && next!(progressbar)
     debug && println("")
@@ -607,6 +609,7 @@ function MCMC(n::Int64,
   debug && println(round(transition_cov, 3))
   rejects = 0
   infectious = pathwayfrom(0, ilm_trace.network[end])
+  
   for i = 1:n
     progress && !debug && next!(progressbar)
     debug && println("")
