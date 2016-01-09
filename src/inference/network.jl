@@ -5,7 +5,7 @@ function propose_network(changed_individuals::Vector{Int64},
                          network_rates::Array{Float64, 2},
                          previous_network::Array{Bool, 2},
                          debug=false::Bool,
-                         method="multinomial"::String)
+                         method="multinomial"::AbstractString)
   @assert(any(method .== ["uniform", "multinomial"]),
           "Network proposal method must be 'uniform' or 'multinomial'.")
   network = copy(previous_network)
@@ -37,7 +37,7 @@ function propose_network(network_rates::Array{Float64, 2},
                          previous_network::Array{Bool, 2},
                          debug=false::Bool,
                          changes=0::Int64,
-                         method="multinomial"::String)
+                         method="multinomial"::AbstractString)
   rate_totals = sum(network_rates, 1)
   @assert(changes <= sum(rate_totals .> 0),
           "Attempting to make more network changes than there are exposure events")

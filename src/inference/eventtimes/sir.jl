@@ -99,7 +99,7 @@ function propose_augment(i::Int64,
   end
   # Exposure time augmentation
   infectious_augmented[i] = obs.infectious[i] - rand(Exponential(1/ν))
-  difference = infectious_augmented[i] - previous_aug[i]
+  difference = infectious_augmented[i] - previous_aug.infectious[i]
   for j in pathway_out[2:end]
     infectious_augmented[j] += difference
     removed_augmented[j] += difference
