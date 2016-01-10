@@ -257,9 +257,7 @@ function MCMC(n::Int64,
         # Generate network proposal
         network = propose_network(network_rates,
                                   ilm_trace.network[end],
-                                  debug,
-                                  rand(Poisson(1.)),
-                                  "multinomial")
+                                  debug)
       else
         network = ilm_trace.network[end]
       end
@@ -451,9 +449,7 @@ function MCMC(n::Int64,
         # Generate network proposal
         network = propose_network(network_rates,
                                   ilm_trace.network[end],
-                                  debug,
-                                  rand(Poisson(1)),
-                                  "multinomial")
+                                  debug)
       else
         network = ilm_trace.network[end]
       end

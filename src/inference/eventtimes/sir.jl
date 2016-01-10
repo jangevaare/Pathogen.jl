@@ -134,7 +134,7 @@ Proposes new augmented data
 * Requires `network` information
 * Proposals made with truncated exponential distributions
 * Use is not suggested as errors can probablistically arise when moving through
-tree space, instead use alternative which utilizes `previous_aug` 
+tree space, instead use alternative which utilizes `previous_aug`
 """
 function propose_augment(ν::Float64,
                          network::Array{Bool, 2},
@@ -194,12 +194,16 @@ function propose_augment(ν::Float64,
                          obs::SIR_observed,
                          changes=rand(Poisson(1.))::Int64,
                          debug=false::Bool)
-  exposures = pathwayfrom(0, network, debug)[2:end]
-  if changes == 0 || changes > length(exposures)
-    return propose_augment(ν, obs, debug)
+  if changes == 0
+    return previous_aug
   else
-    changed_individuals = sample(exposures, changes, replace=false)
-    return propose_augment(changed_individuals, ν, network, previous_aug, obs, debug)
+    exposures = pathwayfrom(0, network, debug)[2:end]
+    if changes >= length(exposures)
+      return propose_augment(ν, obs, debug)
+    else
+      changed_individuals = sample(exposures, changes, replace=false)
+      return propose_augment(changed_individuals, ν, network, previous_aug, obs, debug)
+    end
   end
 end
 
@@ -207,6 +211,7 @@ end
 """
 Log likelihood for detection rate, `ν` for SIR models
 * Requires `network` information
+* Deprecate
 """
 function detection_loglikelihood(ν::Float64,
                                  aug::SIR_augmented,
