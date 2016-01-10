@@ -30,15 +30,15 @@ ilm_priors = SIR_priors(Gamma(3.),
                         Uniform(0., 0.002),
                         Gamma(1/7))
 
-detection_priors = Lag_priors(Gamma(2.))
+detection_priors = Lag_priors(Normal(2.,0.00000001))
 
 mutation_priors = JC69_priors(Uniform(0., 0.002))
 
-ilm_trace, detection_trace, mutation_trace = MCMC(1000,
+ilm_trace, detection_trace, mutation_trace = MCMC(10000,
                                                   ilm_priors,
                                                   detection_priors,
                                                   mutation_priors,
-                                                  obs, true, true)
+                                                  obs)
 
 # Tune the transition kernel's covariance matrix
 n = 300

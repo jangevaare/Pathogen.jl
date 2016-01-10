@@ -279,7 +279,8 @@ function MCMC(n::Int64,
     end
 
     ilm_proposal = param_proposal[1:4]
-    detection_proposal = [param_proposal[5]]
+    # detection_proposal = [param_proposal[5]]
+    detection_proposal = 2.
     mutation_proposal = [param_proposal[6]]
 
     debug && println("ILM proposal: $(round(ilm_proposal, 3))")
@@ -288,9 +289,9 @@ function MCMC(n::Int64,
     lp = logprior(ilm_priors,
                   ilm_proposal,
                   debug)
-    lp += logprior(detection_priors, 
-                   detection_proposal,
-                   debug)
+    # lp += logprior(detection_priors,
+    #                detection_proposal,
+    #                debug)
     lp += logprior(mutation_priors,
                    mutation_proposal,
                    debug)
@@ -298,11 +299,23 @@ function MCMC(n::Int64,
     if lp > -Inf
       if mod(i, 1) == 0
         # Generate data augmentation proposal
-        changed_individual = sample(infected)
-        aug = propose_augment(changed_individual,
-                              detection_proposal[1],
-                              ilm_trace.network[end],
-                              ilm_trace.aug[end],
+        # changed_individual = sample(infected)
+        # aug = propose_augment(changed_individual,
+        #                       detection_proposal[1],
+        #                       ilm_trace.network[end],
+        #                       ilm_trace.aug[end],
+        #                       obs,
+        #                       debug)
+        # aug = propose_augment(detection_proposal[1],
+        #                       ilm_trace.network[end],
+        #                       obs,
+        #                       debug)
+        # aug = propose_augment(detection_proposal[1],
+        #                       ilm_trace.network[end],
+        #                       ilm_trace.aug[end],
+        #                       obs,
+        #                       debug)
+        aug = propose_augment(detection_proposal[1],
                               obs,
                               debug)
       else
@@ -326,9 +339,14 @@ function MCMC(n::Int64,
     if lp > -Inf
       if mod(i, 1) == 0
         # Generate network proposal
-        network = propose_network([changed_individual],
-                                  network_rates,
-                                  ilm_trace.network[end],
+        # network = propose_network([changed_individual],
+        #                           network_rates,
+        #                           ilm_trace.network[end],
+        #                           debug)
+        # network = propose_network(network_rates,
+        #                           debug)
+        network = propose_network(network_rates,
+                                  # ilm_trace.network[end],
                                   debug)
       else
         network = propose_network(network_rates,
@@ -498,7 +516,7 @@ function MCMC(n::Int64,
       if mod(i, 1) == 0
         # Generate network proposal
         network = propose_network(network_rates,
-                                  # ilm_trace.network[end],
+                                  ilm_trace.network[end],
                                   debug)
       else
         network = ilm_trace.network[end]
@@ -659,9 +677,12 @@ function MCMC(n::Int64,
         #                       ilm_trace.network[end],
         #                       obs,
         #                       debug)
+        # aug = propose_augment(detection_proposal[1],
+        #                       ilm_trace.network[end],
+        #                       ilm_trace.aug[end],
+        #                       obs,
+        #                       debug)
         aug = propose_augment(detection_proposal[1],
-                              ilm_trace.network[end],
-                              ilm_trace.aug[end],
                               obs,
                               debug)
 
@@ -693,7 +714,7 @@ function MCMC(n::Int64,
         # network = propose_network(network_rates,
         #                           debug)
         network = propose_network(network_rates,
-                                  ilm_trace.network[end],
+                                  # ilm_trace.network[end],
                                   debug)
       else
         network = propose_network(network_rates,
