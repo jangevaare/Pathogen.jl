@@ -80,26 +80,11 @@ function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, network::Array{B
   pathways = pathwaysto(find(obs.sequenced), network, debug)
   seq_dist = fill(0., (size(network, 2), size(network, 2)))
   for i = 1:length(pathways)
-    # if debug
-    #   println("Infection of individual $(pathways[i][1]) observed at $(obs.infectious[pathways[i][1]])")
-    #   println("Infection pathway of individual $(pathways[i][1]) is $(pathways[i])")
-    # end
     for j = 1:(i-1)
       k = 1
       while length(pathways[i]) > k && length(pathways[j]) > k && pathways[i][end - k] == pathways[j][end - k]
         k += 1
       end
-      # if debug
-      #   println("Infection of individual $(pathways[j][1]) observed at $(obs.infectious[pathways[j][1]])")
-      #   println("Infection pathway of individual $(pathways[j][1]) is $(pathways[j])")
-      #   if k == length(pathways[i]) || k == length(pathways[j])
-      #     println("Linear infection pathway between individual $(pathways[i][1]) and individual $(pathways[j][1])")
-      #   else
-      #     println("Most recent common infection source of individuals $(pathways[i][1]) and $(pathways[j][1]) is $(pathways[i][end - k + 1])")
-      #     println("The infection pathway of $(pathways[i][1]) and $(pathways[j][1]) diverged with $(pathways[i][end - k]) and $(pathways[j][end - k])")
-      #   end
-      # end
-
       if k == length(pathways[i])
         seq_dist[pathways[i][1],pathways[j][1]] += obs.infectious[pathways[j][1]] - aug.exposed[pathways[j][end - k]]
         seq_dist[pathways[i][1],pathways[j][1]] += abs(aug.exposed[pathways[j][end - k]] - obs.infectious[pathways[i][1]])
@@ -115,8 +100,7 @@ function seq_distances(obs::SEIR_observed, aug::SEIR_augmented, network::Array{B
   end
   seq_dist += transpose(seq_dist)
   if debug
-    println("Sequence distances:")
-    println(round(seq_dist, 3))
+    @assert(all(seq_dist .>= 0), "Negative sequence distance detected...")
   end
   return seq_dist
 end
@@ -149,8 +133,7 @@ function seq_distances(obs::SIR_observed, aug::SIR_augmented, network::Array{Boo
   end
   seq_dist += transpose(seq_dist)
   if debug
-    println("Sequence distances:")
-    println(round(seq_dist, 3))
+    @assert(all(seq_dist .>= 0), "Negative sequence distance detected...")
   end
   return seq_dist
 end

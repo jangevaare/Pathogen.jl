@@ -34,7 +34,7 @@ detection_priors = Lag_priors(Gamma(2.))
 ilm_trace, detection_trace = MCMC(10000,
                                   ilm_priors,
                                   detection_priors,
-                                  obs, true, true)
+                                  obs)
 
 # Tune the transition kernel's covariance matrix
 n = 300
