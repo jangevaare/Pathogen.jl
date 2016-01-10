@@ -92,6 +92,7 @@ function propose_augment(i::Int64,
   infectious_augmented = copy(previous_aug.infectious)
   removed_augmented = copy(previous_aug.removed)
   pathway_out = pathwayfrom(i, network, 1, debug)
+  pathway_out_full = pathwayfrom(i, network, debug)
   pathway_in = pathwayto(i, network, debug)
   if debug
     println("Observed infection times (pathway from $i): $(obs.infectious[pathway_out])")
@@ -100,7 +101,7 @@ function propose_augment(i::Int64,
   # Exposure time augmentation
   if length(pathway_out) > 1
     if !isnan(obs.removed[i])
-      infectious_augmented[i] = previous_aug.infectious[i] + minimum([[obs.removed[i] - maximum(infectious_augmented[pathway_out[2:end]])]; (obs.infectious[pathway_out].- previous_aug.infectious[pathway_out])]) - rand(Exponential(1/ν))
+      infectious_augmented[i] = previous_aug.infectious[i] + minimum([[obs.removed[i] - maximum(infectious_augmented[pathway_out[2:end]])]; (obs.infectious[pathway_out_full].- previous_aug.infectious[pathway_out_full])]) - rand(Exponential(1/ν))
       # infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - (previous_aug.infectious[i] + (obs.removed[i] - maximum(infectious_augmented[pathway_out[2:end]]))), Inf))
     else
       infectious_augmented[i] = obs.infectious[i] - rand(Exponential(1/ν))
@@ -110,11 +111,9 @@ function propose_augment(i::Int64,
       println("Change in infection time of individual $i: $difference")
       println(difference)
     end
-    for j in pathway_out[2:end]
-      for k in pathwayfrom(j, network, debug)
-        infectious_augmented[k] += difference
-        removed_augmented[k] += difference
-      end
+    for j in pathway_out_full[2:end]
+      infectious_augmented[j] += difference
+      removed_augmented[j] += difference
     end
   else
     infectious_augmented[i] = obs.infectious[i] - rand(Exponential(1/ν))
@@ -134,17 +133,19 @@ Proposes new augmented data
 * With detection rate, `ν`
 * Requires `network` information
 * Proposals made with truncated exponential distributions
+* Use is not suggested as errors can probablistically arise when moving through
+tree space, instead use alternative which utilizes `previous_aug` 
 """
 function propose_augment(ν::Float64,
                          network::Array{Bool, 2},
                          obs::SIR_observed,
                          debug=false::Bool)
 
-  infectious_augmented = obs.infectious
-  removed_augmented = obs.removed
+  infectious_augmented = copy(obs.infectious)
+  removed_augmented = copy(obs.removed)
   exposures = pathwayfrom(0, network, debug)[2:end]
   for i in exposures
-    pathway_out = pathwayfrom(i, network, 1, debug)
+    pathway_out = pathwayfrom(i, network, debug)
     pathway_in = pathwayto(i, network, debug)
 
     if debug
@@ -160,17 +161,17 @@ function propose_augment(ν::Float64,
     # Infection time augmentation
     if length(pathway_in) > 2
       if isnan(obs.removed[pathway_in[2]])
-        infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - minimum([obs.infectious[i]; infectious_augmented[pathway_out[2:end]]]), obs.infectious[i] - infectious_augmented[pathway_in[2]]))
+        infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - minimum(obs.infectious[pathway_out]), obs.infectious[i] - infectious_augmented[pathway_in[2]]))
       else
-        infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - minimum([obs.infectious[i]; infectious_augmented[pathway_out[2:end]]; removed_augmented[pathway_in[2]]]), obs.infectious[i] - infectious_augmented[pathway_in[2]]))
+        infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - minimum([obs.infectious[pathway_out]; removed_augmented[pathway_in[2]]]), obs.infectious[i] - infectious_augmented[pathway_in[2]]))
       end
     else
-      infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - minimum([obs.infectious[i]; infectious_augmented[pathway_out[2:end]]]), Inf))
+      infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - minimum(obs.infectious[pathway_out]), Inf))
     end
 
     # Removal time augmentation
     if !isnan(obs.removed[i])
-      removed_augmented[i] = obs.removed[i] - rand(Truncated(Exponential(1/ν), 0., obs.removed[i] - maximum([obs.infectious[i]; infectious_augmented[pathway_out[2:end]]])))
+      removed_augmented[i] = obs.removed[i] - rand(Truncated(Exponential(1/ν), 0., obs.removed[i] - obs.infectious[i]))
     end
 
   end

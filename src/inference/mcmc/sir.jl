@@ -32,9 +32,9 @@ function initialize(ilm_priors::SIR_priors,
                    ilm_params,
                    debug)
 
-    lp += logprior(detection_priors,
-                   detection_params,
-                   debug)
+    # lp += logprior(detection_priors,
+    #                detection_params,
+    #                debug)
     if Inf > lp > -Inf
       network = propose_network(network_rates,
                                 debug)
@@ -154,8 +154,11 @@ function initialize(ilm_priors::SIR_priors,
                                           obs,
                                           debug,
                                           dist)
-    lp += logprior(ilm_priors, ilm_params, debug)
-    lp += logprior(detection_priors, detection_params)
+    lp += logprior(ilm_priors,
+                   ilm_params,
+                   debug)
+    # lp += logprior(detection_priors,
+    #                detection_params)
 
     if Inf > lp > -Inf
       network = propose_network(network_rates,
@@ -282,9 +285,15 @@ function MCMC(n::Int64,
     debug && println("ILM proposal: $(round(ilm_proposal, 3))")
     debug && println("Detection proposal: $(round(detection_proposal, 3))")
     debug && println("Mutation proposal: $(round(mutation_proposal, 3))")
-    lp = logprior(ilm_priors, ilm_proposal, debug)
-    lp += logprior(detection_priors, detection_proposal, debug)
-    lp += logprior(mutation_priors, mutation_proposal, debug)
+    lp = logprior(ilm_priors,
+                  ilm_proposal,
+                  debug)
+    lp += logprior(detection_priors, 
+                   detection_proposal,
+                   debug)
+    lp += logprior(mutation_priors,
+                   mutation_proposal,
+                   debug)
 
     if lp > -Inf
       if mod(i, 1) == 0
@@ -628,23 +637,34 @@ function MCMC(n::Int64,
     end
 
     ilm_proposal = param_proposal[1:4]
-    detection_proposal = [param_proposal[5]]
+    # detection_proposal = [param_proposal[5]]
+    detection_proposal = 2.
 
     debug && println("ILM proposal: $(round(ilm_proposal, 3))")
     debug && println("Detection proposal: $(round(detection_proposal, 3))")
     lp = logprior(ilm_priors, ilm_proposal, debug)
-    lp += logprior(detection_priors, detection_proposal, debug)
+    # lp += logprior(detection_priors, detection_proposal, debug)
 
     if lp > -Inf
       if mod(i, 1) == 0
         # Generate data augmentation proposal
-        changed_individual = sample(infected)
-        aug = propose_augment(changed_individual,
-                              detection_proposal[1],
+        # changed_individual = sample(infected)
+        # aug = propose_augment(changed_individual,
+        #                       detection_proposal[1],
+        #                       ilm_trace.network[end],
+        #                       ilm_trace.aug[end],
+        #                       obs,
+        #                       debug)
+        # aug = propose_augment(detection_proposal[1],
+        #                       ilm_trace.network[end],
+        #                       obs,
+        #                       debug)
+        aug = propose_augment(detection_proposal[1],
                               ilm_trace.network[end],
                               ilm_trace.aug[end],
                               obs,
                               debug)
+
       else
         aug = propose_augment(detection_proposal[1],
                               obs,
@@ -666,8 +686,13 @@ function MCMC(n::Int64,
     if lp > -Inf
       if mod(i, 1) == 0
         # Generate network proposal
-        network = propose_network([changed_individual],
-                                  network_rates,
+        # network = propose_network([changed_individual],
+        #                           network_rates,
+        #                           ilm_trace.network[end],
+        #                           debug)
+        # network = propose_network(network_rates,
+        #                           debug)
+        network = propose_network(network_rates,
                                   ilm_trace.network[end],
                                   debug)
       else

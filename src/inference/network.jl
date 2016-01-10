@@ -4,23 +4,14 @@ Propose a network
 function propose_network(changed_individuals::Vector{Int64},
                          network_rates::Array{Float64, 2},
                          previous_network::Array{Bool, 2},
-                         debug=false::Bool,
-                         method="multinomial"::AbstractString)
-  @assert(any(method .== ["uniform", "multinomial"]),
-          "Network proposal method must be 'uniform' or 'multinomial'.")
+                         debug=false::Bool)
   network = copy(previous_network)
   rate_totals = sum(network_rates,1)
   network[:, changed_individuals] = false
-  if method == "uniform"
-    for i in changed_individuals
-      network[sample(find(network_rates[:,i] .> 0.)), i] = true
-    end
-  elseif method == "multinomial"
-    @assert(size(network_rates) == size(previous_network),
-            "A mismatch in the previous network and network rates dimensions was detected in the network proposal function")
-    for i in changed_individuals
-      network[findfirst(rand(Multinomial(1, network_rates[:,i]/rate_totals[i]))), i] = true
-    end
+  @assert(size(network_rates) == size(previous_network),
+          "A mismatch in the previous network and network rates dimensions was detected in the network proposal function")
+  for i in changed_individuals
+    network[findfirst(rand(Multinomial(1, network_rates[:,i]/rate_totals[i]))), i] = true
   end
   if debug
     println("Network proposal contains $(sum(network)) total exposure events, with up to $(length(changed_individuals)) change(s) from the previous network")
@@ -32,30 +23,6 @@ end
 
 """
 Propose a network
-"""
-function propose_network(network_rates::Array{Float64, 2},
-                         previous_network::Array{Bool, 2},
-                         debug=false::Bool,
-                         changes=0::Int64,
-                         method="multinomial"::AbstractString)
-  rate_totals = sum(network_rates, 1)
-  @assert(changes <= sum(rate_totals .> 0),
-          "Attempting to make more network changes than there are exposure events")
-  if changes == 0
-    changed_individuals = find(rate_totals .> 0)
-  else
-    changed_individuals = sample(find(rate_totals .> 0), changes, replace=false)
-  end
-  return propose_network(changed_individuals,
-                         network_rates,
-                         previous_network,
-                         debug,
-                         method)
-end
-
-
-"""
-Initial network proposal
 """
 function propose_network(network_rates::Array{Float64, 2},
                          debug=false::Bool)
@@ -70,6 +37,31 @@ function propose_network(network_rates::Array{Float64, 2},
     println(spy(network))
   end
   return network
+end
+
+
+"""
+Propose a network
+"""
+function propose_network(network_rates::Array{Float64, 2},
+                         previous_network::Array{Bool, 2},
+                         debug=false::Bool,
+                         changes=rand(Poisson(1.))::Int64)
+  if changes == 0
+    return previous_network
+  else
+    rate_totals = sum(network_rates, 1)
+    if changes >= sum(rate_totals .> 0)
+      return propose_network(network_rates,
+                             debug)
+    else
+      changed_individuals = sample(find(rate_totals .> 0), changes, replace=false)
+      return propose_network(changed_individuals,
+                             network_rates,
+                             previous_network,
+                             debug)
+    end
+  end
 end
 
 
