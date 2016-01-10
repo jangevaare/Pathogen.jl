@@ -100,7 +100,7 @@ function propose_augment(i::Int64,
   # Exposure time augmentation
   if length(pathway_out) > 1
     if !isnan(obs.removed[i])
-      infectious_augmented[i] = [previous_aug.infectious[i] + minimum((obs.removed[i] - maximum(infectious_augmented[pathway_out[2:end]])), (obs.infectious[pathway_out].- previous_aug.infectious[pathway_out])) - rand(Exponential(1/ν))
+      infectious_augmented[i] = previous_aug.infectious[i] + minimum([[obs.removed[i] - maximum(infectious_augmented[pathway_out[2:end]])]; (obs.infectious[pathway_out].- previous_aug.infectious[pathway_out])]) - rand(Exponential(1/ν))
       # infectious_augmented[i] = obs.infectious[i] - rand(Truncated(Exponential(1/ν), obs.infectious[i] - (previous_aug.infectious[i] + (obs.removed[i] - maximum(infectious_augmented[pathway_out[2:end]]))), Inf))
     else
       infectious_augmented[i] = obs.infectious[i] - rand(Exponential(1/ν))
