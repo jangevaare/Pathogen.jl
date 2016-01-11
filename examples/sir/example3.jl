@@ -1,7 +1,7 @@
 using Pathogen, DataFrames, Distributions, ProgressMeter
 
 # Simulate
-init_seq = create_seq(100, 0.25, 0.25, 0.25, 0.25)
+init_seq = create_seq(200, 0.25, 0.25, 0.25, 0.25)
 init_var = rand(Uniform(0,25), (2,100))
 
 pop = create_population(init_seq, init_var)
@@ -52,8 +52,76 @@ end
 opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.γ ilm_trace.η mutation_trace.λ])*(2.38^2)/5.
 MCMC(100000, opt_cov, ilm_trace, mutation_trace, ilm_priors, mutation_priors, obs)
 
+
+
 using Gadfly, DataFrames
 cd("/Users/justin/Desktop/pathogen")
+
+
+# Average posterior network correctedness
+average_network = mean(ilm_trace.network[end-99999:end])
+posterior_correct = average_network[findnetwork(pop)]
+mean(posterior_correct)
+correctness = DataFrame(x = Float64[],
+                   y = Float64[],
+                   correct = Float64[])
+
+for i = 2:length(pop.events)
+  if sum(average_network[:,i-1]) > 0
+    push!(correctness, [pop.history[i][1][1][1], pop.history[i][1][1][2], average_network[findfirst(findnetwork(pop)[:,i-1]),i-1]])
+  end
+end
+
+states, routes = plotdata(actual,
+                          pop,
+                          maximum(obs)+1)
+
+
+p1 = plot(layer(correctness, x="x", y="y", Geom.point, color="correct"),
+          # layer(states, x="x", y="y", Geom.point),
+          layer(routes, x="x", y="y", group="line", Geom.polygon),
+          Scale.color_continuous(minvalue=0., maxvalue=1.),
+          Guide.colorkey("Posterior Accuracy"),
+          Theme(panel_opacity=1.,
+                panel_fill=colorant"white",
+                default_color=colorant"black",
+                background_color=colorant"white"))
+draw(PNG("SIR3_accuracy.png", 8inch, 8inch), p1)
+
+# Network age
+# images = 500
+# states, routes = plotdata(actual,
+#                           pop,
+#                           maximum(obs)+1)
+# maxage = maximum(routes[:age])
+# for time = 1:images
+#   states, routes = plotdata(actual,
+#                             pop,
+#                             time/images*(maximum(obs)+1))
+#
+#   p1 = plot(layer(states, x="x", y="y", Geom.point),
+#             layer(routes, x="x", y="y", group="line", color="age", Geom.polygon),
+#             Scale.color_continuous(minvalue=0, maxvalue=maxage),
+#             Theme(panel_opacity=1.,
+#                   panel_fill=colorant"white",
+#                   default_color=colorant"black",
+#                   background_color=colorant"white"))
+#   filenumber = time/images
+#   filenumber = prod(split("$filenumber", ".", limit=2))
+#   filenumber *= prod(fill("0", 5-length(filenumber)))
+#   draw(PNG("SIR_age_$filenumber.png", 15cm, 20cm), p1)
+# end
+#
+# # Assemble into animation
+# run(`convert -delay 10 -loop 0 -layers optimize SIR_age_*.png SIR3_animation_age.gif`)
+#
+# for time = 1:images
+#   filenumber = time/images
+#   filenumber = prod(split("$filenumber", ".", limit=2))
+#   filenumber *= prod(fill("0", 5-length(filenumber)))
+#   rm("SIR_age_$filenumber.png")
+# end
+
 
 # Simulation/Maximum posteriori visualization
 images = 500
@@ -113,19 +181,20 @@ plotdf = DataFrame(iteration = rep(1:100000, 5),
                                 rep("gamma", 100000);
                                 rep("lambda", 100000)])
 
-draw(PNG("SIR3_traceplot.png", 20cm, 15cm),
+draw(PNG("SIR3_traceplot.png", 8inch, 6inch),
      plot(plotdf,
           x="iteration",
           y="value",
           color="parameter",
           Geom.line,
+          Guide.colorkey("Parameter"),
           Theme(panel_opacity=1.,
                 panel_fill=colorant"white",
                 background_color=colorant"white")))
 
 
 # logposterior plot (last 100k iterations)
-draw(PNG("SIR3_logposterior.png", 20cm, 15cm),
+draw(PNG("SIR3_logposterior.png", 6inch, 4inch),
      plot(x=1:100000,
           y=ilm_trace.logposterior[end-99999:end],
           Geom.line,

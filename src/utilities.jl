@@ -129,6 +129,20 @@ end
 
 
 """
+Find the actual transmission network
+"""
+function findnetwork(population::Population)
+  network = fill(false, (length(population.events), length(population.events)-1))
+  for i = 2:length(population.events)
+    if length(population.events[i][2]) > 0
+      network[population.events[i][2][1], i-1] = true
+    end
+  end
+  return network
+end
+
+
+"""
 Create dataframes with all necessary plotting information
 """
 function plotdata(population::Population, time::Float64)

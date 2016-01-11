@@ -42,6 +42,7 @@ export
 
   # utilities.jl
   findstate,
+  findnetwork,
   plotdata,
   convert,
   maximum,
