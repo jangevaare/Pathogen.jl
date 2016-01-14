@@ -244,7 +244,7 @@ function MCMC(n::Int64,
   progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 25)
   debug && println("MCMC transition kernel covariance matrix:")
   debug && println(round(transition_cov, 3))
-  rejects = 0
+  rejects = fill(0, size(transition_cov, 1)+1)
   infected = pathwayfrom(0, ilm_trace.network[end])[2:end]
 
   for i = 1:n
@@ -349,7 +349,7 @@ function MCMC(n::Int64,
       detection_proposal = [param_proposal[5]]
       mutation_proposal = [param_proposal[6]]
 
-      rejects += 1
+      rejects[j] += 1
     end
 
     if j == 7
@@ -364,9 +364,9 @@ function MCMC(n::Int64,
       push!(detection_trace.ν, detection_proposal[1])
       push!(mutation_trace.λ, mutation_proposal[1])
     end
-    
+
   end
-  println("MCMC acceptance rate: $(round(1.0-(rejects/(n*7)),4))")
+  println("MCMC acceptance rate: $(round(1.0-(rejects/(n)),4))")
   return ilm_trace, detection_trace, mutation_trace
 end
 

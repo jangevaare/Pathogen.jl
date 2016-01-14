@@ -30,7 +30,7 @@ ilm_priors = SIR_priors(Gamma(3.),
                         Uniform(0., 0.002),
                         Gamma(1/7))
 
-detection_priors = Lag_priors(Normal(2.,0.00000001))
+detection_priors = Lag_priors(Gamma(2.))
 
 mutation_priors = JC69_priors(Uniform(0., 0.002))
 
