@@ -41,7 +41,7 @@ ilm_trace, detection_trace, mutation_trace = MCMC(10000,
                                                   obs)
 
 # Tune the transition kernel's covariance matrix
-n = 300
+n = 100
 progressbar = Progress(n, 5, "Performing $n tuning MCMC stages...", 25)
 for i = 1:n
   # Tune transition matrix
