@@ -332,11 +332,11 @@ function MCMC(n::Int64,
 
       if lp[1] > -Inf
         if j == 2 || i == 1
-          phylo_ll += phylogenetic_network_loglikelihood(obs,
-                                                         aug,
-                                                         network,
-                                                         jc69p(mutation_proposal),
-                                                         debug)
+          phylo_ll = phylogenetic_network_loglikelihood(obs,
+                                                        aug,
+                                                        network,
+                                                        jc69p(mutation_proposal),
+                                                        debug)
         end
         lp[1] += phylo_ll
       end
