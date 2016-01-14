@@ -284,87 +284,87 @@ function MCMC(n::Int64,
                      mutation_proposal,
                      debug)
 
-    if lp > -Inf
-      if j == 7
-        # Generate data augmentation proposal
-        changed_individual = sample(infected)
-        aug = propose_augment(changed_individual,
-                              detection_proposal[1],
-                              ilm_trace.network[end],
-                              ilm_trace.aug[end],
-                              obs,
-                              debug)
-      else
+      if lp > -Inf
+        if j == 7
+          # Generate data augmentation proposal
+          changed_individual = sample(infected)
+          aug = propose_augment(changed_individual,
+                                detection_proposal[1],
+                                ilm_trace.network[end],
+                                ilm_trace.aug[end],
+                                obs,
+                                debug)
+        else
+          aug = ilm_trace.aug[end]
+        end
+      end
+
+      if lp > -Inf
+        # SIR loglikelihood
+        ll, network_rates = SIR_loglikelihood(ilm_proposal[1],
+                                              ilm_proposal[2],
+                                              ilm_proposal[3],
+                                              ilm_proposal[4],
+                                              aug,
+                                              obs,
+                                              debug,
+                                              dist)
+        lp += ll
+      end
+
+      if lp > -Inf
+        if j == 7
+          # Generate network proposal
+          network = propose_network([changed_individual],
+                                    network_rates,
+                                    ilm_trace.network[end],
+                                    debug)
+        else
+          network = ilm_trace.network[end]
+        end
+      end
+
+      if lp > -Inf
+        lp += phylogenetic_network_loglikelihood(obs,
+                                                 aug,
+                                                 network,
+                                                 jc69p(mutation_proposal),
+                                                 debug)
+      end
+
+      # Acceptance/rejection
+      reject = MHreject(lp, ilm_trace.logposterior[end], debug)
+
+      if reject
         aug = ilm_trace.aug[end]
-      end
-    end
-
-    if lp > -Inf
-      # SIR loglikelihood
-      ll, network_rates = SIR_loglikelihood(ilm_proposal[1],
-                                            ilm_proposal[2],
-                                            ilm_proposal[3],
-                                            ilm_proposal[4],
-                                            aug,
-                                            obs,
-                                            debug,
-                                            dist)
-      lp += ll
-    end
-
-    if lp > -Inf
-      if j == 7
-        # Generate network proposal
-        network = propose_network([changed_individual],
-                                  network_rates,
-                                  ilm_trace.network[end],
-                                  debug)
-      else
+        network_rates = ilm_trace.network_rates[end]
         network = ilm_trace.network[end]
-      end
-    end
+        lp = ilm_trace.logposterior[end]
 
-    if lp > -Inf
-      lp += phylogenetic_network_loglikelihood(obs,
-                                               aug,
-                                               network,
-                                               jc69p(mutation_proposal),
-                                               debug)
-    end
+        if j < 7
+          param_proposal[j] -= param_change[j]
+        end
 
-    # Acceptance/rejection
-    reject = MHreject(lp, ilm_trace.logposterior[end], debug)
+        ilm_proposal = param_proposal[1:4]
+        detection_proposal = [param_proposal[5]]
+        mutation_proposal = [param_proposal[6]]
 
-    if reject
-      aug = ilm_trace.aug[end]
-      network_rates = ilm_trace.network_rates[end]
-      network = ilm_trace.network[end]
-      lp = ilm_trace.logposterior[end]
-
-      if j < 7
-        param_proposal[j] -= param_change[j]
+        rejects[j] += 1
       end
 
-      ilm_proposal = param_proposal[1:4]
-      detection_proposal = [param_proposal[5]]
-      mutation_proposal = [param_proposal[6]]
-
-      rejects[j] += 1
+      if j == 7
+        push!(ilm_trace.aug, aug)
+        push!(ilm_trace.network_rates, network_rates)
+        push!(ilm_trace.network, network)
+        push!(ilm_trace.logposterior, lp)
+        push!(ilm_trace.α, ilm_proposal[1])
+        push!(ilm_trace.β, ilm_proposal[2])
+        push!(ilm_trace.η, ilm_proposal[3])
+        push!(ilm_trace.γ, ilm_proposal[4])
+        push!(detection_trace.ν, detection_proposal[1])
+        push!(mutation_trace.λ, mutation_proposal[1])
+      end
     end
-
-    if j == 7
-      push!(ilm_trace.aug, aug)
-      push!(ilm_trace.network_rates, network_rates)
-      push!(ilm_trace.network, network)
-      push!(ilm_trace.logposterior, lp)
-      push!(ilm_trace.α, ilm_proposal[1])
-      push!(ilm_trace.β, ilm_proposal[2])
-      push!(ilm_trace.η, ilm_proposal[3])
-      push!(ilm_trace.γ, ilm_proposal[4])
-      push!(detection_trace.ν, detection_proposal[1])
-      push!(mutation_trace.λ, mutation_proposal[1])
-    end
-
   end
   println("MCMC acceptance rate: $(round(1.0-(rejects/(n)),4))")
   return ilm_trace, detection_trace, mutation_trace
