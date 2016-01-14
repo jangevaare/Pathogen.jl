@@ -1,7 +1,7 @@
 using Pathogen, DataFrames, Distributions, ProgressMeter
 
 # Simulate
-init_seq = create_seq(100, 0.25, 0.25, 0.25, 0.25)
+init_seq = create_seq(200, 0.25, 0.25, 0.25, 0.25)
 init_var = rand(Uniform(0,25), (2,100))
 
 pop = create_population(init_seq, init_var)
@@ -55,7 +55,7 @@ end
 opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.γ ilm_trace.η detection_trace.ν mutation_trace.λ])*(2.38^2)/6.
 MCMC(100000, opt_cov, ilm_trace, detection_trace, mutation_trace, ilm_priors, detection_priors, mutation_priors, obs)
 
-using Gadfly, DataFrames
+using Gadfly
 cd("/Users/justin/Desktop/pathogen")
 
 # Simulation/Maximum posteriori visualization

@@ -50,16 +50,15 @@ for i = 1:n
 end
 
 opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.γ ilm_trace.η mutation_trace.λ])*(2.38^2)/5.
-MCMC(100000, opt_cov, ilm_trace, mutation_trace, ilm_priors, mutation_priors, obs)
+MCMC(200000, opt_cov, ilm_trace, mutation_trace, ilm_priors, mutation_priors, obs)
 
 
-
-using Gadfly, DataFrames
+using Gadfly
 cd("/Users/justin/Desktop/pathogen")
 
 
 # Average posterior network correctedness
-average_network = mean(ilm_trace.network[end-99999:end])
+average_network = mean(ilm_trace.network[end-199999:end])
 posterior_correct = average_network[findnetwork(pop)]
 mean(posterior_correct)
 correctness = DataFrame(x = Float64[],
@@ -87,40 +86,6 @@ p1 = plot(layer(correctness, x="x", y="y", Geom.point, color="correct"),
                 default_color=colorant"black",
                 background_color=colorant"white"))
 draw(PNG("SIR3_accuracy.png", 8inch, 8inch), p1)
-
-# Network age
-# images = 500
-# states, routes = plotdata(actual,
-#                           pop,
-#                           maximum(obs)+1)
-# maxage = maximum(routes[:age])
-# for time = 1:images
-#   states, routes = plotdata(actual,
-#                             pop,
-#                             time/images*(maximum(obs)+1))
-#
-#   p1 = plot(layer(states, x="x", y="y", Geom.point),
-#             layer(routes, x="x", y="y", group="line", color="age", Geom.polygon),
-#             Scale.color_continuous(minvalue=0, maxvalue=maxage),
-#             Theme(panel_opacity=1.,
-#                   panel_fill=colorant"white",
-#                   default_color=colorant"black",
-#                   background_color=colorant"white"))
-#   filenumber = time/images
-#   filenumber = prod(split("$filenumber", ".", limit=2))
-#   filenumber *= prod(fill("0", 5-length(filenumber)))
-#   draw(PNG("SIR_age_$filenumber.png", 15cm, 20cm), p1)
-# end
-#
-# # Assemble into animation
-# run(`convert -delay 10 -loop 0 -layers optimize SIR_age_*.png SIR3_animation_age.gif`)
-#
-# for time = 1:images
-#   filenumber = time/images
-#   filenumber = prod(split("$filenumber", ".", limit=2))
-#   filenumber *= prod(fill("0", 5-length(filenumber)))
-#   rm("SIR_age_$filenumber.png")
-# end
 
 
 # Simulation/Maximum posteriori visualization
@@ -168,18 +133,18 @@ end
 
 
 # Inference visualization
-# Joint trace plots (last 100k iterations)
-plotdf = DataFrame(iteration = rep(1:100000, 5),
-                   value = [ilm_trace.α[end-99999:end];
-                            ilm_trace.β[end-99999:end];
-                            ilm_trace.η[end-99999:end];
-                            ilm_trace.γ[end-99999:end];
-                            mutation_trace.λ[end-99999:end]],
-                   parameter = [rep("alpha", 100000);
-                                rep("beta", 100000);
-                                rep("eta", 100000);
-                                rep("gamma", 100000);
-                                rep("lambda", 100000)])
+# Joint trace plots (last 200k iterations)
+plotdf = DataFrame(iteration = rep(1:200000, 5),
+                   value = [ilm_trace.α[end-199999:end];
+                            ilm_trace.β[end-199999:end];
+                            ilm_trace.η[end-199999:end];
+                            ilm_trace.γ[end-199999:end];
+                            mutation_trace.λ[end-199999:end]],
+                   parameter = [rep("alpha", 200000);
+                                rep("beta", 200000);
+                                rep("eta", 200000);
+                                rep("gamma", 200000);
+                                rep("lambda", 200000)])
 
 draw(PNG("SIR3_traceplot.png", 8inch, 6inch),
      plot(plotdf,
@@ -195,8 +160,8 @@ draw(PNG("SIR3_traceplot.png", 8inch, 6inch),
 
 # logposterior plot (last 100k iterations)
 draw(PNG("SIR3_logposterior.png", 6inch, 4inch),
-     plot(x=1:100000,
-          y=ilm_trace.logposterior[end-99999:end],
+     plot(x=1:200000,
+          y=ilm_trace.logposterior[end-199999:end],
           Geom.line,
           Theme(panel_opacity=1.,
                 panel_fill=colorant"white",

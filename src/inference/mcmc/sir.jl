@@ -252,78 +252,53 @@ function MCMC(n::Int64,
     debug && println("")
     debug && println("Performing the $(i)th MCMC iteration")
 
-    if mod(i, 1) == 0
-      param_proposal = rand(MvNormal([ilm_trace.α[end],
-                                      ilm_trace.β[end],
-                                      ilm_trace.η[end],
-                                      ilm_trace.γ[end],
-                                      detection_trace.ν[end],
-                                      mutation_trace.λ[end]],
-                                     transition_cov))
-      while any(param_proposal .<= 0)
-        param_proposal = rand(MvNormal([ilm_trace.α[end],
-                                        ilm_trace.β[end],
-                                        ilm_trace.η[end],
-                                        ilm_trace.γ[end],
-                                        detection_trace.ν[end],
-                                        mutation_trace.λ[end]],
-                                       transition_cov))
+    param_proposal = [ilm_trace.α[end],
+                      ilm_trace.β[end],
+                      ilm_trace.η[end],
+                      ilm_trace.γ[end],
+                      detection_trace.ν[end],
+                      mutation_trace.λ[end]]
+
+    param_change = rand(MvNormal(transition_cov))
+
+    for j = 1:7
+      if j < 7
+        param_proposal[j] += param_change[j]
       end
-    else
-      param_proposal = [ilm_trace.α[end],
-                        ilm_trace.β[end],
-                        ilm_trace.η[end],
-                        ilm_trace.γ[end],
-                        detection_trace.ν[end],
-                        mutation_trace.λ[end]]
-    end
 
-    ilm_proposal = param_proposal[1:4]
-    # detection_proposal = [param_proposal[5]]
-    detection_proposal = 2.
-    mutation_proposal = [param_proposal[6]]
+      ilm_proposal = param_proposal[1:4]
+      detection_proposal = [param_proposal[5]]
+      mutation_proposal = [param_proposal[6]]
 
-    debug && println("ILM proposal: $(round(ilm_proposal, 3))")
-    debug && println("Detection proposal: $(round(detection_proposal, 3))")
-    debug && println("Mutation proposal: $(round(mutation_proposal, 3))")
-    lp = logprior(ilm_priors,
-                  ilm_proposal,
-                  debug)
-    # lp += logprior(detection_priors,
-    #                detection_proposal,
-    #                debug)
-    lp += logprior(mutation_priors,
-                   mutation_proposal,
-                   debug)
+      debug && println("ILM proposal: $(round(ilm_proposal, 3))")
+      debug && println("Detection proposal: $(round(detection_proposal, 3))")
+      debug && println("Mutation proposal: $(round(mutation_proposal, 3))")
+
+      lp = logprior(ilm_priors,
+                    ilm_proposal,
+                    debug)
+      lp += logprior(detection_priors,
+                     detection_proposal,
+                     debug)
+      lp += logprior(mutation_priors,
+                     mutation_proposal,
+                     debug)
 
     if lp > -Inf
-      if mod(i, 1) == 0
+      if j == 7
         # Generate data augmentation proposal
-        # changed_individual = sample(infected)
-        # aug = propose_augment(changed_individual,
-        #                       detection_proposal[1],
-        #                       ilm_trace.network[end],
-        #                       ilm_trace.aug[end],
-        #                       obs,
-        #                       debug)
-        # aug = propose_augment(detection_proposal[1],
-        #                       ilm_trace.network[end],
-        #                       obs,
-        #                       debug)
-        # aug = propose_augment(detection_proposal[1],
-        #                       ilm_trace.network[end],
-        #                       ilm_trace.aug[end],
-        #                       obs,
-        #                       debug)
-        aug = propose_augment(detection_proposal[1],
+        changed_individual = sample(infected)
+        aug = propose_augment(changed_individual,
+                              detection_proposal[1],
+                              ilm_trace.network[end],
+                              ilm_trace.aug[end],
                               obs,
                               debug)
       else
-        aug = propose_augment(detection_proposal[1],
-                              obs,
-                              debug)
+        aug = ilm_trace.aug[end]
       end
     end
+
     if lp > -Inf
       # SIR loglikelihood
       ll, network_rates = SIR_loglikelihood(ilm_proposal[1],
@@ -336,23 +311,19 @@ function MCMC(n::Int64,
                                             dist)
       lp += ll
     end
+
     if lp > -Inf
-      if mod(i, 1) == 0
+      if j == 7
         # Generate network proposal
-        # network = propose_network([changed_individual],
-        #                           network_rates,
-        #                           ilm_trace.network[end],
-        #                           debug)
-        # network = propose_network(network_rates,
-        #                           debug)
-        network = propose_network(network_rates,
-                                  # ilm_trace.network[end],
+        network = propose_network([changed_individual],
+                                  network_rates,
+                                  ilm_trace.network[end],
                                   debug)
       else
-        network = propose_network(network_rates,
-                                  debug)
+        network = ilm_trace.network[end]
       end
     end
+
     if lp > -Inf
       lp += phylogenetic_network_loglikelihood(obs,
                                                aug,
@@ -369,27 +340,33 @@ function MCMC(n::Int64,
       network_rates = ilm_trace.network_rates[end]
       network = ilm_trace.network[end]
       lp = ilm_trace.logposterior[end]
-      ilm_proposal = [ilm_trace.α[end],
-                      ilm_trace.β[end],
-                      ilm_trace.η[end],
-                      ilm_trace.γ[end]]
-      detection_proposal = [detection_trace.ν[end]]
-      mutation_proposal = [mutation_trace.λ[end]]
+
+      if j < 7
+        param_proposal[j] -= param_change[j]
+      end
+
+      ilm_proposal = param_proposal[1:4]
+      detection_proposal = [param_proposal[5]]
+      mutation_proposal = [param_proposal[6]]
+
       rejects += 1
     end
 
-    push!(ilm_trace.aug, aug)
-    push!(ilm_trace.network_rates, network_rates)
-    push!(ilm_trace.network, network)
-    push!(ilm_trace.logposterior, lp)
-    push!(ilm_trace.α, ilm_proposal[1])
-    push!(ilm_trace.β, ilm_proposal[2])
-    push!(ilm_trace.η, ilm_proposal[3])
-    push!(ilm_trace.γ, ilm_proposal[4])
-    push!(detection_trace.ν, detection_proposal[1])
-    push!(mutation_trace.λ, mutation_proposal[1])
+    if j == 7
+      push!(ilm_trace.aug, aug)
+      push!(ilm_trace.network_rates, network_rates)
+      push!(ilm_trace.network, network)
+      push!(ilm_trace.logposterior, lp)
+      push!(ilm_trace.α, ilm_proposal[1])
+      push!(ilm_trace.β, ilm_proposal[2])
+      push!(ilm_trace.η, ilm_proposal[3])
+      push!(ilm_trace.γ, ilm_proposal[4])
+      push!(detection_trace.ν, detection_proposal[1])
+      push!(mutation_trace.λ, mutation_proposal[1])
+    end
+    
   end
-  println("MCMC acceptance rate: $(round(1.0-(rejects/n),4))")
+  println("MCMC acceptance rate: $(round(1.0-(rejects/(n*7)),4))")
   return ilm_trace, detection_trace, mutation_trace
 end
 
@@ -480,7 +457,7 @@ function MCMC(n::Int64,
     progress && !debug && next!(progressbar)
     debug && println("")
     debug && println("Performing the $(i)th MCMC iteration")
-    if mod(i, 1) == 0
+    if mod(i, 2) == 1
       param_proposal = rand(MvNormal([ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.γ[end], mutation_trace.λ[end]],
                                               transition_cov))
       while any(param_proposal .<= 0)
@@ -513,7 +490,7 @@ function MCMC(n::Int64,
       lp += ll
     end
     if lp > -Inf
-      if mod(i, 1) == 0
+      if mod(i, 2) == 0
         # Generate network proposal
         network = propose_network(network_rates,
                                   ilm_trace.network[end],
@@ -642,7 +619,7 @@ function MCMC(n::Int64,
     progress && !debug && next!(progressbar)
     debug && println("")
     debug && println("Performing the $(i)th MCMC iteration")
-    if mod(i, 1) == 0
+    if mod(i, 2) == 1
       param_proposal = rand(MvNormal([ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.γ[end], detection_trace.ν[end]],
                                               transition_cov))
       while any(param_proposal .<= 0)
@@ -664,32 +641,30 @@ function MCMC(n::Int64,
     # lp += logprior(detection_priors, detection_proposal, debug)
 
     if lp > -Inf
-      if mod(i, 1) == 0
+      if mod(i, 2) == 0
         # Generate data augmentation proposal
-        # changed_individual = sample(infected)
-        # aug = propose_augment(changed_individual,
-        #                       detection_proposal[1],
-        #                       ilm_trace.network[end],
-        #                       ilm_trace.aug[end],
-        #                       obs,
-        #                       debug)
-        # aug = propose_augment(detection_proposal[1],
-        #                       ilm_trace.network[end],
-        #                       obs,
-        #                       debug)
-        # aug = propose_augment(detection_proposal[1],
-        #                       ilm_trace.network[end],
-        #                       ilm_trace.aug[end],
-        #                       obs,
-        #                       debug)
-        aug = propose_augment(detection_proposal[1],
+        changed_individual = sample(infected)
+        aug = propose_augment(changed_individual,
+                              detection_proposal[1],
+                              ilm_trace.network[end],
+                              ilm_trace.aug[end],
                               obs,
                               debug)
+        # aug = propose_augment(detection_proposal[1],
+        #                       ilm_trace.network[end],
+        #                       obs,
+        #                       debug)
+        # aug = propose_augment(detection_proposal[1],
+        #                       ilm_trace.network[end],
+        #                       ilm_trace.aug[end],
+        #                       obs,
+        #                       debug)
+        # aug = propose_augment(detection_proposal[1],
+        #                       obs,
+        #                       debug)
 
       else
-        aug = propose_augment(detection_proposal[1],
-                              obs,
-                              debug)
+        aug = ilm_trace.aug[end]
       end
     end
     if lp > -Inf
@@ -705,20 +680,19 @@ function MCMC(n::Int64,
       lp += ll
     end
     if lp > -Inf
-      if mod(i, 1) == 0
+      if mod(i, 2) == 0
         # Generate network proposal
-        # network = propose_network([changed_individual],
-        #                           network_rates,
-        #                           ilm_trace.network[end],
-        #                           debug)
+        network = propose_network([changed_individual],
+                                  network_rates,
+                                  ilm_trace.network[end],
+                                  debug)
         # network = propose_network(network_rates,
         #                           debug)
-        network = propose_network(network_rates,
-                                  # ilm_trace.network[end],
-                                  debug)
+        # network = propose_network(network_rates,
+        #                           # ilm_trace.network[end],
+        #                           debug)
       else
-        network = propose_network(network_rates,
-                                  debug)
+        network = ilm_trace.network[end]
       end
     end
 
@@ -827,7 +801,7 @@ function MCMC(n::Int64,
     progress && !debug && next!(progressbar)
     debug && println("")
     debug && println("Performing the $(i)th MCMC iteration")
-    if mod(i, 1) == 0
+    if mod(i, 2) == 1
       param_proposal = rand(MvNormal([ilm_trace.α[end], ilm_trace.β[end], ilm_trace.η[end], ilm_trace.γ[end]],
                                               transition_cov))
       while any(param_proposal .<= 0)
@@ -858,7 +832,7 @@ function MCMC(n::Int64,
       lp += ll
     end
     if lp > -Inf
-      if mod(i, 1) == 0
+      if mod(i, 2) == 0
         # Generate network proposal
         network = propose_network(network_rates,
                                   # ilm_trace.network[end],

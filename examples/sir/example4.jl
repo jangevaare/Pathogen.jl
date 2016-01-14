@@ -48,7 +48,7 @@ end
 opt_cov = cov([ilm_trace.α ilm_trace.β ilm_trace.γ ilm_trace.η])*(2.38^2)/4.
 MCMC(100000, opt_cov, ilm_trace, ilm_priors, obs)
 
-using Gadfly, DataFrames
+using Gadfly
 cd("/Users/justin/Desktop/pathogen")
 
 # Simulation/Maximum posteriori visualization
