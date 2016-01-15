@@ -23,14 +23,14 @@ end
 # γ: recovery rate (1/mean infectious period)
 # λ: JC69 transition/transversion rate
 
-actual, obs = surveil(pop, 2.)
+actual, obs = surveil(pop, 3.)
 
 ilm_priors = SIR_priors(Gamma(3.),
                         Gamma(5.),
                         Uniform(0., 0.002),
                         Gamma(1/7))
 
-detection_priors = Lag_priors(Uniform(1.,3.))
+detection_priors = Lag_priors(Uniform(2.5,3.5))
 
 mutation_priors = JC69_priors(Uniform(0., 0.002))
 
