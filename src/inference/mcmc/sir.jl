@@ -244,7 +244,7 @@ function MCMC(n::Int64,
   progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 25)
   debug && println("MCMC transition kernel covariance matrix:")
   debug && println(round(transition_cov, 3))
-  rejects = fill(0, size(transition_cov))
+  rejects = fill(0, size(transition_cov, 1))
   aug = ilm_trace.aug[end]
   network_rates = ilm_trace.network_rates[end]
   network_rates_previous = ilm_trace.network_rates[end]
