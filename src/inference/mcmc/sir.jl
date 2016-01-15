@@ -32,9 +32,9 @@ function initialize(ilm_priors::SIR_priors,
                    ilm_params,
                    debug)
 
-    # lp += logprior(detection_priors,
-    #                detection_params,
-    #                debug)
+    lp += logprior(detection_priors,
+                   detection_params,
+                   debug)
     if Inf > lp > -Inf
       network = propose_network(network_rates,
                                 debug)
@@ -244,16 +244,17 @@ function MCMC(n::Int64,
   progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 25)
   debug && println("MCMC transition kernel covariance matrix:")
   debug && println(round(transition_cov, 3))
-  rejects = fill(0, 2)
-  lp = fill(0., 2)
-  lp[1] = ilm_trace.logposterior[end]
-
-  infected = pathwayfrom(0, ilm_trace.network[end])[2:end]
+  rejects = fill(0, size(transition_cov))
+  aug = ilm_trace.aug[end]
+  network_rates = ilm_trace.network_rates[end]
+  network_rates_previous = ilm_trace.network_rates[end]
+  network = ilm_trace.network[end]
+  lp = [ilm_trace.logposterior[end], ilm_trace.logposterior[end]]
+  phylo_ll = 0.
+  infected = pathwayfrom(0, network)[2:end]
 
   for i = 1:n
     progress && !debug && next!(progressbar)
-    debug && println("")
-    debug && println("Performing the $(i)th MCMC iteration")
 
     param_proposal = [ilm_trace.α[end],
                       ilm_trace.β[end],
@@ -264,13 +265,11 @@ function MCMC(n::Int64,
 
     param_change = rand(MvNormal(transition_cov))
 
-    for j = 1:2
+    for j = 1:6
       lp[2] = lp[1]
-      if j == 1
-        param_proposal[1:4] += param_change[1:4]
-      else
-        param_proposal[5:6] += param_change[5:6]
-      end
+      network_rates_previous = network_rates
+      param_proposal[j] += param_change[j]
+      debug && println("MCMC step $j of iteration $i...")
 
       ilm_proposal = param_proposal[1:4]
       detection_proposal = [param_proposal[5]]
@@ -291,47 +290,40 @@ function MCMC(n::Int64,
                         debug)
 
       if lp[1] > -Inf
-        if j == 2
+        if j == 5
           # Generate data augmentation proposal
           changed_individual = sample(infected)
           aug = propose_augment(changed_individual,
                                 detection_proposal[1],
-                                ilm_trace.network[end],
+                                network_rates,
                                 ilm_trace.aug[end],
                                 obs,
                                 debug)
-        else
-          aug = ilm_trace.aug[end]
         end
       end
 
       if lp[1] > -Inf
         # SIR loglikelihood
-        ll, network_rates = SIR_loglikelihood(ilm_proposal[1],
-                                              ilm_proposal[2],
-                                              ilm_proposal[3],
-                                              ilm_proposal[4],
-                                              aug,
-                                              obs,
-                                              debug,
-                                              dist)
-        lp[1] += ll
-      end
-
-      if lp[1] > -Inf
-        if j == 2
+        ll, network_rates[1] = SIR_loglikelihood(ilm_proposal[1],
+                                                 ilm_proposal[2],
+                                                 ilm_proposal[3],
+                                                 ilm_proposal[4],
+                                                 aug,
+                                                 obs,
+                                                 debug,
+                                                 dist)
+        if j == 5
           # Generate network proposal
           network = propose_network([changed_individual],
                                     network_rates,
                                     ilm_trace.network[end],
                                     debug)
-        else
-          network = ilm_trace.network[end]
         end
+        lp[1] += ll
       end
 
       if lp[1] > -Inf
-        if j == 2 || i == 1
+        if j >= 5 || i == 1
           phylo_ll = phylogenetic_network_loglikelihood(obs,
                                                         aug,
                                                         network,
@@ -342,28 +334,23 @@ function MCMC(n::Int64,
       end
 
       # Acceptance/rejection
-
       reject = MHreject(lp[1], lp[2], debug)
 
       if reject
-        if j == 1
-          param_proposal[1:4] -= param_change[1:4]
-          network_rates = ilm_trace.network_rates[end]
-        else
-          param_proposal[5:6] -= param_change[5:6]
-          aug = ilm_trace.aug[end]
-          network = ilm_trace.network[end]
-        end
-
         rejects[j] += 1
+        param_proposal[j] -= param_change[j]
+        network_rates = network_rates_previous
         lp[1] = lp[2]
         ilm_proposal = param_proposal[1:4]
         detection_proposal = [param_proposal[5]]
         mutation_proposal = [param_proposal[6]]
-
+        if j == 5
+          aug = ilm_trace.aug[end]
+          network = ilm_trace.network[end]
+        end
       end
 
-      if j == 2
+      if j == 6
         push!(ilm_trace.aug, aug)
         push!(ilm_trace.network_rates, network_rates)
         push!(ilm_trace.network, network)
