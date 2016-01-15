@@ -291,25 +291,26 @@ function MCMC(n::Int64,
 
       if lp[1] > -Inf
         if j == 5
-          # changed_individual = sample(infected)
-          # aug = propose_augment(changed_individual,
-          #                       detection_proposal[1],
-          #                       ilm_trace.network[end],
-          #                       ilm_trace.aug[end],
-          #                       obs,
-          #                       debug)
-          # aug = propose_augment(detection_proposal[1],
-          #                       ilm_trace.network[end],
-          #                       obs,
-          #                       debug)
-          # aug = propose_augment(detection_proposal[1],
-          #                       ilm_trace.network[end],
-          #                       ilm_trace.aug[end],
-          #                       obs,
-          #                       debug)
-          aug = propose_augment(detection_proposal[1],
+          # Subnetwork shift
+          changed_individual = sample(infected)
+          aug = propose_augment(changed_individual,
+                                detection_proposal[1],
+                                ilm_trace.network[end],
+                                ilm_trace.aug[end],
                                 obs,
                                 debug)
+
+          # Network restricted augmentation
+          # aug = propose_augment(detection_proposal[1],
+          #                       ilm_trace.network[end],
+          #                       ilm_trace.aug[end],
+          #                       obs,
+          #                       debug)
+
+          # Unrestricted augmentation
+          # aug = propose_augment(detection_proposal[1],
+          #                       obs,
+          #                       debug)
         end
       end
 
@@ -325,12 +326,17 @@ function MCMC(n::Int64,
                                               dist)
         if j == 5
           # Generate network proposal
-          # network = propose_network([changed_individual],
-          #                           network_rates,
-          #                           ilm_trace.network[end],
-          #                           debug)
-          network = propose_network(network_rates,
+          # Subnetwork shift
+          network = propose_network([changed_individual],
+                                    network_rates,
+                                    ilm_trace.network[end],
                                     debug)
+                                    
+          # Unrestricted augmentation
+          # network = propose_network(network_rates,
+          #                           debug)
+
+          # Network restricted augmentation
           # network = propose_network(network_rates,
           #                           ilm_trace.network[end],
           #                           debug)
