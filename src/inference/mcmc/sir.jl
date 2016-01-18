@@ -488,7 +488,6 @@ function MCMC(n::Int64,
                       ilm_trace.β[end],
                       ilm_trace.η[end],
                       ilm_trace.γ[end],
-                      detection_trace.ν[end],
                       mutation_trace.λ[end]]
 
     param_change = rand(MvNormal(transition_cov))
@@ -518,12 +517,12 @@ function MCMC(n::Int64,
         if j == 6
           # Subnetwork shift
           changed_individual = sample(infected)
-          aug = propose_augment(changed_individual,
-                                detection_proposal[1],
-                                ilm_trace.network[end],
-                                ilm_trace.aug[end],
-                                obs,
-                                debug)
+          # aug = propose_augment(changed_individual,
+          #                       detection_proposal[1],
+          #                       ilm_trace.network[end],
+          #                       ilm_trace.aug[end],
+          #                       obs,
+          #                       debug)
 
           # Network restricted augmentation
           # aug = propose_augment(detection_proposal[1],
@@ -610,7 +609,7 @@ function MCMC(n::Int64,
     end
   end
   println("MCMC acceptance rate: $(round(1.0-(rejects/(n)),4))")
-  return ilm_trace, detection_trace, mutation_trace
+  return ilm_trace, mutation_trace
 end
 
 
