@@ -4,7 +4,6 @@ Generate a nucleotide sequence of length `n`, with specific nucleotide frequenci
 function create_seq(n::Int, π_A::Float64, π_T::Float64, π_C::Float64, π_G::Float64)
   @assert(sum([π_A, π_T, π_C, π_G]) == 1, "Nucleotide frequencies must sum to 1")
   @assert(all(0 .< [π_A, π_T, π_C, π_G] .< 1), "Each nucleotide frequency must be between 0 and 1")
-  # return convert(Nucleotide2bitSeq, findn(rand(Multinomial(1, [π_A, π_T, π_C, π_G]),n))[1])
   findn(rand(Multinomial(1, [π_A, π_T, π_C, π_G]),n))[1]
 end
 
@@ -14,13 +13,12 @@ Create an infection database.
 `init_seq` is assigned to the "external" infection source.
 Each column of the `init_var` is assigned to an individual
 """
-# function create_population(init_seq::Nucleotide2bitSeq, init_var::Array)
 function create_population(init_seq::Vector{Int64}, init_var::Array)
   # exposure times, exposure source, infection times, recovery times, covariate times, sequence times
   events = Array[Array[[NaN], [NaN],  [NaN],  [NaN],  [NaN], [0.]]]
 
   # covariate history, sequence history
-  history = Array[Array[Array[fill(NaN, length(init_var[:,1]))],[init_seq]]]
+  history = Array[Array[Array[fill(NaN, length(init_var[:,1]))],init_seq]]
 
   # event time, event type
   timeline = Array[[0.],[(0,0,0)]]
@@ -28,7 +26,7 @@ function create_population(init_seq::Vector{Int64}, init_var::Array)
   # push individuals to these arrays.
   for r = 1:size(init_var,2)
     push!(events, Array[Float64[],    Int64[],     Float64[],     Float64[],     [0.],   Float64[]])
-    push!(history, Array[Array[init_var[:,r]], Vector{Vector{Int64}}[]])
+    push!(history, Array[Array[init_var[:,r]], Array{Int64,2}[]])
   end
 
   # save as a population object type
@@ -79,8 +77,8 @@ Generate an array which contains rates (for exponential distribution) for moveme
 """
 function create_ratearray(population::Population, susceptibility_fun::Function, substitution_matrix::Array)
   # Set up an array of zeros with rows for each potential source of exposure, for infection, recovery, and mutation at each base location, and columns for each individual...
-  rate_array = RateArray(fill(0., (length(population.events)+2+length(population.history[1][2][1]), length(population.events))),
-                         fill((0,0,0), (length(population.events)+2+length(population.history[1][2][1]), length(population.events))))
+  rate_array = RateArray(fill(0., (length(population.events)+2+length(population.history[1][2]), length(population.events))),
+                         fill((0,0,0), (length(population.events)+2+length(population.history[1][2]), length(population.events))))
 
   # Define events
   for r in 1:size(rate_array.events, 1)
@@ -146,13 +144,13 @@ function onestep!(rate_array::RateArray, population::Population, susceptibility_
     # Update population - exposure source
     push!(population.events[event[2]][2], event[3])
     # Update population - sequence
-    population.history[event[2]][2] = [population.history[event[3]][2][end]]
+    population.history[event[2]][2] = population.history[event[3]][2][:,end]
     # Update population - sequence time
     push!(population.events[event[2]][6], population.timeline[1][end])
     # Update rates - mutation rates
     substitution_matrix[[1,6,11,16]] = 0.
     rate_ref = sum(substitution_matrix,2)[:]
-    rate_array.rates[length(population.events)+3:end, event[2]] = rate_ref[population.history[event[2]][2][1]]
+    rate_array.rates[length(population.events)+3:end, event[2]] = rate_ref[population.history[event[2]][2][:,end]]
 
   elseif event[1] == 2
     # E => I
@@ -184,13 +182,13 @@ function onestep!(rate_array::RateArray, population::Population, susceptibility_
     # Mutation
     # Update population - sequence
     substitution_matrix[[1,6,11,16]] = 0.
-    population.history[event[2]][2] = push!(population.history[event[2]][2], population.history[event[2]][2][end])
-    population.history[event[2]][2][end][event[3]] = findfirst(rand(Multinomial(1, substitution_matrix[:,population.history[event[2]][2][end][event[3]]][:]/sum(substitution_matrix[:,population.history[event[2]][2][end][event[3]]][:]))))
+    population.history[event[2]][2] = hcat(population.history[event[2]][2], population.history[event[2]][2][:,end])
+    population.history[event[2]][2][event[3],end] = findfirst(rand(Multinomial(1, substitution_matrix[population.history[event[2]][2][event[3], end],:][:]/sum(substitution_matrix[population.history[event[2]][2][event[3], end],:]))))
     # Update population - sequence time
     push!(population.events[event[2]][6], population.timeline[1][end])
     # Update rates - mutation rates
-    rate_ref = sum(substitution_matrix,2)[:]
-    rate_array.rates[size(rate_array.rates,2)+2+event[3], event[2]] = rate_ref[convert(Int64, population.history[event[2]][2][end][event[3]])]
+    rate_ref = sum(substitution_matrix,1)[:]
+    rate_array.rates[size(rate_array.rates,2)+2+event[3], event[2]] = rate_ref[population.history[event[2]][2][event[3], end]]
   end
   return rate_array, population
 end
@@ -223,7 +221,7 @@ function surveil(population::Population, ν::Float64)
     # Infectious time (observed with latency)
     if length(population.events[i][3]) > 0
       infectious_actual[i-1] = population.events[i][3][1]
-      seq_actual[i-1] = convert(Vector{Int64}, population.history[i][2][findlast(infectious_actual[i-1] .>= population.events[i][6])])
+      seq_actual[i-1] = population.history[i][2][:,findlast(infectious_actual[i-1] .>= population.events[i][6])]
       if ν < Inf
         infectious_observed[i-1] = infectious_actual[i-1] + rand(Exponential(1/ν))
       elseif ν == Inf
@@ -233,7 +231,7 @@ function surveil(population::Population, ν::Float64)
       if length(population.events[i][4]) > 0 && infectious_observed[i-1] >= population.events[i][4][1]
         infectious_observed[i-1] = NaN
       else
-        seq_observed[i-1] = population.history[i][2][findlast(infectious_observed[i-1] .>= population.events[i][6])]
+        seq_observed[i-1] = population.history[i][2][:,findlast(infectious_observed[i-1] .>= population.events[i][6])]
       end
     end
 

@@ -1,4 +1,4 @@
-import Base.convert
+# import Base.convert
 
 
 import Base.maximum
@@ -10,7 +10,7 @@ import Base.maximum
 # function convert(::Type{Vector{Int64}}, x::Nucleotide2bitSeq)
 #   return sub2ind((2,2), x.b1 .+1, x.b2 .+1)
 # end
-# 
+#
 #
 # """
 # Add a conversion method to move from an integer vector to a nucleotide sequence

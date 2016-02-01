@@ -44,7 +44,7 @@ export
   findstate,
   findnetwork,
   plotdata,
-  convert,
+  # convert,
   maximum,
   isseq,
   pathwayto,
