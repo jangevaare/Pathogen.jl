@@ -71,65 +71,49 @@ for i = 2:length(pop.events)
   end
 end
 
-states, routes = plotdata(actual,
-                          pop,
-                          maximum(obs)+1)
 
-
-p1 = plot(layer(correctness, x="x", y="y", Geom.point, color="correct"),
-          # layer(states, x="x", y="y", Geom.point),
-          layer(routes, x="x", y="y", group="line", Geom.polygon),
-          Scale.color_continuous(minvalue=0., maxvalue=1.),
-          Guide.colorkey("Posterior Accuracy"),
-          Theme(panel_opacity=1.,
-                panel_fill=colorant"white",
-                default_color=colorant"black",
-                background_color=colorant"white"))
-draw(PNG("SIR3_accuracy.png", 8inch, 8inch), p1)
-
-
-# Simulation/Maximum posteriori visualization
-images = 500
-max_tracelp=findfirst(ilm_trace.logposterior.==maximum(ilm_trace.logposterior))
-
-for time = 1:images
-  states, routes = plotdata(actual,
-                            pop,
-                            (time*maximum([maximum(ilm_trace.aug[max_tracelp]), maximum(obs)])/images))
-  p1 = plot(layer(states, x="x", y="y", color="state", Geom.point),
-            layer(routes, x="x", y="y", group="line", Geom.polygon),
-            Theme(panel_opacity=1.,
-                  panel_fill=colorant"white",
-                  default_color=colorant"black",
-                  background_color=colorant"white"))
-
-  states, routes = plotdata(obs,
-                            ilm_trace,
-                            max_tracelp,
-                            (time*maximum([maximum(ilm_trace.aug[max_tracelp]), pop.timeline[1][end]])/images))
-  p2 = plot(layer(states, x="x", y="y", color="state", Geom.point),
-            layer(routes, x="x", y="y", group="line", Geom.polygon),
-            Theme(panel_opacity=1.,
-                  panel_fill=colorant"white",
-                  default_color=colorant"black",
-                  background_color=colorant"white"))
-
-  filenumber = time/images
-  filenumber = prod(split("$filenumber", ".", limit=2))
-  filenumber *= prod(fill("0", 5-length(filenumber)))
-  draw(PNG("SIR_simulation_$filenumber.png", 15cm, 20cm), vstack(p1,p2))
-end
-
-# Assemble into animation
-run(`convert -delay 10 -loop 0 -layers optimize SIR_simulation_*.png SIR3_animation_combined.gif`)
-
-# Remove frames
-for time = 1:images
-  filenumber = time/images
-  filenumber = prod(split("$filenumber", ".", limit=2))
-  filenumber *= prod(fill("0", 5-length(filenumber)))
-  rm("SIR_simulation_$filenumber.png")
-end
+# # Simulation/Maximum posteriori visualization
+# images = 500
+# max_tracelp=findfirst(ilm_trace.logposterior.==maximum(ilm_trace.logposterior))
+#
+# for time = 1:images
+#   states, routes = plotdata(actual,
+#                             pop,
+#                             (time*maximum([maximum(ilm_trace.aug[max_tracelp]), maximum(obs)])/images))
+#   p1 = plot(layer(states, x="x", y="y", color="state", Geom.point),
+#             layer(routes, x="x", y="y", group="line", Geom.polygon),
+#             Theme(panel_opacity=1.,
+#                   panel_fill=colorant"white",
+#                   default_color=colorant"black",
+#                   background_color=colorant"white"))
+#
+#   states, routes = plotdata(obs,
+#                             ilm_trace,
+#                             max_tracelp,
+#                             (time*maximum([maximum(ilm_trace.aug[max_tracelp]), pop.timeline[1][end]])/images))
+#   p2 = plot(layer(states, x="x", y="y", color="state", Geom.point),
+#             layer(routes, x="x", y="y", group="line", Geom.polygon),
+#             Theme(panel_opacity=1.,
+#                   panel_fill=colorant"white",
+#                   default_color=colorant"black",
+#                   background_color=colorant"white"))
+#
+#   filenumber = time/images
+#   filenumber = prod(split("$filenumber", ".", limit=2))
+#   filenumber *= prod(fill("0", 5-length(filenumber)))
+#   draw(PNG("SIR_simulation_$filenumber.png", 15cm, 20cm), vstack(p1,p2))
+# end
+#
+# # Assemble into animation
+# run(`convert -delay 10 -loop 0 -layers optimize SIR_simulation_*.png SIR3_animation_combined.gif`)
+#
+# # Remove frames
+# for time = 1:images
+#   filenumber = time/images
+#   filenumber = prod(split("$filenumber", ".", limit=2))
+#   filenumber *= prod(fill("0", 5-length(filenumber)))
+#   rm("SIR_simulation_$filenumber.png")
+# end
 
 
 # Inference visualization
@@ -152,6 +136,7 @@ draw(PNG("SIR3_traceplot.png", 8inch, 6inch),
           y="value",
           color="parameter",
           Geom.line,
+          Scale.y_log10,
           Guide.colorkey("Parameter"),
           Theme(panel_opacity=1.,
                 panel_fill=colorant"white",

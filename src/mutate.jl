@@ -1,18 +1,6 @@
 """
 Returns the JC69 Q matrix with parameter λ
 """
-function jc69(θ::Vector{Float64})
-  λ = θ[1]
-  return [[-3λ λ λ λ]
-          [λ -3λ λ λ]
-          [λ λ -3λ λ]
-          [λ λ λ -3λ]]
-end
-
-
-"""
-Returns the JC69 Q matrix with parameter λ
-"""
 function jc69q(θ::Vector{Float64})
   λ = θ[1]
   return [[-3λ λ λ λ]
@@ -27,8 +15,8 @@ Returns the JC69 P matrix with parameter λ, for time t
 """
 function jc69p(θ::Vector{Float64}, t::Float64)
   λ = θ[1]
-  p0 = 0.25 + 0.75*exp(-t*λ)
-  p1 = 0.25 - 0.25*exp(-t*λ)
+  p0 = 0.25 + 0.75*exp(-t*λ*4)
+  p1 = 0.25 - 0.25*exp(-t*λ*4)
   return [[p0 p1 p1 p1]
           [p1 p0 p1 p1]
           [p1 p1 p0 p1]
