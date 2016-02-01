@@ -1,45 +1,4 @@
-# import Base.convert
-
-
 import Base.maximum
-
-
-# """
-# Add a conversion method to move from Nucleotide to an integer vector
-# """
-# function convert(::Type{Vector{Int64}}, x::Nucleotide2bitSeq)
-#   return sub2ind((2,2), x.b1 .+1, x.b2 .+1)
-# end
-#
-#
-# """
-# Add a conversion method to move from an integer vector to a nucleotide sequence
-# """
-# function convert(::Type{Nucleotide2bitSeq}, x::Vector{Int64})
-#   b1,b2 = ind2sub((2,2), x)
-#   if length(x) == 1
-#     return Nucleotide2bitSeq(convert(BitArray, [b1 - 1]), convert(BitArray, [b2 - 1]))
-#   else
-#     return Nucleotide2bitSeq(convert(BitArray, b1 - 1), convert(BitArray, b2 - 1))
-#   end
-# end
-#
-#
-# """
-# Add a conversion method to move from nucleotide base to an integer
-# """
-# function convert(::Type{Int64}, x::Nucleotide2bitBase)
-#   return sub2ind((2,2), x.b1 .+1, x.b2 .+1)
-# end
-#
-#
-# """
-# Add a conversion method to move from an integer to a nucleotide base
-# """
-# function convert(::Type{Nucleotide2bitBase}, x::Int64)
-#   b1,b2 = ind2sub((2,2), x)
-#   return Nucleotide2bitBase(convert(Bool, b1 - 1), convert(Bool, b2 - 1))
-# end
 
 
 """
@@ -489,4 +448,20 @@ function isseq(x::Vector{Any})
     end
   end
   return seq
+end
+
+
+"""
+Mutation matrix
+"""
+function mutmat(obs::Observed)
+  mutations = fill(0, (length(obs.seq), length(obs.seq)))
+  for i = 1:length(obs.seq)
+    for j = 1:(i-1)
+      mutations[i,j] = sum(obs.seq[i] .!= obs.seq[j])
+    end
+  end
+  mutations += mutations'
+  mutations[mutations .== 400] = 0
+  return mutations
 end
