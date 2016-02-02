@@ -352,11 +352,56 @@ end
 
 
 """
+Return all transmission pathways leading to specified individuals
+"""
+function pathwaysto(infections::Vector{Int64}, network::Array{Bool,2}, depth=0::Int64, debug=false::Bool)
+  paths = Array[Int64[]]
+  for i = 1:length(infections)
+    if i > 1
+      push!(paths, Int64[])
+    end
+    push!(paths[i], infections[i])
+    if depth == 0
+      while paths[i][end] > 0
+        push!(paths[i], findfirst(network[:, paths[i][end]])-1)
+      end
+    elseif depth > 0
+      while paths[i][end] > 0 && length(paths[i]) <= depth
+        push!(paths[i], findfirst(network[:, paths[i][end]])-1)
+      end
+    end
+    if debug
+      println("Pathway to: $(paths[i])")
+    end
+  end
+  return paths
+end
+
+
+"""
 Return all transmission pathways
 """
 function pathwaysto(network::Array{Bool,2}, debug=false::Bool)
   infections = find(sum(network,1))
   return pathwaysto(infections, network, debug)
+end
+
+
+"""
+Return a left justified array of max `depth`, with transmission pathways leading
+to specified individuals
+"""
+function pathwaysto_array(infections::Vector{Int64}, network::Array{Bool,2}, depth::Int64, debug=false::Bool)
+  paths = fill(0, (length(infectious, depth+1)))
+  paths[:,1] = infectious
+  for i = 1:length(infectious)
+    level = 0
+    while level < depth && paths[i, level+1] > 0
+      level += 1
+      paths[i, level + 1] = findfirst(network[:, paths[i, level][end]])-1
+    end
+  end
+  return paths
 end
 
 
@@ -434,6 +479,7 @@ function pathwaysfrom(network::Array{Bool,2}, depth=0::Int64, debug=false::Bool)
   return pathwaysfrom(infections, network, depth, debug)
 end
 
+
 pathwaysfrom(network::Array{Bool,2}, debug::Bool) = pathwaysfrom(network, 0, debug)
 
 
@@ -454,7 +500,7 @@ end
 """
 Mutation matrix
 """
-function mutmat(obs::Observed)
+function mutations_observed(obs::Observed)
   mutations = fill(0, (length(obs.seq), length(obs.seq)))
   for i = 1:length(obs.seq)
     for j = 1:(i-1)

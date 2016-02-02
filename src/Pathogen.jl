@@ -44,13 +44,14 @@ export
   findstate,
   findnetwork,
   plotdata,
-  # convert,
   maximum,
   isseq,
   pathwayto,
   pathwaysto,
+  pathwaysto_array,
   pathwayfrom,
   pathwaysfrom,
+  mutations_observed,
 
   # mutate.jl
   jc69q,

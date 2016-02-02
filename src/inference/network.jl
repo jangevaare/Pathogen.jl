@@ -135,10 +135,10 @@ end
 Loglikelihood for a transmission network based on sequence data and event timing
 """
 function phylogenetic_network_loglikelihood(obs::Observed,
-                                            aug::Augmented,
-                                            network::Array{Bool, 2},
-                                            p_matrix::Function,
-                                            debug=false::Bool)
+                                                     aug::Augmented,
+                                                     network::Array{Bool, 2},
+                                                     p_matrix::Function,
+                                                     debug=false::Bool)
   ll = 0.
   infected = find(obs.sequenced)
   seq_dist = seq_distances(obs, aug, network, debug)
@@ -156,6 +156,47 @@ function phylogenetic_network_loglikelihood(obs::Observed,
   end
   return ll
 end
+
+
+# """
+# Loglikelihood for a transmission network based on sequence data and event timing
+# """
+# function phylogenetic_network_loglikelihood(obs::SIR_observed,
+#                                             aug::SIR_augmented,
+#                                             network::Array{Bool, 2},
+#                                             p_matrix::Function,
+#                                             debug=false::Bool)
+#
+#   # Initialize
+#   p_array = fill(0., ((sum(obs.sequenced)*2)-1, length(obs.seq[findfirst(obs.sequenced)]), 4))
+#
+#   # Terminal nodes
+#   pathways = pathwaysto(find(obs.sequenced), network, 1, debug)
+#   for i = 1:sum(obs.sequenced)
+#     depth[i] = length(pathways[i][2:end])
+#     p_array[i,:,:] = p_matrix(obs.infectious[pathways[i][1]] - obs.infectious[pathways[i][1]])[:,obs.seq[pathways[i][1]]]
+#   end
+#
+#   # Inner nodes
+#   id_order = sort(aug.infectious[obs.sequenced])
+#
+#
+#   id_order = pathwaym(0, network, 1, debug)[end:2]
+#   id_order = id_order[obs.sequenced[id_order]]
+#
+#   pathways = pathwaysto(id_order, network, 1, debug)
+#   j = 1
+#   current_node = pathways[1][2]
+#   for i = 1:length(id_order)
+#     if pathway[i][2] != current_node
+#       j += 1
+#       current_node = pathway[i][2]
+#     end
+#     p_array[sum(obs.sequenced)+j,:,:] = p_matrix(obs.infectious[pathways[i][1]] - aug.infectious[pathways[i][1]])[:,obs.seq[pathways[i][1]]] .*
+#
+#
+#   end
+# end
 
 
 """
