@@ -167,6 +167,10 @@ end
 #                                             p_matrix::Function,
 #                                             debug=false::Bool)
 #
+#   # Build network outwards
+#
+#   # Evaluate likelihood inwards
+#
 #   # Initialize
 #   p_array = fill(0., ((sum(obs.sequenced)*2)-1, length(obs.seq[findfirst(obs.sequenced)]), 4))
 #

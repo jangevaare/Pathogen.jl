@@ -80,7 +80,7 @@ MCMC(100000,
      mutation_priors,
      obs)
 
-using Gadfly, DataFrames
+using Gadfly
 cd("/Users/justin/Desktop/pathogen")
 
 # Simulation/Maximum posteriori visualization
