@@ -1,5 +1,5 @@
 module Pathogen
 
-# package code goes here
+  include("population.jl")
 
 end # module
