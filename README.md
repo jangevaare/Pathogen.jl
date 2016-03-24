@@ -33,32 +33,32 @@ Pathogen.jl utilizes the [PhyloTrees.jl]("https://github.com/jangevaare/PhyloTre
 
 3. Create the following risk functions:
 
-       function susceptibility(Θ::Vector{Float64}, population::DataFrame, i::Int64)
-         # function of risk factors associated with the susceptibility of a susceptible
-         # individual i
-       end
-
-       function transmissibility(Θ::Vector{Float64}, population::DataFrame, k::Int64)
-         # function of risk factors associated with transmission of an infection from an
-         # infectious individual k
-       end
-
-       function infectivity(Θ::Vector{Float64}, population::DataFrame, i::Int64, k::Int64)
-         # function of risk factors involving both a susceptible individual i and an
-         # infectious individual k
-       end
-
-       function sparks(Θ::Vector{Float64}, population::DataFrame, i::Int64)
-         # function of risk factors associated with transmission of an infection from an
-         # external disease source to a susceptible individual i
-       end
-
-       function latency(Θ::Vector{Float64}, population::DataFrame, j::Int64)
-         # function of risk factors associated with the latency of an infection in an
-         # exposed individual j
-       end
-
-       function removal(Θ::Vector{Float64}, population::DataFrame, k::Int64)
-         # function of risk factors associated with the removal of an infectious
-         # individual k
-       end
+        function susceptibility(Θ::Vector{Float64}, population::DataFrame, i::Int64)
+          # function of risk factors associated with the susceptibility of a susceptible
+          # individual i
+        end
+ 
+        function transmissibility(Θ::Vector{Float64}, population::DataFrame, k::Int64)
+          # function of risk factors associated with transmission of an infection from an
+          # infectious individual k
+        end
+ 
+        function infectivity(Θ::Vector{Float64}, population::DataFrame, i::Int64, k::Int64)
+          # function of risk factors involving both a susceptible individual i and an
+          # infectious individual k
+        end
+ 
+        function sparks(Θ::Vector{Float64}, population::DataFrame, i::Int64)
+          # function of risk factors associated with transmission of an infection from an
+          # external disease source to a susceptible individual i
+        end
+ 
+        function latency(Θ::Vector{Float64}, population::DataFrame, j::Int64)
+          # function of risk factors associated with the latency of an infection in an
+          # exposed individual j
+        end
+ 
+        function removal(Θ::Vector{Float64}, population::DataFrame, k::Int64)
+          # function of risk factors associated with the removal of an infectious
+          # individual k
+        end
