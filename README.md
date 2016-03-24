@@ -21,15 +21,15 @@ Pathogen.jl utilizes the [PhyloTrees.jl]("https://github.com/jangevaare/PhyloTre
 
 1. Create a population data frame containing covariate information for each individual in a population. This data frame should contain the location of each individual. Each row in this data frame is considered to represent a unique individual.
 
-       using DataFrames
-       population = Data.Frame(x = x_coordinates,
-                               y = y_coordinates,
-                               age = age)
+        using DataFrames
+        population = Data.Frame(x = x_coordinates,
+                                y = y_coordinates,
+                                age = age)
 
 2. Generate the event data frame using the Pathogen.jl package.
 
-       using Pathogen
-       events = create_events(population)
+        using Pathogen
+        events = create_events(population)
 
 3. Create the following risk functions:
 
