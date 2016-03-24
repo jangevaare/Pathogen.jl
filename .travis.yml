@@ -12,3 +12,5 @@ notifications:
 #script:
 #  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
 #  - julia -e 'Pkg.clone(pwd()); Pkg.build("Pathogen"); Pkg.test("Pathogen"; coverage=true)'
+git:
+  depth: 99999

@@ -1,5 +1,14 @@
 module Pathogen
 
-  include("population.jl")
+using DataFrames
+using PhyloTrees
+
+  include("risks.jl")
+  include("simulate.jl")
+
+  export
+    RiskFunctions,
+    RiskParameters,
+    simulate
 
 end # module
