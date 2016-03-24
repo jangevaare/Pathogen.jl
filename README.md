@@ -60,5 +60,5 @@ Pathogen.jl utilizes the [PhyloTrees.jl]("https://github.com/jangevaare/PhyloTre
 
        function removal(Θ::Vector{Float64}, population::DataFrame, k::Int64)
          # function of risk factors associated with the removal of an infectious
-         $ individual k
+         # individual k
        end
