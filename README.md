@@ -78,10 +78,12 @@ Pathogen.jl utilizes the [PhyloTrees.jl](https://github.com/jangevaare/PhyloTree
 
 4. Simulate `n` events and the associated transmission tree using the [Pathogen.jl](https://github.com/jangevaare/Pathogen.jl/tree/alpha) package
 
-        events, tree = simulate(n, population, risk_funcs, risk_params)
+        events, trees = simulate(n, population, risk_funcs, risk_params)
 
-5. Now, using the [PhyloTrees.jl](https://github.com/jangevaare/PhyloTrees.jl) package, simulate sequence data for the previously generated transmission tree
+5. Now, using the [PhyloTrees.jl](https://github.com/jangevaare/PhyloTrees.jl) package, simulate sequence data for each of the previously generated transmission trees
 
         using PhyloTrees
         substitution_model = JC69([1.0e-5])
-        simulate!(tree, substitution_model)
+        for i in trees
+          simulate!(i, substitution_model)
+        end
