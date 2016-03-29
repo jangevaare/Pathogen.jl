@@ -9,6 +9,7 @@ type RiskFunctions
   sparks::Function
   latency::Function
   removal::Function
+  detection::Function
 end
 
 
@@ -22,4 +23,5 @@ type RiskParameters
   sparks::Vector{Float64}
   latency::Vector{Float64}
   removal::Vector{Float64}
+  detection::Vector{Float64}
 end

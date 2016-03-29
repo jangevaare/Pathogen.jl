@@ -58,6 +58,11 @@ Pathogen.jl utilizes the [PhyloTrees.jl](https://github.com/jangevaare/PhyloTree
           # individual k
         end
 
+        function detection_func(parameters::Vector{Float64}, population::DataFrame, k::Int64)
+          # function of risk factors associated with the detection of an infectious
+          # individual k
+        end
+
 
 3. Collect these risk functions in the `RiskFunctions` type, and parameterizations in the `RiskParameters` type
 
@@ -67,13 +72,15 @@ Pathogen.jl utilizes the [PhyloTrees.jl](https://github.com/jangevaare/PhyloTree
                                    infectivity_func,
                                    sparks_func,
                                    latency_func,
-                                   removal_func)
+                                   removal_func,
+                                   detection_func)
         risk_params = RiskParameters(susceptibility_params,
                                      transmissibility_params,
                                      infectivity_params,
                                      sparks_params,
                                      latency_params,
-                                     removal_params)
+                                     removal_params,
+                                     detection_params)
 
 
 4. Simulate `n` events and the associated transmission tree using the [Pathogen.jl](https://github.com/jangevaare/Pathogen.jl/tree/alpha) package

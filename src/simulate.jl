@@ -30,10 +30,31 @@ function simulate(n::Int64,
                   risk_funcs::RiskFunctions,
                   risk_params::RiskParameters,
                   index_case=1::Int64)
-  events = DataFrame(time=Float64[], event=Tuple[], node=Tuple[])
-  trees = Tree[]
-  time = 0.0
+
+  individuals = size(DataFrame, 2)
 
   # Initialize rate arrays
-  rates = Rates(size(DataFrame, 2))
+  rates = Rates(individuals)
+  rates.infection[index_case] = risk_funcs.latency([risk_params.latency], population, index_case)
+  for i in [1:(index_case-1); (index_case+1):individuals]
+    rates.external_exposure[i] = risk_funcs.sparks([risk_params.sparks], population, i)
+  end
+
+  # Initialize events data frame
+  events = DataFrame(time=Float64[], event=Tuple[], node=Tuple[])
+  push!(events, [0. (2, index_case) (1, 1)])
+
+  # Initialize tree vector
+  trees = Tree[]
+  push!(trees, Tree())
+  add_node!(trees[1])
+
+  info("Initialization complete")
+
+
+
+  # rates.internal_exposure[k, i] = risk_funcs.susceptibility([risk_params.susceptibility], population, i) *
+  #                                          risk_funcs.transmissibility([risk_params.transmissibility], population, k) *
+  #                                          risk_funcs.infectivity([risk_params.infectivity], population, i, k)
+
 end
