@@ -9,6 +9,6 @@ using PhyloTrees
   export
     RiskFunctions,
     RiskParameters,
-    simulate
+    Rates
 
 end # module

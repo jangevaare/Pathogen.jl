@@ -1,60 +1,148 @@
 """
-Stores rate information for simulation purposes
+An array which stores information for simulation purposes
 """
 type Rates
-  internal_exposure::Array{Float64,2}
-  external_exposure::Vector{Float64}
-  infection::Vector{Float64}
-  detection::Vector{Float64}
-  removal::Vector{Float64}
+  rates::Array{Array{Float64}, 1}
+  mask::Array{Array{Bool}, 1}
 
   function Rates(individuals::Int64)
-    if individuals <= 0
-      error("At least one individual must be present")
-    end
-    return new(fill(0., (individuals, individuals)),
-               fill(0., individuals),
-               fill(0., individuals),
-               fill(0., individuals),
-               fill(0., individuals))
+    rates = Array{Float64}[]
+    mask = Array{Bool}[]
+
+    # External exposure rates
+    push!(rates, fill(0., individuals))
+    push!(mask, fill(false, individuals))
+
+    # Internal exposure rates
+    push!(rates, fill(0., (individuals, individuals)))
+    push!(mask, fill(false, (individuals, individuals)))
+
+    # Infection rates
+    push!(rates, fill(0., individuals))
+    push!(mask, fill(false, individuals))
+
+    # Removal rates
+    push!(rates, fill(0., individuals))
+    push!(mask, fill(false, individuals))
+
+    return new(rates, mask)
   end
 end
 
 
 """
-Simulate events and a transmission tree for a
-phylodynamic individual level model of infectious disease
+Create an initialize rate array
 """
-function simulate(n::Int64,
-                  population::DataFrame,
-                  risk_funcs::RiskFunctions,
-                  risk_params::RiskParameters,
-                  index_case=1::Int64)
-
-  individuals = size(DataFrame, 2)
-
-  # Initialize rate arrays
+function initialize_rates(population::DataFrame,
+                          risk_funcs::RiskFunctions,
+                          risk_params::RiskParameters)
+  individuals = size(population, 2)
   rates = Rates(individuals)
-  rates.infection[index_case] = risk_funcs.latency([risk_params.latency], population, index_case)
-  for i in [1:(index_case-1); (index_case+1):individuals]
-    rates.external_exposure[i] = risk_funcs.sparks([risk_params.sparks], population, i)
+  for i = 1:individuals
+    # External exposure
+    rates.rates[1][i] = risk_funcs.sparks(risk_params.sparks, population, i)
+
+    # Internal exposure
+    for k = 1:individuals
+      if i !== k
+        rates.rates[2][k, i] = risk_funcs.susceptibility([risk_params.susceptibility], population, i) *
+                               risk_funcs.transmissibility([risk_params.transmissibility], population, k) *
+                               risk_funcs.infectivity([risk_params.infectivity], population, i, k)
+      end
+    end
   end
 
-  # Initialize events data frame
-  events = DataFrame(time=Float64[], event=Tuple[], node=Tuple[])
-  push!(events, [0. (2, index_case) (1, 1)])
+  # Infection onset
+  for j = 1:individuals
+    rates.rates[3][j] = risk_funcs.latency(risk_params.latency, population, j)
+  end
 
-  # Initialize tree vector
-  trees = Tree[]
-  push!(trees, Tree())
-  add_node!(trees[1])
+  # Removal
+  for k = 1:individuals
+    rates.rates[4][k] = risk_funcs.removal(risk_params.removal, population, k)
+  end
 
-  info("Initialization complete")
+  # Mask
+  rates.mask[1][:] = true
+
+  return rates
+end
 
 
+import Base.getindex
 
-  # rates.internal_exposure[k, i] = risk_funcs.susceptibility([risk_params.susceptibility], population, i) *
-  #                                          risk_funcs.transmissibility([risk_params.transmissibility], population, k) *
-  #                                          risk_funcs.infectivity([risk_params.infectivity], population, i, k)
 
+function getindex(x::Rates, i, j)
+  return x.mask[i][j] * x.rates[i][j]
+end
+
+
+function getindex(x::Rates, i)
+  return x.mask[i] .* x.rates[i]
+end
+
+
+"""
+A function to generate an event time and event type from a rate array
+"""
+function generate_event(rates::Rates,
+                        time=0.::Float64)
+  totals = [sum(rates[1]);
+            sum(rates[2]);
+            sum(rates[3]);
+            sum(rates[4])]
+  total = sum(totals)
+  if total < Inf
+
+    # Generate event time
+    time += rand(Exponential(1/total))
+
+    # Generate event type and index
+    event_type = findfirst(rand(Multinomial(1, totals/total)))
+    event_index = findfirst(rand(Multinomial(1, rates[event_type][:]/totals[event_type])))
+  else
+    event_type = findfirst(totals .== Inf)
+    event_index = findfirst(rates[event_type][:] .== Inf)
+  end
+  return time, (event_type, event_index)
+end
+
+
+"""
+A function to update a rate array base on an event which has occurred
+"""
+function update_rates!(rates::Rates,
+                       event::Tuple{Int64, Int64},
+                       population::DataFrame,
+                       risk_funcs::RiskFunctions,
+                       risk_params::RiskParameters)
+  # External exposure
+  if event[1] == 1
+    individual = event[2]
+    rates.mask[1][individual] = false
+    rates[1][:, individual] = false
+    rates.mask[3][event[2]] = true
+
+  # Internal exposure
+  elseif event[1] == 2
+    individual = ind2sub(size(rates[2]), event[2])
+    rates.mask[1][individual] = false
+    rates.mask[2][:, individual] = false
+    rates.mask[3][event[2]] = true
+
+  # Onset of infection
+  elseif event[1] == 3
+    individual = event[2]
+    rates.mask[3][individual] = false
+    rates.mask[4][individual] = true
+    rates.mask[2][individual, :] = rates.mask[1]
+
+  # Removal
+  elseif event[1] == 4
+    individual = event[2]
+    rates[4][individual] = false
+    rates.mask[2][individual, :] = false
+  end
+
+  return rates
 end

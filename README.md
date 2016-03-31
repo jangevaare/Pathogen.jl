@@ -28,6 +28,12 @@ Pathogen.jl utilizes the [PhyloTrees.jl](https://github.com/jangevaare/PhyloTree
 
 2. Create the following risk functions. These risk functions are the components of event (disease state transition) rates.
 
+
+        function sparks_func(parameters::Vector{Float64}, population::DataFrame, i::Int64)
+          # function of risk factors associated with transmission of an infection from an
+          # external disease source to a susceptible individual i
+        end
+
         function susceptibility_func(parameters::Vector{Float64}, population::DataFrame, i::Int64)
           # function of risk factors associated with the susceptibility of a susceptible
           # individual i
@@ -43,11 +49,6 @@ Pathogen.jl utilizes the [PhyloTrees.jl](https://github.com/jangevaare/PhyloTree
           # infectious individual k
         end
 
-        function sparks_func(parameters::Vector{Float64}, population::DataFrame, i::Int64)
-          # function of risk factors associated with transmission of an infection from an
-          # external disease source to a susceptible individual i
-        end
-
         function latency_func(parameters::Vector{Float64}, population::DataFrame, j::Int64)
           # function of risk factors associated with the latency of an infection in an
           # exposed individual j
@@ -58,29 +59,22 @@ Pathogen.jl utilizes the [PhyloTrees.jl](https://github.com/jangevaare/PhyloTree
           # individual k
         end
 
-        function detection_func(parameters::Vector{Float64}, population::DataFrame, k::Int64)
-          # function of risk factors associated with the detection of an infectious
-          # individual k
-        end
-
 
 3. Collect these risk functions in the `RiskFunctions` type, and parameterizations in the `RiskParameters` type
 
         using Pathogen
-        risk_funcs = RiskFunctions(susceptibility_func,
+        risk_funcs = RiskFunctions(sparks_func,
+                                   susceptibility_func,
                                    transmissibility_func,
                                    infectivity_func,
-                                   sparks_func,
                                    latency_func,
-                                   removal_func,
-                                   detection_func)
-        risk_params = RiskParameters(susceptibility_params,
+                                   removal_func)
+        risk_params = RiskParameters(sparks_params,
+                                     susceptibility_params,
                                      transmissibility_params,
                                      infectivity_params,
-                                     sparks_params,
                                      latency_params,
-                                     removal_params,
-                                     detection_params)
+                                     removal_params)
 
 
 4. Simulate `n` events and the associated transmission tree using the [Pathogen.jl](https://github.com/jangevaare/Pathogen.jl/tree/alpha) package
