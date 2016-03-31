@@ -112,10 +112,7 @@ end
 A function to update a rate array base on an event which has occurred
 """
 function update_rates!(rates::Rates,
-                       event::Tuple{Int64, Int64},
-                       population::DataFrame,
-                       risk_funcs::RiskFunctions,
-                       risk_params::RiskParameters)
+                       event::Tuple{Int64, Int64})
   # External exposure
   if event[1] == 1
     individual = event[2]
@@ -145,4 +142,34 @@ function update_rates!(rates::Rates,
   end
 
   return rates
+end
+
+
+"""
+Initialize a simulation with an events data frame and a transmission tree for a
+phylodynamic individual level model of infectious disease
+"""
+function initialize_simulation(population::DataFrame,
+                               risk_funcs::RiskFunctions,
+                               risk_params::RiskParameters,
+                               index_case=1::Int64)
+  # Initialize rate array
+  rates = initialize_rates(population,
+                           risk_funcs,
+                           risk_params)
+
+  # Initialize events data frame
+  events = DataFrame(time=Float64[], event=Tuple{Int64,Int64}[], node=Tuple{Int64,Int64}[])
+
+  # Initialize tree vector
+  trees = Tree[]
+
+  # Add index case
+  update_rates!(rates, (1, index_case))
+  push!(events, [0. (1, index_case) (1, 1)])
+  push!(trees, Tree())
+  add_node!(trees[1])
+
+  info("Initialization complete")
+  return rates, events, trees
 end
