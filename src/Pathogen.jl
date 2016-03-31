@@ -10,6 +10,7 @@ using PhyloTrees
     RiskFunctions,
     RiskParameters,
     Rates,
+    Events,
     initialize_simulation,
     simulate!
 

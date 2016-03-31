@@ -72,6 +72,31 @@ end
 
 
 """
+Events type for simulations
+"""
+type Events
+  susceptible::Vector{Float64}
+  exposed::Vector{Float64}
+  infected::Vector{Float64}
+  removed::Vector{Float64}
+  network::Array{Bool, 2}
+  function Events(population::DataFrame)
+    individuals = size(population, 1)
+    susceptible = fill(0.0, individuals)
+    exposed = fill(NaN, individuals)
+    infected = fill(NaN, individuals)
+    removed = fill(NaN, individuals)
+    network = fill(false, (individuals, individuals))
+    return new(susceptible,
+               exposed,
+               infected,
+               removed,
+               network)
+  end
+end
+
+
+"""
 A function to generate an event time and event type from a rate array
 """
 function generate_event(rates::Rates,
@@ -100,7 +125,7 @@ end
 
 
 """
-A function to update a rate array base on an event which has occurred
+A function to update a `Rates` object based on an event occurence
 """
 function update_rates!(rates::Rates,
                        event::Tuple{Int64, Int64})
@@ -128,8 +153,35 @@ function update_rates!(rates::Rates,
     rates[4][individual] = false
     rates.mask[2][individual, :] = false
   end
-
   return rates
+end
+
+
+"""
+A function to update an `Events` object based on an event occurence
+"""
+function update_events!(events::Events,
+                        event::Tuple{Int64, Int64},
+                        time::Float64)
+  # External exposure
+  if event[1] == 1
+    individual = event[2]
+    events.exposed[individual] = time
+  # Internal exposure
+  elseif event[1] == 2
+    individual = ind2sub(size(rates[2]), event[2])[2]
+    events.exposed[individual] = time
+    events.network[event[2]] = true
+  # Onset of infection
+  elseif event[1] == 3
+    individual = event[2]
+    events.infected[individual] = time
+  # Removal
+  elseif event[1] == 4
+    individual = event[2]
+    events.removed[individual] = time
+  end
+  return events
 end
 
 
@@ -146,10 +198,10 @@ function initialize_simulation(population::DataFrame,
                            risk_funcs,
                            risk_params)
   # Initialize events data frame
-  events = DataFrame(time=Float64[], event=Tuple{Int64,Int64}[])
+  events = Events(population)
   # Add index case
   update_rates!(rates, (1, index_case))
-  push!(events, [0. (1, index_case)])
+  update_events!(events, (1, index_case), 0.0)
   return rates, events
 end
 
@@ -165,8 +217,10 @@ function simulate!(n::Int64,
   while counter < n && time < Inf
     counter += 1
     time, event = generate_event(rates, time)
-    update_rates!(rates, event)
-    push!(events, [time event])
+    if time < Inf
+      update_rates!(rates, event)
+      update_events!(events, event, time)
+    end
   end
   return rates, events
 end
