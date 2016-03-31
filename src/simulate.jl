@@ -92,17 +92,20 @@ function generate_event(rates::Rates,
             sum(rates[3]);
             sum(rates[4])]
   total = sum(totals)
-  if total < Inf
-
+  if 0. < total < Inf
     # Generate event time
     time += rand(Exponential(1/total))
 
     # Generate event type and index
     event_type = findfirst(rand(Multinomial(1, totals/total)))
     event_index = findfirst(rand(Multinomial(1, rates[event_type][:]/totals[event_type])))
-  else
+  elseif total == Inf
+    time = time
     event_type = findfirst(totals .== Inf)
     event_index = findfirst(rates[event_type][:] .== Inf)
+  elseif total == 0.
+    time = Inf
+    event_type = (0, 0)
   end
   return time, (event_type, event_index)
 end
@@ -122,7 +125,7 @@ function update_rates!(rates::Rates,
 
   # Internal exposure
   elseif event[1] == 2
-    individual = ind2sub(size(rates[2]), event[2])
+    individual = ind2sub(size(rates[2]), event[2])[2]
     rates.mask[1][individual] = false
     rates.mask[2][:, individual] = false
     rates.mask[3][event[2]] = true
@@ -166,10 +169,63 @@ function initialize_simulation(population::DataFrame,
 
   # Add index case
   update_rates!(rates, (1, index_case))
-  push!(events, [0. (1, index_case) (1, 1)])
   push!(trees, Tree())
   add_node!(trees[1])
+  push!(events, [0. (1, index_case) (1, 1)])
+
 
   info("Initialization complete")
+  return rates, events, trees
+end
+
+
+"""
+Simulation function
+"""
+function simulate!(n::Int64,
+                   rates::Rates,
+                   events::DataFrame,
+                   trees::Vector{Tree})
+  counter = 0
+  time = 0.
+    time, event = generate_event(rates, time)
+  while counter < n && time < Inf
+    counter += 1
+    update_rates!(rates, event)
+    if event[1] == 1
+      push!(trees, Tree())
+      tree = length(trees)
+      node = 1
+      add_node!(trees[tree])
+      push!(events, [time event (tree, node)])
+    elseif event[1] == 2
+      # TODO
+      # tree =
+      add_node!(trees[tree])
+      target = length(trees[tree].nodes)
+      # source =
+      # branch_length =
+      add_branch!(trees[tree], branch_length, 1., source, target)
+      push!(events, [time event (tree, node)])
+    elseif event[1] == 3
+      # TODO
+      # tree =
+      add_node!(trees[tree])
+      target = length(trees[tree].nodes)
+      # source =
+      # branch_length =
+      add_branch!(trees[tree], branch_length, 1., source, target)
+      push!(events, [time event (tree, node)])
+    elseif event[1] == 4
+      # TODO
+      # tree =
+      add_node!(trees[tree])
+      target = length(trees[tree].nodes)
+      # source =
+      # branch_length =
+      add_branch!(trees[tree], branch_length, 1., source, target)
+      push!(events, [time event (tree, node)])
+    end
+  end
   return rates, events, trees
 end
