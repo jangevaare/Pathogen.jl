@@ -147,8 +147,6 @@ function initialize_simulation(population::DataFrame,
                            risk_params)
   # Initialize events data frame
   events = DataFrame(time=Float64[], event=Tuple{Int64,Int64}[])
-  # Initialize tree vector
-  trees = Tree[]
   # Add index case
   update_rates!(rates, (1, index_case))
   push!(events, [0. (1, index_case)])
