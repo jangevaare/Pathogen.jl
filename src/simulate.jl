@@ -4,27 +4,21 @@ An array which stores information for simulation purposes
 type Rates
   rates::Array{Array{Float64}, 1}
   mask::Array{Array{Bool}, 1}
-
   function Rates(individuals::Int64)
     rates = Array{Float64}[]
     mask = Array{Bool}[]
-
     # External exposure rates
     push!(rates, fill(0., individuals))
     push!(mask, fill(false, individuals))
-
     # Internal exposure rates
     push!(rates, fill(0., (individuals, individuals)))
     push!(mask, fill(false, (individuals, individuals)))
-
     # Infection rates
     push!(rates, fill(0., individuals))
     push!(mask, fill(false, individuals))
-
     # Removal rates
     push!(rates, fill(0., individuals))
     push!(mask, fill(false, individuals))
-
     return new(rates, mask)
   end
 end
@@ -41,7 +35,6 @@ function initialize_rates(population::DataFrame,
   for i = 1:individuals
     # External exposure
     rates.rates[1][i] = risk_funcs.sparks(risk_params.sparks, population, i)
-
     # Internal exposure
     for k = 1:individuals
       if i !== k
@@ -51,20 +44,16 @@ function initialize_rates(population::DataFrame,
       end
     end
   end
-
   # Infection onset
   for j = 1:individuals
     rates.rates[3][j] = risk_funcs.latency(risk_params.latency, population, j)
   end
-
   # Removal
   for k = 1:individuals
     rates.rates[4][k] = risk_funcs.removal(risk_params.removal, population, k)
   end
-
   # Mask
   rates.mask[1][:] = true
-
   return rates
 end
 
@@ -95,7 +84,6 @@ function generate_event(rates::Rates,
   if 0. < total < Inf
     # Generate event time
     time += rand(Exponential(1/total))
-
     # Generate event type and index
     event_type = findfirst(rand(Multinomial(1, totals/total)))
     event_index = findfirst(rand(Multinomial(1, rates[event_type][:]/totals[event_type])))
@@ -122,21 +110,18 @@ function update_rates!(rates::Rates,
     rates.mask[1][individual] = false
     rates[1][:, individual] = false
     rates.mask[3][event[2]] = true
-
   # Internal exposure
   elseif event[1] == 2
     individual = ind2sub(size(rates[2]), event[2])[2]
     rates.mask[1][individual] = false
     rates.mask[2][:, individual] = false
     rates.mask[3][event[2]] = true
-
   # Onset of infection
   elseif event[1] == 3
     individual = event[2]
     rates.mask[3][individual] = false
     rates.mask[4][individual] = true
     rates.mask[2][individual, :] = rates.mask[1]
-
   # Removal
   elseif event[1] == 4
     individual = event[2]
@@ -149,8 +134,8 @@ end
 
 
 """
-Initialize a simulation with an events data frame and a transmission tree for a
-phylodynamic individual level model of infectious disease
+Initialize a simulation with an events data frame for a phylodynamic individual
+level model of infectious disease
 """
 function initialize_simulation(population::DataFrame,
                                risk_funcs::RiskFunctions,
@@ -160,22 +145,14 @@ function initialize_simulation(population::DataFrame,
   rates = initialize_rates(population,
                            risk_funcs,
                            risk_params)
-
   # Initialize events data frame
-  events = DataFrame(time=Float64[], event=Tuple{Int64,Int64}[], node=Tuple{Int64,Int64}[])
-
+  events = DataFrame(time=Float64[], event=Tuple{Int64,Int64}[])
   # Initialize tree vector
   trees = Tree[]
-
   # Add index case
   update_rates!(rates, (1, index_case))
-  push!(trees, Tree())
-  add_node!(trees[1])
-  push!(events, [0. (1, index_case) (1, 1)])
-
-
-  info("Initialization complete")
-  return rates, events, trees
+  push!(events, [0. (1, index_case)])
+  return rates, events
 end
 
 
@@ -184,48 +161,14 @@ Simulation function
 """
 function simulate!(n::Int64,
                    rates::Rates,
-                   events::DataFrame,
-                   trees::Vector{Tree})
+                   events::DataFrame)
   counter = 0
   time = 0.
-    time, event = generate_event(rates, time)
   while counter < n && time < Inf
     counter += 1
+    time, event = generate_event(rates, time)
     update_rates!(rates, event)
-    if event[1] == 1
-      push!(trees, Tree())
-      tree = length(trees)
-      node = 1
-      add_node!(trees[tree])
-      push!(events, [time event (tree, node)])
-    elseif event[1] == 2
-      # TODO
-      # tree =
-      add_node!(trees[tree])
-      target = length(trees[tree].nodes)
-      # source =
-      # branch_length =
-      add_branch!(trees[tree], branch_length, 1., source, target)
-      push!(events, [time event (tree, node)])
-    elseif event[1] == 3
-      # TODO
-      # tree =
-      add_node!(trees[tree])
-      target = length(trees[tree].nodes)
-      # source =
-      # branch_length =
-      add_branch!(trees[tree], branch_length, 1., source, target)
-      push!(events, [time event (tree, node)])
-    elseif event[1] == 4
-      # TODO
-      # tree =
-      add_node!(trees[tree])
-      target = length(trees[tree].nodes)
-      # source =
-      # branch_length =
-      add_branch!(trees[tree], branch_length, 1., source, target)
-      push!(events, [time event (tree, node)])
-    end
+    push!(events, [time event])
   end
-  return rates, events, trees
+  return rates, events
 end
