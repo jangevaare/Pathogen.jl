@@ -8,6 +8,7 @@ type RiskFunctions
   transmissibility::Function
   infectivity::Function
   latency::Function
+  detection::Function
   removal::Function
 end
 
@@ -21,5 +22,6 @@ type RiskParameters
   transmissibility::Vector{Float64}
   infectivity::Vector{Float64}
   latency::Vector{Float64}
+  detection::Vector{Float64}
   removal::Vector{Float64}
 end

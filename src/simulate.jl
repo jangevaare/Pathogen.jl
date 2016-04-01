@@ -16,6 +16,9 @@ type Rates
     # Infection rates
     push!(rates, fill(0., individuals))
     push!(mask, fill(false, individuals))
+    # Detection rates
+    push!(rates, fill(0., individuals))
+    push!(mask, fill(false, individuals))
     # Removal rates
     push!(rates, fill(0., individuals))
     push!(mask, fill(false, individuals))
@@ -48,9 +51,13 @@ function initialize_rates(population::DataFrame,
   for j = 1:individuals
     rates.rates[3][j] = risk_funcs.latency(risk_params.latency, population, j)
   end
+  # Detection
+  for k = 1:individuals
+    rates.rates[4][k] = risk_funcs.detection(risk_params.detection, population, k)
+  end
   # Removal
   for k = 1:individuals
-    rates.rates[4][k] = risk_funcs.removal(risk_params.removal, population, k)
+    rates.rates[5][k] = risk_funcs.removal(risk_params.removal, population, k)
   end
   # Mask
   rates.mask[1][:] = true
@@ -78,6 +85,7 @@ type Events
   susceptible::Vector{Float64}
   exposed::Vector{Float64}
   infected::Vector{Float64}
+  detected::Vector{Float64}
   removed::Vector{Float64}
   network::Array{Bool, 2}
   function Events(population::DataFrame)
@@ -85,11 +93,13 @@ type Events
     susceptible = fill(0.0, individuals)
     exposed = fill(NaN, individuals)
     infected = fill(NaN, individuals)
+    detected = fill(NaN, individuals)
     removed = fill(NaN, individuals)
     network = fill(false, (individuals, individuals))
     return new(susceptible,
                exposed,
                infected,
+               detected,
                removed,
                network)
   end
@@ -104,7 +114,8 @@ function generate_event(rates::Rates,
   totals = [sum(rates[1]);
             sum(rates[2]);
             sum(rates[3]);
-            sum(rates[4])]
+            sum(rates[4])
+            sum(rates[5])]
   total = sum(totals)
   if 0. < total < Inf
     # Generate event time
@@ -146,11 +157,17 @@ function update_rates!(rates::Rates,
     individual = event[2]
     rates.mask[3][individual] = false
     rates.mask[4][individual] = true
+    rates.mask[5][individual] = true
     rates.mask[2][individual, :] = rates.mask[1]
-  # Removal
+  # Detection
   elseif event[1] == 4
     individual = event[2]
-    rates[4][individual] = false
+    rates.mask[4][individual] = false
+  # Removal
+  elseif event[1] == 5
+    individual = event[2]
+    rates.mask[4][individual] = false
+    rates.mask[5][individual] = false
     rates.mask[2][individual, :] = false
   end
   return rates
@@ -176,8 +193,12 @@ function update_events!(events::Events,
   elseif event[1] == 3
     individual = event[2]
     events.infected[individual] = time
-  # Removal
+  # Detection
   elseif event[1] == 4
+    individual = event[2]
+    events.detected[individual] = time
+  # Removal
+  elseif event[1] == 5
     individual = event[2]
     events.removed[individual] = time
   end
@@ -211,7 +232,7 @@ Simulation function
 """
 function simulate!(n::Int64,
                    rates::Rates,
-                   events::DataFrame)
+                   events::Events)
   counter = 0
   time = 0.
   while counter < n && time < Inf

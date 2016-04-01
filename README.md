@@ -54,6 +54,11 @@ Pathogen.jl utilizes the [PhyloTrees.jl](https://github.com/jangevaare/PhyloTree
           # exposed individual j
         end
 
+        function detection_func(parameters::Vector{Float64}, population::DataFrame, k::Int64)
+          # function of risk factors associated with the detection of an infection in an
+          # infectious individual k
+        end
+
         function removal_func(parameters::Vector{Float64}, population::DataFrame, k::Int64)
           # function of risk factors associated with the removal of an infectious
           # individual k
@@ -68,20 +73,34 @@ Pathogen.jl utilizes the [PhyloTrees.jl](https://github.com/jangevaare/PhyloTree
                                    transmissibility_func,
                                    infectivity_func,
                                    latency_func,
+                                   detection_func,
                                    removal_func)
         risk_params = RiskParameters(sparks_params,
                                      susceptibility_params,
                                      transmissibility_params,
                                      infectivity_params,
                                      latency_params,
+                                     detection_params,
                                      removal_params)
 
 
-4. Simulate `n` events and the associated transmission tree using the [Pathogen.jl](https://github.com/jangevaare/Pathogen.jl/tree/alpha) package
+4. Initialize the simulation
 
-        events, trees = simulate(n, population, risk_funcs, risk_params)
+        index_case = 1
+        rates, events = initialize_simulation(population,
+                                              risk_funcs,
+                                              risk_params,
+                                              index_case)
 
-5. Now, using the [PhyloTrees.jl](https://github.com/jangevaare/PhyloTrees.jl) package, simulate sequence data for each of the previously generated transmission trees
+5. Simulate `n` events
+
+        rates, events = simulate!(n, rates, events)
+
+6. Generate the associated phylogenetic tree
+
+        # TODO
+
+7. Now, using the [PhyloTrees.jl](https://github.com/jangevaare/PhyloTrees.jl) package, simulate sequence data for each of the previously generated transmission trees
 
         using PhyloTrees
         substitution_model = JC69([1.0e-5])
