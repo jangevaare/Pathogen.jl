@@ -87,7 +87,7 @@ type Events
   infected::Vector{Float64}
   detected::Vector{Float64}
   removed::Vector{Float64}
-  network::Array{Bool, 2}
+  network::Array{Array{Bool}, 1}
   function Events(population::DataFrame)
     individuals = size(population, 1)
     susceptible = fill(0.0, individuals)
@@ -95,7 +95,9 @@ type Events
     infected = fill(NaN, individuals)
     detected = fill(NaN, individuals)
     removed = fill(NaN, individuals)
-    network = fill(false, (individuals, individuals))
+    network = Array{Bool}[]
+    push!(fill(false, individuals))
+    push!(fill(false, (individuals, individuals)))
     return new(susceptible,
                exposed,
                infected,
@@ -184,11 +186,12 @@ function update_events!(events::Events,
   if event[1] == 1
     individual = event[2]
     events.exposed[individual] = time
+    events.network[1][event[2]] = true
   # Internal exposure
   elseif event[1] == 2
     individual = ind2sub(size(rates[2]), event[2])[2]
     events.exposed[individual] = time
-    events.network[event[2]] = true
+    events.network[2][event[2]] = true
   # Onset of infection
   elseif event[1] == 3
     individual = event[2]
@@ -244,4 +247,46 @@ function simulate!(n::Int64,
     end
   end
   return rates, events
+end
+
+
+"""
+Generate phylogenetic tree based on transmission events
+"""
+function generate_tree(events::Events)
+  trees = Tree[]
+  # Tree for external exposures
+  # push!(trees, Tree())
+  #
+  # Node for internal exposures
+  # tree =
+  # add_node!(trees[tree])
+  # source =
+  # target =
+  # branch_length =
+  # add_branch!(trees[tree], source, target, branch_length)
+  #
+  # Node for infection onsets
+  # tree =
+  # add_node!(trees[tree])
+  # source =
+  # target =
+  # branch_length =
+  # add_branch!(trees[tree], source, target, branch_length)
+  #
+  # Node for infection detections
+  # tree =
+  # add_node!(trees[tree])
+  # source =
+  # target =
+  # branch_length =
+  # add_branch!(trees[tree], source, target, branch_length)
+  #
+  # Terminal node for removals
+  # tree =
+  # add_node!(trees[tree])
+  # source =
+  # target =
+  # branch_length =
+  # add_branch!(trees[tree], source, target, branch_length)
 end

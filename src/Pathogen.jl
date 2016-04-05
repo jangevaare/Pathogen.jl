@@ -12,6 +12,7 @@ using PhyloTrees
     Rates,
     Events,
     initialize_simulation,
-    simulate!
+    simulate!,
+    generate_tree
 
 end # module
