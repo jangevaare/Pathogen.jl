@@ -1,33 +1,4 @@
 """
-An array which stores information for simulation purposes
-"""
-type Rates
-  rates::Array{Array{Float64}, 1}
-  mask::Array{Array{Bool}, 1}
-  function Rates(individuals::Int64)
-    rates = Array{Float64}[]
-    mask = Array{Bool}[]
-    # External exposure rates
-    push!(rates, fill(0., individuals))
-    push!(mask, fill(false, individuals))
-    # Internal exposure rates
-    push!(rates, fill(0., (individuals, individuals)))
-    push!(mask, fill(false, (individuals, individuals)))
-    # Infection rates
-    push!(rates, fill(0., individuals))
-    push!(mask, fill(false, individuals))
-    # Detection rates
-    push!(rates, fill(0., individuals))
-    push!(mask, fill(false, individuals))
-    # Removal rates
-    push!(rates, fill(0., individuals))
-    push!(mask, fill(false, individuals))
-    return new(rates, mask)
-  end
-end
-
-
-"""
 Create an initialize rate array
 """
 function initialize_rates(population::DataFrame,
@@ -62,49 +33,6 @@ function initialize_rates(population::DataFrame,
   # Mask
   rates.mask[1][:] = true
   return rates
-end
-
-
-import Base.getindex
-
-
-function getindex(x::Rates, i, j)
-  return x.mask[i][j] * x.rates[i][j]
-end
-
-
-function getindex(x::Rates, i)
-  return x.mask[i] .* x.rates[i]
-end
-
-
-"""
-Events type for simulations
-"""
-type Events
-  susceptible::Vector{Float64}
-  exposed::Vector{Float64}
-  infected::Vector{Float64}
-  detected::Vector{Float64}
-  removed::Vector{Float64}
-  network::Array{Array{Bool}, 1}
-  function Events(population::DataFrame)
-    individuals = size(population, 1)
-    susceptible = fill(0.0, individuals)
-    exposed = fill(NaN, individuals)
-    infected = fill(NaN, individuals)
-    detected = fill(NaN, individuals)
-    removed = fill(NaN, individuals)
-    network = Array{Bool}[]
-    push!(fill(false, individuals))
-    push!(fill(false, (individuals, individuals)))
-    return new(susceptible,
-               exposed,
-               infected,
-               detected,
-               removed,
-               network)
-  end
 end
 
 
@@ -254,10 +182,11 @@ end
 Generate phylogenetic tree based on transmission events
 """
 function generate_tree(events::Events)
-  trees = Tree[]
-  # Tree for external exposures
-  # push!(trees, Tree())
-  #
+  trees = fill(Tree(), sum(events.network[1]))
+  for i = 1:length(trees)
+    # Root node (external exposure)
+    add_node!(trees[i])
+  end
   # Node for internal exposures
   # tree =
   # add_node!(trees[tree])
