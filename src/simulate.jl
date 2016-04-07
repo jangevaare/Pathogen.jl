@@ -201,52 +201,82 @@ function generate_tree(events::Events)
       else
         # Internal exposure
         source = findfirst(events.network[2][:, event[2]])
+        priorexposures = events.network[2][source, :][:] & eventtimes[:, 1] .< eventtimes[event]
         if isnan(eventtimes[source, 2]) || eventtimes[source, 2] > eventtimes[event[2], 1]
           # Undetected exposure source
-          priorexposures = events.network[2][source, :][:] & eventtimes[:, 1] .< eventtimes[event]
           if any(priorexposures)
             # Prior exposures from this source
             parentnode = eventnodes[priorexposures, 1][indmax(eventtimes[priorexposures, 1])]
             branch_length = eventimes[event] - maximum(eventtimes[priorexposures, 1])
-            add_node!(trees[parentnode[1]])
-            newnode = (parentnode[1], length(trees[parentnode[1]].nodes))
-            add_branch!(trees[parentnode[1]], parentnode[2], newnode[2], branch_length)
-            eventnodes[event] = newnode
           else
             # No prior exposures from this source
             parentnode = eventnodes[source, 1]
             branch_length = eventtimes[event] - eventtimes[source, 1]
-            add_node!(trees[parentnode[1]])
-            newnode = (parentnode[1], length(trees[parentnode[1]].nodes))
-            add_branch!(trees[parentnode[1]], parentnode[2], newnode[2], branch_length)
-            eventnodes[event] = newnode
           end
         else
           # Detected exposure source
-          priorexposures = events.network[2][source, :][:] & eventtimes[:, 1] .< eventtimes[event]
           if !any(priorexposures) || all(eventtimes[source, 2] .> eventimes[priorexposures, 1])
             # Detection of exposure source is most recent, relevant event
             parentnode = eventnodes[source, 2]
             branch_length = eventtimes[event] - eventtimes[source, 2]
-            add_node!(trees[parentnode[1]])
-            newnode = (parentnode[1], length(trees[parentnode[1]].nodes))
-            add_branch!(trees[parentnode[1]], parentnode[2], newnode[2], branch_length)
-            eventnodes[event] = newnode
           else
             # Other, prior exposure is most recent, relevant event
             parentnode = eventnodes[priorexposures, 1][indmax(eventtimes[priorexposures, 1])]
             branch_length = eventimes[event] - maximum(eventtimes[priorexposures, 1])
-            add_node!(trees[parentnode[1]])
-            newnode = (parentnode[1], length(trees[parentnode[1]].nodes))
-            add_branch!(trees[parentnode[1]], parentnode[2], newnode[2], branch_length)
-            eventnodes[event] = newnode
           end
         end
+        add_node!(trees[parentnode[1]])
+        newnode = (parentnode[1], length(trees[parentnode[1]].nodes))
+        add_branch!(trees[parentnode[1]], parentnode[2], newnode[2], branch_length)
+        eventnodes[event] = newnode
       end
     elseif event[1] == 2
       # Detection event
+      priorexposures = events.network[2][event[2], :][:] & eventtimes[:, 1] .< eventtimes[event]
+      if any(priorexposures)
+        # Individual has exposed others before detection
+        parentnode = eventnodes[priorexposures, 1][indmax(eventtimes[priorexposures, 1])]
+        branch_length = eventimes[event] - maximum(eventtimes[priorexposures, 1])
+      else
+        # Individual has not exposed others before detection
+        parentnode = (1, event[2])
+        branch_length = eventtimes[event] - eventtimes[event[2], 2]
+      end
+      add_node!(trees[parentnode[1]])
+      newnode = (parentnode[1], length(trees[parentnode[1]].nodes))
+      add_branch!(trees[parentnode[1]], parentnode[2], newnode[2], branch_length)
+      eventnodes[event] = newnode
     elseif event[1] == 3
       # Removal event
+      priorexposures = events.network[2][event[2], :][:]
+      if any(priorexposures)
+        # Individual has exposed others prior to removal
+        if !isnan(eventtimes[event[2], 2]) && all(eventtimes[priorexposures, 1] .< eventtimes[event[2], 2])
+          # Detection is most recent and relevant event
+          parentnode = eventnodes[event[2], 2]
+          branch_length = eventtimes[event] - eventtimes[event[2], 2]
+        else
+          # Exposure is the most recent and relevant event
+          parentnode = eventnodes[priorexposures, 1][indmax(eventtimes[priorexposures, 1])]
+          branch_length = eventimes[event] - maximum(eventtimes[priorexposures, 1])
+        end
+      else
+        # No prior exposures
+        if !isnan(eventtimes[event[2], 2])
+          # Has been previously detected
+          parentnode = eventnodes[event[2], 2]
+          branch_length = eventtimes[event] - eventtimes[event[2], 2]
+        else
+          # Has not been detected
+          parentnode = eventnodes[event[2], 1]
+          branch_length = eventtimes[event] - eventtimes[event[2], 1]
+        end
+      end
+      add_node!(trees[parentnode[1]])
+      newnode = (parentnode[1], length(trees[parentnode[1]].nodes))
+      add_branch!(trees[parentnode[1]], parentnode[2], newnode[2], branch_length)
+      eventnodes[event] = newnode
     end
   end
+  return trees, eventnodes[:,2]
 end

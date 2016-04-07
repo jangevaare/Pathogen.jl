@@ -98,7 +98,7 @@ Pathogen.jl utilizes the [PhyloTrees.jl](https://github.com/jangevaare/PhyloTree
 
 6. Generate the associated phylogenetic tree
 
-        # TODO
+        trees, observed = generate_tree(events)
 
 7. Now, using the [PhyloTrees.jl](https://github.com/jangevaare/PhyloTrees.jl) package, simulate sequence data for each of the previously generated transmission trees
 
