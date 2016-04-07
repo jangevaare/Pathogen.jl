@@ -8,8 +8,8 @@ function pathwayto(individual::Int64,
     path = Int64[]
   else
     path = [individual]
-    while length(path) <= depth && sum(events.network[1][:, path[end]]) == 1
-      push!(path, findfirst(events.network[1][:, path[end]]))
+    while length(path) <= depth && sum(events.network[2][:, path[end]]) == 1
+      push!(path, findfirst(events.network[2][:, path[end]]))
     end
   end
   return path
@@ -53,7 +53,7 @@ function pathwayfrom(individual::Int64,
    while depth >= length(path) > pathlengths[end]
      push!(pathlengths, length(path))
      for j in path[(pathlengths[end-1]+1):pathlengths[end]]
-       append!(path, find(events.network[1][j, :]))
+       append!(path, find(events.network[2][j, :]))
      end
    end
   end

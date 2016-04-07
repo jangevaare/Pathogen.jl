@@ -2,8 +2,8 @@
 An array which stores information for simulation purposes
 """
 type Rates
-  rates::Array{Array{Float64}, 1}
-  mask::Array{Array{Bool}, 1}
+  rates::Vector{Array{Float64}}
+  mask::Vector{Array{Bool}}
   function Rates(individuals::Int64)
     rates = Array{Float64}[]
     mask = Array{Bool}[]

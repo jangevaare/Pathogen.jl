@@ -182,40 +182,71 @@ end
 Generate phylogenetic tree based on transmission events
 """
 function generate_tree(events::Events)
-  trees = fill(Tree(), sum(events.network[1]))
-  for i = 1:length(trees)
-    # Root node (external exposure)
-    add_node!(trees[i])
+  eventtimes = [events.exposed
+                events.detected
+                events.removed]
+  eventorder = sortperm(eventtimes)
+  eventnodes = fill((NaN, NaN), size(eventtimes))
+  trees = Tree[]
+  for i = 1:length(eventimes)
+    isnan!(eventtimes[eventorder[i]]) && break
+    event = ind2sub(size(eventtimes), eventorder[i])
+    if event[1] == 1
+      # Exposure event
+      if events.network[1][event[2]]
+        # External exposure
+        push!(trees, Tree())
+        add_node!(trees[end])
+        eventnodes[event] = (length(trees), 1)
+      else
+        # Internal exposure
+        source = findfirst(events.network[2][:, event[2]])
+        if isnan(eventtimes[source, 2]) || eventtimes[source, 2] > eventtimes[event[2], 1]
+          # Undetected exposure source
+          priorexposures = events.network[2][source, :][:] & eventtimes[:, 1] .< eventtimes[event]
+          if any(priorexposures)
+            # Prior exposures from this source
+            parentnode = eventnodes[priorexposures, 1][indmax(eventtimes[priorexposures, 1])]
+            branch_length = eventimes[event] - maximum(eventtimes[priorexposures, 1])
+            add_node!(trees[parentnode[1]])
+            newnode = (parentnode[1], length(trees[parentnode[1]].nodes))
+            add_branch!(trees[parentnode[1]], parentnode[2], newnode[2], branch_length)
+            eventnodes[event] = newnode
+          else
+            # No prior exposures from this source
+            parentnode = eventnodes[source, 1]
+            branch_length = eventtimes[event] - eventtimes[source, 1]
+            add_node!(trees[parentnode[1]])
+            newnode = (parentnode[1], length(trees[parentnode[1]].nodes))
+            add_branch!(trees[parentnode[1]], parentnode[2], newnode[2], branch_length)
+            eventnodes[event] = newnode
+          end
+        else
+          # Detected exposure source
+          priorexposures = events.network[2][source, :][:] & eventtimes[:, 1] .< eventtimes[event]
+          if !any(priorexposures) || all(eventtimes[source, 2] .> eventimes[priorexposures, 1])
+            # Detection of exposure source is most recent, relevant event
+            parentnode = eventnodes[source, 2]
+            branch_length = eventtimes[event] - eventtimes[source, 2]
+            add_node!(trees[parentnode[1]])
+            newnode = (parentnode[1], length(trees[parentnode[1]].nodes))
+            add_branch!(trees[parentnode[1]], parentnode[2], newnode[2], branch_length)
+            eventnodes[event] = newnode
+          else
+            # Other, prior exposure is most recent, relevant event
+            parentnode = eventnodes[priorexposures, 1][indmax(eventtimes[priorexposures, 1])]
+            branch_length = eventimes[event] - maximum(eventtimes[priorexposures, 1])
+            add_node!(trees[parentnode[1]])
+            newnode = (parentnode[1], length(trees[parentnode[1]].nodes))
+            add_branch!(trees[parentnode[1]], parentnode[2], newnode[2], branch_length)
+            eventnodes[event] = newnode
+          end
+        end
+      end
+    elseif event[1] == 2
+      # Detection event
+    elseif event[1] == 3
+      # Removal event
+    end
   end
-  # Node for internal exposures
-  # tree =
-  # add_node!(trees[tree])
-  # source =
-  # target =
-  # branch_length =
-  # add_branch!(trees[tree], source, target, branch_length)
-  #
-  # Node for infection onsets
-  # tree =
-  # add_node!(trees[tree])
-  # source =
-  # target =
-  # branch_length =
-  # add_branch!(trees[tree], source, target, branch_length)
-  #
-  # Node for infection detections
-  # tree =
-  # add_node!(trees[tree])
-  # source =
-  # target =
-  # branch_length =
-  # add_branch!(trees[tree], source, target, branch_length)
-  #
-  # Terminal node for removals
-  # tree =
-  # add_node!(trees[tree])
-  # source =
-  # target =
-  # branch_length =
-  # add_branch!(trees[tree], source, target, branch_length)
 end

@@ -1,5 +1,5 @@
 """
-Events type for simulations
+`Events` type for simulations
 """
 type Events
   susceptible::Vector{Float64}
@@ -7,7 +7,7 @@ type Events
   infected::Vector{Float64}
   detected::Vector{Float64}
   removed::Vector{Float64}
-  network::Array{Array{Bool}, 1}
+  network::Vector{Array{Bool}}
   function Events(population::DataFrame)
     individuals = size(population, 1)
     susceptible = fill(0.0, individuals)
@@ -26,3 +26,21 @@ type Events
                network)
   end
 end
+
+#
+# """
+# `EventsList` type for tree generation
+# """
+# type EventsList
+#   time::Vector{Float64}
+#   event::Vector{Tuple{Int64, Int64}}
+#
+#   function EventsList(events::Events)
+#     return new(time, event)
+#   end
+#
+#   function EventsList(time::Vector{Float64},
+#                       event::Vector{Tuple{Int64, Int64}})
+#     return new(time, event)
+#   end
+# end
