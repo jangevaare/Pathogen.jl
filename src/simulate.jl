@@ -227,7 +227,7 @@ function generate_tree(events::Events)
         end
         add_node!(trees[parentnode[1]])
         newnode = (parentnode[1], length(trees[parentnode[1]].nodes))
-        add_branch!(trees[parentnode[1]], parentnode[2], newnode[2], branch_length)
+        add_branch!(trees[parentnode[1]], branch_length, parentnode[2], newnode[2])
         eventnodes[event] = newnode
       end
     elseif event[1] == 2
@@ -244,7 +244,7 @@ function generate_tree(events::Events)
       end
       add_node!(trees[parentnode[1]])
       newnode = (parentnode[1], length(trees[parentnode[1]].nodes))
-      add_branch!(trees[parentnode[1]], parentnode[2], newnode[2], branch_length)
+      add_branch!(trees[parentnode[1]], branch_length, parentnode[2], newnode[2])
       eventnodes[event] = newnode
     elseif event[1] == 3
       # Removal event
@@ -274,7 +274,7 @@ function generate_tree(events::Events)
       end
       add_node!(trees[parentnode[1]])
       newnode = (parentnode[1], length(trees[parentnode[1]].nodes))
-      add_branch!(trees[parentnode[1]], parentnode[2], newnode[2], branch_length)
+      add_branch!(trees[parentnode[1]], branch_length, parentnode[2], newnode[2])
       eventnodes[event] = newnode
     end
   end
