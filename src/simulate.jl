@@ -196,7 +196,6 @@ function generate_tree(events::Events)
       if events.network[1][event[2]]
         # External exposure
         push!(trees, Tree())
-        add_node!(trees[end])
         eventnodes[event] = (length(trees), 1)
       else
         # Internal exposure
@@ -225,9 +224,9 @@ function generate_tree(events::Events)
             branch_length = eventimes[event] - maximum(eventtimes[priorexposures, 1])
           end
         end
-        add_node!(trees[parentnode[1]])
+        addnode!(trees[parentnode[1]])
         newnode = (parentnode[1], length(trees[parentnode[1]].nodes))
-        add_branch!(trees[parentnode[1]], branch_length, parentnode[2], newnode[2])
+        addbranch!(trees[parentnode[1]], parentnode[2], newnode[2], branch_length)
         eventnodes[event] = newnode
       end
     elseif event[1] == 2
@@ -242,9 +241,9 @@ function generate_tree(events::Events)
         parentnode = (1, event[2])
         branch_length = eventtimes[event] - eventtimes[event[2], 2]
       end
-      add_node!(trees[parentnode[1]])
+      addnode!(trees[parentnode[1]])
       newnode = (parentnode[1], length(trees[parentnode[1]].nodes))
-      add_branch!(trees[parentnode[1]], branch_length, parentnode[2], newnode[2])
+      addbranch!(trees[parentnode[1]], parentnode[2], newnode[2], branch_length)
       eventnodes[event] = newnode
     elseif event[1] == 3
       # Removal event
@@ -272,9 +271,9 @@ function generate_tree(events::Events)
           branch_length = eventtimes[event] - eventtimes[event[2], 1]
         end
       end
-      add_node!(trees[parentnode[1]])
+      addnode!(trees[parentnode[1]])
       newnode = (parentnode[1], length(trees[parentnode[1]].nodes))
-      add_branch!(trees[parentnode[1]], branch_length, parentnode[2], newnode[2])
+      addbranch!(trees[parentnode[1]], parentnode[2], newnode[2], branch_length)
       eventnodes[event] = newnode
     end
   end
