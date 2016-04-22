@@ -12,9 +12,9 @@ function initialize_rates(population::DataFrame,
     # Internal exposure
     for k = 1:individuals
       if i !== k
-        rates.rates[2][k, i] = risk_funcs.susceptibility([risk_params.susceptibility], population, i) *
-                               risk_funcs.transmissibility([risk_params.transmissibility], population, k) *
-                               risk_funcs.infectivity([risk_params.infectivity], population, i, k)
+        rates.rates[2][k, i] = risk_funcs.susceptibility(risk_params.susceptibility, population, i) *
+                               risk_funcs.transmissibility(risk_params.transmissibility, population, k) *
+                               risk_funcs.infectivity(risk_params.infectivity, population, i, k)
       end
     end
   end
@@ -59,7 +59,8 @@ function generate_event(rates::Rates,
     event_index = findfirst(rates[event_type][:] .== Inf)
   elseif total == 0.
     time = Inf
-    event_type = (0, 0)
+    event_type = 0
+    event_index = 0
   end
   return time, (event_type, event_index)
 end
@@ -74,7 +75,7 @@ function update_rates!(rates::Rates,
   if event[1] == 1
     individual = event[2]
     rates.mask[1][individual] = false
-    rates[1][:, individual] = false
+    rates.mask[1][:, individual] = false
     rates.mask[3][event[2]] = true
   # Internal exposure
   elseif event[1] == 2
@@ -182,99 +183,97 @@ end
 Generate phylogenetic tree based on transmission events
 """
 function generate_tree(events::Events)
-  eventtimes = [events.exposed
-                events.detected
-                events.removed]
-  eventorder = sortperm(eventtimes)
-  eventnodes = fill((NaN, NaN), size(eventtimes))
+  eventtimes = [events.exposed events.detected events.removed]
+  eventorder = sortperm(eventtimes[:])
+  eventnodes = fill(Nullable{Tuple{Int64,Int64}}(), size(eventtimes))
   trees = Tree[]
-  for i = 1:length(eventimes)
-    isnan!(eventtimes[eventorder[i]]) && break
+  for i = 1:length(eventorder)
+    isnan(eventtimes[eventorder[i]]) && break
     event = ind2sub(size(eventtimes), eventorder[i])
-    if event[1] == 1
+    if event[2] == 1
       # Exposure event
-      if events.network[1][event[2]]
+      if events.network[1][event[1]]
         # External exposure
         push!(trees, Tree())
-        eventnodes[event] = (length(trees), 1)
+        eventnodes[eventorder[i]] = (length(trees), 1)
       else
         # Internal exposure
-        source = findfirst(events.network[2][:, event[2]])
-        priorexposures = events.network[2][source, :][:] & eventtimes[:, 1] .< eventtimes[event]
-        if isnan(eventtimes[source, 2]) || eventtimes[source, 2] > eventtimes[event[2], 1]
+        source = findfirst(events.network[2][:, event[1]])
+        priorexposures = events.network[2][source, :][:] & eventtimes[:, 1] .< eventtimes[eventorder[i]]
+        if isnan(eventtimes[source, 2]) || eventtimes[source, 2] > eventtimes[event[1], 1]
           # Undetected exposure source
           if any(priorexposures)
             # Prior exposures from this source
-            parentnode = eventnodes[priorexposures, 1][indmax(eventtimes[priorexposures, 1])]
-            branch_length = eventimes[event] - maximum(eventtimes[priorexposures, 1])
+            parentnode = get(eventnodes[priorexposures, 1][indmax(eventtimes[priorexposures, 1])])
+            branch_length = eventimes[eventorder[i]] - maximum(eventtimes[priorexposures, 1])
           else
             # No prior exposures from this source
-            parentnode = eventnodes[source, 1]
-            branch_length = eventtimes[event] - eventtimes[source, 1]
+            parentnode = get(eventnodes[source, 1])
+            branch_length = eventtimes[eventorder[i]] - eventtimes[source, 1]
           end
         else
           # Detected exposure source
           if !any(priorexposures) || all(eventtimes[source, 2] .> eventimes[priorexposures, 1])
             # Detection of exposure source is most recent, relevant event
-            parentnode = eventnodes[source, 2]
-            branch_length = eventtimes[event] - eventtimes[source, 2]
+            parentnode = get(eventnodes[source, 2])
+            branch_length = eventtimes[eventorder[i]] - eventtimes[source, 2]
           else
             # Other, prior exposure is most recent, relevant event
-            parentnode = eventnodes[priorexposures, 1][indmax(eventtimes[priorexposures, 1])]
-            branch_length = eventimes[event] - maximum(eventtimes[priorexposures, 1])
+            parentnode = get(eventnodes[priorexposures, 1][indmax(eventtimes[priorexposures, 1])])
+            branch_length = eventimes[eventorder[i]] - maximum(eventtimes[priorexposures, 1])
           end
         end
         addnode!(trees[parentnode[1]])
         newnode = (parentnode[1], length(trees[parentnode[1]].nodes))
         addbranch!(trees[parentnode[1]], parentnode[2], newnode[2], branch_length)
-        eventnodes[event] = newnode
+        eventnodes[eventorder[i]] = newnode
       end
-    elseif event[1] == 2
+    elseif event[2] == 2
       # Detection event
-      priorexposures = events.network[2][event[2], :][:] & eventtimes[:, 1] .< eventtimes[event]
+      priorexposures = events.network[2][event[1], :][:] & (eventtimes[:, 1] .< eventtimes[eventorder[i]])
       if any(priorexposures)
         # Individual has exposed others before detection
-        parentnode = eventnodes[priorexposures, 1][indmax(eventtimes[priorexposures, 1])]
-        branch_length = eventimes[event] - maximum(eventtimes[priorexposures, 1])
+        parentnode = get(eventnodes[priorexposures, 1][indmax(eventtimes[priorexposures, 1])])
+        branch_length = eventimes[eventorder[i]] - maximum(eventtimes[priorexposures, 1])
       else
         # Individual has not exposed others before detection
-        parentnode = (1, event[2])
-        branch_length = eventtimes[event] - eventtimes[event[2], 2]
+        parentnode = get(eventnodes[event[1], 1])
+        branch_length = eventtimes[eventorder[i]] - eventtimes[event[1], 1]
       end
       addnode!(trees[parentnode[1]])
       newnode = (parentnode[1], length(trees[parentnode[1]].nodes))
       addbranch!(trees[parentnode[1]], parentnode[2], newnode[2], branch_length)
-      eventnodes[event] = newnode
-    elseif event[1] == 3
+      eventnodes[eventorder[i]] = newnode
+    elseif event[2] == 3
       # Removal event
-      priorexposures = events.network[2][event[2], :][:]
+      priorexposures = events.network[2][event[1], :][:]
       if any(priorexposures)
         # Individual has exposed others prior to removal
-        if !isnan(eventtimes[event[2], 2]) && all(eventtimes[priorexposures, 1] .< eventtimes[event[2], 2])
+        if !isnan(eventtimes[event[1], 2]) && all(eventtimes[priorexposures, 1] .< eventtimes[event[1], 2])
           # Detection is most recent and relevant event
-          parentnode = eventnodes[event[2], 2]
-          branch_length = eventtimes[event] - eventtimes[event[2], 2]
+          parentnode = get(eventnodes[event[1], 2])
+          branch_length = eventtimes[eventorder[i]] - eventtimes[event[1], 2]
         else
           # Exposure is the most recent and relevant event
-          parentnode = eventnodes[priorexposures, 1][indmax(eventtimes[priorexposures, 1])]
-          branch_length = eventimes[event] - maximum(eventtimes[priorexposures, 1])
+          parentnode = get(eventnodes[priorexposures, 1][indmax(eventtimes[priorexposures, 1])])
+          branch_length = eventimes[eventorder[i]] - maximum(eventtimes[priorexposures, 1])
         end
       else
         # No prior exposures
-        if !isnan(eventtimes[event[2], 2])
+        if !isnan(eventtimes[event[1], 2])
           # Has been previously detected
-          parentnode = eventnodes[event[2], 2]
-          branch_length = eventtimes[event] - eventtimes[event[2], 2]
+          parentnode = get(eventnodes[event[1], 2])
+          branch_length = eventtimes[eventorder[i]] - eventtimes[event[1], 2]
         else
           # Has not been detected
-          parentnode = eventnodes[event[2], 1]
-          branch_length = eventtimes[event] - eventtimes[event[2], 1]
+          parentnode = get(eventnodes[event[1], 1])
+          branch_length = eventtimes[eventorder[i]] - eventtimes[event[1], 1]
         end
       end
       addnode!(trees[parentnode[1]])
       newnode = (parentnode[1], length(trees[parentnode[1]].nodes))
       addbranch!(trees[parentnode[1]], parentnode[2], newnode[2], branch_length)
-      eventnodes[event] = newnode
+      eventnodes[eventorder[i]] = newnode
     end
   end
   return trees, eventnodes[:,2]

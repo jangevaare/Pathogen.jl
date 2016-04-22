@@ -22,9 +22,9 @@ Pathogen.jl utilizes the [PhyloTrees.jl](https://github.com/jangevaare/PhyloTree
 1. Create a population data frame containing covariate information for each individual in a population. If there is a spatial component to your model, this data frame should contain the location of each individual. Each row in this data frame is assumed to represent a single unique individual.
 
          using DataFrames
-         population = Data.Frame(x = x_coordinates,
-                                 y = y_coordinates,
-                                 age = age)
+         population = DataFrame(x = x_coordinates,
+                                y = y_coordinates,
+                                age = age)
 
 2. Create the following risk functions. These risk functions are the components of event (disease state transition) rates.
 
@@ -100,10 +100,11 @@ Pathogen.jl utilizes the [PhyloTrees.jl](https://github.com/jangevaare/PhyloTree
 
         trees, observed = generate_tree(events)
 
-7. Now, using the [PhyloTrees.jl](https://github.com/jangevaare/PhyloTrees.jl) package, simulate sequence data for each of the previously generated transmission trees
+7. Now, using the [PhyloTrees.jl](https://github.com/jangevaare/PhyloTrees.jl) package, simulate sequence data for each of the previously generated transmission trees (there are many more simulation options available through PhyloTrees.jl)
 
         using PhyloTrees
         substitution_model = JC69([1.0e-5])
+        tree_sequences = Array{Bool, 3}[]
         for i in trees
-          simulate!(i, substitution_model)
+          push!(tree_sequences, simulate(i, substitution_model, 1000))
         end

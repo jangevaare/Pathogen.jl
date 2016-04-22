@@ -16,8 +16,8 @@ type Events
     detected = fill(NaN, individuals)
     removed = fill(NaN, individuals)
     network = Array{Bool}[]
-    push!(fill(false, individuals))
-    push!(fill(false, (individuals, individuals)))
+    push!(network, fill(false, individuals))
+    push!(network, fill(false, (individuals, individuals)))
     return new(susceptible,
                exposed,
                infected,
