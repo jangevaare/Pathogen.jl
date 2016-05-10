@@ -185,8 +185,8 @@ Generate phylogenetic tree based on transmission events
 function generate_tree(events::Events)
   eventtimes = [events.exposed events.detected events.removed]
   eventorder = sortperm(eventtimes[:])
-  eventnodes = fill(Nullable{Tuple{Int64,Int64}}(), size(eventtimes))
-  trees = Tree[]
+  eventnodes = fill(Nullable{Int64}(), size(eventtimes))
+  tree = Tree()
   for i = 1:length(eventorder)
     isnan(eventtimes[eventorder[i]]) && break
     event = ind2sub(size(eventtimes), eventorder[i])
@@ -194,8 +194,8 @@ function generate_tree(events::Events)
       # Exposure event
       if events.network[1][event[1]]
         # External exposure
-        push!(trees, Tree())
-        eventnodes[eventorder[i]] = (length(trees), 1)
+        addnode!(tree)
+        eventnodes[eventorder[i]] = length(tree.nodes)
       else
         # Internal exposure
         source = findfirst(events.network[2][:, event[1]])
@@ -223,10 +223,8 @@ function generate_tree(events::Events)
             branch_length = eventimes[eventorder[i]] - maximum(eventtimes[priorexposures, 1])
           end
         end
-        addnode!(trees[parentnode[1]])
-        newnode = (parentnode[1], length(trees[parentnode[1]].nodes))
-        addbranch!(trees[parentnode[1]], parentnode[2], newnode[2], branch_length)
-        eventnodes[eventorder[i]] = newnode
+        branch!(tree, parentnode, branch_length)
+        eventnodes[eventorder[i]] = length(tree.nodes)
       end
     elseif event[2] == 2
       # Detection event
@@ -240,10 +238,8 @@ function generate_tree(events::Events)
         parentnode = get(eventnodes[event[1], 1])
         branch_length = eventtimes[eventorder[i]] - eventtimes[event[1], 1]
       end
-      addnode!(trees[parentnode[1]])
-      newnode = (parentnode[1], length(trees[parentnode[1]].nodes))
-      addbranch!(trees[parentnode[1]], parentnode[2], newnode[2], branch_length)
-      eventnodes[eventorder[i]] = newnode
+      branch!(tree, parentnode, branch_length)
+      eventnodes[eventorder[i]] = length(tree.nodes)
     elseif event[2] == 3
       # Removal event
       priorexposures = events.network[2][event[1], :][:]
@@ -270,11 +266,9 @@ function generate_tree(events::Events)
           branch_length = eventtimes[eventorder[i]] - eventtimes[event[1], 1]
         end
       end
-      addnode!(trees[parentnode[1]])
-      newnode = (parentnode[1], length(trees[parentnode[1]].nodes))
-      addbranch!(trees[parentnode[1]], parentnode[2], newnode[2], branch_length)
-      eventnodes[eventorder[i]] = newnode
+      branch!(tree, parentnode, branch_length)
+      eventnodes[eventorder[i]] = length(tree.nodes)
     end
   end
-  return trees, eventnodes[:,2]
+  return tree, eventnodes[:,2]
 end
