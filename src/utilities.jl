@@ -27,4 +27,17 @@ function findstate(events::Events, individuals::Array{Int64}, time::Float64)
   for i in eachindex(individuals)
     states[i] = findstate(events, individuals[i], time)
   end
+  return states
+end
+
+
+"""
+Provides the state of an array of individuals at a specified time
+"""
+function findstate(events::Events, time::Float64)
+  states = fill("", length(events.exposed))
+  for i in 1:length(states)
+    states[i] = findstate(events, i, time)
+  end
+  return states
 end

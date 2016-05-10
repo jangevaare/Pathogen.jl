@@ -9,6 +9,8 @@ using Distributions
   include("events.jl")
   include("pathways.jl")
   include("simulate.jl")
+  include("utilities.jl")
+  include("plot.jl")
 
   export
     RiskFunctions,
@@ -19,8 +21,12 @@ using Distributions
     pathwaysto,
     pathwayfrom,
     pathwaysfrom,
+    update_events!,
+    update_rates!,
+    initialize_rates,
     initialize_simulation,
     simulate!,
-    generate_tree
+    generatetree,
+    findstate
 
 end # module

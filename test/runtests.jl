@@ -77,15 +77,12 @@ rates, events = initialize_simulation(population,
                                       index_case)
 
 # Simulate `n` events
-n=300
+n = 300
 rates, events = simulate!(n, rates, events)
 
 # Generate the associated phylogenetic tree
-trees, observed = generate_tree(events)
+tree, observed = generatetree(events)
 
 # Simulate sequence data for each of the previously generated transmission trees
 substitution_model = JC69([1.0e-5])
-tree_sequences = Array{Bool, 3}[]
-for i in trees
-  push!(tree_sequences, simulate(i, substitution_model, 1000))
-end
+tree_sequences = simulate(tree, substitution_model, 1000)

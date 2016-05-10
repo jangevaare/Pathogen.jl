@@ -4,7 +4,7 @@ Create an initialize rate array
 function initialize_rates(population::DataFrame,
                           risk_funcs::RiskFunctions,
                           risk_params::RiskParameters)
-  individuals = size(population, 2)
+  individuals = size(population, 1)
   rates = Rates(individuals)
   for i = 1:individuals
     # External exposure
@@ -75,14 +75,14 @@ function update_rates!(rates::Rates,
   if event[1] == 1
     individual = event[2]
     rates.mask[1][individual] = false
-    rates.mask[1][:, individual] = false
-    rates.mask[3][event[2]] = true
+    rates.mask[2][:, individual] = false
+    rates.mask[3][individual] = true
   # Internal exposure
   elseif event[1] == 2
     individual = ind2sub(size(rates[2]), event[2])[2]
     rates.mask[1][individual] = false
     rates.mask[2][:, individual] = false
-    rates.mask[3][event[2]] = true
+    rates.mask[3][individual] = true
   # Onset of infection
   elseif event[1] == 3
     individual = event[2]
@@ -118,7 +118,7 @@ function update_events!(events::Events,
     events.network[1][event[2]] = true
   # Internal exposure
   elseif event[1] == 2
-    individual = ind2sub(size(rates[2]), event[2])[2]
+    individual = ind2sub((length(events.exposed),length(events.exposed)), event[2])[2]
     events.exposed[individual] = time
     events.network[2][event[2]] = true
   # Onset of infection
@@ -182,7 +182,7 @@ end
 """
 Generate phylogenetic tree based on transmission events
 """
-function generate_tree(events::Events)
+function generatetree(events::Events)
   eventtimes = [events.exposed events.detected events.removed]
   eventorder = sortperm(eventtimes[:])
   eventnodes = fill(Nullable{Int64}(), size(eventtimes))
@@ -199,13 +199,13 @@ function generate_tree(events::Events)
       else
         # Internal exposure
         source = findfirst(events.network[2][:, event[1]])
-        priorexposures = events.network[2][source, :][:] & eventtimes[:, 1] .< eventtimes[eventorder[i]]
+        priorexposures = events.network[2][source, :][:] & (eventtimes[:, 1] .< eventtimes[eventorder[i]])
         if isnan(eventtimes[source, 2]) || eventtimes[source, 2] > eventtimes[event[1], 1]
           # Undetected exposure source
           if any(priorexposures)
             # Prior exposures from this source
             parentnode = get(eventnodes[priorexposures, 1][indmax(eventtimes[priorexposures, 1])])
-            branch_length = eventimes[eventorder[i]] - maximum(eventtimes[priorexposures, 1])
+            branch_length = eventtimes[eventorder[i]] - maximum(eventtimes[priorexposures, 1])
           else
             # No prior exposures from this source
             parentnode = get(eventnodes[source, 1])
@@ -213,14 +213,14 @@ function generate_tree(events::Events)
           end
         else
           # Detected exposure source
-          if !any(priorexposures) || all(eventtimes[source, 2] .> eventimes[priorexposures, 1])
+          if !any(priorexposures) || all(eventtimes[source, 2] .> eventtimes[priorexposures, 1])
             # Detection of exposure source is most recent, relevant event
             parentnode = get(eventnodes[source, 2])
             branch_length = eventtimes[eventorder[i]] - eventtimes[source, 2]
           else
             # Other, prior exposure is most recent, relevant event
             parentnode = get(eventnodes[priorexposures, 1][indmax(eventtimes[priorexposures, 1])])
-            branch_length = eventimes[eventorder[i]] - maximum(eventtimes[priorexposures, 1])
+            branch_length = eventtimes[eventorder[i]] - maximum(eventtimes[priorexposures, 1])
           end
         end
         branch!(tree, parentnode, branch_length)
@@ -232,7 +232,7 @@ function generate_tree(events::Events)
       if any(priorexposures)
         # Individual has exposed others before detection
         parentnode = get(eventnodes[priorexposures, 1][indmax(eventtimes[priorexposures, 1])])
-        branch_length = eventimes[eventorder[i]] - maximum(eventtimes[priorexposures, 1])
+        branch_length = eventtimes[eventorder[i]] - maximum(eventtimes[priorexposures, 1])
       else
         # Individual has not exposed others before detection
         parentnode = get(eventnodes[event[1], 1])
@@ -252,7 +252,7 @@ function generate_tree(events::Events)
         else
           # Exposure is the most recent and relevant event
           parentnode = get(eventnodes[priorexposures, 1][indmax(eventtimes[priorexposures, 1])])
-          branch_length = eventimes[eventorder[i]] - maximum(eventtimes[priorexposures, 1])
+          branch_length = eventtimes[eventorder[i]] - maximum(eventtimes[priorexposures, 1])
         end
       else
         # No prior exposures
