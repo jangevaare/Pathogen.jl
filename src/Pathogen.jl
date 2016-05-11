@@ -1,8 +1,8 @@
 module Pathogen
 
-using DataFrames
-using PhyloTrees
-using Distributions
+  using DataFrames
+  using PhyloTrees
+  using Distributions
 
   include("risks.jl")
   include("rates.jl")
