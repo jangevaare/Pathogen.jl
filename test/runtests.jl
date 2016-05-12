@@ -83,6 +83,6 @@ rates, events = simulate!(n, rates, events)
 # Generate the associated phylogenetic tree
 tree, observed = generatetree(events)
 
-# Simulate sequence data for each of the previously generated transmission trees
-substitution_model = JC69([1.0e-5])
-tree_sequences = simulate(tree, substitution_model, 1000)
+# # Simulate sequence data for each of the previously generated transmission trees
+# substitution_model = JC69([1.0e-5])
+# tree_sequences = simulate(tree, substitution_model, 1000)
