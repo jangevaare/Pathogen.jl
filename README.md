@@ -100,13 +100,10 @@ Pathogen.jl utilizes the [PhyloTrees.jl](https://github.com/jangevaare/PhyloTree
 
 6. Generate the associated phylogenetic tree
 
-        trees, observed = generate_tree(events)
+        tree, observed = generate_tree(events)
 
 7. Now, using the [PhyloTrees.jl](https://github.com/jangevaare/PhyloTrees.jl) package, simulate sequence data for each of the previously generated transmission trees (there are many more simulation options available through PhyloTrees.jl)
 
         using PhyloTrees
         substitution_model = JC69([1.0e-5])
-        tree_sequences = Array{Bool, 3}[]
-        for i in trees
-          push!(tree_sequences, simulate(i, substitution_model, 1000))
-        end
+        tree_sequences = simulate(tree, substitution_model, 1000)
