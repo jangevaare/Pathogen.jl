@@ -1,20 +1,30 @@
 """
 Provides the state of an individual at a specified time
 """
-function findstate(events::Events, individual::Int64, time::Float64)
+function findstate(events::Events, individual::Int64, time::Float64, number=false::Bool)
   if !(1 <= individual <= length(events.exposed))
     error("Invalid individual specified")
   end
-  if isnan(events.exposed[individual]) || events.exposed[individual] > time
-    return "S"
-  elseif isnan(events.infected[individual]) || events.infected[individual] > time
-    return "E"
-  elseif isnan(events.removed[individual]) || events.removed[individual] > time
-    return "I"
-  elseif events.removed[individual] <= time
-    return "R"
+  if number
+    if isnan(events.exposed[individual]) || events.exposed[individual] > time
+      return 1
+    elseif isnan(events.infected[individual]) || events.infected[individual] > time
+      return 2
+    elseif isnan(events.removed[individual]) || events.removed[individual] > time
+      return 3
+    elseif events.removed[individual] <= time
+      return 4
+    end
   else
-    error("Could not determine state of individual")
+    if isnan(events.exposed[individual]) || events.exposed[individual] > time
+      return "S"
+    elseif isnan(events.infected[individual]) || events.infected[individual] > time
+      return "E"
+    elseif isnan(events.removed[individual]) || events.removed[individual] > time
+      return "I"
+    elseif events.removed[individual] <= time
+      return "R"
+    end
   end
 end
 
@@ -22,10 +32,14 @@ end
 """
 Provides the state of an array of individuals at a specified time
 """
-function findstate(events::Events, individuals::Array{Int64}, time::Float64)
-  states = fill("", size(individuals))
+function findstate(events::Events, individuals::Array{Int64}, time::Float64, number=false::Bool)
+  if number
+    states = fill(0, size(individuals))
+  else
+    states = fill("", size(individuals))
+  end
   for i in eachindex(individuals)
-    states[i] = findstate(events, individuals[i], time)
+    states[i] = findstate(events, individuals[i], time, number)
   end
   return states
 end
@@ -34,10 +48,14 @@ end
 """
 Provides the state of an array of individuals at a specified time
 """
-function findstate(events::Events, time::Float64)
-  states = fill("", length(events.exposed))
+function findstate(events::Events, time::Float64, number=false::Bool)
+  if number
+    states = fill(0, length(events.susceptible))
+  else
+    states = fill("", length(events.susceptible))
+  end
   for i in 1:length(states)
-    states[i] = findstate(events, i, time)
+    states[i] = findstate(events, i, time, number)
   end
   return states
 end

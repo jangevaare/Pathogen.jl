@@ -26,21 +26,3 @@ type Events
                network)
   end
 end
-
-#
-# """
-# `EventsList` type for tree generation
-# """
-# type EventsList
-#   time::Vector{Float64}
-#   event::Vector{Tuple{Int64, Int64}}
-#
-#   function EventsList(events::Events)
-#     return new(time, event)
-#   end
-#
-#   function EventsList(time::Vector{Float64},
-#                       event::Vector{Tuple{Int64, Int64}})
-#     return new(time, event)
-#   end
-# end

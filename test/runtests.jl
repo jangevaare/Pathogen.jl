@@ -77,7 +77,7 @@ rates, events = initialize_simulation(population,
                                       index_case)
 
 # Simulate `n` events
-n = 300
+n = 500
 rates, events = simulate!(n, rates, events)
 
 # Generate the associated phylogenetic tree
