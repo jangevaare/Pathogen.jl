@@ -44,7 +44,7 @@ function generate_event(rates::Rates,
   totals = [sum(rates[1]);
             sum(rates[2]);
             sum(rates[3]);
-            sum(rates[4])
+            sum(rates[4]);
             sum(rates[5])]
   total = sum(totals)
   if 0. < total < Inf
@@ -145,7 +145,7 @@ level model of infectious disease
 function initialize_simulation(population::DataFrame,
                                risk_funcs::RiskFunctions,
                                risk_params::RiskParameters,
-                               index_case=1::Int64)
+                               index_case::Int64)
   # Initialize rate array
   rates = initialize_rates(population,
                            risk_funcs,
@@ -155,6 +155,23 @@ function initialize_simulation(population::DataFrame,
   # Add index case
   update_rates!(rates, (1, index_case))
   update_events!(events, (1, index_case), 0.0)
+  return rates, events
+end
+
+
+"""
+Initialize a simulation with an events data frame for a phylodynamic individual
+level model of infectious disease
+"""
+function initialize_simulation(population::DataFrame,
+                               risk_funcs::RiskFunctions,
+                               risk_params::RiskParameters)
+  # Initialize rate array
+  rates = initialize_rates(population,
+                           risk_funcs,
+                           risk_params)
+  # Initialize events data frame
+  events = Events(population)
   return rates, events
 end
 
@@ -194,8 +211,8 @@ function generatetree(events::Events)
       # Exposure event
       if events.network[1][event[1]]
         # External exposure
-        addnode!(tree)
-        eventnodes[eventorder[i]] = length(tree.nodes)
+        parentnode = 1
+        branch_length = eventtimes[eventorder[i]]
       else
         # Internal exposure
         source = findfirst(events.network[2][:, event[1]])
@@ -223,9 +240,9 @@ function generatetree(events::Events)
             branch_length = eventtimes[eventorder[i]] - maximum(eventtimes[priorexposures, 1])
           end
         end
-        branch!(tree, parentnode, branch_length)
-        eventnodes[eventorder[i]] = length(tree.nodes)
       end
+      branch!(tree, parentnode, branch_length)
+      eventnodes[eventorder[i]] = length(tree.nodes)
     elseif event[2] == 2
       # Detection event
       priorexposures = events.network[2][event[1], :][:] & (eventtimes[:, 1] .< eventtimes[eventorder[i]])

@@ -51,7 +51,8 @@ function plot(population::DataFrame, events::Events, time::Float64, paths=true::
             xlabel = "",
             ylabel = "",
             lab = ["S" "E" "I" "R"],
-            seriescolor = ColorGradient(:viridis).colors[[1; 10; 20; 30]]')
+            seriescolor = ColorGradient(:viridis).colors[[1; 10; 21; 30]]',
+            legend = :right)
     else
       plot(vcat(DataFrame(x = fill(NaN, 4),
                           y = fill(NaN, 4),
@@ -66,7 +67,8 @@ function plot(population::DataFrame, events::Events, time::Float64, paths=true::
            xlabel = "",
            ylabel = "",
            lab = ["S" "E" "I" "R"],
-           seriescolor = ColorGradient(:viridis).colors[[1; 10; 20; 30]]')
+           seriescolor = ColorGradient(:viridis).colors[[1; 10; 21; 30]]',
+           legend = :right)
     end
   else
     plot(vcat(DataFrame(x = fill(NaN, 4),
@@ -82,7 +84,8 @@ function plot(population::DataFrame, events::Events, time::Float64, paths=true::
          xlabel = "",
          ylabel = "",
          lab = ["S" "E" "I" "R"],
-         seriescolor = ColorGradient(:viridis).colors[[1; 10; 20; 30]]')
+         seriescolor = ColorGradient(:viridis).colors[[1; 10; 21; 30]]',
+         legend = :right)
   end
 end
 
@@ -186,5 +189,5 @@ function plot(events::Events)
               ylabel="",
               lab=["S" "E" "I" "R"],
               xlim=(-1., maximum(epidemic[:time])+1),
-              seriescolor = ColorGradient(:viridis).colors[[1; 10; 20; 30]]')
+              seriescolor = ColorGradient(:viridis).colors[[1; 10; 21; 30]]')
 end
