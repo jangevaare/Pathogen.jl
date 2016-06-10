@@ -11,6 +11,7 @@ module Pathogen
   include("simulate.jl")
   include("utilities.jl")
   include("plot.jl")
+  include("infer.jl")
 
   export
     RiskFunctions,
