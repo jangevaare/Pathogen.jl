@@ -6,38 +6,41 @@ type RiskPriors
   susceptibility::Vector{UnivariateDistribution}
   transmissibility::Vector{UnivariateDistribution}
   infectivity::Vector{UnivariateDistribution}
-  latency::Vector{Float64}
-  detection::Vector{Float64}
-  removal::Vector{Float64}
+  latency::Vector{UnivariateDistribution}
+  detection::Vector{UnivariateDistribution}
+  removal::Vector{UnivariateDistribution}
 end
 
 
 """
 MCMC trace
 """
-type Trace
+type PathogenTrace
   risk_parameters::Vector{RiskParameters}
   events::Vector{Events}
-  tree::Vector{Tree}
 end
 
 
 """
 MCMC iteration
 """
-type Iteration
+type PathogenIteration
   risk_parameters::RiskParameters
   events::Events
-  tree::Tree
 end
 
 
-Proposal = Iteration
+PathogenProposal = PathogenIteration
 
 
-function push!(trace::Trace, iteration::Iteration)
+function push!(trace::PathogenTrace, iteration::PathogenIteration)
   push!(trace.risk_parameters, iteration.risk_parameters)
   push!(trace.events, iteration.events)
-  push!(trace.tree, iteration.tree)
   return trace
+end
+
+
+function append!(trace1::PathogenTrace, trace2::PathogenTrace)
+  append!(trace1.risk_parameters, trace2.risk_parameters)
+  append!(trace1.events, trace2.events)
 end

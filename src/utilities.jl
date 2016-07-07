@@ -2,7 +2,7 @@
 Provides the state of an individual at a specified time
 """
 function findstate(events::Events, individual::Int64, time::Float64, number=false::Bool)
-  if !(1 <= individual <= length(events.exposed))
+  if !(1 <= individual <= length(events.susceptible))
     error("Invalid individual specified")
   end
   if number
@@ -17,13 +17,13 @@ function findstate(events::Events, individual::Int64, time::Float64, number=fals
     end
   else
     if isnan(events.exposed[individual]) || events.exposed[individual] > time
-      return "S"
+      return :S
     elseif isnan(events.infected[individual]) || events.infected[individual] > time
-      return "E"
+      return :E
     elseif isnan(events.removed[individual]) || events.removed[individual] > time
-      return "I"
+      return :I
     elseif events.removed[individual] <= time
-      return "R"
+      return :R
     end
   end
 end
@@ -46,16 +46,16 @@ end
 
 
 """
-Provides the state of an array of individuals at a specified time
+Provides the state of all individuals at a specified time
 """
 function findstate(events::Events, time::Float64, number=false::Bool)
   if number
-    states = fill(0, length(events.susceptible))
+    states = Int64[]
   else
-    states = fill("", length(events.susceptible))
+    states = Symbol[]
   end
-  for i in 1:length(states)
-    states[i] = findstate(events, i, time, number)
+  for i in 1:length(events.susceptible)
+    push!(states, findstate(events, i, time, number))
   end
   return states
 end

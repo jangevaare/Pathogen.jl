@@ -1,5 +1,5 @@
 julia 0.4
 Distributions
-PhyloTrees 0.3.0-
+PhyloTrees 0.4.0-
 DataFrames
-Plots
+RecipesBase

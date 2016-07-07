@@ -3,6 +3,12 @@ module Pathogen
   using DataFrames
   using PhyloTrees
   using Distributions
+  using RecipesBase
+
+  # New methods
+  import
+    Base.push!,
+    Base.append!
 
   include("risks.jl")
   include("rates.jl")
@@ -10,9 +16,11 @@ module Pathogen
   include("pathways.jl")
   include("simulate.jl")
   include("utilities.jl")
-  include("plot.jl")
+  include("plothelpers.jl")
+  include("plotrecipes.jl")
   include("infer.jl")
 
+  # New types and functions
   export
     RiskFunctions,
     RiskParameters,
@@ -28,6 +36,10 @@ module Pathogen
     initialize_simulation,
     simulate!,
     generatetree,
-    findstate
+    findstate,
+    RiskPriors,
+    PathogenTrace,
+    PathogenIteration,
+    PathogenProposal
 
 end # module
