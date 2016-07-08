@@ -3,6 +3,7 @@
   yguide --> ""
   @series begin
     seriestype := :steppost
+    seriescolor --> :purple
     time, count = epiplot(events, :S)
     xlims --> (-1., maximum(time)+1.)
     label := "S"
@@ -10,6 +11,7 @@
   end
   @series begin
     seriestype := :steppost
+    seriescolor --> :lightblue4
     time, count = epiplot(events, :E)
     xlims --> (-1., maximum(time)+1.)
     label := "E"
@@ -17,6 +19,7 @@
   end
   @series begin
     seriestype := :steppost
+    seriescolor --> :lightgreen
     time, count = epiplot(events, :I)
     xlims --> (-1., maximum(time)+1.)
     label := "I"
@@ -24,6 +27,7 @@
   end
   @series begin
     seriestype := :steppost
+    seriescolor --> :yellow
     time, count = epiplot(events, :R)
     xlims --> (-1., maximum(time)+1.)
     label := "R"
@@ -50,24 +54,28 @@ end
   @series begin
     x, y = popplot(population, events, time, :S)
     seriestype := :scatter
+    seriescolor --> :purple
     label := "S"
     x, y
   end
   @series begin
     x, y = popplot(population, events, time, :E)
     seriestype := :scatter
+    seriescolor --> :lightblue4
     label := "E"
     x, y
   end
   @series begin
     x, y = popplot(population, events, time, :I)
     seriestype := :scatter
+    seriescolor --> :lightgreen
     label := "I"
     x, y
   end
   @series begin
     x, y = popplot(population, events, time, :R)
     seriestype := :scatter
+    seriescolor --> :yellow
     label := "R"
     x, y
   end
