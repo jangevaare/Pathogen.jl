@@ -8,7 +8,8 @@ module Pathogen
   # New methods
   import
     Base.push!,
-    Base.append!
+    Base.append!,
+    Base.rand
 
   include("risks.jl")
   include("rates.jl")

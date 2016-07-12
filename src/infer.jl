@@ -44,3 +44,56 @@ function append!(trace1::PathogenTrace, trace2::PathogenTrace)
   append!(trace1.risk_parameters, trace2.risk_parameters)
   append!(trace1.events, trace2.events)
 end
+
+
+type RiskParameters
+  sparks::Vector{Float64}
+  susceptibility::Vector{Float64}
+  transmissibility::Vector{Float64}
+  infectivity::Vector{Float64}
+  latency::Vector{Float64}
+  detection::Vector{Float64}
+  removal::Vector{Float64}
+end
+
+function rand(riskpriors::RiskPriors)
+  sparks = Float64[]
+  susceptibility = Float64[]
+  transmissibility = Float64[]
+  infectivity = Float64[]
+  latency = Float64[]
+  detection = Float64[]
+  removal = Float64[]
+
+  for i = 1:length(riskpriors.sparks)
+    push!(sparks, rand(riskpriors.sparks[i]))
+  end
+
+  for i = 1:length(riskpriors.susceptibility)
+    push!(susceptibility, rand(riskpriors.susceptibility[i]))
+  end
+
+  for i = 1:length(riskpriors.transmissability)
+    push!(transmissability, rand(riskpriors.transmissability[i]))
+  end
+
+  for i = 1:length(riskpriors.infectivity)
+    push!(infectivity, rand(riskpriors.infectivity[i]))
+  end
+
+  for i = 1:length(riskpriors.latency)
+    push!(latency, rand(riskpriors.latency[i]))
+  end
+
+  for i = 1:length(riskpriors.removal)
+    push!(removal, rand(riskpriors.removal[i]))
+  end
+
+  return RiskParameters(sparks,
+                        susceptibility,
+                        transmissability,
+                        infectivity,
+                        latency,
+                        detection,
+                        removal)
+end
