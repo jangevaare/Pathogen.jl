@@ -16,9 +16,6 @@ type Rates
     # Infection rates
     push!(rates, fill(0., individuals))
     push!(mask, fill(false, individuals))
-    # Detection rates
-    push!(rates, fill(0., individuals))
-    push!(mask, fill(false, individuals))
     # Removal rates
     push!(rates, fill(0., individuals))
     push!(mask, fill(false, individuals))

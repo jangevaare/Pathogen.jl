@@ -1,16 +1,18 @@
 module Pathogen
 
+  # Dependencies
   using DataFrames
   using PhyloTrees
   using Distributions
   using RecipesBase
 
-  # New methods
+  # Functions to be extended
   import
     Base.push!,
     Base.append!,
     Base.rand
 
+  # Source files
   include("core/risks.jl")
   include("core/rates.jl")
   include("core/events.jl")
@@ -50,4 +52,4 @@ module Pathogen
     PathogenIteration,
     PathogenProposal
 
-end # module
+end

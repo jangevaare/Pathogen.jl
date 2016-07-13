@@ -5,7 +5,6 @@ type Events
   susceptible::Vector{Float64}
   exposed::Vector{Float64}
   infected::Vector{Float64}
-  detected::Vector{Float64}
   removed::Vector{Float64}
   network::Vector{Array{Bool}}
   function Events(population::DataFrame)
@@ -13,7 +12,6 @@ type Events
     susceptible = fill(0.0, individuals)
     exposed = fill(NaN, individuals)
     infected = fill(NaN, individuals)
-    detected = fill(NaN, individuals)
     removed = fill(NaN, individuals)
     network = Array{Bool}[]
     push!(network, fill(false, individuals))
@@ -21,7 +19,6 @@ type Events
     return new(susceptible,
                exposed,
                infected,
-               detected,
                removed,
                network)
   end
