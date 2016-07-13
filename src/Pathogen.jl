@@ -11,15 +11,22 @@ module Pathogen
     Base.append!,
     Base.rand
 
-  include("risks.jl")
-  include("rates.jl")
-  include("events.jl")
-  include("pathways.jl")
-  include("simulate.jl")
-  include("utilities.jl")
-  include("plothelpers.jl")
-  include("plotrecipes.jl")
-  include("infer.jl")
+  include("core/risks.jl")
+  include("core/rates.jl")
+  include("core/events.jl")
+
+  include("utilities/pathways.jl")
+  include("utilities/states.jl")
+
+  include("simulation/simulate.jl")
+
+  include("inference/priors.jl")
+  include("inference/augmentation.jl")
+  include("inference/likelihoods.jl")
+  include("inference/mcmc.jl")
+
+  include("plotting/helpers.jl")
+  include("plotting/recipes.jl")
 
   # New types and functions
   export
