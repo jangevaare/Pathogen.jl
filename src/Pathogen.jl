@@ -13,53 +13,53 @@ module Pathogen
     Base.rand
 
   # Source files
-  # Core
+  ## Core
   include("core/risks.jl")
   include("core/rates.jl")
   include("core/events.jl")
 
-  # Utilities
+  ## Utilities
   include("utilities/pathways.jl")
   include("utilities/states.jl")
   include("utilities/plotting.jl")
 
-  # Simulation
-  include("simulation/simulate.jl")
+  ## Simulation
+  include("simulation/initialization.jl")
+  include("simulation/run.jl")
 
-  # Inference
+  ## Inference
   include("inference/priors.jl")
   include("inference/augmentation.jl")
   include("inference/likelihoods.jl")
   include("inference/mcmc.jl")
 
-  # Visualization
+  ## Visualization
   include("plotrecipes.jl")
 
   # New types and functions
   export
-
-    # Core
+    ## Core
     RiskFunctions,
     RiskParameters,
     Rates,
     Events,
 
-    # Utilities
+    ## Utilities
     pathwayto,
     pathwayfrom,
     findstate,
-
-    # Simulation
-    update_events!,
-    update_rates!,
-    initialize_rates,
-    initialize_simulation,
-    simulate!,
     generatetree,
 
+    ## Simulation
+    initialize_rates,
+    initialize_simulation,
+    update_events!,
+    update_rates!,
+    simulate!,
+
+    ## Inference
     RiskPriors,
     PathogenTrace,
     PathogenIteration,
     PathogenProposal
-
 end

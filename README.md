@@ -71,6 +71,7 @@ Pathogen.jl utilizes the [PhyloTrees.jl](https://github.com/jangevaare/PhyloTree
                                    infectivity_func,
                                    detection_func,
                                    removal_func)
+                                   
         risk_params = RiskParameters(sparks_params,
                                      susceptibility_params,
                                      transmissibility_params,
