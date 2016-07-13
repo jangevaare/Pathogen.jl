@@ -19,9 +19,9 @@ end
 """
 Return all transmission pathways leading to specified individuals
 """
-function pathwaysto(individuals::Vector{Int64},
-                    events::Events,
-                    depth=Inf::Real)
+function pathwayto(individuals::Vector{Int64},
+                   events::Events,
+                   depth=Inf::Real)
   paths = Array[Int64[]]
   for i in individuals
     push!(paths, pathwayto(individual, events, depth))
@@ -33,9 +33,9 @@ end
 """
 Return all transmission pathways leading to individuals
 """
-function pathwaysto(events::Events,
-                    depth=Inf::Real)
-  return pathwaysto(1:length(events.exposed), events, depth)
+function pathwayto(events::Events,
+                   depth=Inf::Real)
+  return pathwayto(1:length(events.exposed), events, depth)
 end
 
 
@@ -64,9 +64,9 @@ end
 """
 Return all transmission pathways leading from specified individuals
 """
-function pathwaysfrom(individuals::Vector{Int64},
-                      events::Events,
-                      depth=Inf::Int64)
+function pathwayfrom(individuals::Vector{Int64},
+                     events::Events,
+                     depth=Inf::Int64)
   paths = Array[Int64[]]
   for i in individuals
     push!(paths, pathwayfrom(i))
@@ -78,7 +78,7 @@ end
 """
 Return all transmission pathways leading from individuals
 """
-function pathwaysfrom(events::Events,
+function pathwayfrom(events::Events,
                       depth=Inf::Int64)
-  return pathwaysfrom(1:length(events.exposed), events, depth)
+  return pathwayfrom(1:length(events.exposed), events, depth)
 end
