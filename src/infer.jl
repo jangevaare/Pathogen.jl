@@ -56,6 +56,7 @@ type RiskParameters
   removal::Vector{Float64}
 end
 
+
 function rand(riskpriors::RiskPriors)
   sparks = Float64[]
   susceptibility = Float64[]
@@ -97,3 +98,27 @@ function rand(riskpriors::RiskPriors)
                         detection,
                         removal)
 end
+
+
+"""
+Event data augmentation
+"""
+function eventDA(riskparams::RiskParameters, population::DataFrame, detectiontimes::Vector{Float64})
+  detectiontimes = fill(NaN, length(detectiontimes))
+  for i in 1:length(detectiontimes)
+    if !isnan(detectiontimes[i])
+      # TODO
+    end
+  end
+  infectiontimes = detectiontimes
+  # TODO
+end
+
+
+type Events
+  susceptible::Vector{Float64}
+  exposed::Vector{Float64}
+  infected::Vector{Float64}
+  detected::Vector{Float64}
+  removed::Vector{Float64}
+  network::Vector{Array{Bool}}
