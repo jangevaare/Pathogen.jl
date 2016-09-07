@@ -1,5 +1,5 @@
 """
-Create an initialize rate array
+Create and initialize a rate array
 """
 function initialize_rates(population::DataFrame,
                           risk_funcs::RiskFunctions,

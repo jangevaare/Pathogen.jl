@@ -7,7 +7,6 @@ type RiskPriors
   transmissibility::Vector{UnivariateDistribution}
   infectivity::Vector{UnivariateDistribution}
   latency::Vector{UnivariateDistribution}
-  detection::Vector{UnivariateDistribution}
   removal::Vector{UnivariateDistribution}
 end
 
@@ -18,7 +17,6 @@ function rand(riskpriors::RiskPriors)
   transmissibility = Float64[]
   infectivity = Float64[]
   latency = Float64[]
-  detection = Float64[]
   removal = Float64[]
 
   for i = 1:length(riskpriors.sparks)
@@ -50,6 +48,16 @@ function rand(riskpriors::RiskPriors)
                         transmissability,
                         infectivity,
                         latency,
-                        detection,
                         removal)
+end
+
+
+"""
+Priors for event times
+"""
+type EventPriors
+  susceptible::UnivariateDistribution
+  exposed::UnivariateDistribution
+  infected::UnivariateDistribution
+  removed::UnivariateDistribution
 end
