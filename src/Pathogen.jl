@@ -26,6 +26,7 @@ module Pathogen
   ## Simulation
   include("simulation/initialization.jl")
   include("simulation/run.jl")
+  include("simulation/observe.jl")
 
   ## Inference
   include("inference/priors.jl")
@@ -56,9 +57,12 @@ module Pathogen
     update_events!,
     update_rates!,
     simulate!,
+    EventObservations,
+    observe,
 
     ## Inference
-    RiskPriors,
+    RiskParameterPriors,
+    EventPriors,
     PathogenTrace,
     PathogenIteration,
     PathogenProposal

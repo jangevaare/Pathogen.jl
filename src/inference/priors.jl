@@ -1,7 +1,7 @@
 """
 Prior distributions vectors for the `RiskParameters`
 """
-type RiskPriors
+type RiskParameterPriors
   sparks::Vector{UnivariateDistribution}
   susceptibility::Vector{UnivariateDistribution}
   transmissibility::Vector{UnivariateDistribution}
@@ -11,7 +11,7 @@ type RiskPriors
 end
 
 
-function rand(riskpriors::RiskPriors)
+function rand(riskpriors::RiskParameterPriors)
   sparks = Float64[]
   susceptibility = Float64[]
   transmissibility = Float64[]
