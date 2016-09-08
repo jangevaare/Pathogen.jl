@@ -1,8 +1,6 @@
 """
 Event data augmentation
 """
-function eventDA(riskparams::RiskParameters, population::DataFrame, detectiontimes::Vector{Float64})
-  events = Events(population)
+function eventDA
   # TODO
-  return events
 end

@@ -52,12 +52,66 @@ function rand(riskpriors::RiskParameterPriors)
 end
 
 
+function logprior(riskparams::RiskParameters,
+                  riskpriors::RiskParameterPriors)
+  lp = 0.
+  for i = 1:length(riskparams.sparks)
+    lp += loglikelihood(riskpriors.sparks[i], riskparams.sparks[i])
+  end
+  for i = 1:length(riskparams.susceptibility)
+    lp += loglikelihood(riskpriors.susceptibility[i], riskparams.susceptibility[i])
+  end
+  for i = 1:length(riskparams.transmissability)
+    lp += loglikelihood(riskpriors.transmissability[i], riskparams.transmissability[i])
+  end
+  for i = 1:length(riskparams.infectivity)
+    lp += loglikelihood(riskpriors.infectivity[i], riskparams.infectivity[i])
+  end
+  for i = 1:length(riskparams.latency)
+    lp += loglikelihood(riskpriors.latency[i], riskparams.latency[i])
+  end
+  for i = 1:length(riskparams.removal)
+    lp += loglikelihood(riskpriors.removal[i], riskparams.removal[i])
+  end
+  return lp
+end
+
+
 """
 Priors for event times
 """
 type EventPriors
-  susceptible::UnivariateDistribution
-  exposed::UnivariateDistribution
-  infected::UnivariateDistribution
-  removed::UnivariateDistribution
+  susceptible::Vector{Nullable{UnivariateDistribution}}
+  exposed::Vector{Nullable{UnivariateDistribution}}
+  infected::Vector{Nullable{UnivariateDistribution}}
+  removed::Vector{Nullable{UnivariateDistribution}}
+end
+
+
+"""
+Calculate log priors
+"""
+function logprior(events::Events, priors::EventPriors)
+  lp = 0.
+  for i = 1:length(events.susceptible)
+    if !isnull(priors.susceptible[i])
+      lp += loglikelihood(get(priors.susceptible[i]), events.susceptible[i])
+    end
+  end
+  for i = 1:length(events.exposed)
+    if !isnull(priors.exposed[i])
+      lp += loglikelihood(get(priors.exposed[i]), events.exposed[i])
+    end
+  end
+  for i = 1:length(events.infected)
+    if !isnull(priors.infected[i])
+      lp += loglikelihood(get(priors.infected[i]), events.infected[i])
+    end
+  end
+  for i = 1:length(events.removed)
+    if !isnull(priors.removed[i])
+      lp += loglikelihood(get(priors.removed[i]), events.removed[i])
+    end
+  end
+  return lp
 end

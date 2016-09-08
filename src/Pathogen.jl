@@ -63,7 +63,9 @@ module Pathogen
     ## Inference
     RiskParameterPriors,
     EventPriors,
+    logprior,
     PathogenTrace,
     PathogenIteration,
-    PathogenProposal
+    PathogenProposal,
+    loglikelihood
 end
