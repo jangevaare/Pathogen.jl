@@ -115,3 +115,30 @@ function logprior(events::Events, priors::EventPriors)
   end
   return lp
 end
+
+
+function rand(eventpriors::EventPriors)
+  susceptible = fill(NaN, length(eventpriors.susceptible))
+  exposed = fill(NaN, length(eventpriors.exposed))
+  infected = fill(NaN, length(eventpriors.infected))
+  removed = fill(NaN, length(eventpriors.removed))
+  for i = 1:length(susceptible)
+    if !isnull(eventpriors.susceptible[i])
+      susceptible[i] = rand(eventpriors.susceptible[i])
+    end
+  end
+  for i = 1:length(exposed)
+    if !isnull(eventpriors.exposed[i])
+      exposed[i] = rand(eventpriors.exposed[i])
+    end
+  end
+  for i = 1:length(infected)
+    if !isnull(eventpriors.infected[i])
+      infected[i] = rand(eventpriors.infected[i])
+    end
+  end
+  for i = 1:length(removed)
+    if !isnull(eventpriors.removed[i])
+      removed[i] = rand(eventpriors.removed[i])
+    end
+  end
