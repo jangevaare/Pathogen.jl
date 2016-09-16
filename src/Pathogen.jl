@@ -18,16 +18,17 @@ module Pathogen
   include("core/rates.jl")
   include("core/events.jl")
   include("core/networks.jl")
+  include("core/observe.jl")
 
   ## Utilities
   include("utilities/pathways.jl")
   include("utilities/states.jl")
+  include("utilities/trees.jl")
   include("utilities/plotting.jl")
 
   ## Simulation
   include("simulation/initialization.jl")
   include("simulation/run.jl")
-  include("simulation/observe.jl")
 
   ## Inference
   include("inference/priors.jl")

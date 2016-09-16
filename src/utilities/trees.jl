@@ -1,8 +1,10 @@
 """
 Generate phylogenetic tree based on transmission events
 """
-function generatetree(events::Events)
-  eventtimes = [events.exposed events.detected events.removed]
+function generatetree(events::Events,
+                      observations::EventObservations
+                      network::Network)
+  eventtimes = [events.exposed observations.infected events.removed]
   eventorder = sortperm(eventtimes[:])
   eventnodes = fill(Nullable{Int64}(), size(eventtimes))
   tree = Tree()
@@ -11,14 +13,14 @@ function generatetree(events::Events)
     event = ind2sub(size(eventtimes), eventorder[i])
     if event[2] == 1
       # Exposure event
-      if events.network[1][event[1]]
+      if network.internal[event[1]]
         # External exposure
         parentnode = 1
         branch_length = eventtimes[eventorder[i]]
       else
         # Internal exposure
-        source = findfirst(events.network[2][:, event[1]])
-        priorexposures = events.network[2][source, :][:] & (eventtimes[:, 1] .< eventtimes[eventorder[i]])
+        source = findfirst(network.external[:, event[1]])
+        priorexposures = network.external[source, :][:] & (eventtimes[:, 1] .< eventtimes[eventorder[i]])
         if isnan(eventtimes[source, 2]) || eventtimes[source, 2] > eventtimes[event[1], 1]
           # Undetected exposure source
           if any(priorexposures)
@@ -47,7 +49,7 @@ function generatetree(events::Events)
       eventnodes[eventorder[i]] = length(tree.nodes)
     elseif event[2] == 2
       # Detection event
-      priorexposures = events.network[2][event[1], :][:] & (eventtimes[:, 1] .< eventtimes[eventorder[i]])
+      priorexposures = network.external[event[1], :][:] & (eventtimes[:, 1] .< eventtimes[eventorder[i]])
       if any(priorexposures)
         # Individual has exposed others before detection
         parentnode = get(eventnodes[priorexposures, 1][indmax(eventtimes[priorexposures, 1])])
@@ -61,7 +63,7 @@ function generatetree(events::Events)
       eventnodes[eventorder[i]] = length(tree.nodes)
     elseif event[2] == 3
       # Removal event
-      priorexposures = events.network[2][event[1], :][:]
+      priorexposures = network.external[event[1], :][:]
       if any(priorexposures)
         # Individual has exposed others prior to removal
         if !isnan(eventtimes[event[1], 2]) && all(eventtimes[priorexposures, 1] .< eventtimes[event[1], 2])

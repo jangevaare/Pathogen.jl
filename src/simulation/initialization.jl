@@ -45,5 +45,7 @@ function initialize_simulation(population::DataFrame,
                            risk_params)
   # Initialize events data frame
   events = Events(population)
-  return rates, events
+  # Initialize exposure network
+  network = Network(population)
+  return rates, events, network
 end

@@ -70,12 +70,10 @@ function update_events!(events::Events,
   if event[1] == 1
     individual = event[2]
     events.exposed[individual] = time
-    events.network[1][event[2]] = true
   # Internal exposure
   elseif event[1] == 2
     individual = ind2sub((length(events.exposed),length(events.exposed)), event[2])[2]
     events.exposed[individual] = time
-    events.network[2][event[2]] = true
   # Onset of infection
   elseif event[1] == 3
     individual = event[2]
@@ -90,11 +88,26 @@ end
 
 
 """
+A function to update a `Network` object based on an event occurence
+"""
+function update_network!(network::Network,
+                         event::Tuple{Int64, Int64})
+  if event[1] == 1
+    network.internal[event[2]] = true
+  elseif event[1] == 2
+    network.external[event[2]] = true
+  end
+  return network
+end
+
+
+"""
 Simulation function
 """
 function simulate!(n::Int64,
                    rates::Rates,
-                   events::Events)
+                   events::Events,
+                   network::Network)
   counter = 0
   time = 0.
   while counter < n && time < Inf
@@ -103,7 +116,8 @@ function simulate!(n::Int64,
     if time < Inf
       update_rates!(rates, event)
       update_events!(events, event, time)
+      update_network!(network, event)
     end
   end
-  return rates, events
+  return rates, events, network
 end
