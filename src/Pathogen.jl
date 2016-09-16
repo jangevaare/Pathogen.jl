@@ -17,6 +17,7 @@ module Pathogen
   include("core/risks.jl")
   include("core/rates.jl")
   include("core/events.jl")
+  include("core/networks.jl")
 
   ## Utilities
   include("utilities/pathways.jl")
@@ -44,6 +45,7 @@ module Pathogen
     RiskParameters,
     Rates,
     Events,
+    Network,
 
     ## Utilities
     pathwayto,
