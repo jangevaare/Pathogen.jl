@@ -142,3 +142,5 @@ function rand(eventpriors::EventPriors)
       removed[i] = rand(eventpriors.removed[i])
     end
   end
+  return susceptible, exposed, infected, removed
+end
