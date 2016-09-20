@@ -5,12 +5,16 @@ module Pathogen
   using PhyloTrees
   using Distributions
   using RecipesBase
+  using ProgressMeter
 
   # Functions to be extended
   import
     Base.push!,
     Base.append!,
-    Base.rand
+    Base.rand,
+    Base.length,
+    Base.Array,
+    Base.size
 
   # Source files
   ## Core
