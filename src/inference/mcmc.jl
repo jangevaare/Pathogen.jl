@@ -41,36 +41,23 @@ end
 PathogenProposal = PathogenIteration
 
 
-# function Array(riskparams::RiskParameters)
-#   return [riskparams.sparks;
-#           riskparams.susceptibility;
-#           riskparams.transmissibility;
-#           riskparams.infectivity;
-#           riskparams.latency;
-#           riskparams.removal]
-# end
-
-
-# function Array(trace::PathogenTrace)
-#   return [Array(trace.riskparameters[i]) for i = 1:length(trace.riskparameters)]
-# end
-
-function length(trace::PathogenTrace)
-  return length(trace.riskparameters)
-end
-
-function length(riskparameters::RiskParameters)
-  return sum([length(riskparameters.sparks);
-              length(riskparameters.susceptibility);
-              length(riskparameters.transmissibility);
-              length(riskparameters.infectivity);
-              length(riskparameters.latency);
-              length(riskparameters.removal)])
+function length(x::PathogenTrace)
+  return length(x.riskparameters)
 end
 
 
-function size(trace::PathogenTrace)
-  return (length(trace), length(trace[1]))
+function length(x::RiskParameters)
+  return sum([length(x.sparks);
+              length(x.susceptibility);
+              length(x.transmissibility);
+              length(x.infectivity);
+              length(x.latency);
+              length(x.removal)])
+end
+
+
+function size(x::Vector{RiskParameters})
+  return (length(x), length(x[1]))
 end
 
 
@@ -89,7 +76,12 @@ function getindex(x::RiskParameters, i)
 end
 
 
-function getindex(x::Array{RiskParameters, 1}, i, j)
+function Vector(x::RiskParameters)
+  return [x[i] for i = 1:length(x)]
+end
+
+
+function getindex(x::Vector{RiskParameters}, i, j)
   inds = cumsum([length(x[i].sparks);
                  length(x[i].susceptibility);
                  length(x[i].transmissibility);
@@ -104,9 +96,9 @@ function getindex(x::Array{RiskParameters, 1}, i, j)
 end
 
 
-function Array(trace::PathogenTrace)
-  dims = size(trace)
-  return [trace.riskparameters[i, j] for i = 1:dim[1], j = 1:dim[2]]
+function Array(x::Vector{RiskParameters})
+  dims = size(x)
+  return [x[i, j] for i = 1:dim[1], j = 1:dim[2]]
 end
 
 
@@ -132,76 +124,64 @@ function MHaccept(lp1::Float64, lp2::Float64)
 end
 
 
+
 """
-Transition kernel
+Generate the variance-covariance matrix for a MvNormal transition kernel based
+upon prior distributions
 """
-type TransitionKernel
-  sparks::Vector{Float64}
-  susceptibility::Vector{Float64}
-  transmissibility::Vector{Float64}
-  infectivity::Vector{Float64}
-  latency::Vector{Float64}
-  removal::Vector{Float64}
-
-  function(priors::RiskParameterPriors)
-    sparks = Float64[]
-    susceptibility = Float64[]
-    transmissibility = Float64[]
-    infectivity = Float64[]
-    latency = Float64[]
-    removal = Float64[]
-    for i in RiskParameterPriors.sparks
-      push!(sparks, var(i)*2.38^2)
-    end
-    for i in RiskParameterPriors.susceptibility
-      push!(susceptibility, var(i)*2.38^2)
-    end
-    for i in RiskParameterPriors.transmissibility
-      push!(transmissibility, var(i)*2.38^2)
-    end
-    for i in RiskParameterPriors.infectivity
-      push!(infectivity, var(i)*2.38^2)
-    end
-    for i in RiskParameterPriors.latency
-      push!(latency, var(i)*2.38^2)
-    end
-    for i in RiskParameterPriors.removal
-      push!(removal, var(i)*2.38^2)
-    end
-    dims = sum([length(sparks);
-                length(susceptibility);
-                length(transmissibility);
-                length(infectivity);
-                length(latency);
-                length(removal)])
-
-    sparks /= dims
-    susceptibility /= dims
-    transmissibility /= dims
-    infectivity /= dims
-    latency /= dims
-    removal /= dims
-
-    return new(sparks,
-               susceptibility,
-               transmissibility,
-               infectivity,
-               latency,
-               removal)
+function transition_kernel_variance(x::RiskParameterPriors)
+  diagonal = Float64[]
+  for i in x.sparks
+    push!(diagonal, var(i)*2.38^2)
   end
-
-  function(paramstrace::Vector{RiskParameters})
-
+  for i in x.susceptibility
+    push!(diagonal, var(i)*2.38^2)
+  end
+  for i in x.transmissibility
+    push!(diagonal, var(i)*2.38^2)
+  end
+  for i in x.infectivity
+    push!(diagonal, var(i)*2.38^2)
+  end
+  for i in x.latency
+    push!(diagonal, var(i)*2.38^2)
+  end
+  for i in x.removal
+    push!(diagonal, var(i)*2.38^2)
+  end
+  diagonal /= length(diagonal)
+  return diagm(diagonal)
 end
 
+
+"""
+Adapt the variance-covariance matrix for a MvNormal transition kernel
+"""
+function transition_kernel_variance(x::Vector{RiskParameters})
+  return cov(Array(x))*(2.38^2)/length(x[1])
+end
 
 
 """
 Generate proposal
 """
-function propose(currentstate::PathogenIteration)
-  newstate
-  return newstate
+function propose(currentstate::RiskParameters,
+                 transitionkernel::Array{Float64, 2})
+  newstate = rand(MvNormal(Vector(currentstate), transitionkernel))
+
+  inds = cumsum([length(x[i].sparks);
+                 length(x[i].susceptibility);
+                 length(x[i].transmissibility);
+                 length(x[i].infectivity);
+                 length(x[i].latency);
+                 length(x[i].removal)])
+
+  return RiskParameters([newstate[1:inds[1]]],
+                        [newstate[inds[1]+1:inds[2]]],
+                        [newstate[inds[2]+1:inds[3]]],
+                        [newstate[inds[3]+1:inds[4]]],
+                        [newstate[inds[4]+1:inds[5]]],
+                        [newstate[inds[5]+1:inds[6]]])
 end
 
 

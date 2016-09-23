@@ -14,6 +14,7 @@ module Pathogen
     Base.rand,
     Base.length,
     Base.Array,
+    Base.Vector,
     Base.size
 
   # Source files
