@@ -202,28 +202,51 @@ function mcmc(n::Int64,
                                     events_proposal,
                                     riskfuncs,
                                     population)
-  network_proposal = rand(network)
+  network_proposal1 = rand(network)
   trace = PathogenTrace([riskparameter_proposal], [events_proposal], [network_proposal])
+  individuals = size(population, 1)
   for i = 1:n
     next!(progressbar)
-    lp2 = lp1
     if mod(tune, i) == 0
       transition_kernel_var = transition_kernel_variance(trace.riskparameters)
     end
-    riskparameter_proposal = propose(trace.riskparameters[end], transition_kernel_var)
-    events_proposal = propose(events, trace.network[end])
-    lp1, networkrates = loglikelihood(riskparameter_proposal,
-                                      events_proposal,
-                                      riskfuncs,
-                                      population)
-    if lp1 < Inf
-      lp1 += logprior(riskparameter_proposal, riskparameter_priors)
+    riskparameter_proposal2 = riskparameter_proposal1
+    lprior2 = lprior1
+    events_proposal2 = events_proposal1
+    network_proposal2 = network_proposal1
+    lposterior2 = lposterior1
+
+    if mod(3, i) == 0
+      lprior1 = Inf
+      while lprior1 == Inf
+        riskparameter_proposal1 = propose(riskparameter_proposal2, transition_kernel_var)
+        lprior1 = logprior(riskparameter_proposal1, riskparameter_priors)
+      end
     end
-
-
-
-
-
+    if mod(3, i) == 1
+      updated_inds = sample(1:individuals, rand(Poisson(1.)))
+      events_proposal1 = propose(updated_inds, events_proposal2, eventpriors, network_proposal1)
+    end
+    if mod(3, i) != 2
+      llikelihood1, networkrates1 = loglikelihood(riskparameter_proposal1,
+                                                  events_proposal1,
+                                                  riskfuncs,
+                                                  population)
+    end
+    if mod(3, i) == 2
+      updated_inds = sample(1:individuals, rand(Poisson(1.)))
+      network_proposal1 = propose(updated_inds, networkrates1, network_proposal2)
+    end
+    lposterior1 = lprior1 + llikelihood1
+    if MHreject(lposterior1, lposterior2)
+      riskparameter_proposal1 = riskparameter_proposal2
+      events_proposal1 = events_proposal2
+      network_proposal1 = networkproposal2
+      lposterior1 = lposterior2
+    end
+    push!(trace, PathogenProposal(riskparameter_proposal1,
+                                  events_proposal1,
+                                  network_proposal1))
   end
   return trace
 end
