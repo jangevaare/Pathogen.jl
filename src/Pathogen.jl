@@ -37,10 +37,10 @@ module Pathogen
   include("simulation/run.jl")
 
   ## Inference
-  include("inference/priors.jl")
+  include("inference/riskparameters.jl")
   include("inference/eventtimes.jl")
-  include("inference/networks.jl")
-  include("inference/likelihoods.jl")
+  include("inference/exposurenetwork.jl")
+  include("inference/loglikelihood.jl")
   include("inference/mcmc.jl")
 
   ## Visualization

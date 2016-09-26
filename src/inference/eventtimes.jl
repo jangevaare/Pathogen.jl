@@ -1,4 +1,61 @@
 """
+Priors for event times
+"""
+type EventPriors
+  exposed::Vector{Nullable{UnivariateDistribution}}
+  infected::Vector{Nullable{UnivariateDistribution}}
+  removed::Vector{Nullable{UnivariateDistribution}}
+end
+
+
+"""
+Calculate log priors
+"""
+function logprior(events::Events, priors::EventPriors)
+  lp = 0.
+  for i = 1:length(events.exposed)
+    if !isnull(priors.exposed[i])
+      lp += loglikelihood(get(priors.exposed[i]), events.exposed[i])
+    end
+  end
+  for i = 1:length(events.infected)
+    if !isnull(priors.infected[i])
+      lp += loglikelihood(get(priors.infected[i]), events.infected[i])
+    end
+  end
+  for i = 1:length(events.removed)
+    if !isnull(priors.removed[i])
+      lp += loglikelihood(get(priors.removed[i]), events.removed[i])
+    end
+  end
+  return lp
+end
+
+
+function rand(eventpriors::EventPriors)
+  exposed = fill(NaN, length(eventpriors.exposed))
+  infected = fill(NaN, length(eventpriors.infected))
+  removed = fill(NaN, length(eventpriors.removed))
+  for i = 1:length(exposed)
+    if !isnull(eventpriors.exposed[i])
+      exposed[i] = rand(eventpriors.exposed[i])
+    end
+  end
+  for i = 1:length(infected)
+    if !isnull(eventpriors.infected[i])
+      infected[i] = rand(eventpriors.infected[i])
+    end
+  end
+  for i = 1:length(removed)
+    if !isnull(eventpriors.removed[i])
+      removed[i] = rand(eventpriors.removed[i])
+    end
+  end
+  return Events(exposed, infected, removed)
+end
+
+
+"""
 Event time augmentation
 """
 function propose(individuals::Vector{Int64},
