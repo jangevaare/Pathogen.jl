@@ -207,9 +207,11 @@ function mcmc(n::Int64,
   individuals = size(population, 1)
   for i = 1:n
     next!(progressbar)
+
     if mod(tune, i) == 0
       transition_kernel_var = transition_kernel_variance(trace.riskparameters)
     end
+
     riskparameter_proposal2 = riskparameter_proposal1
     lprior2 = lprior1
     events_proposal2 = events_proposal1
@@ -223,10 +225,12 @@ function mcmc(n::Int64,
         lprior1 = logprior(riskparameter_proposal1, riskparameter_priors)
       end
     end
+
     if mod(3, i) == 1
       updated_inds = sample(1:individuals, rand(Poisson(1.)))
       events_proposal1 = propose(updated_inds, events_proposal2, eventpriors, network_proposal1)
     end
+
     if mod(3, i) != 2
       llikelihood1, networkrates1 = loglikelihood(riskparameter_proposal1,
                                                   events_proposal1,
@@ -239,6 +243,8 @@ function mcmc(n::Int64,
     end
     lposterior1 = lprior1 + llikelihood1
     if MHreject(lposterior1, lposterior2)
+      lprior1 = lprior2
+      llikelihood1 = llikelihood2
       riskparameter_proposal1 = riskparameter_proposal2
       events_proposal1 = events_proposal2
       network_proposal1 = networkproposal2
