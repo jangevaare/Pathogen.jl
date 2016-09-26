@@ -1,13 +1,13 @@
-function loglikelihood(iter::PathogenIteration
+function loglikelihood(riskparams::RiskParameters,
+                       events::Events,
                        riskfuncs::RiskFunctions,
                        population::DataFrame)
   # Initialize
   ll = 0.
-  eventtimes = [iter.events.exposed
-                iter.events.infected
-                iter.events.removed]
-  riskparams = iter.risk_parameters
-  rates = initialize_rates(population, riskfuncs, riskparms)
+  eventtimes = [events.exposed
+                events.infected
+                events.removed]
+  rates = initialize_rates(population, riskfuncs, riskparams)
   networkrates = [fill(0., size(population, 1)), fill(0., (size(population, 1), size(population, 1)))]
 
   # Find event order

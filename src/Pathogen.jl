@@ -15,7 +15,8 @@ module Pathogen
     Base.length,
     Base.Array,
     Base.Vector,
-    Base.size
+    Base.size,
+    Base.copy
 
   # Source files
   ## Core
@@ -37,7 +38,8 @@ module Pathogen
 
   ## Inference
   include("inference/priors.jl")
-  include("inference/augmentation.jl")
+  include("inference/eventtimes.jl")
+  include("inference/networks.jl")
   include("inference/likelihoods.jl")
   include("inference/mcmc.jl")
 

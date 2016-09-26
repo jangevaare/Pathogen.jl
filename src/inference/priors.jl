@@ -81,7 +81,6 @@ end
 Priors for event times
 """
 type EventPriors
-  susceptible::Vector{Nullable{UnivariateDistribution}}
   exposed::Vector{Nullable{UnivariateDistribution}}
   infected::Vector{Nullable{UnivariateDistribution}}
   removed::Vector{Nullable{UnivariateDistribution}}
@@ -93,11 +92,6 @@ Calculate log priors
 """
 function logprior(events::Events, priors::EventPriors)
   lp = 0.
-  for i = 1:length(events.susceptible)
-    if !isnull(priors.susceptible[i])
-      lp += loglikelihood(get(priors.susceptible[i]), events.susceptible[i])
-    end
-  end
   for i = 1:length(events.exposed)
     if !isnull(priors.exposed[i])
       lp += loglikelihood(get(priors.exposed[i]), events.exposed[i])
@@ -118,15 +112,9 @@ end
 
 
 function rand(eventpriors::EventPriors)
-  susceptible = fill(NaN, length(eventpriors.susceptible))
   exposed = fill(NaN, length(eventpriors.exposed))
   infected = fill(NaN, length(eventpriors.infected))
   removed = fill(NaN, length(eventpriors.removed))
-  for i = 1:length(susceptible)
-    if !isnull(eventpriors.susceptible[i])
-      susceptible[i] = rand(eventpriors.susceptible[i])
-    end
-  end
   for i = 1:length(exposed)
     if !isnull(eventpriors.exposed[i])
       exposed[i] = rand(eventpriors.exposed[i])
@@ -142,5 +130,5 @@ function rand(eventpriors::EventPriors)
       removed[i] = rand(eventpriors.removed[i])
     end
   end
-  return susceptible, exposed, infected, removed
+  return Events(exposed, infected, removed)
 end

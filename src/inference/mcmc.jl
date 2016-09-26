@@ -166,9 +166,9 @@ end
 Generate proposal
 """
 function propose(currentstate::RiskParameters,
-                 transitionkernel::Array{Float64, 2})
-  newstate = rand(MvNormal(Vector(currentstate), transitionkernel))
+                 transition_kernel_variance::Array{Float64, 2})
 
+  newstate = rand(MvNormal(Vector(currentstate), transition_kernel_variance))
   inds = cumsum([length(x[i].sparks);
                  length(x[i].susceptibility);
                  length(x[i].transmissibility);
@@ -176,12 +176,12 @@ function propose(currentstate::RiskParameters,
                  length(x[i].latency);
                  length(x[i].removal)])
 
-  return RiskParameters([newstate[1:inds[1]]],
-                        [newstate[inds[1]+1:inds[2]]],
-                        [newstate[inds[2]+1:inds[3]]],
-                        [newstate[inds[3]+1:inds[4]]],
-                        [newstate[inds[4]+1:inds[5]]],
-                        [newstate[inds[5]+1:inds[6]]])
+  return RiskParameters(newstate[1:inds[1]],
+                        newstate[inds[1]+1:inds[2]],
+                        newstate[inds[2]+1:inds[3]],
+                        newstate[inds[3]+1:inds[4]],
+                        newstate[inds[4]+1:inds[5]],
+                        newstate[inds[5]+1:inds[6]])
 end
 
 
@@ -189,16 +189,39 @@ end
 Phylodynamic ILM MCMC
 """
 function mcmc(n::Int64,
-              trace::PathogenTrace,
               eventpriors::EventPriors,
-              riskparameterpriors::RiskParameterPriors,
+              riskparameter_priors::RiskParameterPriors,
               riskfuncs::RiskFunctions,
               population::DataFrame,
-              events::Events)
+              tune=1000::Int64)
   progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 25)
+  transition_kernel_var = transition_kernel_variance(riskparameterpriors)
+  riskparameter_proposal = rand(riskparameter_priors)
+  events_proposal = rand(eventpriors)
+  lp1, networkrates = loglikelihood(riskparameter_proposal,
+                                    events_proposal,
+                                    riskfuncs,
+                                    population)
+  network_proposal = rand(network)
+  trace = PathogenTrace([riskparameter_proposal], [events_proposal], [network_proposal])
   for i = 1:n
     next!(progressbar)
-    proposal = PathogenProposal
+    lp2 = lp1
+    if mod(tune, i) == 0
+      transition_kernel_var = transition_kernel_variance(trace.riskparameters)
+    end
+    riskparameter_proposal = propose(trace.riskparameters[end], transition_kernel_var)
+    events_proposal = propose(events, trace.network[end])
+    lp1, networkrates = loglikelihood(riskparameter_proposal,
+                                      events_proposal,
+                                      riskfuncs,
+                                      population)
+    if lp1 < Inf
+      lp1 += logprior(riskparameter_proposal, riskparameter_priors)
+    end
+
+
+
 
 
   end
