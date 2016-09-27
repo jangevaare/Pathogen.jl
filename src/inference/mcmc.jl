@@ -72,7 +72,7 @@ end
 Phylodynamic ILM MCMC
 """
 function mcmc(n::Int64,
-              event_priors::event_priors,
+              event_priors::EventPriors,
               riskparameter_priors::RiskParameterPriors,
               riskfuncs::RiskFunctions,
               population::DataFrame,

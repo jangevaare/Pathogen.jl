@@ -2,7 +2,7 @@
 Generate phylogenetic tree based on transmission events
 """
 function generatetree(events::Events,
-                      observations::EventObservations
+                      observations::EventObservations,
                       network::Network)
   eventtimes = [events.exposed observations.infected events.removed]
   eventorder = sortperm(eventtimes[:])

@@ -57,7 +57,6 @@ function pathwayfrom(individual::Int64,
        append!(path, find(network.external[j, :]))
      end
    end
-  end
   return path
 end
 

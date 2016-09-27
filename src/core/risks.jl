@@ -50,12 +50,12 @@ function getindex(x::RiskParameters, i)
 end
 
 
-function getindex(x::Vector{RiskParameters}, i, j)
+function getindex(x::Array{RiskParameters, 1}, i, j)
   return x[i][j]
 end
 
 
-function convert(::Type{Array}, x::Vector{RiskParameters})
+function convert(::Type{Array}, x::Array{RiskParameters, 1})
   parameters = length(x[1])
   iterations = length(x)
   return [x[i, j] for i = 1:iterations, j = 1:parameters]
