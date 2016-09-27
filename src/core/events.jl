@@ -22,7 +22,7 @@ type Events
                length(infected);
                length(removed)]
     if !(lengths[1] == lengths[2] == lengths[3])
-      error("Event time vectors are not of equal length")
+      throw(BoundsError)
     end
     return new(exposed,
                infected,

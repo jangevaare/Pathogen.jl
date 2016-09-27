@@ -3,7 +3,7 @@ Provides the state of an individual at a specified time
 """
 function findstate(events::Events, individual::Int64, time::Float64, number=false::Bool)
   if !(1 <= individual <= length(events.susceptible))
-    error("Invalid individual specified")
+    throw("Invalid individual specified")
   end
   if number
     if isnan(events.exposed[individual]) || events.exposed[individual] > time

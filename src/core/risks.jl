@@ -35,11 +35,6 @@ function length(x::RiskParameters)
 end
 
 
-function size(x::Vector{RiskParameters})
-  return (length(x), length(x[1]))
-end
-
-
 function getindex(x::RiskParameters, i)
   inds = cumsum([length(x.sparks);
                  length(x.susceptibility);
@@ -49,33 +44,19 @@ function getindex(x::RiskParameters, i)
                  length(x.removal)])
   riskfunc = findfirst(i <= inds)
   if riskfunc == 0
-    error("BoundsError")
+    throw(BoundsError)
   end
   return x.(fieldnames(x)[riskfunc])[end - (inds[riskfunc] - i)]
 end
 
 
-function Vector(x::RiskParameters)
-  return [x[i] for i = 1:length(x)]
-end
-
-
 function getindex(x::Vector{RiskParameters}, i, j)
-  inds = cumsum([length(x[i].sparks);
-                 length(x[i].susceptibility);
-                 length(x[i].transmissibility);
-                 length(x[i].infectivity);
-                 length(x[i].latency);
-                 length(x[i].removal)])
-  riskfunc = findfirst(j <= inds)
-  if riskfunc == 0
-    @error("BoundsError")
-  end
-  return x[i].(fieldnames(x[i])[riskfunc])[end - (inds[riskfunc] - j)]
+  return x[i][j]
 end
 
 
-function Array(x::Vector{RiskParameters})
-  dims = size(x)
-  return [x[i, j] for i = 1:dim[1], j = 1:dim[2]]
+function convert(::Type{Array}, x::Vector{RiskParameters})
+  parameters = length(x[1])
+  iterations = length(x)
+  return [x[i, j] for i = 1:iterations, j = 1:parameters]
 end

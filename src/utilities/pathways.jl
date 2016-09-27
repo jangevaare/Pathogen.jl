@@ -47,7 +47,7 @@ Return the transmission pathway leading from an individual
 """
 function pathwayfrom(individual::Int64,
                      network::Network,
-                     depth=Inf::Int64)
+                     depth=Inf::Real)
    path = [individual]
    pathlengths = [0]
    while depth >= length(path) > pathlengths[end]
@@ -66,7 +66,7 @@ Return all transmission pathways leading from specified individuals
 """
 function pathwayfrom(individuals::Vector{Int64},
                      network::Network,
-                     depth=Inf::Int64)
+                     depth=Inf::Real)
   paths = Array[Int64[]]
   for i in individuals
     push!(paths, pathwayfrom(i, network, depth))
@@ -79,6 +79,6 @@ end
 Return all transmission pathways leading from individuals
 """
 function pathwayfrom(network::Network,
-                     depth=Inf::Int64)
+                     depth=Inf::Real)
   return pathwayfrom(1:length(network.internal), network, depth)
 end

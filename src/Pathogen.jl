@@ -13,8 +13,7 @@ module Pathogen
     Base.append!,
     Base.rand,
     Base.length,
-    Base.Array,
-    Base.Vector,
+    Base.convert,
     Base.size,
     Base.copy
 

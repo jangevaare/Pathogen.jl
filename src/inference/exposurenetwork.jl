@@ -7,7 +7,7 @@ function rand(network_rates::Array{Array{Float64}, 1})
   external_network = fill(false, length(external_rates))
   internal_network = fill(false, size(internal_rates))
   if !(length(external_rates) == size(internal_rates, 1) == size(internal_rates, 2))
-    error("Dimension mismatch in exposure rates object")
+    throw(BoundsError)
   end
   for i = 1:length(external_rates)
     external_total = external_rates[i]

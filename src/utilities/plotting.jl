@@ -1,6 +1,6 @@
 function popplot(population::DataFrame, events::Events, time::Float64, state::Symbol)
   if !(state in [:S; :E; :I; :R])
-    error("State must be specified as S, E, I or R")
+    throw("State must be specified as S, E, I or R")
   end
   x = [NaN]
   y = [NaN]
@@ -36,7 +36,7 @@ end
 
 function epiplot(events::Events, state::Symbol)
   if !(state in [:S, :E, :I, :R])
-    error("State must be specified as S, E, I or R")
+    throw("State must be specified as S, E, I or R")
   end
   time=[0.]
   amount=[0]

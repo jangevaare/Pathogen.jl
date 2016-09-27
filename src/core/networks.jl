@@ -12,7 +12,7 @@ type Network
 
   function Network(external, internal)
     if !(length(external) == size(internal, 1) == size(internal, 2))
-      error("Dimension mismatch in exposure network object")
+      throw(BoundsError)
     end
     return new(external, internal)
   end
