@@ -1,5 +1,6 @@
 function loglikelihood(riskparams::RiskParameters,
                        events::Events,
+                       network::Network,
                        riskfuncs::RiskFunctions,
                        population::DataFrame)
   # Initialize
@@ -48,7 +49,7 @@ function loglikelihood(riskparams::RiskParameters,
         update_rates(rates, (1, individual))
       else
         source = findfirst(network.external[:,individual])
-        update_rates(rates, (2, sub2ind(size(network.external), source, individual)))
+        update_rates!(rates, (2, sub2ind(size(network.external), source, individual)))
       end
     else
       ll += log(rates[eventtype+1][individual]/total)

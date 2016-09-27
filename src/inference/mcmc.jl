@@ -13,13 +13,13 @@ PathogenProposal = PathogenIteration
 
 
 """
-MCMC trace object
+MCMC trace
 """
 type PathogenTrace
   riskparameters::Vector{RiskParameters}
   events::Vector{Events}
   network::Vector{Network}
-  logposterior::Vector{Float64}
+  lpgposterior::Vector{Float64}
 end
 
 
@@ -39,9 +39,6 @@ function append!(trace1::PathogenTrace, trace2::PathogenTrace)
   append!(trace1.logposterior, trace2.logposterior)
   return trace1
 end
-
-
-
 
 
 function length(x::PathogenTrace)
@@ -75,7 +72,7 @@ end
 Phylodynamic ILM MCMC
 """
 function mcmc(n::Int64,
-              eventpriors::EventPriors,
+              event_priors::event_priors,
               riskparameter_priors::RiskParameterPriors,
               riskfuncs::RiskFunctions,
               population::DataFrame,
@@ -85,15 +82,19 @@ function mcmc(n::Int64,
   transition_kernel_var = transition_kernel_variance(riskparameterpriors)
 
   riskparameter_proposal1 = rand(riskparameter_priors)
-  lprior1 = logprior(riskparameter_proposal1, riskparameter_priors)
-  events_proposal1 = rand(eventpriors)
+  lprior1 = logprior(riskparameter_proposal1,
+                     riskparameter_priors)
+  events_proposal1 = rand(event_priors)
   llikelihood1, network_rates1 = loglikelihood(riskparameter_proposal1,
                                     events_proposal1,
                                     riskfuncs,
                                     population)
   network_proposal1 = rand(network_rates1)
   lposterior1 = lprior1 + llikelihood1
-  trace = PathogenTrace([riskparameter_proposal], [events_proposal], [network_proposal], [lposterior1])
+  trace = PathogenTrace([riskparameter_proposal],
+                        [events_proposal],
+                        [network_proposal],
+                        [lposterior1])
 
   for i = 1:n
     next!(progressbar)
@@ -111,25 +112,33 @@ function mcmc(n::Int64,
     if mod(3, i) == 0
       lprior1 = -Inf
       while lprior1 == -Inf
-        riskparameter_proposal1 = propose(riskparameter_proposal2, transition_kernel_var)
-        lprior1 = logprior(riskparameter_proposal1, riskparameter_priors)
+        riskparameter_proposal1 = propose(riskparameter_proposal2,
+                                          transition_kernel_var)
+        lprior1 = logprior(riskparameter_proposal1,
+                           riskparameter_priors)
       end
     end
 
     if mod(3, i) == 1
       updated_inds = sample(1:individuals, rand(Poisson(1.)))
-      events_proposal1 = propose(updated_inds, events_proposal2, eventpriors, network_proposal1)
+      events_proposal1 = propose(updated_inds,
+                                 events_proposal2,
+                                 event_priors,
+                                 network_proposal1)
     end
 
     if mod(3, i) != 2
       llikelihood1, network_rates1 = loglikelihood(riskparameter_proposal1,
-                                                  events_proposal1,
-                                                  riskfuncs,
-                                                  population)
+                                                   events_proposal1,
+                                                   network_proposal1,
+                                                   riskfuncs,
+                                                   population)
     end
     if mod(3, i) == 2
       updated_inds = sample(1:individuals, rand(Poisson(1.)))
-      network_proposal1 = propose(updated_inds, network_rates1, network_proposal2)
+      network_proposal1 = propose(updated_inds,
+                                  network_rates1,
+                                  network_proposal2)
     end
     lposterior1 = lprior1 + llikelihood1
     if MHreject(lposterior1, lposterior2)
@@ -143,7 +152,7 @@ function mcmc(n::Int64,
     push!(trace, PathogenProposal(riskparameter_proposal1,
                                   events_proposal1,
                                   network_proposal1,
-                                  logposterior1))
+                                  lposterior1))
   end
   return trace
 end

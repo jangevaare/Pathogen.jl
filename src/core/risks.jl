@@ -49,7 +49,7 @@ function getindex(x::RiskParameters, i)
                  length(x.removal)])
   riskfunc = findfirst(i <= inds)
   if riskfunc == 0
-    @error("BoundsError")
+    error("BoundsError")
   end
   return x.(fieldnames(x)[riskfunc])[end - (inds[riskfunc] - i)]
 end

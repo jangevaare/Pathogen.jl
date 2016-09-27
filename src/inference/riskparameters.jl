@@ -127,7 +127,6 @@ vector and a transition kernel variance as the variance-covariance matrix
 """
 function propose(currentstate::RiskParameters,
                  transition_kernel_variance::Array{Float64, 2})
-
   newstate = rand(MvNormal(Vector(currentstate), transition_kernel_variance))
   inds = cumsum([length(x[i].sparks);
                  length(x[i].susceptibility);
@@ -135,7 +134,6 @@ function propose(currentstate::RiskParameters,
                  length(x[i].infectivity);
                  length(x[i].latency);
                  length(x[i].removal)])
-
   return RiskParameters(newstate[1:inds[1]],
                         newstate[inds[1]+1:inds[2]],
                         newstate[inds[2]+1:inds[3]],
