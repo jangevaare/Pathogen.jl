@@ -1,3 +1,6 @@
+"""
+Event observations
+"""
 type EventObservations
   infected::Vector{Float64}
   removed::Vector{Float64}

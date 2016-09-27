@@ -9,6 +9,7 @@ module Pathogen
 
   # Functions to be extended
   import
+    Base.getindex,
     Base.push!,
     Base.append!,
     Base.rand,

@@ -48,7 +48,8 @@ Return the transmission pathway leading from an individual
 function pathwayfrom(individual::Int64,
                      network::Network,
                      depth=Inf::Real)
-   path = [individual]
+   path = Int64[]
+   push!(path, individual)
    pathlengths = [0]
    while depth >= length(path) > pathlengths[end]
      push!(pathlengths, length(path))

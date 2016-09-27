@@ -36,17 +36,17 @@ end
 
 
 function getindex(x::RiskParameters, i)
-  inds = cumsum([length(x.sparks);
-                 length(x.susceptibility);
-                 length(x.transmissibility);
-                 length(x.infectivity);
-                 length(x.latency);
-                 length(x.removal)])
-  riskfunc = findfirst(i <= inds)
+  indices = cumsum([length(x.sparks);
+                    length(x.susceptibility);
+                    length(x.transmissibility);
+                    length(x.infectivity);
+                    length(x.latency);
+                    length(x.removal)])
+  riskfunc = findfirst(i <= indices)
   if riskfunc == 0
     throw(BoundsError)
   end
-  return x.(fieldnames(x)[riskfunc])[end - (inds[riskfunc] - i)]
+  return x.(fieldnames(x)[riskfunc])[end - (indices[riskfunc] - i)]
 end
 
 
