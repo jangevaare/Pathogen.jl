@@ -35,7 +35,7 @@ function length(x::RiskParameters)
 end
 
 
-function getindex(x::RiskParameters, i)
+function getindex(x::RiskParameters, i::Real)
   indices = cumsum([length(x.sparks);
                     length(x.susceptibility);
                     length(x.transmissibility);
@@ -50,7 +50,7 @@ function getindex(x::RiskParameters, i)
 end
 
 
-function getindex(x::Array{RiskParameters, 1}, i, j)
+function getindex(x::Array{RiskParameters, 1}, i::Real, j::Real)
   return x[i][j]
 end
 

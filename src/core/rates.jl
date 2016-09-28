@@ -6,7 +6,7 @@
 # end
 #
 #
-# function getindex(x::Rates, i)
+# function getindex(x::Rates, i::Real)
 #   if i == 1
 #     return x.external
 #   elseif i == 2
@@ -46,11 +46,11 @@ type Rates
   end
 end
 
-function getindex(x::Rates, i, j)
+function getindex(x::Rates, i::Real, j::Real)
   return x.mask[i][j] * x.rates[i][j]
 end
 
 
-function getindex(x::Rates, i)
+function getindex(x::Rates, i::Real)
   return x.mask[i] .* x.rates[i]
 end

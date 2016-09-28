@@ -13,14 +13,14 @@ function generatetree(events::Events,
     event = ind2sub(size(eventtimes), eventorder[i])
     if event[2] == 1
       # Exposure event
-      if network.internal[event[1]]
-        # External exposure
+      if network.external[event[1]]
+        # External exposure event
         parentnode = 1
         branch_length = eventtimes[eventorder[i]]
       else
-        # Internal exposure
-        source = findfirst(network.external[:, event[1]])
-        priorexposures = network.external[source, :][:] & (eventtimes[:, 1] .< eventtimes[eventorder[i]])
+        # Internal exposure event
+        source = findfirst(network.internal[:, event[1]])
+        priorexposures = network.internal[source, :][:] & (eventtimes[:, 1] .< eventtimes[eventorder[i]])
         if isnan(eventtimes[source, 2]) || eventtimes[source, 2] > eventtimes[event[1], 1]
           # Undetected exposure source
           if any(priorexposures)
@@ -48,14 +48,14 @@ function generatetree(events::Events,
       branch!(tree, parentnode, branch_length)
       eventnodes[eventorder[i]] = length(tree.nodes)
     elseif event[2] == 2
-      # Detection event
-      priorexposures = network.external[event[1], :][:] & (eventtimes[:, 1] .< eventtimes[eventorder[i]])
+      # Infection observation event
+      priorexposures = network.internal[event[1], :][:] & (eventtimes[:, 1] .< eventtimes[eventorder[i]])
       if any(priorexposures)
-        # Individual has exposed others before detection
+        # Individual has exposed others before being observed as infected
         parentnode = get(eventnodes[priorexposures, 1][indmax(eventtimes[priorexposures, 1])])
         branch_length = eventtimes[eventorder[i]] - maximum(eventtimes[priorexposures, 1])
       else
-        # Individual has not exposed others before detection
+        # Individual has not exposed others before being observed as infected
         parentnode = get(eventnodes[event[1], 1])
         branch_length = eventtimes[eventorder[i]] - eventtimes[event[1], 1]
       end
@@ -63,11 +63,11 @@ function generatetree(events::Events,
       eventnodes[eventorder[i]] = length(tree.nodes)
     elseif event[2] == 3
       # Removal event
-      priorexposures = network.external[event[1], :][:]
+      priorexposures = network.internal[event[1], :][:]
       if any(priorexposures)
         # Individual has exposed others prior to removal
         if !isnan(eventtimes[event[1], 2]) && all(eventtimes[priorexposures, 1] .< eventtimes[event[1], 2])
-          # Detection is most recent and relevant event
+          # An infection observation is most recent and relevant event
           parentnode = get(eventnodes[event[1], 2])
           branch_length = eventtimes[eventorder[i]] - eventtimes[event[1], 2]
         else
@@ -78,11 +78,11 @@ function generatetree(events::Events,
       else
         # No prior exposures
         if !isnan(eventtimes[event[1], 2])
-          # Has been previously detected
+          # Has been previously observed as infected
           parentnode = get(eventnodes[event[1], 2])
           branch_length = eventtimes[eventorder[i]] - eventtimes[event[1], 2]
         else
-          # Has not been detected
+          # Has not been previously observed as infected
           parentnode = get(eventnodes[event[1], 1])
           branch_length = eventtimes[eventorder[i]] - eventtimes[event[1], 1]
         end
