@@ -5,6 +5,8 @@ type Events
   exposed::Vector{Float64}
   infected::Vector{Float64}
   removed::Vector{Float64}
+  individuals::Int64
+
   function Events(population::DataFrame)
     individuals = size(population, 1)
     exposed = fill(NaN, individuals)
@@ -12,27 +14,20 @@ type Events
     removed = fill(NaN, individuals)
     return new(exposed,
                infected,
-               removed)
+               removed,
+               individuals)
   end
 
   function Events(exposed::Vector{Float64},
                   infected::Vector{Float64},
                   removed::Vector{Float64})
-    lengths = [length(exposed);
-               length(infected);
-               length(removed)]
-    if !(lengths[1] == lengths[2] == lengths[3])
+    if !(length(exposed) == length(infected) == length(removed))
       throw(BoundsError)
     end
+    individuals = length(exposed)
     return new(exposed,
                infected,
-               removed)
+               removed,
+               individuals)
   end
-end
-
-
-function copy(events::Events)
-  return Events(copy(events.exposed),
-                copy(events.infected),
-                copy(events.removed))
 end

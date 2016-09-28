@@ -15,8 +15,7 @@ module Pathogen
     Base.rand,
     Base.length,
     Base.convert,
-    Base.size,
-    Base.copy
+    Base.size
 
   # Source files
   ## Core
