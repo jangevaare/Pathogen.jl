@@ -15,23 +15,3 @@ function findstate(events::Events, individual::Int64, time::Real)
     return :R
   end
 end
-
-
-"""
-Provides the state of an array of individuals at a specified time
-"""
-function findstate(individuals::Array{Int64}, events::Events, time::Real)
-  states = Symbol[]
-  for i in eachindex(individuals)
-    push!(states, findstate(events, individuals[i], time))
-  end
-  return states
-end
-
-
-"""
-Provides the state of all individuals at a specified time
-"""
-function findstate(events::Events, time::Real)
-  return findstate(1:events.individuals, events, time)
-end

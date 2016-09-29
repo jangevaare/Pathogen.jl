@@ -7,7 +7,7 @@ function popplot(population::DataFrame,
   end
   x = [NaN]
   y = [NaN]
-  for i in 1:size(population, 1)
+  for i = 1:events.individuals
     if findstate(events, i, time) == state
       push!(x, population[:x][i])
       push!(y, population[:y][i])
@@ -21,10 +21,10 @@ function pathplot(population::DataFrame,
                   events::Events,
                   network::Network,
                   time::Float64)
-  states = findstate(events, time)
+  states = [findstate(events, i, time) for i = 1:events.individuals]
   # Count how many paths their are
-  x = Array(Float64, (2,0))
-  y = Array(Float64, (2,0))
+  x = Array(Float64, (2, 0))
+  y = Array(Float64, (2, 0))
   for i = 1:length(states)
     # If state is exposed, infected, or removed...
     if states[i] in [:E; :I; :R]

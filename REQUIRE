@@ -1,6 +1,6 @@
-julia 0.4
+julia 0.5
 Distributions
-PhyloTrees 0.4.0-
+PhyloTrees
 DataFrames
 RecipesBase
 ProgressMeter
