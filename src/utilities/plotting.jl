@@ -51,7 +51,7 @@ function epiplot(events::Events, state::Symbol)
     amount[end] += events.individuals
     eventorder = sortperm(events.exposed)
     for i in 1:length(eventorder)
-      if isnan(events.exposed[eventorder[1][i]])
+      if isnan(events.exposed[eventorder[i]])
         break
       end
       if time[end] == events.exposed[eventorder[i]]
