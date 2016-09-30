@@ -9,9 +9,40 @@ end
 
 
 """
+Generate uniform `EventPriors` from `EventObservations`
+"""
+generate_eventpriors(observations::EventObservations,
+                     exposureextent::Float64,
+                     infectionextent::Float64,
+                     removalextent::Float64)
+  removed = fill(Nullable{UnivariateDistribution}(), observations.individuals)
+  infected = fill(Nullable{UnivariateDistribution}(), observations.individuals)
+  exposed = fill(Nullable{UnivariateDistribution}(), observations.individuals)
+  for i = 1:observations.individuals
+    if !isnan(observations.removed[i])
+      removed_lb = maximum([observations.infected[i];
+                            observations.removed[i]-removalextent])
+      removed[i] = Uniform(removed_lb,
+                           observations.removed[i])
+    end
+    if !isnan(observations.infected)
+      infected[i] = Uniform(observations.infected[i] - infectionextent,
+                            observations.infected[i])
+      exposed[i] = Uniform(observations.infected[i] - infectionextent - exposureextent,
+                           observations.infected[i] - infectionextent)
+    end
+  end
+  return EventPriors(exposed,
+                     infected,
+                     removed)
+end
+
+
+"""
 Calculate log priors
 """
-function logprior(events::Events, priors::EventPriors)
+function logprior(events::Events,
+                  priors::EventPriors)
   lp = 0.
   for i = 1:length(events.exposed)
     if !isnull(priors.exposed[i])

@@ -1,4 +1,57 @@
 """
+Create and initialize a rate array
+"""
+function initialize_rates(population::DataFrame,
+                          riskfuncs::RiskFunctions,
+                          riskparams::RiskParameters)
+  individuals = size(population, 1)
+  rates = Rates(individuals)
+  for i = 1:individuals
+    # External exposure
+    rates.rates[1][i] = riskfuncs.sparks(riskparams.sparks, population, i)
+    # Internal exposure
+    for k = 1:individuals
+      if i !== k
+        rates.rates[2][k, i] = riskfuncs.susceptibility(riskparams.susceptibility, population, i) *
+                               riskfuncs.transmissibility(riskparams.transmissibility, population, k) *
+                               riskfuncs.infectivity(riskparams.infectivity, population, i, k)
+      end
+    end
+  end
+  # Infection onset
+  for j = 1:individuals
+    rates.rates[3][j] = riskfuncs.latency(riskparams.latency, population, j)
+  end
+  # Removal
+  for k = 1:individuals
+    rates.rates[4][k] = riskfuncs.removal(riskparams.removal, population, k)
+  end
+  # Mask
+  rates.mask[1][:] = true
+  return rates
+end
+
+
+"""
+Initialize a simulation with an events data frame for a phylodynamic individual
+level model of infectious disease
+"""
+function initialize_simulation(population::DataFrame,
+                               riskfuncs::RiskFunctions,
+                               riskparams::RiskParameters)
+  # Initialize rate array
+  rates = initialize_rates(population,
+                           riskfuncs,
+                           riskparams)
+  # Initialize events data frame
+  events = Events(population)
+  # Initialize exposure network
+  network = Network(population)
+  return rates, events, network
+end
+
+
+"""
 A function to generate an event time and event type from a rate array
 """
 function generate_event(rates::Rates,
@@ -120,4 +173,44 @@ function simulate!(n::Int64,
     end
   end
   return rates, events, network
+end
+
+
+"""
+Make event time observations from a simulation. Force option ensures all
+infections are observed.
+"""
+function observe(events::Events,
+                 delay_infected::UnivariateDistribution,
+                 delay_removed::UnivariateDistribution,
+                 force = false::Bool)
+  infected = fill(NaN, events.individuals)
+  removed = fill(NaN, events.individuals)
+  if force
+    for i = 1:events.individuals
+      infection_delay_ub = events.removed[i] - events.infected[i]
+      infected[i] = events.infected[i] + rand(Truncated(delay_infected, 0., infection_delay_ub))
+      removed[i] = events.removed[i] + rand(Truncated(delay_removed, 0., Inf))
+    end
+  else
+    for i = 1:events.individuals
+      infection_delay = rand(delay_infected)
+      if isnan(events.removed[i]) || infection_delay + events.infected[i] < events.removed[i]
+        infected[i] = events.infected[i] + infection_delay
+        removed[i] = events.removed[i] + rand(Truncated(delay_removed, 0., Inf))
+      end
+    end
+  end
+  return EventObservations(infected, removed, events.individuals)
+end
+
+
+"""
+Make event time observations from a simulation. Force option ensures all
+infections are observed.
+"""
+function observe(events::Events,
+                 delay::UnivariateDistribution,
+                 force = false::Bool)
+  return observe(events, delay, delay, force)
 end

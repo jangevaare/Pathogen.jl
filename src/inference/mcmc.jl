@@ -98,7 +98,6 @@ function mcmc(n::Int64,
 
   for i = 1:n
     next!(progressbar)
-
     if mod(tune, i) == 0
       transition_kernel_var = transition_kernel_variance(trace.riskparameters)
     end
