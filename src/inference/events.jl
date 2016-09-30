@@ -25,7 +25,7 @@ function generate_eventpriors(observations::EventObservations,
       removed[i] = Uniform(removed_lb,
                            observations.removed[i])
     end
-    if !isnan(observations.infected)
+    if !isnan(observations.infected[i])
       infected[i] = Uniform(observations.infected[i] - infectionextent,
                             observations.infected[i])
       exposed[i] = Uniform(observations.infected[i] - infectionextent - exposureextent,
