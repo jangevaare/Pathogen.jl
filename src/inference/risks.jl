@@ -30,8 +30,8 @@ function rand(riskpriors::RiskParameterPriors)
     push!(susceptibility, rand(riskpriors.susceptibility[i]))
   end
 
-  for i = 1:length(riskpriors.transmissability)
-    push!(transmissability, rand(riskpriors.transmissability[i]))
+  for i = 1:length(riskpriors.transmissibility)
+    push!(transmissibility, rand(riskpriors.transmissibility[i]))
   end
 
   for i = 1:length(riskpriors.infectivity)
@@ -48,7 +48,7 @@ function rand(riskpriors::RiskParameterPriors)
 
   return RiskParameters(sparks,
                         susceptibility,
-                        transmissability,
+                        transmissibility,
                         infectivity,
                         latency,
                         removal)
@@ -67,8 +67,8 @@ function logprior(riskparams::RiskParameters,
   for i = 1:length(riskparams.susceptibility)
     lp += loglikelihood(riskpriors.susceptibility[i], riskparams.susceptibility[i])
   end
-  for i = 1:length(riskparams.transmissability)
-    lp += loglikelihood(riskpriors.transmissability[i], riskparams.transmissability[i])
+  for i = 1:length(riskparams.transmissibility)
+    lp += loglikelihood(riskpriors.transmissibility[i], riskparams.transmissibility[i])
   end
   for i = 1:length(riskparams.infectivity)
     lp += loglikelihood(riskpriors.infectivity[i], riskparams.infectivity[i])
