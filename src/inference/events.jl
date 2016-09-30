@@ -11,10 +11,10 @@ end
 """
 Generate uniform `EventPriors` from `EventObservations`
 """
-generate_eventpriors(observations::EventObservations,
-                     exposureextent::Float64,
-                     infectionextent::Float64,
-                     removalextent::Float64)
+function generate_eventpriors(observations::EventObservations,
+                              exposureextent::Float64,
+                              infectionextent::Float64,
+                              removalextent::Float64)
   removed = fill(Nullable{UnivariateDistribution}(), observations.individuals)
   infected = fill(Nullable{UnivariateDistribution}(), observations.individuals)
   exposed = fill(Nullable{UnivariateDistribution}(), observations.individuals)
