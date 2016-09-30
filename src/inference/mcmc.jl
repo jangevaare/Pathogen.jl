@@ -79,7 +79,7 @@ function mcmc(n::Int64,
               tune=1000::Int64)
   progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 25)
   individuals = size(population, 1)
-  transition_kernel_var = transition_kernel_variance(riskparameterpriors)
+  transition_kernel_var = transition_kernel_variance(riskparameter_priors)
 
   riskparameter_proposal1 = rand(riskparameter_priors)
   lprior1 = logprior(riskparameter_proposal1,
