@@ -82,6 +82,7 @@ function logprior(riskparams::RiskParameters,
   return lp
 end
 
+
 """
 Generate the variance-covariance matrix for a MvNormal transition kernel based
 upon prior distributions
