@@ -1,16 +1,14 @@
 using Pathogen
-using Base.Test
 using DataFrames
 using Distributions
 using PhyloTrees
+using Plots
 
 # Define population
-x_coordinates = rand(Uniform(0, 10), 100)
-y_coordinates = rand(Uniform(0, 10), 100)
-age = rand(Poisson(40), 100)
+x_coordinates = rand(Uniform(0, 20), 400)
+y_coordinates = rand(Uniform(0, 20), 400)
 population = DataFrame(x = x_coordinates,
-                       y = y_coordinates,
-                       age = age)
+                       y = y_coordinates)
 
 # Define event rate functions
 function sparks_func(parameters::Vector{Float64}, population::DataFrame, i::Int64)
@@ -36,10 +34,6 @@ function latency_func(parameters::Vector{Float64}, population::DataFrame, j::Int
   return parameters[1]
 end
 
-function detection_func(parameters::Vector{Float64}, population::DataFrame, k::Int64)
-  return parameters[1]
-end
-
 function removal_func(parameters::Vector{Float64}, population::DataFrame, k::Int64)
   return parameters[1]
 end
@@ -49,7 +43,6 @@ risk_funcs = RiskFunctions(sparks_func,
                            transmissibility_func,
                            infectivity_func,
                            latency_func,
-                           detection_func,
                            removal_func)
 
 # Parametrize event rate functions
@@ -58,7 +51,6 @@ susceptibility_params = Float64[]
 transmissibility_params = Float64[]
 infectivity_params = [3., 5.]
 latency_params = [1/7.]
-detection_params = [1.]
 removal_params = [1/7.]
 
 risk_params = RiskParameters(sparks_params,
@@ -66,21 +58,54 @@ risk_params = RiskParameters(sparks_params,
                              transmissibility_params,
                              infectivity_params,
                              latency_params,
-                             detection_params,
                              removal_params)
 
 # Initialize the simulation
-rates, events = initialize_simulation(population,
-                                      risk_funcs,
-                                      risk_params)
+rates, events, network = initialize_simulation(population,
+                                               risk_funcs,
+                                               risk_params)
 
 # Simulate `n` events
-n = 500
-rates, events = simulate!(n, rates, events)
+n = 1500
+rates, events, network = simulate!(n, rates, events, network)
+
+# Plot events
+plot(events)
+plot(population, events, network, 20.)
+
+# Generate observations
+observations = observe(events, Uniform(0., 0.5))
 
 # Generate the associated phylogenetic tree
-tree, observed = generatetree(events)
+tree, observednodes = generatetree(events, observations, network)
 
 # Simulate sequence data for each of the previously generated transmission trees
 substitution_model = JC69([1.0e-5])
 tree_sequences = simulate(tree, substitution_model, 1000)
+
+plot(tree)
+
+# Inference
+riskparam_priors = RiskParameterPriors([Uniform(0., 0.001)],
+                                        UnivariateDistribution[],
+                                        UnivariateDistribution[],
+                                        [Uniform(1., 5.), Uniform(3., 7.)],
+                                        [Uniform(0., 1.)],
+                                        [Uniform(0., 1.)])
+
+# Generate prior distributions for event times
+event_priors = generate_eventpriors(observations, 7, 3, 3)
+
+# Substitution model priors
+substitutionmodel_priors = SubstitutionModelPriors(Uniform(5e-6, 2e-5), Nullable{Dirichlet}())
+
+# Run MCMC
+phylodynamicILM_trace, phylogenetic_trace = mcmc(1000,
+                                                 observations,
+                                                 tree_sequences[:,:,observednodes],
+                                                 event_priors,
+                                                 riskparam_priors,
+                                                 risk_funcs,
+                                                 JC69,
+                                                 substitutionmodel_priors,
+                                                 population)
