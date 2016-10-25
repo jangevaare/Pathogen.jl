@@ -46,11 +46,12 @@ type Rates
   end
 end
 
-function getindex(x::Rates, i::Real, j::Real)
+
+function getindex(x::Rates, i::Int64, j::Int64)
   return x.mask[i][j] * x.rates[i][j]
 end
 
 
-function getindex(x::Rates, i::Real)
+function getindex(x::Rates, i::Int64)
   return x.mask[i] .* x.rates[i]
 end

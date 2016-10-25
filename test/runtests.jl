@@ -77,13 +77,21 @@ plot(population, events, network, 20.)
 observations = observe(events, Uniform(0., 0.5))
 
 # Generate the associated phylogenetic tree
-tree, observednodes = generatetree(events, observations, network)
+tree, observed_nodes = generatetree(events, observations, network)
 
 # Simulate sequence data for each of the previously generated transmission trees
 substitution_model = JC69([1.0e-5])
 tree_sequences = simulate(tree, substitution_model, 1000)
 
 plot(tree)
+
+# Observed sequences
+observed_sequences = fill(Nullable{Bool, 2}(), length(observed_nodes))
+for i = 1:length(observed_nodes)
+  if !isnull(observed_nodes[i])
+    observed_sequences[i] = tree_sequences[observed_nodes[i]]
+  end
+end
 
 # Inference
 riskparam_priors = RiskParameterPriors([Uniform(0., 0.001)],
@@ -97,12 +105,12 @@ riskparam_priors = RiskParameterPriors([Uniform(0., 0.001)],
 event_priors = generate_eventpriors(observations, 7, 3, 3)
 
 # Substitution model priors
-substitutionmodel_priors = SubstitutionModelPriors(Uniform(5e-6, 2e-5), Nullable{Dirichlet}())
+substitutionmodel_priors = SubstitutionModelPriors([Uniform(5e-6, 2e-5)])
 
 # Run MCMC
 phylodynamicILM_trace, phylogenetic_trace = mcmc(1000,
                                                  observations,
-                                                 tree_sequences[:,:,observednodes],
+                                                 observed_sequences,
                                                  event_priors,
                                                  riskparam_priors,
                                                  risk_funcs,

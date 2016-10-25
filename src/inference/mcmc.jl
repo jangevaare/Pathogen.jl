@@ -86,7 +86,7 @@ function mcmc(n::Int64,
   transition_kernel_var1 = transition_kernel_variance(riskparameter_priors)
   transition_kernel_var2 = transition_kernel_variance(substitutionmodel_priors)
   riskparameter_proposal1 = rand(riskparameter_priors)
-  substitutionmodel_proposal1 = substitutionmodel(rand(substitutionmodel_priors))
+  substitutionmodel_proposal1 = substitutionmodel_func(rand(substitutionmodel_priors))
   lprior1 = logprior(riskparameter_proposal1,
                      riskparameter_priors)
   lprior1 += logprior(substitutionmodel_proposal1,

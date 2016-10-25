@@ -33,7 +33,7 @@ module Pathogen
 
   ## Simulation
   include("simulation.jl")
-  
+
   ## Inference
   include("inference/risks.jl")
   include("inference/events.jl")
@@ -52,6 +52,8 @@ module Pathogen
 
     ## Utilities
     generatetree,
+    pathwayto,
+    pathwayfrom,
 
     ## Simulation
     initialize_simulation,
