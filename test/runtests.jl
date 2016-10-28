@@ -77,43 +77,34 @@ plot(population, events, network, 20.)
 observations = observe(events, Uniform(0., 0.5))
 
 # Generate the associated phylogenetic tree
-tree, observed_nodes = generatetree(events, observations, network)
+tree = generatetree(events, observations, network)
 
 # Simulate sequence data for each of the previously generated transmission trees
 substitution_model = JC69([1.0e-5])
-tree_sequences = simulate(tree, substitution_model, 1000)
+observed_sequences = simulate(tree, substitution_model, 1000)[findleaves(tree)]
 
 plot(tree)
 
-# Observed sequences
-observed_sequences = fill(Nullable{Bool, 2}(), length(observed_nodes))
-for i = 1:length(observed_nodes)
-  if !isnull(observed_nodes[i])
-    observed_sequences[i] = tree_sequences[observed_nodes[i]]
-  end
-end
-
 # Inference
-riskparam_priors = RiskParameterPriors([Uniform(0., 0.001)],
-                                        UnivariateDistribution[],
-                                        UnivariateDistribution[],
-                                        [Uniform(1., 5.), Uniform(3., 7.)],
-                                        [Uniform(0., 1.)],
-                                        [Uniform(0., 1.)])
+riskparameter_priors = RiskParameterPriors([Uniform(0., 0.001)],
+                                            UnivariateDistribution[],
+                                            UnivariateDistribution[],
+                                            [Uniform(1., 5.), Uniform(3., 7.)],
+                                            [Uniform(0., 1.)],
+                                            [Uniform(0., 1.)])
 
 # Generate prior distributions for event times
 event_priors = generate_eventpriors(observations, 7, 3, 3)
 
 # Substitution model priors
-substitutionmodel_priors = SubstitutionModelPriors([Uniform(5e-6, 2e-5)])
+substitutionmodel_priors = JC69Prior([Uniform(5e-6, 2e-5)])
 
 # Run MCMC
 phylodynamicILM_trace, phylogenetic_trace = mcmc(1000,
                                                  observations,
                                                  observed_sequences,
                                                  event_priors,
-                                                 riskparam_priors,
+                                                 riskparameter_priors,
                                                  risk_funcs,
-                                                 JC69,
                                                  substitutionmodel_priors,
                                                  population)

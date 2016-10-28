@@ -69,17 +69,17 @@ function rand(eventpriors::EventPriors)
   removed = fill(NaN, length(eventpriors.removed))
   for i = 1:length(exposed)
     if !isnull(eventpriors.exposed[i])
-      exposed[i] = rand(eventpriors.exposed[i])
+      exposed[i] = rand(get(eventpriors.exposed[i]))
     end
   end
   for i = 1:length(infected)
     if !isnull(eventpriors.infected[i])
-      infected[i] = rand(eventpriors.infected[i])
+      infected[i] = rand(get(eventpriors.infected[i]))
     end
   end
   for i = 1:length(removed)
     if !isnull(eventpriors.removed[i])
-      removed[i] = rand(eventpriors.removed[i])
+      removed[i] = rand(get(eventpriors.removed[i]))
     end
   end
   return Events(exposed, infected, removed)

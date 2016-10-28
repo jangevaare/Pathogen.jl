@@ -58,8 +58,8 @@ end
 """
 Calculate the log prior of a set of `RiskParameters`
 """
-function logprior(riskparams::RiskParameters,
-                  riskpriors::RiskParameterPriors)
+function logprior(riskpriors::RiskParameterPriors,
+                  riskparams::RiskParameters)
   lp = 0.
   for i = 1:length(riskparams.sparks)
     lp += loglikelihood(riskpriors.sparks[i], [riskparams.sparks[i]])

@@ -15,7 +15,10 @@ module Pathogen
     Base.rand,
     Base.length,
     Base.convert,
-    Base.size
+    Base.size,
+    PhyloTrees.transition_kernel_variance,
+    PhyloTrees.loglikelihood,
+    PhyloTrees.logprior
 
   # Source files
   ## Core

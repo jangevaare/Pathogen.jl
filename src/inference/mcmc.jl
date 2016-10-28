@@ -73,12 +73,11 @@ Phylodynamic ILM MCMC
 """
 function mcmc(n::Int64,
               event_obs::EventObservations,
-              seq_obs::Array{Bool, 3},
+              seq_obs::Vector{Sequence},
               event_priors::EventPriors,
               riskparameter_priors::RiskParameterPriors,
               riskfuncs::RiskFunctions,
-              substitutionmodel_func::Function,
-              substitutionmodel_priors::SubstitutionModelPriors,
+              substitutionmodel_priors::SubstitutionModelPrior,
               population::DataFrame,
               tune=1000::Int64)
   progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 25)
@@ -86,11 +85,11 @@ function mcmc(n::Int64,
   transition_kernel_var1 = transition_kernel_variance(riskparameter_priors)
   transition_kernel_var2 = transition_kernel_variance(substitutionmodel_priors)
   riskparameter_proposal1 = rand(riskparameter_priors)
-  substitutionmodel_proposal1 = substitutionmodel_func(rand(substitutionmodel_priors))
-  lprior1 = logprior(riskparameter_proposal1,
-                     riskparameter_priors)
-  lprior1 += logprior(substitutionmodel_proposal1,
-                      substitutionmodel_priors)
+  substitutionmodel_proposal1 = rand(substitutionmodel_priors)
+  lprior1 = logprior(riskparameter_priors,
+                     riskparameter_proposal1)
+  lprior1 += logprior(substitutionmodel_priors,
+                      substitutionmodel_proposal1)
   events_proposal1 = rand(event_priors)
   llikelihood1, network_rates1 = loglikelihood(riskparameter_proposal1,
                                                events_proposal1,
@@ -108,9 +107,9 @@ function mcmc(n::Int64,
                                  [events_proposal1],
                                  [network_proposal1],
                                  [lposterior1])
-  phylo_trace = PhyloTrace(substitutionmodel_proposal1,
-                           tree_proposal1,
-                           lposterior1)
+  phylo_trace = PhyloTrace([substitutionmodel_proposal1],
+                           [tree_proposal1],
+                           [lposterior1])
 
   for i = 1:n
     next!(progressbar)
@@ -134,10 +133,10 @@ function mcmc(n::Int64,
                                           transition_kernel_var1)
         substitutionmodel_proposal1 = propose(substitutionmodel_proposal2,
                                               transition_kernel_var2)
-        lprior1 = logprior(riskparameter_proposal1,
-                           riskparameter_priors)
-        lprior1 += logprior(substitutionmodel_proposal1,
-                            substitutionmodel_priors)
+        lprior1 = logprior(riskparameter_priors,
+                           riskparameter_proposal1)
+        lprior1 += logprior(substitutionmodel_priors,
+                            substitutionmodel_proposal1)
       end
     end
 
@@ -152,7 +151,6 @@ function mcmc(n::Int64,
     if mod(3, i) != 2
       llikelihood1, network_rates1 = loglikelihood(riskparameter_proposal1,
                                                    events_proposal1,
-                                                   network_proposal1,
                                                    riskfuncs,
                                                    population)
     end
