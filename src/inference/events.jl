@@ -104,25 +104,25 @@ function propose(individuals::Vector{Int64},
         if isnan(events.removed[pathto[2]])
           exposure_ub = events.infected[i]
         else
-          exposure_ub = minimum([events.infected[i]; events.removed[pathto[2]]])
+          exposure_ub = minimum([events.infected[i]; proposal.exposed[pathfrom[2:end]]; events.removed[pathto[2]]])
         end
       else
         exposure_lb = 0.
         exposure_ub = events.infected[i]
       end
-      proposal.exposed[i] = rand(Truncated(eventpriors.exposed[i], exposure_lb, exposure_ub))
+      proposal.exposed[i] = rand(Truncated(get(eventpriors.exposed[i]), exposure_lb, exposure_ub))
     end
     # Infection time
     if !isnan(events.infected[i])
       infection_lb = proposal.exposed[i]
-      infection_ub = minimum(proposal.exposed[pathfrom[2:end]], Inf)
-      proposal.infected[i] = rand(Truncated(eventpriors.infected[i], infection_lb, infection_ub))
+      infection_ub = minimum([proposal.exposed[pathfrom[2:end]]; Inf])
+      proposal.infected[i] = rand(Truncated(get(eventpriors.infected[i]), infection_lb, infection_ub))
     end
     # Removal time
     if !isnan(events.removed[i])
-      removal_lb = maximum(proposal.exposed[pathfrom[2:end]])
+      removal_lb = maximum([proposal.exposed[pathfrom[2:end]]; proposal.infected[i]])
       removal_ub = Inf
-      proposal.removed[i] = rand(Truncated(eventpriors.removed[i], removal_lb, removal_ub))
+      proposal.removed[i] = rand(Truncated(get(eventpriors.removed[i]), removal_lb, removal_ub))
     end
   end
   return proposal

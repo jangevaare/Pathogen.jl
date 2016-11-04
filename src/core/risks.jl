@@ -35,27 +35,33 @@ function length(x::RiskParameters)
 end
 
 
-function getindex(x::RiskParameters, i::Real)
+function getindex(x::RiskParameters, i::Int64)
   indices = cumsum([length(x.sparks);
                     length(x.susceptibility);
                     length(x.transmissibility);
                     length(x.infectivity);
                     length(x.latency);
                     length(x.removal)])
-  riskfunc = findfirst(i <= indices)
+  riskfunc = findfirst(i .<= indices)
   if riskfunc == 0
     throw(BoundsError)
   end
-  return x.(fieldnames(x)[riskfunc])[end - (indices[riskfunc] - i)]
+  return getfield(x, riskfunc)[end - (indices[riskfunc] - i)]
 end
 
 
-function getindex(x::Array{RiskParameters, 1}, i::Real, j::Real)
+function getindex(x::Vector{RiskParameters}, i::Int64, j::Int64)
   return x[i][j]
 end
 
 
-function convert(::Type{Array}, x::Array{RiskParameters, 1})
+function convert(::Type{Vector}, x::RiskParameters)
+  parameters = length(x)
+  return [x[i] for i = 1:parameters]
+end
+
+
+function convert(::Type{Array}, x::Vector{RiskParameters})
   parameters = length(x[1])
   iterations = length(x)
   return [x[i, j] for i = 1:iterations, j = 1:parameters]

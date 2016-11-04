@@ -18,7 +18,8 @@ module Pathogen
     Base.size,
     PhyloTrees.transition_kernel_variance,
     PhyloTrees.loglikelihood,
-    PhyloTrees.logprior
+    PhyloTrees.logprior,
+    PhyloTrees.propose
 
   # Source files
   ## Core
