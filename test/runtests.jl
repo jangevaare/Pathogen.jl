@@ -5,8 +5,8 @@ using PhyloTrees
 using Plots
 
 # Define population
-x_coordinates = rand(Uniform(0, 10), 100)
-y_coordinates = rand(Uniform(0, 10), 100)
+x_coordinates = rand(Uniform(0, 9), 100)
+y_coordinates = rand(Uniform(0, 9), 100)
 population = DataFrame(x = x_coordinates,
                        y = y_coordinates)
 
@@ -81,7 +81,7 @@ tree = generatetree(events, observations, network)
 
 # Simulate sequence data for each of the previously generated transmission trees
 substitution_model = JC69([1.0e-5])
-observed_sequences = simulate(tree, substitution_model, 1000)[findleaves(tree)]
+observed_sequences = simulate(tree, substitution_model, 500)[findleaves(tree)]
 
 plot(tree)
 
@@ -94,13 +94,13 @@ riskparameter_priors = RiskParameterPriors([Uniform(0., 0.001)],
                                             [Uniform(0., 1.)])
 
 # Generate prior distributions for event times
-event_priors = generate_eventpriors(observations, 7, 3, 3)
+event_priors = generate_eventpriors(observations, 7., 3., 3.)
 
 # Substitution model priors
 substitutionmodel_priors = JC69Prior([Uniform(5e-6, 2e-5)])
 
 # Run MCMC
-phylodynamicILM_trace, phylogenetic_trace = mcmc(5000,
+phylodynamicILM_trace, phylogenetic_trace = mcmc(1000,
                                                  observations,
                                                  observed_sequences,
                                                  event_priors,

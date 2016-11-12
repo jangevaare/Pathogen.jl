@@ -10,7 +10,7 @@ function initialize_rates(population::DataFrame,
     # External exposure
     rates.rates[1][i] = riskfuncs.sparks(riskparams.sparks, population, i)
     # Internal exposure
-    for k = 1:individuals
+    @simd for k = 1:individuals
       if i !== k
         rates.rates[2][k, i] = riskfuncs.susceptibility(riskparams.susceptibility, population, i) *
                                riskfuncs.transmissibility(riskparams.transmissibility, population, k) *
@@ -19,12 +19,10 @@ function initialize_rates(population::DataFrame,
     end
   end
   # Infection onset
-  for j = 1:individuals
-    rates.rates[3][j] = riskfuncs.latency(riskparams.latency, population, j)
+  rates.rates[3] = [riskfuncs.latency(riskparams.latency, population, j) for j = 1:individuals]
   end
   # Removal
-  for k = 1:individuals
-    rates.rates[4][k] = riskfuncs.removal(riskparams.removal, population, k)
+  rates.rates[4] = [riskfuncs.removal(riskparams.removal, population, k) for k = 1:individuals]
   end
   # Mask
   rates.mask[1][:] = true
@@ -187,13 +185,13 @@ function observe(events::Events,
   infected = fill(NaN, events.individuals)
   removed = fill(NaN, events.individuals)
   if force
-    for i = 1:events.individuals
+    @simd for i = 1:events.individuals
       infection_delay_ub = events.removed[i] - events.infected[i]
       infected[i] = events.infected[i] + rand(Truncated(delay_infected, 0., infection_delay_ub))
       removed[i] = events.removed[i] + rand(Truncated(delay_removed, 0., Inf))
     end
   else
-    for i = 1:events.individuals
+    @simd for i = 1:events.individuals
       infection_delay = rand(delay_infected)
       if isnan(events.removed[i]) || infection_delay + events.infected[i] < events.removed[i]
         infected[i] = events.infected[i] + infection_delay

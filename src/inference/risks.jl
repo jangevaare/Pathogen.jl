@@ -117,7 +117,12 @@ Adapt the variance-covariance matrix for a MvNormal transition kernel for
 `RiskParameters`
 """
 function transition_kernel_variance(x::Vector{RiskParameters})
-  return cov(Array(x))*(2.38^2)/length(x[1])
+  kernel_var = cov(Array(x))*(2.38^2)/length(x[1])
+  if ndims(kernel_var) == 1
+    return diagm(kernel_var)
+  else
+    return kernel_var
+  end
 end
 
 

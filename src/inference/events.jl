@@ -12,9 +12,9 @@ end
 Generate uniform `EventPriors` from `EventObservations`
 """
 function generate_eventpriors(observations::EventObservations,
-                              exposureextent::Real,
-                              infectionextent::Real,
-                              removalextent::Real)
+                              exposureextent::Float64,
+                              infectionextent::Float64,
+                              removalextent::Float64)
   removed = fill(Nullable{UnivariateDistribution}(), observations.individuals)
   infected = fill(Nullable{UnivariateDistribution}(), observations.individuals)
   exposed = fill(Nullable{UnivariateDistribution}(), observations.individuals)
@@ -95,11 +95,11 @@ function propose(individuals::Vector{Int64},
                  network::Network)
   proposal = events
   for i in individuals
-    pathfrom = pathwayfrom(i, network)
-    pathto = pathwayto(i, network)
+    pathfrom = pathwayfrom(i, network, 2)
+    pathto = pathwayto(i, network, 2)
     # Exposure time
     if !isnan(events.exposed[i])
-      if length(pathto) > 2
+      if length(pathto) > 1
         exposure_lb = events.infected[pathto[2]]
         if isnan(events.removed[pathto[2]])
           exposure_ub = events.infected[i]

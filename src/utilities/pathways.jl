@@ -29,7 +29,7 @@ function pathwayfrom(individual::Int64,
    if network.external[individual] | any(network.internal[:, individual])
      push!(path, individual)
      pathlengths = [0]
-     while depth >= length(path) > pathlengths[end]
+     while (length(path) > pathlengths[end]) & (depth >= length(pathlengths))
        push!(pathlengths, length(path))
        for j in path[(pathlengths[end-1]+1):pathlengths[end]]
          append!(path, find(network.internal[j, :]))
