@@ -20,10 +20,8 @@ function initialize_rates(population::DataFrame,
   end
   # Infection onset
   rates.rates[3] = [riskfuncs.latency(riskparams.latency, population, j) for j = 1:individuals]
-  end
   # Removal
   rates.rates[4] = [riskfuncs.removal(riskparams.removal, population, k) for k = 1:individuals]
-  end
   # Mask
   rates.mask[1][:] = true
   return rates
