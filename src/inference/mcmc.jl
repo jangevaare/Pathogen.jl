@@ -125,6 +125,7 @@ function mcmc(n::Int64,
       riskparameter_proposal1 = propose(riskparameter_proposal2,
                                         riskparameter_priors,
                                         ILM_kernel_variance)
+    end
     if mod(i, 4) == 2
       substitutionmodel_proposal1 = propose(substitutionmodel_proposal2,
                                             substitutionmodel_priors,
