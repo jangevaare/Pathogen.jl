@@ -41,22 +41,22 @@ end
 """
 Calculate log priors
 """
-function logprior(events::Events,
-                  priors::EventPriors)
+function logprior(priors::EventPriors,
+                  events::Events)
   lp = 0.
-  for i = 1:length(events.exposed)
+  @simd for i = 1:length(events.exposed)
     if !isnull(priors.exposed[i])
-      lp += loglikelihood(get(priors.exposed[i]), events.exposed[i])
+      lp += loglikelihood(get(priors.exposed[i]), [events.exposed[i]])
     end
   end
-  for i = 1:length(events.infected)
+  @simd for i = 1:length(events.infected)
     if !isnull(priors.infected[i])
-      lp += loglikelihood(get(priors.infected[i]), events.infected[i])
+      lp += loglikelihood(get(priors.infected[i]), [events.infected[i]])
     end
   end
-  for i = 1:length(events.removed)
+  @simd for i = 1:length(events.removed)
     if !isnull(priors.removed[i])
-      lp += loglikelihood(get(priors.removed[i]), events.removed[i])
+      lp += loglikelihood(get(priors.removed[i]), [events.removed[i]])
     end
   end
   return lp

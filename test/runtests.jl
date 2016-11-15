@@ -99,8 +99,14 @@ event_priors = generate_eventpriors(observations, 7., 3., 3.)
 # Substitution model priors
 substitutionmodel_priors = JC69Prior([Uniform(5e-6, 2e-5)])
 
+# Transition kernel
+transition_kernel_var1 = transition_kernel_variance(riskparameter_priors)
+transition_kernel_var2 = transition_kernel_variance(substitutionmodel_priors)
+
 # Run MCMC
-phylodynamicILM_trace, phylogenetic_trace = mcmc(1000,
+phylodynamicILM_trace, phylogenetic_trace = mcmc(50000,
+                                                 transition_kernel_var1,
+                                                 transition_kernel_var2,
                                                  observations,
                                                  observed_sequences,
                                                  event_priors,

@@ -72,37 +72,38 @@ end
 Phylodynamic ILM MCMC
 """
 function mcmc(n::Int64,
+              ILM_kernel_variance::Vector{Float64},
+              phylogenetic_kernel_variance::Vector{Float64},
               event_obs::EventObservations,
               seq_obs::Vector{Sequence},
               event_priors::EventPriors,
               riskparameter_priors::RiskParameterPriors,
               riskfuncs::RiskFunctions,
               substitutionmodel_priors::SubstitutionModelPrior,
-              population::DataFrame,
-              tune=1000::Int64)
+              population::DataFrame)
   progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 25)
   individuals = size(population, 1)
-  transition_kernel_var1 = transition_kernel_variance(riskparameter_priors)
-  transition_kernel_var2 = transition_kernel_variance(substitutionmodel_priors)
   riskparameter_proposal1 = rand(riskparameter_priors)
   substitutionmodel_proposal1 = rand(substitutionmodel_priors)
-  lprior1 = logprior(riskparameter_priors,
-                     riskparameter_proposal1)
-  lprior1 += logprior(substitutionmodel_priors,
-                      substitutionmodel_proposal1)
   events_proposal1 = rand(event_priors)
-  llikelihood1, network_rates1 = loglikelihood(riskparameter_proposal1,
-                                               events_proposal1,
-                                               riskfuncs,
-                                               population)
+  lprior = logprior(riskparameter_priors,
+                    riskparameter_proposal1)
+  lprior += logprior(substitutionmodel_priors,
+                     substitutionmodel_proposal1)
+  lprior += logprior(event_priors,
+                     events_proposal1)
+  llikelihood, network_rates1 = loglikelihood(riskparameter_proposal1,
+                                              events_proposal1,
+                                              riskfuncs,
+                                              population)
   network_proposal1 = rand(network_rates1)
   tree_proposal1 = generatetree(events_proposal1,
                                 event_obs,
                                 network_proposal1)
-  llikelihood1 += loglikelihood(seq_obs,
-                                tree_proposal1,
-                                substitutionmodel_proposal1)
-  lposterior1 = lprior1 + llikelihood1
+  llikelihood += loglikelihood(seq_obs,
+                               tree_proposal1,
+                               substitutionmodel_proposal1)
+  lposterior1 = lprior + llikelihood
   pathogen_trace = PathogenTrace([riskparameter_proposal1],
                                  [events_proposal1],
                                  [network_proposal1],
@@ -113,68 +114,62 @@ function mcmc(n::Int64,
 
   for i = 1:n
     next!(progressbar)
-    if mod(i, tune) == 0
-      transition_kernel_var1 = transition_kernel_variance(pathogen_trace.riskparameters)
-      transition_kernel_var2 = transition_kernel_variance(phylo_trace.substitution_model)
-    end
-
     riskparameter_proposal2 = riskparameter_proposal1
     substitutionmodel_proposal2 = substitutionmodel_proposal1
-    lprior2 = lprior1
-    llikelihood2 = llikelihood1
     events_proposal2 = events_proposal1
     network_proposal2 = network_proposal1
     tree_proposal2 = tree_proposal1
     lposterior2 = lposterior1
 
-    if mod(i, 3) == 0
-      lprior1 = -Inf
-      while lprior1 == -Inf
-        riskparameter_proposal1 = propose(riskparameter_proposal2,
-                                          transition_kernel_var1)
-        substitutionmodel_proposal1 = propose(substitutionmodel_proposal2,
-                                              transition_kernel_var2)
-        lprior1 = logprior(riskparameter_priors,
-                           riskparameter_proposal1)
-        lprior1 += logprior(substitutionmodel_priors,
-                            substitutionmodel_proposal1)
-      end
+    if mod(i, 4) == 1
+      riskparameter_proposal1 = propose(riskparameter_proposal2,
+                                        riskparameter_priors,
+                                        ILM_kernel_variance)
+    if mod(i, 4) == 2
+      substitutionmodel_proposal1 = propose(substitutionmodel_proposal2,
+                                            substitutionmodel_priors,
+                                            phylogenetic_kernel_variance)
     end
-
-    if mod(i, 3) == 1
+    if mod(i, 4) == 3
       updated_inds = sample(1:individuals, rand(Poisson(1.)))
       events_proposal1 = propose(updated_inds,
                                  events_proposal2,
                                  event_priors,
                                  network_proposal1)
     end
-
-    if mod(i, 3) != 2
-      llikelihood1, network_rates1 = loglikelihood(riskparameter_proposal1,
-                                                   events_proposal1,
-                                                   riskfuncs,
-                                                   population)
+    lprior = logprior(riskparameter_priors,
+                      riskparameter_proposal1)
+    lprior += logprior(substitutionmodel_priors,
+                       substitutionmodel_proposal1)
+    lprior += logprior(event_priors,
+                       events_proposal1)
+    if lprior > -Inf
+      llikelihood, network_rates1 = loglikelihood(riskparameter_proposal1,
+                                                  events_proposal1,
+                                                  riskfuncs,
+                                                  population)
+      if mod(i, 4) == 0
+        updated_inds = sample(1:individuals, rand(Poisson(1.)))
+        network_proposal1 = propose(updated_inds,
+                                    network_proposal2,
+                                    network_rates1)
+      end
+      tree_proposal1 = generatetree(events_proposal1,
+                                    event_obs,
+                                    network_proposal1)
+      llikelihood += loglikelihood(seq_obs,
+                                   tree_proposal1,
+                                   substitutionmodel_proposal1)
     end
-    if mod(i, 3) == 2
-      updated_inds = sample(1:individuals, rand(Poisson(1.)))
-      network_proposal1 = propose(updated_inds,
-                                  network_proposal2,
-                                  network_rates1)
-    end
-    tree_proposal1 = generatetree(events_proposal1,
-                                  event_obs,
-                                  network_proposal1)
-    llikelihood1 += loglikelihood(seq_obs,
-                                  tree_proposal1,
-                                  substitutionmodel_proposal1)
-    lposterior1 = lprior1 + llikelihood1
+    lposterior1 = lprior + llikelihood
     if MHreject(lposterior1, lposterior2)
-      lprior1 = lprior2
-      llikelihood1 = llikelihood2
       riskparameter_proposal1 = riskparameter_proposal2
       events_proposal1 = events_proposal2
       network_proposal1 = network_proposal2
+
+      substitutionmodel_proposal1 = substitutionmodel_proposal2
       tree_proposal1 = tree_proposal2
+
       lposterior1 = lposterior2
     end
     push!(pathogen_trace, PathogenIteration(riskparameter_proposal1,

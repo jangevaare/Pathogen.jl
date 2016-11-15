@@ -108,7 +108,7 @@ function transition_kernel_variance(x::RiskParameterPriors)
     push!(diagonal, var(i)*2.38^2)
   end
   diagonal /= length(diagonal)
-  return diagm(diagonal)
+  return diagonal
 end
 
 
@@ -118,11 +118,7 @@ Adapt the variance-covariance matrix for a MvNormal transition kernel for
 """
 function transition_kernel_variance(x::Vector{RiskParameters})
   kernel_var = cov(Array(x))*(2.38^2)/length(x[1])
-  if ndims(kernel_var) == 1
-    return diagm(kernel_var)
-  else
-    return kernel_var
-  end
+  return diag(kernel_var)
 end
 
 
@@ -132,18 +128,45 @@ as the transition kernel, with a previous set of `RiskParameters` as the mean
 vector and a transition kernel variance as the variance-covariance matrix
 """
 function propose(currentstate::RiskParameters,
-                 transition_kernel_variance::Array{Float64, 2})
-  newstate = rand(MvNormal(Vector(currentstate), transition_kernel_variance))
-  inds = cumsum([length(currentstate.sparks);
-                 length(currentstate.susceptibility);
-                 length(currentstate.transmissibility);
-                 length(currentstate.infectivity);
-                 length(currentstate.latency);
-                 length(currentstate.removal)])
-  return RiskParameters(newstate[1:inds[1]],
-                        newstate[inds[1]+1:inds[2]],
-                        newstate[inds[2]+1:inds[3]],
-                        newstate[inds[3]+1:inds[4]],
-                        newstate[inds[4]+1:inds[5]],
-                        newstate[inds[5]+1:inds[6]])
+                 riskpriors::RiskParameterPriors,
+                 variance::Vector{Float64})
+                 newstate = currentstate
+                 variance_index = 1
+  for i = 1:length(riskpriors.sparks)
+    lb = support(riskpriors.sparks[i]).lb
+    ub = support(riskpriors.sparks[i]).ub
+    newstate.sparks[i] = rand(Truncated(Normal(currentstate.sparks[i], variance[variance_index]), lb, ub))
+    variance_index += 1
+  end
+  for i = 1:length(riskpriors.susceptibility)
+    lb = support(riskpriors.susceptibility[i]).lb
+    ub = support(riskpriors.susceptibility[i]).ub
+    newstate.susceptibility[i] = rand(Truncated(Normal(currentstate.susceptibility[i], variance[variance_index]), lb, ub))
+    variance_index += 1
+  end
+  for i = 1:length(riskpriors.transmissibility)
+    lb = support(riskpriors.transmissibility[i]).lb
+    ub = support(riskpriors.transmissibility[i]).ub
+    newstate.transmissibility[i] = rand(Truncated(Normal(currentstate.transmissibility[i], variance[variance_index]), lb, ub))
+    variance_index += 1
+  end
+  for i = 1:length(riskpriors.infectivity)
+    lb = support(riskpriors.infectivity[i]).lb
+    ub = support(riskpriors.infectivity[i]).ub
+    newstate.infectivity[i] = rand(Truncated(Normal(currentstate.infectivity[i], variance[variance_index]), lb, ub))
+    variance_index += 1
+  end
+  for i = 1:length(riskpriors.latency)
+    lb = support(riskpriors.latency[i]).lb
+    ub = support(riskpriors.latency[i]).ub
+    newstate.latency[i] = rand(Truncated(Normal(currentstate.latency[i], variance[variance_index]), lb, ub))
+    variance_index += 1
+  end
+  for i = 1:length(riskpriors.removal)
+    lb = support(riskpriors.removal[i]).lb
+    ub = support(riskpriors.removal[i]).ub
+    newstate.removal[i] = rand(Truncated(Normal(currentstate.removal[i], variance[variance_index]), lb, ub))
+    variance_index += 1
+  end
+  return newstate
 end
