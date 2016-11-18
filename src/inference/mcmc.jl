@@ -96,10 +96,10 @@ function mcmc(n::Int64,
                                              events_proposal,
                                              riskfuncs,
                                              population)
-  network_proposal1 = rand(network_rates)
+  network_proposal = rand(network_rates)
   tree_proposal = generatetree(events_proposal,
-                                event_obs,
-                                network_proposal)
+                               event_obs,
+                               network_proposal)
   llikelihood += loglikelihood(seq_obs,
                                tree_proposal,
                                substitutionmodel_proposal)
