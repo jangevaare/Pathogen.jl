@@ -5,8 +5,8 @@ using PhyloTrees
 using Plots
 
 # Define population
-x_coordinates = rand(Uniform(0, 9), 100)
-y_coordinates = rand(Uniform(0, 9), 100)
+x_coordinates = rand(Uniform(0, 9), 200)
+y_coordinates = rand(Uniform(0, 9), 200)
 population = DataFrame(x = x_coordinates,
                        y = y_coordinates)
 
@@ -66,7 +66,7 @@ rates, events, network = initialize_simulation(population,
                                                risk_params)
 
 # Simulate `n` events
-n = 300
+n = 500
 rates, events, network = simulate!(n, rates, events, network)
 
 # Plot events
@@ -104,7 +104,7 @@ transition_kernel_var1 = transition_kernel_variance(riskparameter_priors)
 transition_kernel_var2 = transition_kernel_variance(substitutionmodel_priors)
 
 # Run MCMC
-phylodynamicILM_trace, phylogenetic_trace = mcmc(50000,
+phylodynamicILM_trace, phylogenetic_trace = mcmc(5000,
                                                  transition_kernel_var1,
                                                  transition_kernel_var2,
                                                  observations,
