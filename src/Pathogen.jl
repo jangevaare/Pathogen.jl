@@ -16,6 +16,7 @@ module Pathogen
     Base.length,
     Base.convert,
     Base.size,
+    Base.show,
     PhyloTrees.transition_kernel_variance,
     PhyloTrees.loglikelihood,
     PhyloTrees.logprior,
