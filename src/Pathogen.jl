@@ -73,6 +73,5 @@ module Pathogen
     generate_eventpriors,
     PathogenTrace,
     PathogenIteration,
-    mcmc,
-    importancesampling
+    mcmc
 end
