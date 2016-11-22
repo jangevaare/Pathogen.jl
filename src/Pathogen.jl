@@ -17,6 +17,7 @@ module Pathogen
     Base.convert,
     Base.size,
     Base.show,
+    Base.Array,
     PhyloTrees.transition_kernel_variance,
     PhyloTrees.loglikelihood,
     PhyloTrees.logprior,
@@ -70,5 +71,8 @@ module Pathogen
     RiskParameterPriors,
     EventPriors,
     generate_eventpriors,
-    mcmc
+    PathogenTrace,
+    PathogenIteration,
+    mcmc,
+    importancesampling
 end

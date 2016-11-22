@@ -103,8 +103,8 @@ substitutionmodel_priors = JC69Prior([Uniform(5e-6, 2e-5)])
 transition_kernel_var1 = transition_kernel_variance(riskparameter_priors)
 transition_kernel_var2 = transition_kernel_variance(substitutionmodel_priors)
 
-# Run MCMC
-phylodynamicILM_trace, phylogenetic_trace = mcmc(1000,
+Run MCMC
+phylodynamicILM_trace, phylogenetic_trace = mcmc(5000,
                                                  transition_kernel_var1,
                                                  transition_kernel_var2,
                                                  observations,
