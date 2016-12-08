@@ -43,9 +43,6 @@ function getindex(x::RiskParameters, i::Int64)
                     length(x.latency);
                     length(x.removal)])
   riskfunc = findfirst(i .<= indices)
-  if riskfunc == 0
-    throw(BoundsError)
-  end
   return getfield(x, riskfunc)[end - (indices[riskfunc] - i)]
 end
 

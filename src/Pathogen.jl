@@ -3,6 +3,7 @@ module Pathogen
   # Dependencies
   using DataFrames
   using PhyloTrees
+  using PhyloModels
   using Distributions
   using RecipesBase
   using ProgressMeter
@@ -18,14 +19,16 @@ module Pathogen
     Base.size,
     Base.show,
     Base.Array,
-    PhyloTrees.transition_kernel_variance,
-    PhyloTrees.loglikelihood,
-    PhyloTrees.logprior,
-    PhyloTrees.propose
+    PhyloModels.simulate!,
+    PhyloModels.transition_kernel_variance,
+    PhyloModels.loglikelihood,
+    PhyloModels.logprior,
+    PhyloModels.propose
 
   # Source files
   ## Core
   include("core/risks.jl")
+  include("core/states.jl")
   include("core/rates.jl")
   include("core/events.jl")
   include("core/networks.jl")
@@ -57,7 +60,8 @@ module Pathogen
     RiskParameters,
 
     ## Utilities
-    generatetree,
+    generatetree!,
+    generatefulltree!,
     pathwayto,
     pathwayfrom,
 

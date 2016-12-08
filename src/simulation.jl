@@ -1,29 +1,36 @@
 """
 Create and initialize a rate array
 """
-function initialize_rates(population::DataFrame,
+function initialize_rates(states::States,
+                          population::DataFrame,
                           riskfuncs::RiskFunctions,
                           riskparams::RiskParameters)
   individuals = size(population, 1)
   rates = Rates(individuals)
-  for i = 1:individuals
+
+  # Exposure
+  for i in find(states.susceptible)
     # External exposure
-    rates.rates[1][i] = riskfuncs.sparks(riskparams.sparks, population, i)
+    rates.external[i] = riskfuncs.sparks(riskparams.sparks, population, i)
+
     # Internal exposure
-    @simd for k = 1:individuals
-      if i !== k
-        rates.rates[2][k, i] = riskfuncs.susceptibility(riskparams.susceptibility, population, i) *
-                               riskfuncs.transmissibility(riskparams.transmissibility, population, k) *
-                               riskfuncs.infectivity(riskparams.infectivity, population, i, k)
-      end
+    @simd for k in find(states.infected)
+      rates.internal[k, i] = riskfuncs.susceptibility(riskparams.susceptibility, population, i) *
+                             riskfuncs.transmissibility(riskparams.transmissibility, population, k) *
+                             riskfuncs.infectivity(riskparams.infectivity, population, i, k)
     end
   end
+
   # Infection onset
-  rates.rates[3] = [riskfuncs.latency(riskparams.latency, population, j) for j = 1:individuals]
+  @simd for j in find(states.exposed)
+    rates.infection[j] = riskfuncs.latency(riskparams.latency, population, j)
+  end
+
   # Removal
-  rates.rates[4] = [riskfuncs.removal(riskparams.removal, population, k) for k = 1:individuals]
-  # Mask
-  rates.mask[1][:] = true
+  @simd for k in find(states.infected)
+    rates.removal = riskfuncs.removal(riskparams.removal, population, k)
+  end
+
   return rates
 end
 
@@ -35,15 +42,22 @@ level model of infectious disease
 function initialize_simulation(population::DataFrame,
                                riskfuncs::RiskFunctions,
                                riskparams::RiskParameters)
+  # Initialize state array
+  states = States(population)
+
   # Initialize rate array
-  rates = initialize_rates(population,
+  rates = initialize_rates(states,
+                           population,
                            riskfuncs,
                            riskparams)
+
   # Initialize events data frame
   events = Events(population)
+
   # Initialize exposure network
   network = Network(population)
-  return rates, events, network
+
+  return states, rates, events, network
 end
 
 
@@ -52,10 +66,10 @@ A function to generate an event time and event type from a rate array
 """
 function generate_event(rates::Rates,
                         time=0.::Float64)
-  totals = [sum(rates[1]);
-            sum(rates[2]);
-            sum(rates[3]);
-            sum(rates[4])]
+  totals = [sum(rates.external);
+            sum(rates.internal);
+            sum(rates.infection);
+            sum(rates.removal)]
   total = sum(totals)
   if total == Inf
     time = time
@@ -77,33 +91,75 @@ end
 
 
 """
-A function to update a `Rates` object based on an event occurence
+A function to update a `States` object based on an event occurence
 """
-function update_rates!(rates::Rates,
-                       event::Tuple{Int64, Int64})
+function update_states!(states::States,
+                        event::Tuple{Int64, Int64})
   # External exposure
   if event[1] == 1
     individual = event[2]
-    rates.mask[1][individual] = false
-    rates.mask[2][:, individual] = false
-    rates.mask[3][individual] = true
+    states.susceptible[individual] = false
+    states.exposed[individual] = true
+
   # Internal exposure
   elseif event[1] == 2
-    individual = ind2sub(size(rates[2]), event[2])[2]
-    rates.mask[1][individual] = false
-    rates.mask[2][:, individual] = false
-    rates.mask[3][individual] = true
+    individual = ind2sub((states.individuals, states.individuals), event[2])[2]
+    states.susceptible[individual] = false
+    states.exposed[individual] = true
+
   # Onset of infection
   elseif event[1] == 3
     individual = event[2]
-    rates.mask[3][individual] = false
-    rates.mask[4][individual] = true
-    rates.mask[2][individual, :] = rates.mask[1]
+    states.exposed[individual] = false
+    states.infected[individual] = true
+
   # Removal
   elseif event[1] == 4
     individual = event[2]
-    rates.mask[4][individual] = false
-    rates.mask[2][individual, :] = false
+    states.infected[individual] = false
+    states.removed[individual] = true
+  end
+  return states
+end
+
+
+"""
+A function to update a `Rates` object based on an event occurence
+"""
+function update_rates!(rates::Rates,
+                       states::States,
+                       event::Tuple{Int64, Int64},
+                       population::DataFrame,
+                       riskfuncs::RiskFunctions,
+                       riskparams::RiskParameters)
+  # External exposure
+  if event[1] == 1
+    individual = event[2]
+    rates.external[individual] = 0.
+    rates.internal[:, individual] = 0.
+    rates.infection[individual] = riskfuncs.latency(riskparams.latency, population, individual)
+  # Internal exposure
+  elseif event[1] == 2
+    individual = ind2sub((rates.individuals, rates.individuals), event[2])[2]
+    rates.external[individual] = 0.
+    rates.internal[:, individual] = 0.
+    rates.infection[individual] = riskfuncs.latency(riskparams.latency, population, individual)
+  # Onset of infection
+  elseif event[1] == 3
+    individual = event[2]
+    rates.infection[individual] = 0.
+    @simd for i in find(states.susceptible)
+      rates.internal[individual, i] = riskfuncs.susceptibility(riskparams.susceptibility, population, i) *
+                                      riskfuncs.transmissibility(riskparams.transmissibility, population, individual) *
+                                      riskfuncs.infectivity(riskparams.infectivity, population, i, individual)
+    end
+  # Removal
+  elseif event[1] == 4
+    individual = event[2]
+    rates.removal[individual] = 0.
+    @simd for i in find(states.susceptible)
+      rates.internal[individual, i] = 0.
+    end
   end
   return rates
 end
@@ -154,21 +210,26 @@ end
 Simulation function
 """
 function simulate!(n::Int64,
+                   states::States,
                    rates::Rates,
                    events::Events,
-                   network::Network)
+                   network::Network,
+                   population::DataFrame,
+                   riskfuncs::RiskFunctions,
+                   riskparams::RiskParameters)
   counter = 0
   time = 0.
   while counter < n && time < Inf
     counter += 1
     time, event = generate_event(rates, time)
     if time < Inf
-      update_rates!(rates, event)
+      update_states!(states, event)
+      update_rates!(rates, states, event, population, riskfuncs, riskparams)
       update_events!(events, event, time)
       update_network!(network, event)
     end
   end
-  return rates, events, network
+  return states, rates, events, network
 end
 
 
@@ -197,7 +258,7 @@ function observe(events::Events,
       end
     end
   end
-  return EventObservations(infected, removed, events.individuals)
+  return EventObservations(infected, removed)
 end
 
 

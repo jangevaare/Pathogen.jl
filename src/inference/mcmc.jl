@@ -117,9 +117,12 @@ function mcmc(n::Int64,
   tree_proposal = generatetree(events_proposal,
                                event_obs,
                                network_proposal)
-  llikelihood += loglikelihood(seq_obs,
-                               tree_proposal,
-                               substitutionmodel_proposal)
+  leaves = findleaves(tree_proposal)
+  for j = 1:length(leaves)
+    setdata!(tree_proposal.nodes[leave[j]], seq_obs[j])
+  end
+  llikelihood += loglikelihood(tree_proposal,
+                              substitutionmodel_proposal)
   lposterior = lprior + llikelihood
   pathogen_trace = PathogenTrace([riskparameter_proposal],
                                  [events_proposal],
@@ -133,7 +136,8 @@ function mcmc(n::Int64,
 
   for i = 2:n
     next!(progressbar)
-    iterationtype = findfirst(rand(Multinomial(1, [0.25; 0.25; 0.25; 0.25])))
+    # iterationtype = findfirst(rand(Multinomial(1, [0.25; 0.25; 0.25; 0.25])))
+    iterationtype = findfirst(rand(Multinomial(1, [1.0; 0.0; 0.0; 0.0])))
 
     if iterationtype == 1
       riskparameter_proposal = propose(pathogen_trace.riskparameters[end],
@@ -186,8 +190,11 @@ function mcmc(n::Int64,
     tree_proposal = generatetree(events_proposal,
                                  event_obs,
                                  network_proposal)
-    llikelihood += loglikelihood(seq_obs,
-                                 tree_proposal,
+    leaves = findleaves(tree_proposal)
+    for j = 1:length(leaves)
+      setdata!(tree_proposal.nodes[leave[j]], seq_obs[j])
+    end
+    llikelihood += loglikelihood(tree_proposal,
                                  substitutionmodel_proposal)
 
     lposterior = lprior + llikelihood

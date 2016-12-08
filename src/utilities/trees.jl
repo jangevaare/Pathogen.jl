@@ -2,14 +2,14 @@
 Generates a minimal phylogenetic tree based on observations and transmission
 events
 """
-function generatetree(events::Events,
-                      observations::EventObservations,
-                      network::Network)
+function generatetree!(tree::Tree,
+                       events::Events,
+                       observations::EventObservations,
+                       network::Network)
   # Initialization
   eventtimes = [events.exposed observations.infected]
   eventorder = sortperm(eventtimes[:])
   eventnodes = fill(Nullable{Int64}(), (events.individuals, 3))
-  tree = Tree(0)
   pathways = [pathwayfrom(i, network) for i = 1:events.individuals]
 
   # Determine significant exposures (results in a observation in the future)
@@ -129,13 +129,16 @@ end
 Generates a full phylogenetic tree based on observations, transmission events,
 and removals
 """
-function generatefulltree(events::Events,
+function generatefulltree(tree::Tree,
+                          events::Events,
                           observations::EventObservations,
                           network::Network)
   eventtimes = [events.exposed observations.infected events.removed]
   eventorder = sortperm(eventtimes[:])
   eventnodes = fill(Nullable{Int64}(), size(eventtimes))
-  tree = Tree()
+  # Root node
+  addnode!(tree)
+  rootnode = length(tree.nodes)
   for i = 1:length(eventorder)
     isnan(eventtimes[eventorder[i]]) && break
     event = ind2sub(size(eventtimes), eventorder[i])
@@ -143,7 +146,7 @@ function generatefulltree(events::Events,
       # Exposure event
       if network.external[event[1]]
         # External exposure event
-        parentnode = 1
+        parentnode = rootnode
         branch_length = eventtimes[eventorder[i]]
       else
         # Internal exposure event
