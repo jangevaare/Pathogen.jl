@@ -121,7 +121,7 @@ function mcmc(n::Int64,
                                 network_proposal)
   leaves = findleaves(tree_proposal)
   for j = 1:length(leaves)
-    setdata!(tree_proposal.nodes[leave[j]], seq_obs[j])
+    setdata!(tree_proposal.nodes[leaves[j]], seq_obs[j])
   end
   llikelihood += loglikelihood(tree_proposal,
                               substitutionmodel_proposal)
@@ -195,7 +195,7 @@ function mcmc(n::Int64,
                                   network_proposal)
     leaves = findleaves(tree_proposal)
     for j = 1:length(leaves)
-      setdata!(tree_proposal.nodes[leave[j]], seq_obs[j])
+      setdata!(tree_proposal.nodes[leaves[j]], seq_obs[j])
     end
     llikelihood += loglikelihood(tree_proposal,
                                  substitutionmodel_proposal)
