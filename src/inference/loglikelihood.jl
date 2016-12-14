@@ -43,11 +43,11 @@ function loglikelihood(riskparams::RiskParameters,
 
       ll += log(exposuretotal/ratetotal)
       update_states!(states, (1, individual))
-      update_rates!(rates, states, (1, individual))
+      update_rates!(rates, states, (1, individual), population, riskfuncs, riskparams)
     else
       ll += log(rates[eventtype+1][individual]/ratetotal)
       update_states!(states, (eventtype+1, individual))
-      update_rates!(rates, states, (eventtype+1, individual))
+      update_rates!(rates, states, (eventtype+1, individual), population, riskfuncs, riskparams)
     end
   end
   return ll, networkrates

@@ -153,6 +153,7 @@ function update_rates!(rates::Rates,
                                       riskfuncs.transmissibility(riskparams.transmissibility, population, individual) *
                                       riskfuncs.infectivity(riskparams.infectivity, population, i, individual)
     end
+    rates.removal[individual] = riskfuncs.removal(riskparams.removal, population, individual)
   # Removal
   elseif event[1] == 4
     individual = event[2]

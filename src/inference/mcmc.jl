@@ -114,9 +114,11 @@ function mcmc(n::Int64,
                                              riskfuncs,
                                              population)
   network_proposal = rand(network_rates)
-  tree_proposal = generatetree(events_proposal,
-                               event_obs,
-                               network_proposal)
+  tree_proposal = Tree{Sequence, Void}()
+  tree_proposal = generatetree!(tree_proposal,
+                                events_proposal,
+                                event_obs,
+                                network_proposal)
   leaves = findleaves(tree_proposal)
   for j = 1:length(leaves)
     setdata!(tree_proposal.nodes[leave[j]], seq_obs[j])
@@ -186,10 +188,11 @@ function mcmc(n::Int64,
     else
       network_proposal = pathogen_trace.network[end]
     end
-
-    tree_proposal = generatetree(events_proposal,
-                                 event_obs,
-                                 network_proposal)
+    tree_proposal = Tree{Sequence, Void}()
+    tree_proposal = generatetree!(tree_proposal,
+                                  events_proposal,
+                                  event_obs,
+                                  network_proposal)
     leaves = findleaves(tree_proposal)
     for j = 1:length(leaves)
       setdata!(tree_proposal.nodes[leave[j]], seq_obs[j])
