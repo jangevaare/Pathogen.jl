@@ -27,24 +27,29 @@ function loglikelihood(riskparams::RiskParameters,
                      sum(rates[2]);
                      sum(rates[3]);
                      sum(rates[4])])
-
-    ΔT = eventtimes[eventorder[i]]
+                     
     if i > 1
       # Find the time difference between consecutive events
-      ΔT -= eventtimes[eventorder[i-1]]
-    end
-    # loglikelihood contribution of specific event
-    ll += loglikelihood(Exponential(1/ratetotal), [ΔT])
+      ΔT = eventtimes[eventorder[i]] - eventtimes[eventorder[i-1]]
 
+      # loglikelihood contribution of specific event
+      ll += log(ratetotal) - ratetotal*ΔT
+    end
+
+    # For exposure events
     if eventtype == 1
+      # Copy exposure rates from this moment in time
       networkrates[1][individual] = rates[1][individual]
       networkrates[2][:, individual] = rates[2][:, individual]
       exposuretotal = networkrates[1][individual] + sum(networkrates[2][:, individual])
 
+      # loglikelihood contribution of an exposure event
       ll += log(exposuretotal/ratetotal)
       update_states!(states, (1, individual))
       update_rates!(rates, states, (1, individual), population, riskfuncs, riskparams)
+    # For non-exposure events
     else
+      # loglikelihood contribution of a non-exposure event
       ll += log(rates[eventtype+1][individual]/ratetotal)
       update_states!(states, (eventtype+1, individual))
       update_rates!(rates, states, (eventtype+1, individual), population, riskfuncs, riskparams)

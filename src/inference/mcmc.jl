@@ -6,7 +6,6 @@ type PathogenIteration
   events::Events
   network::Network
   logposterior::Float64
-  acceptance::Bool
 end
 
 
@@ -21,7 +20,6 @@ type PathogenTrace
   events::Vector{Events}
   network::Vector{Network}
   logposterior::Vector{Float64}
-  acceptance::Vector{Bool}
 end
 
 
@@ -30,7 +28,6 @@ function push!(trace::PathogenTrace, iteration::PathogenIteration)
   push!(trace.events, iteration.events)
   push!(trace.network, iteration.network)
   push!(trace.logposterior, iteration.logposterior)
-  push!(trace.acceptance, iteration.acceptance)
   return trace
 end
 
@@ -40,7 +37,6 @@ function append!(trace1::PathogenTrace, trace2::PathogenTrace)
   append!(trace1.events, trace2.events)
   append!(trace1.network, trace2.network)
   append!(trace1.logposterior, trace2.logposterior)
-  append!(trace1.acceptance, trace2.acceptance)
   return trace1
 end
 
@@ -51,7 +47,7 @@ end
 
 
 function show(io::IO, object::PathogenTrace)
-  print(io, "PathogenTrace object (MCMC iterations: $(length(object)), acceptance rate: $(trunc(sum(object.acceptance)*100/length(object), 4))%)")
+  print(io, "PathogenTrace object (MCMC iterations: $(length(object)))")
 end
 
 
@@ -64,11 +60,7 @@ end
 Metropolis-Hastings rejection using log posteriors
 """
 function MHreject(lp1::Float64, lp2::Float64)
-  if rand() <= exp(lp1 - lp2)
-    return false
-  else
-    return true
-  end
+  return rand() > exp(lp1 - lp2)
 end
 
 
@@ -76,77 +68,89 @@ end
 Metropolis-Hastings acceptance using log posteriors
 """
 function MHaccept(lp1::Float64, lp2::Float64)
-  if rand() < exp(lp1 - lp2)
-    return true
-  else
-    return false
-  end
+  return rand() <= exp(lp1 - lp2)
 end
 
-
 """
-Phylodynamic ILM MCMC
+Initialize MCMC
 """
-function mcmc(n::Int64,
-              ILM_kernel_variance::Vector{Float64},
-              phylogenetic_kernel_variance::Vector{Float64},
-              event_obs::EventObservations,
-              seq_obs::Vector{Sequence},
-              event_priors::EventPriors,
-              riskparameter_priors::RiskParameterPriors,
-              riskfuncs::RiskFunctions,
-              substitutionmodel_priors::SubstitutionModelPrior,
-              population::DataFrame)
-  progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 25)
-  individuals = size(population, 1)
-
+function initialize_mcmc(event_obs::EventObservations,
+                         seq_obs::Vector{Sequence},
+                         events_proposal::Events
+                         riskparameter_priors::RiskParameterPriors,
+                         riskfuncs::RiskFunctions,
+                         substitutionmodel_priors::SubstitutionModelPrior,
+                         population::DataFrame)
   riskparameter_proposal = rand(riskparameter_priors)
   substitutionmodel_proposal = rand(substitutionmodel_priors)
-  events_proposal = rand(event_priors)
+
   lprior = logprior(riskparameter_priors,
                     riskparameter_proposal)
   lprior += logprior(substitutionmodel_priors,
                      substitutionmodel_proposal)
-  lprior += logprior(event_priors,
-                     events_proposal)
+
   llikelihood, network_rates = loglikelihood(riskparameter_proposal,
                                              events_proposal,
                                              riskfuncs,
                                              population)
   network_proposal = rand(network_rates)
   tree_proposal = Tree{Sequence, Void}()
-  tree_proposal = generatetree!(tree_proposal,
-                                events_proposal,
-                                event_obs,
-                                network_proposal)
+  generatetree!(tree_proposal,
+                events_proposal,
+                event_obs,
+                network_proposal)
   leaves = findleaves(tree_proposal)
   for j = 1:length(leaves)
     setdata!(tree_proposal.nodes[leaves[j]], seq_obs[j])
   end
   llikelihood += loglikelihood(tree_proposal,
-                              substitutionmodel_proposal)
+                               substitutionmodel_proposal)
   lposterior = lprior + llikelihood
   pathogen_trace = PathogenTrace([riskparameter_proposal],
                                  [events_proposal],
                                  [network_proposal],
-                                 [lposterior],
-                                 [true])
+                                 [lposterior])
   phylo_trace = PhyloTrace([substitutionmodel_proposal],
                            [tree_proposal],
-                           [lposterior],
-                           [true])
+                           [lposterior])
+  return pathogen_trace, phylo_trace
+end
 
-  for i = 2:n
-    next!(progressbar)
-    # iterationtype = findfirst(rand(Multinomial(1, [0.25; 0.25; 0.25; 0.25])))
-    iterationtype = findfirst(rand(Multinomial(1, [1.0; 0.0; 0.0; 0.0])))
+
+"""
+Phylodynamic ILM MCMC
+"""
+function mcmc!(pathogen_trace::PathogenTrace,
+               phylo_trace::PhyloTrace,
+               n::Int64,
+               ILM_kernel_variance::Array{Float64, 2},
+               phylogenetic_kernel_variance::Array{Float64, 2},
+               event_variance::Float64,
+               event_obs::EventObservations,
+               seq_obs::Vector{Sequence},
+               riskparameter_priors::RiskParameterPriors,
+               riskfuncs::RiskFunctions,
+               substitutionmodel_priors::SubstitutionModelPrior,
+               population::DataFrame,
+               iterprob::Vector{Float64})
+  progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 25)
+  individuals = size(population, 1)
+  acceptances = fill(false, (1, length(iterprob)))
+  for i = 1:n
+    next!(progressbar, showvalues = [("Iterations", size(acceptances, 1)); ("Acceptances", sum(acceptances, 1))])
+
+    iterationtype = findfirst(rand(Multinomial(1, iterprob)))
 
     if iterationtype == 1
       riskparameter_proposal = propose(pathogen_trace.riskparameters[end],
-                                       riskparameter_priors,
                                        ILM_kernel_variance)
     else
-      riskparameter_proposal = pathogen_trace.riskparameters[end]
+      riskparameter_proposal = RiskParameters(pathogen_trace.riskparameters[end].sparks,
+                                              pathogen_trace.riskparameters[end].susceptibility,
+                                              pathogen_trace.riskparameters[end].transmissibility,
+                                              pathogen_trace.riskparameters[end].infectivity,
+                                              pathogen_trace.riskparameters[end].latency,
+                                              pathogen_trace.riskparameters[end].removal)
     end
 
     if iterationtype == 2
@@ -158,47 +162,45 @@ function mcmc(n::Int64,
     end
 
     if iterationtype == 3
-      updated_inds = sample(1:individuals, 1)
-      events_proposal = propose(updated_inds,
-                                pathogen_trace.events[end],
-                                event_priors,
-                                pathogen_trace.network[end])
-      # events_proposal = rand(event_priors)
+      events_proposal = propose(pathogen_trace.events[end],
+                                pathogen_trace.network[end],
+                                event_variance)
     else
-      events_proposal = pathogen_trace.events[end]
+      events_proposal = Events(pathogen_trace.events[end].exposed,
+                               pathogen_trace.events[end].infected,
+                               pathogen_trace.events[end].removed)
     end
-
     lprior = logprior(riskparameter_priors,
                       riskparameter_proposal)
     lprior += logprior(substitutionmodel_priors,
                        substitutionmodel_proposal)
     lprior += logprior(event_priors,
                        events_proposal)
-
-    llikelihood, network_rates = loglikelihood(riskparameter_proposal,
-                                               events_proposal,
-                                               riskfuncs,
-                                               population)
-    if iterationtype == 4
-      updated_inds = sample(1:individuals, 1)
-      network_proposal = propose(updated_inds,
-                                 pathogen_trace.network[end],
-                                 network_rates)
-      # network_proposal = rand(network_rates)
+    if lprior > -Inf
+      llikelihood, network_rates = loglikelihood(riskparameter_proposal,
+                                                 events_proposal,
+                                                 riskfuncs,
+                                                 population)
+      if iterationtype == 4
+        network_proposal = rand(network_rates)
+      else
+        network_proposal = Network(pathogen_trace.network[end].external,
+                                   pathogen_trace.network[end].internal)
+      end
+      tree_proposal = Tree{Sequence, Void}()
+      generatetree!(tree_proposal,
+                    events_proposal,
+                    event_obs,
+                    network_proposal)
+      leaves = findleaves(tree_proposal)
+      for j = 1:length(leaves)
+        setdata!(tree_proposal.nodes[leaves[j]], seq_obs[j])
+      end
+      llikelihood += loglikelihood(tree_proposal,
+                                   substitutionmodel_proposal)
     else
-      network_proposal = pathogen_trace.network[end]
+      llikelihood = -Inf
     end
-    tree_proposal = Tree{Sequence, Void}()
-    tree_proposal = generatetree!(tree_proposal,
-                                  events_proposal,
-                                  event_obs,
-                                  network_proposal)
-    leaves = findleaves(tree_proposal)
-    for j = 1:length(leaves)
-      setdata!(tree_proposal.nodes[leaves[j]], seq_obs[j])
-    end
-    llikelihood += loglikelihood(tree_proposal,
-                                 substitutionmodel_proposal)
 
     lposterior = lprior + llikelihood
 
@@ -206,22 +208,31 @@ function mcmc(n::Int64,
       push!(pathogen_trace, PathogenIteration(riskparameter_proposal,
                                               events_proposal,
                                               network_proposal,
-                                              lposterior,
-                                              true))
+                                              lposterior))
       push!(phylo_trace, PhyloIteration(substitutionmodel_proposal,
                                         tree_proposal,
-                                        lposterior,
-                                        true))
+                                        lposterior))
+      acceptance = fill(false, (1, length(iterprob)))
+      acceptance[iterationtype] = true
+      acceptances = vcat(acceptances, acceptance)
     else
-      push!(pathogen_trace, PathogenIteration(pathogen_trace.riskparameters[end],
-                                              pathogen_trace.events[end],
-                                              pathogen_trace.network[end],
-                                              pathogen_trace.logposterior[end],
-                                              false))
+      push!(pathogen_trace, PathogenIteration(RiskParameters(pathogen_trace.riskparameters[end].sparks,
+                                                             pathogen_trace.riskparameters[end].susceptibility,
+                                                             pathogen_trace.riskparameters[end].transmissibility,
+                                                             pathogen_trace.riskparameters[end].infectivity,
+                                                             pathogen_trace.riskparameters[end].latency,
+                                                             pathogen_trace.riskparameters[end].removal),
+                                              Events(pathogen_trace.events[end].exposed,
+                                                     pathogen_trace.events[end].infected,
+                                                     pathogen_trace.events[end].removed),
+                                              Network(pathogen_trace.network[end].external,
+                                                      pathogen_trace.network[end].internal),
+                                              pathogen_trace.logposterior[end]))
       push!(phylo_trace, PhyloIteration(phylo_trace.substitutionmodel[end],
                                         phylo_trace.tree[end],
-                                        phylo_trace.logposterior[end],
-                                        false))
+                                        phylo_trace.logposterior[end]))
+      acceptance = fill(false, (1, length(iterprob)))
+      acceptances = vcat(acceptances, acceptance)
     end
   end
   return pathogen_trace, phylo_trace

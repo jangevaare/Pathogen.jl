@@ -31,23 +31,24 @@ network rates
 """
 function propose(individuals::Vector{Int64},
                  network::Network,
-                 network_rates::Array{Array{Float64}, 1})
-  proposal = network
+                 network_rates::Vector{Array{Float64}})
+  external = network.external
+  internal = network.internal
   external_rates = network_rates[1]
   internal_rates = network_rates[2]
   for i in individuals
-    proposal.external[i] = false
-    proposal.internal[:, i] = false
+    external[i] = false
+    internal[:, i] = false
     external_total = external_rates[i]
     internal_total = sum(internal_rates[:, i])
     if sum(external_total + internal_total) > 0.
       if rand() < external_total/(external_total + internal_total)
-        proposal.external[i] = true
+        external[i] = true
       else
         source = findfirst(rand(Multinomial(1, internal_rates[:, i]/internal_total)))
-        proposal.internal[source, i] = true
+        internal[source, i] = true
       end
     end
   end
-  return proposal
+  return Network(external, internal)
 end

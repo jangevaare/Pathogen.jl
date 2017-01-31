@@ -11,30 +11,31 @@ end
 """
 Generate uniform `EventPriors` from `EventObservations`
 """
-function generate_eventpriors(observations::EventObservations,
-                              exposureextent::Float64,
-                              infectionextent::Float64,
-                              removalextent::Float64)
-  removed = fill(Nullable{UnivariateDistribution}(), observations.individuals)
-  infected = fill(Nullable{UnivariateDistribution}(), observations.individuals)
-  exposed = fill(Nullable{UnivariateDistribution}(), observations.individuals)
+function generate_events(observations::EventObservations,
+                         exposureextent::Float64,
+                         infectionextent::Float64,
+                         removalextent::Float64)
+  removed = fill(NaN, observations.individuals)
+  infected = fill(NaN, observations.individuals)
+  exposed = fill(NaN, observations.individuals)
   for i = 1:observations.individuals
     if !isnan(observations.removed[i])
-      removed_lb = maximum([observations.infected[i];
-                            observations.removed[i]-removalextent])
-      removed[i] = Uniform(removed_lb,
-                           observations.removed[i])
+      removed_lb = maximum([observations.infected[i]; observations.removed[i]-removalextent])
+      removed_ub = observations.removed[i])
+      removed[i] = rand(Uniform(removed_lb, removed_ub))
     end
     if !isnan(observations.infected[i])
-      infected[i] = Uniform(observations.infected[i] - infectionextent,
-                            observations.infected[i])
-      exposed[i] = Uniform(observations.infected[i] - infectionextent - exposureextent,
-                           observations.infected[i] - infectionextent)
+      infected_lb = observations.infected[i] - infectionextent
+      infected_ub = observations.infected[i]
+      infected[i] = rand(Uniform(infected_lb, infected_ub))
+      exposed_lb = infected[i] - exposureextent
+      exposed_ub = infected[i]
+      exposed[i] = rand(Uniform(exposed_lb, exposed_ub))
     end
   end
-  return EventPriors(exposed,
-                     infected,
-                     removed)
+  return Events(exposed,
+                infected,
+                removed)
 end
 
 
@@ -93,37 +94,102 @@ function propose(individuals::Vector{Int64},
                  events::Events,
                  eventpriors::EventPriors,
                  network::Network)
-  proposal = events
+  exposed = events.exposed
+  infected = events.infected
+  removed = events.removed
   for i in individuals
     pathfrom = pathwayfrom(i, network, 2)
     pathto = pathwayto(i, network, 2)
     # Exposure time
-    if !isnan(events.exposed[i])
+    if !isnan(exposed[i])
       if length(pathto) > 1
-        exposure_lb = events.infected[pathto[2]]
-        if isnan(events.removed[pathto[2]])
-          exposure_ub = events.infected[i]
+        exposure_lb = infected[pathto[2]]
+        if isnan(removed[pathto[2]])
+          exposure_ub = infected[i]
         else
-          exposure_ub = minimum([events.infected[i]; proposal.exposed[pathfrom[2:end]]; events.removed[pathto[2]]])
+          exposure_ub = minimum([infected[i]; exposed[pathfrom[2:end]]; removed[pathto[2]]])
         end
       else
         exposure_lb = 0.
-        exposure_ub = events.infected[i]
+        exposure_ub = infected[i]
       end
-      proposal.exposed[i] = rand(Truncated(get(eventpriors.exposed[i]), exposure_lb, exposure_ub))
+      exposed[i] = rand(Truncated(get(eventpriors.exposed[i]), exposure_lb, exposure_ub))
     end
     # Infection time
-    if !isnan(events.infected[i])
-      infection_lb = proposal.exposed[i]
-      infection_ub = minimum([proposal.exposed[pathfrom[2:end]]; Inf])
-      proposal.infected[i] = rand(Truncated(get(eventpriors.infected[i]), infection_lb, infection_ub))
+    if !isnan(infected[i])
+      infection_lb = exposed[i]
+      infection_ub = minimum([exposed[pathfrom[2:end]]; Inf])
+      infected[i] = rand(Truncated(get(eventpriors.infected[i]), infection_lb, infection_ub))
     end
     # Removal time
-    if !isnan(events.removed[i])
-      removal_lb = maximum([proposal.exposed[pathfrom[2:end]]; proposal.infected[i]])
+    if !isnan(removed[i])
+      removal_lb = maximum([exposed[pathfrom[2:end]]; infected[i]])
       removal_ub = Inf
-      proposal.removed[i] = rand(Truncated(get(eventpriors.removed[i]), removal_lb, removal_ub))
+      removed[i] = rand(Truncated(get(eventpriors.removed[i]), removal_lb, removal_ub))
     end
   end
-  return proposal
+  return Events(exposed, infected, removed)
+end
+
+
+"""
+Event time augmentation for a single event time
+"""
+function propose(events::Events,
+                 network::Network,
+                 variance::Float64)
+  individuals = events.individuals
+  exposed = events.exposed
+  infected = events.infected
+  removed = events.removed
+  # Randomly select an event time
+  i, j = ind2sub((individuals, 3), sample(find([!isnan(exposed) !isnan(infected) !isnan(removed)]), 1)[1])
+  pathfrom = pathwayfrom(i, network, 2)
+  pathto = pathwayto(i, network, 2)
+  # Exposure time
+  if j == 1
+    if length(pathto) > 1
+      exposure_lb = infected[pathto[2]]
+      exposure_ub = minimum([infected[i]; removed[pathto[2]]; Inf])
+    else
+      exposure_lb = -Inf
+      exposure_ub = minimum([infected[i]; Inf])
+    end
+    exposed[i] = rand(TruncatedNormal(exposed[i], variance, exposure_lb, exposure_ub))
+  # Infection time
+  elseif j == 2
+    infection_lb = exposed[i]
+    infection_ub = minimum([exposed[pathfrom[2:end]]; Inf])
+    infected[i] = rand(TruncatedNormal(infected[i], variance, infection_lb, infection_ub))
+  # Removal time
+  elseif j == 3
+    removal_lb = maximum([exposed[pathfrom[2:end]]; infected[i]])
+    removal_ub = Inf
+    removed[i] = rand(TruncatedNormal(removed[i], variance, removal_lb, removal_ub))
+  end
+  return Events(exposed, infected, removed)
+end
+
+
+"""
+Event time augmentation
+"""
+function propose(individuals::Vector{Int64},
+                 events::Events,
+                 eventpriors::EventPriors)
+  exposed = events.exposed
+  infected = events.infected
+  removed = events.removed
+  for i in individuals
+    if !isnull(eventpriors.exposed[i])
+      exposed[i] = rand(get(eventpriors.exposed[i]))
+    end
+    if !isnull(eventpriors.infected[i])
+      infected[i] = rand(get(eventpriors.infected[i]))
+    end
+    if !isnull(eventpriors.removed[i])
+      removed[i] = rand(get(eventpriors.removed[i]))
+    end
+  end
+  return Events(exposed, infected, removed)
 end

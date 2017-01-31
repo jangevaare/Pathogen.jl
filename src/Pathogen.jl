@@ -77,5 +77,6 @@ module Pathogen
     generate_eventpriors,
     PathogenTrace,
     PathogenIteration,
-    mcmc
+    initialize_mcmc,
+    mcmc!
 end
