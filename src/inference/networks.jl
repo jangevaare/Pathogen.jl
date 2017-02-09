@@ -32,8 +32,8 @@ network rates
 function propose(individuals::Vector{Int64},
                  network::Network,
                  network_rates::Vector{Array{Float64}})
-  external = network.external
-  internal = network.internal
+  external = copy(network.external)
+  internal = copy(network.internal)
   external_rates = network_rates[1]
   internal_rates = network_rates[2]
   for i in individuals
@@ -48,6 +48,33 @@ function propose(individuals::Vector{Int64},
         source = findfirst(rand(Multinomial(1, internal_rates[:, i]/internal_total)))
         internal[source, i] = true
       end
+    end
+  end
+  return Network(external, internal)
+end
+
+
+"""
+Propose an exposure network based on a previous exposure network and exposure
+network rates
+"""
+function propose(i::Int64,
+                 network::Network,
+                 network_rates::Vector{Array{Float64}})
+  external = network.external
+  internal = network.internal
+  external_rates = network_rates[1]
+  internal_rates = network_rates[2]
+  external_total = external_rates[i]
+  internal_total = sum(internal_rates[:, i])
+  if sum(external_total + internal_total) > 0.
+    external[i] = false
+    internal[:, i] = false
+    if rand() < external_total/(external_total + internal_total)
+      external[i] = true
+    else
+      source = findfirst(rand(Multinomial(1, internal_rates[:, i]/internal_total)))
+      internal[source, i] = true
     end
   end
   return Network(external, internal)

@@ -25,6 +25,16 @@ type RiskParameters
 end
 
 
+function copy(riskparameters::RiskParameters)
+  return RiskParameters(copy(riskparameters.sparks),
+                        copy(riskparameters.susceptibility),
+                        copy(riskparameters.transmissibility),
+                        copy(riskparameters.infectivity),
+                        copy(riskparameters.latency),
+                        copy(riskparameters.removal))
+end
+
+
 function length(x::RiskParameters)
   return sum([length(x.sparks);
               length(x.susceptibility);

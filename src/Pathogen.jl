@@ -19,6 +19,7 @@ module Pathogen
     Base.size,
     Base.show,
     Base.Array,
+    Base.copy,
     PhyloModels.simulate!,
     PhyloModels.transition_kernel_variance,
     PhyloModels.loglikelihood,
@@ -73,8 +74,7 @@ module Pathogen
 
     ## Inference
     RiskParameterPriors,
-    EventPriors,
-    generate_eventpriors,
+    generate_events,
     PathogenTrace,
     PathogenIteration,
     initialize_mcmc,

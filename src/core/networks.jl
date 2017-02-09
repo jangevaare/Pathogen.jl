@@ -18,3 +18,9 @@ type Network
     return new(external, internal)
   end
 end
+
+
+function copy(network::Network)
+  return Network(copy(network.external),
+                 copy(network.internal))
+end

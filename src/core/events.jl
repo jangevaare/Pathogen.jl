@@ -31,3 +31,10 @@ type Events
                individuals)
   end
 end
+
+
+function copy(events::Events)
+  return Events(copy(events.exposed),
+                copy(events.infected),
+                copy(events.removed))
+end
