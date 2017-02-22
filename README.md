@@ -1,11 +1,11 @@
 # Pathogen.jl
-[![Build Status](https://travis-ci.org/jangevaare/Pathogen.jl.svg?branch=alpha)](https://travis-ci.org/jangevaare/Pathogen.jl)
+[![Build Status](https://travis-ci.org/jangevaare/Pathogen.jl.svg?branch=master)](https://travis-ci.org/jangevaare/Pathogen.jl)
 
 ## Introduction
 
 Pathogen.jl is a package that provides utilities for the simulation and inference of pathogen phylodynamics, built in the [Julia language](http://julialang.org). Specifically, Pathogen.jl presents an extension to the individual level infectious disease transmission models (ILMs) of Deardon et al. (2010), to simultaneously model infectious disease transmission and evolution. Pathogen genomic sequences are used in conjunction with the covariate and disease state information of individuals to infer disease transmission pathways, external disease pressure, and infectivity parameters.
 
-Pathogen.jl utilizes the [PhyloTrees.jl](https://github.com/jangevaare/PhyloTrees.jl) package for pathogen sequence simulation and calculation of phylogenetic tree likelihoods.
+Pathogen.jl utilizes the packages [PhyloTrees.jl](https://github.com/jangevaare/PhyloTrees.jl) and [PhyloModels.jl](https://github.com/jangevaare/PhyloModels.jl) for pathogen sequence simulation and calculation of phylogenetic tree likelihoods.
 
 
 ![Phylodynamic simulation](epianimation.gif?raw=true)
@@ -15,18 +15,21 @@ Pathogen.jl utilizes the [PhyloTrees.jl](https://github.com/jangevaare/PhyloTree
 
 
     Pkg.update()
-    Pkg.clone("https://github.com/jangevaare/Pathogen.jl/tree/alpha")
+    Pkg.clone("https://github.com/jangevaare/Pathogen.jl")
 
 
 
 ## Package usage
+
+### Simulation
 
 1. Create a population data frame containing covariate information for each individual in a population. If there is a spatial component to your model, this data frame should contain the location of each individual. Each row in this data frame is assumed to represent a single unique individual.
 
          using DataFrames
          population = DataFrame(x = x_coordinates,
                                 y = y_coordinates,
-                                age = age)
+                                riskfactor1 = riskfactor1,
+                                riskfactor2 = riskfactor2)
 
 2. Create the following risk functions. These risk functions are the components of event (disease state transition) rates.
 
@@ -71,7 +74,7 @@ Pathogen.jl utilizes the [PhyloTrees.jl](https://github.com/jangevaare/PhyloTree
                                    infectivity_func,
                                    detection_func,
                                    removal_func)
-                                   
+
         risk_params = RiskParameters(sparks_params,
                                      susceptibility_params,
                                      transmissibility_params,
@@ -79,25 +82,4 @@ Pathogen.jl utilizes the [PhyloTrees.jl](https://github.com/jangevaare/PhyloTree
                                      detection_params,
                                      removal_params)
 
-
-4. Initialize the simulation
-
-        index_case = 1
-        rates, events = initialize_simulation(population,
-                                              risk_funcs,
-                                              risk_params,
-                                              index_case)
-
-5. Simulate `n` events
-
-        rates, events = simulate!(n, rates, events)
-
-6. Generate the associated phylogenetic tree
-
-        tree, observed = generate_tree(events)
-
-7. Now, using the [PhyloTrees.jl](https://github.com/jangevaare/PhyloTrees.jl) package, simulate sequence data for each of the previously generated transmission trees (there are many more simulation options available through PhyloTrees.jl)
-
-        using PhyloTrees
-        substitution_model = JC69([1.0e-5])
-        tree_sequences = simulate(tree, substitution_model, 1000)
+### Inference

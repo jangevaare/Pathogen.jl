@@ -92,11 +92,9 @@ function initialize_mcmc(event_obs::EventObservations,
                                              riskfuncs,
                                              population)
   network_proposal = rand(network_rates)
-  tree_proposal = Tree()
-  generatetree!(tree_proposal,
-                events_proposal,
-                event_obs,
-                network_proposal)
+  tree_proposal = generatetree(events_proposal,
+                               event_obs,
+                               network_proposal)
   llikelihood += loglikelihood(tree_proposal,
                                substitutionmodel_proposal,
                                seq_obs)
@@ -181,11 +179,9 @@ function mcmc!(pathogen_trace::PathogenTrace,
       else
         network_proposal = copy(pathogen_trace.network[end])
       end
-      tree_proposal = Tree()
-      generatetree!(tree_proposal,
-                    events_proposal,
-                    event_obs,
-                    network_proposal)
+      tree_proposal = generatetree(events_proposal,
+                                   event_obs,
+                                   network_proposal)
       llikelihood += loglikelihood(tree_proposal,
                                    substitutionmodel_proposal,
                                    seq_obs)

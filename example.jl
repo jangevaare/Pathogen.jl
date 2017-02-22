@@ -85,8 +85,7 @@ states, rates, events, network = simulate!(n,
 observations = observe(events, Uniform(0., 0.5))
 
 # Generate the associated phylogenetic tree
-tree = Tree()
-generatetree!(tree, events, observations, network)
+generatetree!(events, observations, network)
 
 # Plot the tree
 #plot(tree)
@@ -98,7 +97,7 @@ node_data = Dict{Int64, Sequence}()
 substitution_model = JC69([1.0e-5])
 
 # Set the root sequence
-node_data[findroots(tree)[1]] = simulate(500, substitution_model)
+node_data[findroots(tree)[1]] = simulate(1000, substitution_model)
 
 # Simulate remaining sequences
 site_rates = fill(1., 500)
@@ -141,7 +140,7 @@ transition_kernel_var2 = diagm([2.5e-7])
 # Run MCMC
 mcmc!(phylodynamicILM_trace,
       phylogenetic_trace,
-      4999,
+      24999,
       transition_kernel_var1,
       transition_kernel_var2,
       1.0,
@@ -163,7 +162,7 @@ mcmc!(phylodynamicILM_trace,
       25000,
       transition_kernel_var1,
       diagm(transition_kernel_var2),
-      0.25,
+      1.0,
       observations,
       observed_sequences,
       riskparameter_priors,
@@ -174,16 +173,16 @@ mcmc!(phylodynamicILM_trace,
 
 
 # Tune covariance matrices
-transition_kernel_var1 = transition_kernel_variance(phylodynamicILM_trace.riskparameters)/10
-transition_kernel_var2 = transition_kernel_variance(phylogenetic_trace.substitutionmodel)
+transition_kernel_var1 = cov(Array(phylodynamicILM_trace.riskparameters))/10
+transition_kernel_var2 = [var([phylogenetic_trace.substitutionmodel[i].Θ[j] for i = 1:50000, j = 1])]
 
 # Run MCMC
 mcmc!(phylodynamicILM_trace,
       phylogenetic_trace,
-      25000,
+      100000,
       transition_kernel_var1,
       diagm(transition_kernel_var2),
-      0.25,
+      1.0,
       observations,
       observed_sequences,
       riskparameter_priors,
@@ -207,4 +206,4 @@ plot(population, phylodynamicILM_trace.events[maxiter], phylodynamicILM_trace.ne
 plot(phylodynamicILM_trace.logposterior)
 
 plot(Array(phylodynamicILM_trace.riskparameters))
-plot!([phylogenetic_trace.substitutionmodel[i].Θ[j] for i = 1:75000, j = 1])
+plot!([phylogenetic_trace.substitutionmodel[i].Θ[j] for i = 1:150000, j = 1])

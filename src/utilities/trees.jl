@@ -2,11 +2,11 @@
 Generates a minimal phylogenetic tree based on observations and transmission
 events
 """
-function generatetree!(tree::Tree,
-                       events::Events,
-                       observations::EventObservations,
-                       network::Network)
+function generatetree(events::Events,
+                      observations::EventObservations,
+                      network::Network)
   # Initialization
+  tree = Tree()
   eventtimes = [events.exposed observations.infected]
   eventorder = sortperm(eventtimes[:])
   eventnodes = fill(Nullable{Int64}(), (events.individuals, 3))
