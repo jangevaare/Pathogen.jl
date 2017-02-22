@@ -56,11 +56,6 @@ Pathogen.jl utilizes the [PhyloTrees.jl](https://github.com/jangevaare/PhyloTree
           # exposed individual j
         end
 
-        function detection_func(parameters::Vector{Float64}, population::DataFrame, k::Int64)
-          # function of risk factors associated with the detection of an infection in an
-          # infectious individual k
-        end
-
         function removal_func(parameters::Vector{Float64}, population::DataFrame, k::Int64)
           # function of risk factors associated with the removal of an infectious
           # individual k
@@ -74,14 +69,13 @@ Pathogen.jl utilizes the [PhyloTrees.jl](https://github.com/jangevaare/PhyloTree
                                    susceptibility_func,
                                    transmissibility_func,
                                    infectivity_func,
-                                   latency_func,
                                    detection_func,
                                    removal_func)
+                                   
         risk_params = RiskParameters(sparks_params,
                                      susceptibility_params,
                                      transmissibility_params,
                                      infectivity_params,
-                                     latency_params,
                                      detection_params,
                                      removal_params)
 

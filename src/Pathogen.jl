@@ -1,46 +1,85 @@
+__precompile__()
+
 module Pathogen
 
+  # Dependencies
   using DataFrames
   using PhyloTrees
+  using PhyloModels
   using Distributions
   using RecipesBase
+  using ProgressMeter
 
-  # New methods
+  # Functions to be extended
   import
+    Base.getindex,
     Base.push!,
     Base.append!,
-    Base.rand
+    Base.rand,
+    Base.length,
+    Base.convert,
+    Base.size,
+    Base.show,
+    Base.Array,
+    Base.copy,
+    PhyloModels.simulate!,
+    PhyloModels.loglikelihood,
+    PhyloModels.logprior,
+    PhyloModels.propose
 
-  include("risks.jl")
-  include("rates.jl")
-  include("events.jl")
-  include("pathways.jl")
-  include("simulate.jl")
-  include("utilities.jl")
-  include("plothelpers.jl")
+  # Source files
+  ## Core
+  include("core/risks.jl")
+  include("core/states.jl")
+  include("core/rates.jl")
+  include("core/events.jl")
+  include("core/networks.jl")
+  include("core/observe.jl")
+
+  ## Utilities
+  include("utilities/pathways.jl")
+  include("utilities/states.jl")
+  include("utilities/trees.jl")
+  include("utilities/plotting.jl")
+
+  ## Simulation
+  include("simulation.jl")
+
+  ## Inference
+  include("inference/risks.jl")
+  include("inference/events.jl")
+  include("inference/networks.jl")
+  include("inference/loglikelihood.jl")
+  include("inference/mcmc.jl")
+
+  ## Visualization
   include("plotrecipes.jl")
-  include("infer.jl")
 
   # New types and functions
   export
+    ## Core
     RiskFunctions,
     RiskParameters,
-    Rates,
-    Events,
+    Network,
+    NetworkRates,
+
+    ## Utilities
+    generatetree!,
+    generatefulltree!,
     pathwayto,
-    pathwaysto,
     pathwayfrom,
-    pathwaysfrom,
-    update_events!,
-    update_rates!,
-    initialize_rates,
+
+    ## Simulation
     initialize_simulation,
     simulate!,
-    generatetree,
-    findstate,
-    RiskPriors,
+    EventObservations,
+    observe,
+
+    ## Inference
+    RiskParameterPriors,
+    generate_events,
     PathogenTrace,
     PathogenIteration,
-    PathogenProposal
-
-end # module
+    initialize_mcmc,
+    mcmc!
+end

@@ -36,12 +36,16 @@
 end
 
 
-@recipe function plot(population::DataFrame, events::Events, time::Float64, paths=true::Bool)
+@recipe function plot(population::DataFrame,
+                      events::Events,
+                      network::Network,
+                      time::Real,
+                      paths=true::Bool)
   xguide --> ""
   yguide --> ""
   legend --> :right
   if paths
-    xpath, ypath = pathplot(population, events, time)
+    xpath, ypath = pathplot(population, events, network, time)
     if size(xpath, 2) > 0
       @series begin
         seriestype := :path
