@@ -4,6 +4,7 @@ using Distributions
 using PhyloTrees
 using PhyloModels
 using Plots
+using StatPlots
 
 # Define population
 x_coordinates = rand(Uniform(0, 3), 25)
@@ -85,7 +86,7 @@ states, rates, events, network = simulate!(n,
 observations = observe(events, Uniform(0., 0.5))
 
 # Generate the associated phylogenetic tree
-generatetree!(events, observations, network)
+tree = generate_tree(events, observations, network)
 
 # Plot the tree
 #plot(tree)
@@ -100,7 +101,7 @@ substitution_model = JC69([1.0e-5])
 node_data[findroots(tree)[1]] = simulate(1000, substitution_model)
 
 # Simulate remaining sequences
-site_rates = fill(1., 500)
+site_rates = fill(1., 1000)
 simulate!(node_data, tree, substitution_model, site_rates)
 
 # Extract observed sequences
@@ -200,8 +201,8 @@ plot(phylodynamicILM_trace.events[maxiter])
 plot(tree)
 plot(phylogenetic_trace.tree[maxiter])
 
-plot(population, events, network, 500.)
-plot(population, phylodynamicILM_trace.events[maxiter], phylodynamicILM_trace.network[maxiter], 500.)
+plot(population, events, network, 1000.)
+plot(population, phylodynamicILM_trace.events[maxiter], phylodynamicILM_trace.network[maxiter], 1000.)
 
 plot(phylodynamicILM_trace.logposterior)
 

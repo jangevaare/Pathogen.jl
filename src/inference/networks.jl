@@ -1,4 +1,6 @@
 """
+rand(network_rates::NetworkRates)
+
 Probablistically generate a network object based on exposure network rates
 """
 function rand(network_rates::NetworkRates)
@@ -26,6 +28,10 @@ end
 
 
 """
+propose(individuals::Vector{Int64},
+        network::Network,
+        network_rates::NetworkRates)
+
 Propose an exposure network based on a previous exposure network and exposure
 network rates
 """
@@ -55,6 +61,10 @@ end
 
 
 """
+propose(i::Int64,
+        network::Network,
+        network_rates::NetworkRates)
+
 Propose an exposure network based on a previous exposure network and exposure
 network rates
 """

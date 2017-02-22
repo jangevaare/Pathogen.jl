@@ -64,8 +64,7 @@ module Pathogen
     NetworkRates,
 
     ## Utilities
-    generatetree!,
-    generatefulltree!,
+    generate_tree,
     pathwayto,
     pathwayfrom,
 

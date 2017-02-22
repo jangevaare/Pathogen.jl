@@ -1,4 +1,8 @@
 """
+pathwayto(individual::Int64,
+          network::Network,
+          depth=Inf::Real)
+
 Return the transmission pathway leading to an individual
 """
 function pathwayto(individual::Int64,
@@ -20,6 +24,10 @@ end
 
 
 """
+pathwayfrom(individual::Int64,
+            network::Network,
+            depth=Inf::Real)
+
 Return the transmission pathway leading from an individual
 """
 function pathwayfrom(individual::Int64,

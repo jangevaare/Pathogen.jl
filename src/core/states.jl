@@ -1,3 +1,6 @@
+"""
+State of individuals in a population at a given time
+"""
 type States
   susceptible::Vector{Bool}
   exposed::Vector{Bool}

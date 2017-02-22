@@ -1,5 +1,10 @@
 """
-Generate uniform `EventPriors` from `EventObservations`
+generate_events(observations::EventObservations,
+                exposureextent::Float64,
+                infectionextent::Float64,
+                removalextent::Float64)
+
+Generate some initial `Events` from `EventObservations`
 """
 function generate_events(observations::EventObservations,
                          exposureextent::Float64,
@@ -30,6 +35,13 @@ end
 
 
 """
+propose(i::Int64,
+        j::Int64,
+        events::Events,
+        network::Network,
+        observations::EventObservations,
+        variance::Float64)
+
 Event time augmentation for a single event time
 """
 function propose(i::Int64,

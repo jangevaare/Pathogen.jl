@@ -12,6 +12,8 @@ end
 
 
 """
+rand(riskpriors::RiskParameterPriors)
+
 Randomly generate a set of `RiskParameters` from their prior distributions
 """
 function rand(riskpriors::RiskParameterPriors)
@@ -56,6 +58,9 @@ end
 
 
 """
+logprior(riskpriors::RiskParameterPriors,
+         riskparams::RiskParameters)
+
 Calculate the log prior of a set of `RiskParameters`
 """
 function logprior(riskpriors::RiskParameterPriors,
@@ -84,6 +89,9 @@ end
 
 
 """
+propose(currentstate::RiskParameters,
+        transition_kernel_variance::Array{Float64, 2})
+
 Generate a `RiskParameters` proposal using the multivariate normal distribution
 as the transition kernel, with a previous set of `RiskParameters` as the mean
 vector and a transition kernel variance as the variance-covariance matrix

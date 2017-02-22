@@ -1,3 +1,6 @@
+"""
+Event rates
+"""
 type Rates
   external::Vector{Float64}
   internal::Array{Float64, 2}

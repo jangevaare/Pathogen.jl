@@ -1,3 +1,12 @@
+"""
+loglikelihood(riskparams::RiskParameters,
+              events::Events,
+              riskfuncs::RiskFunctions,
+              population::DataFrame)
+              
+Calculates the log likelihood of a continuous time individual level model of
+infectious disease transmission
+"""
 function loglikelihood(riskparams::RiskParameters,
                        events::Events,
                        riskfuncs::RiskFunctions,

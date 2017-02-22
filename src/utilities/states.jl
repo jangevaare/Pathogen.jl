@@ -1,7 +1,13 @@
 """
+findstate(events::Events,
+          individual::Int64,
+          time::Real)
+
 Provides the state of an individual at a specified time
 """
-function findstate(events::Events, individual::Int64, time::Real)
+function findstate(events::Events,
+                   individual::Int64,
+                   time::Real)
   if !(1 <= individual <= events.individuals)
     throw("Invalid individual specified")
   end

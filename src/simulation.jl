@@ -1,4 +1,9 @@
 """
+initialize_rates(states::States,
+                 population::DataFrame,
+                 riskfuncs::RiskFunctions,
+                 riskparams::RiskParameters)
+
 Create and initialize a rate array
 """
 function initialize_rates(states::States,
@@ -36,6 +41,10 @@ end
 
 
 """
+initialize_simulation(population::DataFrame,
+                      riskfuncs::RiskFunctions,
+                      riskparams::RiskParameters)
+
 Initialize a simulation with an events data frame for a phylodynamic individual
 level model of infectious disease
 """
@@ -62,6 +71,9 @@ end
 
 
 """
+generate_event(rates::Rates,
+               time=0.::Float64)
+
 A function to generate an event time and event type from a rate array
 """
 function generate_event(rates::Rates,
@@ -91,6 +103,9 @@ end
 
 
 """
+update_states!(states::States,
+               event::Tuple{Int64, Int64})
+
 A function to update a `States` object based on an event occurence
 """
 function update_states!(states::States,
@@ -124,6 +139,13 @@ end
 
 
 """
+update_rates!(rates::Rates,
+              states::States,
+              event::Tuple{Int64, Int64},
+              population::DataFrame,
+              riskfuncs::RiskFunctions,
+              riskparams::RiskParameters)
+
 A function to update a `Rates` object based on an event occurence
 """
 function update_rates!(rates::Rates,
@@ -167,6 +189,10 @@ end
 
 
 """
+update_events!(events::Events,
+               event::Tuple{Int64, Int64},
+               time::Float64)
+
 A function to update an `Events` object based on an event occurence
 """
 function update_events!(events::Events,
@@ -194,6 +220,9 @@ end
 
 
 """
+update_network!(network::Network,
+                event::Tuple{Int64, Int64})
+
 A function to update a `Network` object based on an event occurence
 """
 function update_network!(network::Network,
@@ -208,6 +237,15 @@ end
 
 
 """
+simulate!(n::Int64,
+          states::States,
+          rates::Rates,
+          events::Events,
+          network::Network,
+          population::DataFrame,
+          riskfuncs::RiskFunctions,
+          riskparams::RiskParameters)
+
 Simulation function
 """
 function simulate!(n::Int64,
@@ -235,6 +273,11 @@ end
 
 
 """
+observe(events::Events,
+        delay_infected::UnivariateDistribution,
+        delay_removed::UnivariateDistribution,
+        force = false::Bool)
+
 Make event time observations from a simulation. Force option ensures all
 infections are observed.
 """
@@ -264,6 +307,10 @@ end
 
 
 """
+observe(events::Events,
+        delay::UnivariateDistribution,
+        force = false::Bool)
+
 Make event time observations from a simulation. Force option ensures all
 infections are observed.
 """
