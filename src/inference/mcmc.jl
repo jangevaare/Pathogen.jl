@@ -75,7 +75,7 @@ end
 Initialize MCMC
 """
 function initialize_mcmc(event_obs::EventObservations,
-                         seq_obs::Vector{Sequence},
+                         seq_obs::Dict{Int64, Sequence},
                          events_proposal::Events,
                          riskparameter_priors::RiskParameterPriors,
                          riskfuncs::RiskFunctions,
@@ -87,23 +87,19 @@ function initialize_mcmc(event_obs::EventObservations,
                     riskparameter_proposal)
   lprior += logprior(substitutionmodel_priors,
                      substitutionmodel_proposal)
-
   llikelihood, network_rates = loglikelihood(riskparameter_proposal,
                                              events_proposal,
                                              riskfuncs,
                                              population)
   network_proposal = rand(network_rates)
-  tree_proposal = Tree{Sequence, Void}()
+  tree_proposal = Tree()
   generatetree!(tree_proposal,
                 events_proposal,
                 event_obs,
                 network_proposal)
-  leaves = findleaves(tree_proposal)
-  for j = 1:length(leaves)
-    setdata!(tree_proposal.nodes[leaves[j]], seq_obs[j])
-  end
   llikelihood += loglikelihood(tree_proposal,
-                               substitutionmodel_proposal)
+                               substitutionmodel_proposal,
+                               seq_obs)
   lposterior = lprior + llikelihood
   pathogen_trace = PathogenTrace([riskparameter_proposal],
                                  [events_proposal],
@@ -126,7 +122,7 @@ function mcmc!(pathogen_trace::PathogenTrace,
                phylogenetic_kernel_variance::Array{Float64, 2},
                event_variance::Float64,
                event_obs::EventObservations,
-               seq_obs::Vector{Sequence},
+               seq_obs::Dict{Int64, Sequence},
                riskparameter_priors::RiskParameterPriors,
                riskfuncs::RiskFunctions,
                substitutionmodel_priors::SubstitutionModelPrior,
@@ -152,7 +148,6 @@ function mcmc!(pathogen_trace::PathogenTrace,
 
     if iterationtype == 2
       substitutionmodel_proposal = propose(phylo_trace.substitutionmodel[end],
-                                           substitutionmodel_priors,
                                            phylogenetic_kernel_variance)
     else
       substitutionmodel_proposal = copy(phylo_trace.substitutionmodel[end])
@@ -186,17 +181,14 @@ function mcmc!(pathogen_trace::PathogenTrace,
       else
         network_proposal = copy(pathogen_trace.network[end])
       end
-      tree_proposal = Tree{Sequence, Void}()
+      tree_proposal = Tree()
       generatetree!(tree_proposal,
                     events_proposal,
                     event_obs,
                     network_proposal)
-      leaves = findleaves(tree_proposal)
-      for j = 1:length(leaves)
-        setdata!(tree_proposal.nodes[leaves[j]], seq_obs[j])
-      end
       llikelihood += loglikelihood(tree_proposal,
-                                   substitutionmodel_proposal)
+                                   substitutionmodel_proposal,
+                                   seq_obs)
     else
       llikelihood = -Inf
     end

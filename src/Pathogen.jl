@@ -1,3 +1,5 @@
+__precompile__()
+
 module Pathogen
 
   # Dependencies
@@ -21,7 +23,6 @@ module Pathogen
     Base.Array,
     Base.copy,
     PhyloModels.simulate!,
-    PhyloModels.transition_kernel_variance,
     PhyloModels.loglikelihood,
     PhyloModels.logprior,
     PhyloModels.propose
@@ -59,6 +60,8 @@ module Pathogen
     ## Core
     RiskFunctions,
     RiskParameters,
+    Network,
+    NetworkRates,
 
     ## Utilities
     generatetree!,

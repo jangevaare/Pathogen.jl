@@ -7,7 +7,7 @@ function loglikelihood(riskparams::RiskParameters,
   eventtimes = [events.exposed events.infected events.removed]
   states = States(population)
   rates = initialize_rates(states, population, riskfuncs, riskparams)
-  networkrates = [fill(0., events.individuals), fill(0., (events.individuals, events.individuals))]
+  network_rates = NetworkRates(events.individuals)
 
   # Find event order
   eventorder = sortperm(eventtimes[:])
@@ -27,7 +27,7 @@ function loglikelihood(riskparams::RiskParameters,
                      sum(rates[2]);
                      sum(rates[3]);
                      sum(rates[4])])
-                     
+
     if i > 1
       # Find the time difference between consecutive events
       ΔT = eventtimes[eventorder[i]] - eventtimes[eventorder[i-1]]
@@ -39,9 +39,9 @@ function loglikelihood(riskparams::RiskParameters,
     # For exposure events
     if eventtype == 1
       # Copy exposure rates from this moment in time
-      networkrates[1][individual] = rates[1][individual]
-      networkrates[2][:, individual] = rates[2][:, individual]
-      exposuretotal = networkrates[1][individual] + sum(networkrates[2][:, individual])
+      network_rates.external[individual] = rates.external[individual]
+      network_rates.internal[:, individual] = rates.internal[:, individual]
+      exposuretotal = network_rates.external[individual] + sum(network_rates.internal[:, individual])
 
       # loglikelihood contribution of an exposure event
       ll += log(exposuretotal/ratetotal)
@@ -55,5 +55,5 @@ function loglikelihood(riskparams::RiskParameters,
       update_rates!(rates, states, (eventtype+1, individual), population, riskfuncs, riskparams)
     end
   end
-  return ll, networkrates
+  return ll, network_rates
 end
