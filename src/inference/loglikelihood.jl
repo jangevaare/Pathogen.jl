@@ -3,7 +3,7 @@ loglikelihood(riskparams::RiskParameters,
               events::Events,
               riskfuncs::RiskFunctions,
               population::DataFrame)
-              
+
 Calculates the log likelihood of a continuous time individual level model of
 infectious disease transmission
 """
@@ -42,7 +42,7 @@ function loglikelihood(riskparams::RiskParameters,
       ΔT = eventtimes[eventorder[i]] - eventtimes[eventorder[i-1]]
 
       # loglikelihood contribution of specific event
-      ll += log(ratetotal) - ratetotal*ΔT
+      ll += log(ratetotal) - ratetotal * ΔT
     end
 
     # For exposure events

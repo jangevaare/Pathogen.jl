@@ -7,8 +7,8 @@ using Plots
 using StatPlots
 
 # Define population
-x_coordinates = rand(Uniform(0, 3), 25)
-y_coordinates = rand(Uniform(0, 3), 25)
+x_coordinates = rand(Uniform(0, 6), 100)
+y_coordinates = rand(Uniform(0, 6), 100)
 population = DataFrame(x = x_coordinates,
                        y = y_coordinates)
 
@@ -135,8 +135,8 @@ phylodynamicILM_trace, phylogenetic_trace = initialize_mcmc(observations,
                                                             population)
 
 # Transition kernel
-transition_kernel_var1 = diagm([0.000025; 0.05; 0.1; 0.025; 0.025])
-transition_kernel_var2 = diagm([2.5e-7])
+transition_kernel_var1 = diagm([0.0000025; 0.005; 0.01; 0.0025; 0.0025])
+transition_kernel_var2 = diagm([2.5e-8])
 
 # Run MCMC
 mcmc!(phylodynamicILM_trace,
@@ -204,7 +204,43 @@ plot(phylogenetic_trace.tree[maxiter])
 plot(population, events, network, 1000.)
 plot(population, phylodynamicILM_trace.events[maxiter], phylodynamicILM_trace.network[maxiter], 1000.)
 
-plot(phylodynamicILM_trace.logposterior)
+plot(phylodynamicILM_trace.logposterior[50001:150000])
 
-plot(Array(phylodynamicILM_trace.riskparameters))
-plot!([phylogenetic_trace.substitutionmodel[i].Θ[j] for i = 1:150000, j = 1])
+plot(Array(phylodynamicILM_trace.riskparameters)[50001:150000, :])
+plot!([phylogenetic_trace.substitutionmodel[i].Θ[j] for i = 50001:150000, j = 1])
+
+distancematrix1 = distance(tree)
+SSE_distance = Float64[]
+for i = 50001:150000
+  distancematrix2 = distance(phylogenetic_trace.tree[i])
+  push!(SSE_distance, sum((distancematrix1 .- distancematrix2).^2))
+end
+
+plot(SSE_distance)
+
+correct = Float64[]
+totalexposures = sum(network.external) + sum(network.internal)
+for i = 50001:150000
+  exposurematches = 0.
+  exposurematches += sum(phylodynamicILM_trace.network[i].external & network.external)
+  exposurematches += sum(phylodynamicILM_trace.network[i].internal & network.internal)
+  push!(correct, exposurematches/totalexposures)
+end
+
+plot(correct)
+
+SSE_events = Float64[]
+firstevent = minimum(events.exposed)
+relativeevents = Events(events.exposed-firstevent,
+                        events.infected-firstevent,
+                        events.removed-firstevent)
+for i = 50001:150000
+  calc = 0.
+  firstevent = minimum(phylodynamicILM_trace.events[i].exposed)
+  calc += sum((relativeevents.exposed .- (phylodynamicILM_trace.events[i].exposed - firstevent)).^2)
+  calc += sum((relativeevents.infected .- (phylodynamicILM_trace.events[i].infected - firstevent)).^2)
+  calc += sum((relativeevents.removed .- (phylodynamicILM_trace.events[i].removed - firstevent)).^2)
+  push!(SSE_events, calc)
+end
+
+plot(SSE_events)

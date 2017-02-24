@@ -41,36 +41,6 @@ end
 
 
 """
-initialize_simulation(population::DataFrame,
-                      riskfuncs::RiskFunctions,
-                      riskparams::RiskParameters)
-
-Initialize a simulation with an events data frame for a phylodynamic individual
-level model of infectious disease
-"""
-function initialize_simulation(population::DataFrame,
-                               riskfuncs::RiskFunctions,
-                               riskparams::RiskParameters)
-  # Initialize state array
-  states = States(population)
-
-  # Initialize rate array
-  rates = initialize_rates(states,
-                           population,
-                           riskfuncs,
-                           riskparams)
-
-  # Initialize events data frame
-  events = Events(population)
-
-  # Initialize exposure network
-  network = Network(population)
-
-  return states, rates, events, network
-end
-
-
-"""
 generate_event(rates::Rates,
                time=0.::Float64)
 
@@ -233,6 +203,53 @@ function update_network!(network::Network,
     network.internal[event[2]] = true
   end
   return network
+end
+
+
+"""
+initialize_simulation(population::DataFrame,
+                      riskfuncs::RiskFunctions,
+                      riskparams::RiskParameters)
+
+Initialize a simulation with an events data frame for a phylodynamic individual
+level model of infectious disease
+"""
+function initialize_simulation(population::DataFrame,
+                               riskfuncs::RiskFunctions,
+                               riskparams::RiskParameters)
+  # Initialize state array
+  states = States(population)
+
+  # Initialize rate array
+  rates = initialize_rates(states,
+                           population,
+                           riskfuncs,
+                           riskparams)
+
+  # Initialize events data frame
+  events = Events(population)
+
+  # Initialize exposure network
+  network = Network(population)
+
+  # Generate initial event
+  time, event = generate_event(rates)
+
+  # Check to make sure initialization was valid
+  if time == Inf
+    error("Invalid simulation initialization")
+  end
+
+  # Set time to 0.
+  time = 0.
+
+  # Update everything
+  update_states!(states, event)
+  update_rates!(rates, states, event, population, riskfuncs, riskparams)
+  update_events!(events, event, time)
+  update_network!(network, event)
+
+  return states, rates, events, network
 end
 
 

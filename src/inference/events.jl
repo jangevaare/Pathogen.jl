@@ -28,9 +28,10 @@ function generate_events(observations::EventObservations,
       exposed[i] = rand(Uniform(exposed_lb, exposed_ub))
     end
   end
-  return Events(exposed,
-                infected,
-                removed)
+  minimum_event_time = minimum([exposed; infected; removed])
+  return Events(exposed - minimum_event_time,
+                infected - minimum_event_time,
+                removed - minimum_event_time)
 end
 
 
@@ -77,5 +78,8 @@ function propose(i::Int64,
     removal_ub = Inf
     removed[i] = rand(TruncatedNormal(removed[i], variance, removal_lb, removal_ub))
   end
-  return Events(exposed, infected, removed)
+  minimum_event_time = minimum([exposed; infected; removed])
+  return Events(exposed - minimum_event_time,
+                infected - minimum_event_time,
+                removed - minimum_event_time)
 end
