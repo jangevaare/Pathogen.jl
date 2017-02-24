@@ -7,8 +7,8 @@ using Plots
 using StatPlots
 
 # Define population
-x_coordinates = rand(Uniform(0, 6), 100)
-y_coordinates = rand(Uniform(0, 6), 100)
+x_coordinates = rand(Uniform(0, 3), 25)
+y_coordinates = rand(Uniform(0, 3), 25)
 population = DataFrame(x = x_coordinates,
                        y = y_coordinates)
 
@@ -151,7 +151,7 @@ mcmc!(phylodynamicILM_trace,
       risk_funcs,
       substitutionmodel_priors,
       population,
-      [1/4; 1/4; 1/4; 1/4])
+      [1/4; 1/4; 1/4; 1/8; 1/8])
 
 # Tune covariance matrices
 transition_kernel_var1 = cov(Array(phylodynamicILM_trace.riskparameters))/10
@@ -170,7 +170,7 @@ mcmc!(phylodynamicILM_trace,
       risk_funcs,
       substitutionmodel_priors,
       population,
-      [1/4; 1/4; 1/4; 1/4])
+      [1/4; 1/4; 1/4; 1/8; 1/8])
 
 
 # Tune covariance matrices
@@ -190,7 +190,7 @@ mcmc!(phylodynamicILM_trace,
       risk_funcs,
       substitutionmodel_priors,
       population,
-      [1/4; 1/4; 1/4; 1/4])
+      [1/4; 1/4; 1/4; 1/8; 1/8])
 
 
 maxiter = findlast(phylodynamicILM_trace.logposterior .== maximum(phylodynamicILM_trace.logposterior))
@@ -230,16 +230,12 @@ end
 plot(correct)
 
 SSE_events = Float64[]
-firstevent = minimum(events.exposed)
-relativeevents = Events(events.exposed-firstevent,
-                        events.infected-firstevent,
-                        events.removed-firstevent)
+
 for i = 50001:150000
   calc = 0.
-  firstevent = minimum(phylodynamicILM_trace.events[i].exposed)
-  calc += sum((relativeevents.exposed .- (phylodynamicILM_trace.events[i].exposed - firstevent)).^2)
-  calc += sum((relativeevents.infected .- (phylodynamicILM_trace.events[i].infected - firstevent)).^2)
-  calc += sum((relativeevents.removed .- (phylodynamicILM_trace.events[i].removed - firstevent)).^2)
+  calc += sum((events.exposed .- (phylodynamicILM_trace.events[i].exposed)).^2)
+  calc += sum((events.infected .- (phylodynamicILM_trace.events[i].infected)).^2)
+  calc += sum((events.removed .- (phylodynamicILM_trace.events[i].removed)).^2)
   push!(SSE_events, calc)
 end
 

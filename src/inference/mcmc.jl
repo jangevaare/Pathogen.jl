@@ -176,6 +176,8 @@ function mcmc!(pathogen_trace::PathogenTrace,
                                    pathogen_trace.network[end],
                                    network_rates)
         # network_proposal = rand(network_rates)
+      elseif iterationtype == 5
+        network_proposal = rand(network_rates)
       else
         network_proposal = copy(pathogen_trace.network[end])
       end

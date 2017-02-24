@@ -29,9 +29,15 @@ function generate_events(observations::EventObservations,
     end
   end
   minimum_event_time = minimum([exposed; infected; removed])
-  return Events(exposed - minimum_event_time,
-                infected - minimum_event_time,
-                removed - minimum_event_time)
+  if minimum_event_time > 0.
+    return Events(exposed - minimum_event_time,
+                  infected - minimum_event_time,
+                  removed - minimum_event_time)
+  else
+    return Events(exposed,
+                  infected,
+                  removed)
+  end
 end
 
 
@@ -59,17 +65,17 @@ function propose(i::Int64,
   # Exposure time
   if j == 1
     if length(pathto) > 1
-      exposure_lb = maximum([infected[pathto[2]]; -Inf])
+      exposure_lb = maximum([infected[pathto[2]]; 0.])
       exposure_ub = minimum([infected[i]; removed[pathto[2]]])
       exposed[i] = rand(TruncatedNormal(exposed[i], variance, exposure_lb, exposure_ub))
     else
-      exposure_lb = -Inf
+      exposure_lb = 0.
       exposure_ub = infected[i]
       exposed[i] = rand(TruncatedNormal(exposed[i], variance, exposure_lb, exposure_ub))
     end
   # Infection time
   elseif j == 2
-    infection_lb = maximum([exposed[i]; -Inf])
+    infection_lb = exposed[i]
     infection_ub = minimum([exposed[pathfrom[2:end]]; observations.infected[i]; Inf])
     infected[i] = rand(TruncatedNormal(infected[i], variance, infection_lb, infection_ub))
   # Removal time
@@ -79,7 +85,13 @@ function propose(i::Int64,
     removed[i] = rand(TruncatedNormal(removed[i], variance, removal_lb, removal_ub))
   end
   minimum_event_time = minimum([exposed; infected; removed])
-  return Events(exposed - minimum_event_time,
-                infected - minimum_event_time,
-                removed - minimum_event_time)
+  if minimum_event_time > 0.
+    return Events(exposed - minimum_event_time,
+                  infected - minimum_event_time,
+                  removed - minimum_event_time)
+  else
+    return Events(exposed,
+                  infected,
+                  removed)
+  end
 end
