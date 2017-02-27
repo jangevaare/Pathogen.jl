@@ -141,7 +141,7 @@ transition_kernel_var2 = diagm([2.5e-8])
 # Run MCMC
 mcmc!(phylodynamicILM_trace,
       phylogenetic_trace,
-      24999,
+      49999,
       transition_kernel_var1,
       transition_kernel_var2,
       1.0,
@@ -160,7 +160,7 @@ transition_kernel_var2 = [var([phylogenetic_trace.substitutionmodel[i].Θ[j] for
 # Run MCMC
 mcmc!(phylodynamicILM_trace,
       phylogenetic_trace,
-      25000,
+      50000,
       transition_kernel_var1,
       diagm(transition_kernel_var2),
       1.0,
@@ -180,7 +180,7 @@ transition_kernel_var2 = [var([phylogenetic_trace.substitutionmodel[i].Θ[j] for
 # Run MCMC
 mcmc!(phylodynamicILM_trace,
       phylogenetic_trace,
-      100000,
+      900000,
       transition_kernel_var1,
       diagm(transition_kernel_var2),
       1.0,

@@ -130,7 +130,7 @@ function mcmc!(pathogen_trace::PathogenTrace,
   individuals = size(population, 1)
   acceptances = fill(false, (1, length(iterprob)))
   individuals = event_obs.individuals
-  validevents = find([!isnan(event_obs.infected) !isnan(event_obs.infected) !isnan(event_obs.removed)])
+  validevents = find([!isnan(event_obs.infected) !isnan(event_obs.infected) !isnan(event_obs.removed)] & ([event_obs.infected event_obs.infected event_obs.removed] .> 0))
   validexposures = find(!isnan(event_obs.infected))
   for i = 1:n
     next!(progressbar, showvalues = [("Iterations", size(acceptances, 1)); ("Acceptances", sum(acceptances, 1))])
