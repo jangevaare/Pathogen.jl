@@ -185,8 +185,8 @@ function mcmc!(pathogen_trace::PathogenTrace,
     end
 
     if iterationtype == 3
-      i, j = ind2sub((individuals, 3), sample(validevents))
-      events_proposal = propose(i, j,
+      j, k = ind2sub((individuals, 3), sample(validevents))
+      events_proposal = propose(j, k,
                                 events_previous,
                                 network_previous,
                                 event_obs,
@@ -205,8 +205,8 @@ function mcmc!(pathogen_trace::PathogenTrace,
                                                  riskfuncs,
                                                  population)
       if iterationtype == 4
-        i = sample(validexposures)
-        network_proposal = propose(i,
+        j = sample(validexposures)
+        network_proposal = propose(j,
                                    network_previous,
                                    network_rates)
       elseif iterationtype == 5

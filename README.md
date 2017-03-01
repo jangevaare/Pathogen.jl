@@ -21,8 +21,6 @@ Pathogen.jl utilizes the packages [PhyloTrees.jl](https://github.com/jangevaare/
 
 ## Package usage
 
-### Simulation
-
 1. Create a population data frame containing covariate information for each individual in a population. If there is a spatial component to your model, this data frame should contain the location of each individual. Each row in this data frame is assumed to represent a single unique individual.
 
          using DataFrames
@@ -72,14 +70,12 @@ Pathogen.jl utilizes the packages [PhyloTrees.jl](https://github.com/jangevaare/
                                    susceptibility_func,
                                    transmissibility_func,
                                    infectivity_func,
-                                   detection_func,
                                    removal_func)
 
         risk_params = RiskParameters(sparks_params,
                                      susceptibility_params,
                                      transmissibility_params,
                                      infectivity_params,
-                                     detection_params,
                                      removal_params)
-
+### Simulation
 ### Inference

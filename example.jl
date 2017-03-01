@@ -142,7 +142,7 @@ transition_kernel_var2 = diagm([2.5e-8])
 mcmc!(phylodynamicILM_trace,
       phylogenetic_trace,
       50000,
-      100,
+      10,
       transition_kernel_var1,
       transition_kernel_var2,
       1.0,
@@ -156,7 +156,7 @@ mcmc!(phylodynamicILM_trace,
 
 # Tune covariance matrices
 transition_kernel_var1 = cov(Array(phylodynamicILM_trace.riskparameters))/10
-transition_kernel_var2 = [var([phylogenetic_trace.substitutionmodel[i].Θ[j] for i = 1:25000, j = 1])]
+transition_kernel_var2 = [var([phylogenetic_trace.substitutionmodel[i].Θ[j] for i = 1:length(phylogenetic_trace), j = 1])]
 
 # Run MCMC
 mcmc!(phylodynamicILM_trace,
