@@ -29,6 +29,7 @@ function generate_tree(events::Events,
   # Add a root node
   addnode!(tree)
   rootnode = length(tree.nodes)
+  roottime = minimum(events.exposed)
 
   # Iterate through all events to build tree
   for i = 1:length(eventorder)
@@ -50,7 +51,7 @@ function generate_tree(events::Events,
 
           # Parent node of external exposure is the root of the tree...
           parentnode = rootnode
-          branch_length = eventtimes[eventorder[i]]
+          branch_length = eventtimes[eventorder[i]] - roottime
 
         # For significant internal exposure events...
         else

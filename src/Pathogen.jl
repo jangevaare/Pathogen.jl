@@ -22,6 +22,7 @@ module Pathogen
     Base.show,
     Base.Array,
     Base.copy,
+    Base.deleteat!,
     PhyloModels.simulate!,
     PhyloModels.loglikelihood,
     PhyloModels.logprior,

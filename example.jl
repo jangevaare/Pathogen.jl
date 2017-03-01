@@ -141,7 +141,8 @@ transition_kernel_var2 = diagm([2.5e-8])
 # Run MCMC
 mcmc!(phylodynamicILM_trace,
       phylogenetic_trace,
-      49999,
+      50000,
+      100,
       transition_kernel_var1,
       transition_kernel_var2,
       1.0,
@@ -160,7 +161,8 @@ transition_kernel_var2 = [var([phylogenetic_trace.substitutionmodel[i].Θ[j] for
 # Run MCMC
 mcmc!(phylodynamicILM_trace,
       phylogenetic_trace,
-      50000,
+      500000,
+      100,
       transition_kernel_var1,
       diagm(transition_kernel_var2),
       1.0,
@@ -171,27 +173,6 @@ mcmc!(phylodynamicILM_trace,
       substitutionmodel_priors,
       population,
       [1/4; 1/4; 1/4; 1/8; 1/8])
-
-
-# Tune covariance matrices
-transition_kernel_var1 = cov(Array(phylodynamicILM_trace.riskparameters))/10
-transition_kernel_var2 = [var([phylogenetic_trace.substitutionmodel[i].Θ[j] for i = 1:50000, j = 1])]
-
-# Run MCMC
-mcmc!(phylodynamicILM_trace,
-      phylogenetic_trace,
-      900000,
-      transition_kernel_var1,
-      diagm(transition_kernel_var2),
-      1.0,
-      observations,
-      observed_sequences,
-      riskparameter_priors,
-      risk_funcs,
-      substitutionmodel_priors,
-      population,
-      [1/4; 1/4; 1/4; 1/8; 1/8])
-
 
 maxiter = findlast(phylodynamicILM_trace.logposterior .== maximum(phylodynamicILM_trace.logposterior))
 
@@ -204,14 +185,14 @@ plot(phylogenetic_trace.tree[maxiter])
 plot(population, events, network, 1000.)
 plot(population, phylodynamicILM_trace.events[maxiter], phylodynamicILM_trace.network[maxiter], 1000.)
 
-plot(phylodynamicILM_trace.logposterior[50001:150000])
+plot(phylodynamicILM_trace.logposterior)
 
-plot(Array(phylodynamicILM_trace.riskparameters)[50001:150000, :])
-plot!([phylogenetic_trace.substitutionmodel[i].Θ[j] for i = 50001:150000, j = 1])
+plot(Array(phylodynamicILM_trace.riskparameters))
+plot!([phylogenetic_trace.substitutionmodel[i].Θ[j] for i = 1:length(phylogenetic_trace), j = 1])
 
 distancematrix1 = distance(tree)
 SSE_distance = Float64[]
-for i = 50001:150000
+for i = 1:length(phylogenetic_trace)
   distancematrix2 = distance(phylogenetic_trace.tree[i])
   push!(SSE_distance, sum((distancematrix1 .- distancematrix2).^2))
 end
@@ -220,7 +201,7 @@ plot(SSE_distance)
 
 correct = Float64[]
 totalexposures = sum(network.external) + sum(network.internal)
-for i = 50001:150000
+for i = 1:length(phylodynamicILM_trace)
   exposurematches = 0.
   exposurematches += sum(phylodynamicILM_trace.network[i].external & network.external)
   exposurematches += sum(phylodynamicILM_trace.network[i].internal & network.internal)
@@ -231,7 +212,7 @@ plot(correct)
 
 SSE_events = Float64[]
 
-for i = 50001:150000
+for i = 1:length(phylodynamicILM_trace)
   calc = 0.
   calc += sum((events.exposed .- (phylodynamicILM_trace.events[i].exposed)).^2)
   calc += sum((events.infected .- (phylodynamicILM_trace.events[i].infected)).^2)

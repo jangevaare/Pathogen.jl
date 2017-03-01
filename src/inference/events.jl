@@ -58,11 +58,11 @@ function propose(i::Int64,
   # Exposure time
   if j == 1
     if length(pathto) > 1
-      exposure_lb = maximum([infected[pathto[2]]; 0.])
+      exposure_lb = maximum([infected[pathto[2]]; -Inf])
       exposure_ub = minimum([infected[i]; removed[pathto[2]]])
       exposed[i] = rand(TruncatedNormal(exposed[i], variance, exposure_lb, exposure_ub))
     else
-      exposure_lb = 0.
+      exposure_lb = -Inf
       exposure_ub = infected[i]
       exposed[i] = rand(TruncatedNormal(exposed[i], variance, exposure_lb, exposure_ub))
     end
