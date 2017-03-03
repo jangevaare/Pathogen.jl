@@ -52,8 +52,8 @@ sparks_params = [0.0001]
 susceptibility_params = Float64[]
 transmissibility_params = Float64[]
 infectivity_params = [1., 6.]
-latency_params = [1/7.]
-removal_params = [1/7.]
+latency_params = [1/15.]
+removal_params = [1/3.]
 
 risk_params = RiskParameters(sparks_params,
                              susceptibility_params,
@@ -116,14 +116,14 @@ riskparameter_priors = RiskParameterPriors([Uniform(0., 0.001)],
                                             UnivariateDistribution[],
                                             UnivariateDistribution[],
                                             [Uniform(0., 2.), Uniform(4., 8.)],
-                                            [Uniform(0., 1.)],
+                                            [Uniform(0., 0.25)],
                                             [Uniform(0., 1.)])
 
 substitutionmodel_priors = JC69Prior([Uniform(0., 2e-5)])
 
 # Generate initial values for event times
-# event_proposal = generate_events(observations, 10., 2., 2.)
-event_proposal = events
+event_proposal = generate_events(observations, 21., 2., 2.)
+# event_proposal = events
 
 # Initialize MCMC
 phylodynamicILM_trace, phylogenetic_trace = initialize_mcmc(observations,
@@ -135,7 +135,7 @@ phylodynamicILM_trace, phylogenetic_trace = initialize_mcmc(observations,
                                                             population)
 
 # Transition kernel
-transition_kernel_var1 = diagm([0.0000025; 0.005; 0.01; 0.0025; 0.0025])
+transition_kernel_var1 = diagm([0.0000025; 0.005; 0.01; 0.000625; 0.0025])
 transition_kernel_var2 = diagm([2.5e-8])
 
 # Run MCMC
@@ -146,6 +146,9 @@ mcmc!(phylodynamicILM_trace,
       transition_kernel_var1,
       transition_kernel_var2,
       1.0,
+      21.,
+      2.,
+      2.,
       observations,
       observed_sequences,
       riskparameter_priors,
@@ -161,11 +164,14 @@ transition_kernel_var2 = [var([phylogenetic_trace.substitutionmodel[i].Θ[j] for
 # Run MCMC
 mcmc!(phylodynamicILM_trace,
       phylogenetic_trace,
-      500000,
-      100,
+      5000000,
+      250,
       transition_kernel_var1,
       diagm(transition_kernel_var2),
       1.0,
+      21.,
+      2.,
+      2.,
       observations,
       observed_sequences,
       riskparameter_priors,

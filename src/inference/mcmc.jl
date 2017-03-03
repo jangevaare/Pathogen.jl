@@ -144,6 +144,9 @@ function mcmc!(pathogen_trace::PathogenTrace,
                ILM_kernel_variance::Array{Float64, 2},
                phylogenetic_kernel_variance::Array{Float64, 2},
                event_variance::Float64,
+               exposureextent::Float64,
+               infectionextent::Float64,
+               removalextent::Float64,
                event_obs::EventObservations,
                seq_obs::Dict{Int64, Sequence},
                riskparameter_priors::RiskParameterPriors,
@@ -190,7 +193,10 @@ function mcmc!(pathogen_trace::PathogenTrace,
                                 events_previous,
                                 network_previous,
                                 event_obs,
-                                event_variance)
+                                event_variance,
+                                exposureextent,
+                                infectionextent,
+                                removalextent)
     else
       events_proposal = copy(events_previous)
     end

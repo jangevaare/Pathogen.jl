@@ -63,6 +63,7 @@ module Pathogen
     RiskParameters,
     Network,
     NetworkRates,
+    Events,
 
     ## Utilities
     generate_tree,
@@ -81,5 +82,6 @@ module Pathogen
     PathogenTrace,
     PathogenIteration,
     initialize_mcmc,
-    mcmc!
+    mcmc!,
+    propose
 end

@@ -48,8 +48,8 @@ function loglikelihood(riskparams::RiskParameters,
     # For exposure events
     if eventtype == 1
       # Copy exposure rates from this moment in time
-      network_rates.external[individual] = rates.external[individual]
-      network_rates.internal[:, individual] = rates.internal[:, individual]
+      network_rates.external[individual] = copy(rates.external[individual])
+      network_rates.internal[:, individual] = copy(rates.internal[:, individual])
       exposuretotal = network_rates.external[individual] + sum(network_rates.internal[:, individual])
 
       # loglikelihood contribution of an exposure event
