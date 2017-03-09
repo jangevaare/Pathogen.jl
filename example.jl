@@ -122,8 +122,8 @@ riskparameter_priors = RiskParameterPriors([Uniform(0., 0.001)],
 substitutionmodel_priors = JC69Prior([Uniform(0., 2e-5)])
 
 # Generate initial values for event times
-event_proposal = generate_events(observations, 21., 2., 2.)
-# event_proposal = events
+# event_proposal = generate_events(observations, 21., 2., 2.)
+event_proposal = events
 
 # Initialize MCMC
 phylodynamicILM_trace, phylogenetic_trace = initialize_mcmc(observations,
@@ -146,7 +146,7 @@ mcmc!(phylodynamicILM_trace,
       transition_kernel_var1,
       transition_kernel_var2,
       1.0,
-      21.,
+      Inf,
       2.,
       2.,
       observations,
@@ -169,7 +169,7 @@ mcmc!(phylodynamicILM_trace,
       transition_kernel_var1,
       diagm(transition_kernel_var2),
       1.0,
-      21.,
+      Inf,
       2.,
       2.,
       observations,
@@ -191,14 +191,14 @@ plot(phylogenetic_trace.tree[maxiter])
 plot(population, events, network, 1000.)
 plot(population, phylodynamicILM_trace.events[maxiter], phylodynamicILM_trace.network[maxiter], 1000.)
 
-plot(phylodynamicILM_trace.logposterior)
+plot(phylodynamicILM_trace.logposterior[end-20000:end])
 
-plot(Array(phylodynamicILM_trace.riskparameters))
+plot(Array(phylodynamicILM_trace.riskparameters)[end-20000:end,:])
 plot!([phylogenetic_trace.substitutionmodel[i].Θ[j] for i = 1:length(phylogenetic_trace), j = 1])
 
 distancematrix1 = distance(tree)
 SSE_distance = Float64[]
-for i = 1:length(phylogenetic_trace)
+for i = length(phylogenetic_trace)-20000:length(phylogenetic_trace)
   distancematrix2 = distance(phylogenetic_trace.tree[i])
   push!(SSE_distance, sum((distancematrix1 .- distancematrix2).^2))
 end
@@ -214,7 +214,7 @@ for i = 1:length(phylodynamicILM_trace)
   push!(correct, exposurematches/totalexposures)
 end
 
-plot(correct)
+plot(correct[end-20000:end])
 
 SSE_events = Float64[]
 

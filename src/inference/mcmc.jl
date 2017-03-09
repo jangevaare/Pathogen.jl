@@ -157,7 +157,7 @@ function mcmc!(pathogen_trace::PathogenTrace,
   if thin < 0
     error("Thinning rate can not be less than 1")
   end
-  progressbar = Progress(n, 5, "Performing $n MCMC iterations...", 25)
+  progressbar = Progress(n, 5, "Performing $n iterations", 25)
   individuals = event_obs.individuals
   validevents = find([!isnan(event_obs.infected) !isnan(event_obs.infected) !isnan(event_obs.removed)])
   validexposures = find(!isnan(event_obs.infected))
