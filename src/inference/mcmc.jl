@@ -55,6 +55,14 @@ function length(x::PathogenTrace)
 end
 
 
+function getindex(trace::PathogenTrace, i)
+  return PathogenTrace(trace.riskparameters[i],
+                       trace.events[i],
+                       trace.network[i],
+                       trace.logposterior[i])
+end
+
+
 function show(io::IO, object::PathogenTrace)
   print(io, "PathogenTrace object (MCMC iterations: $(length(object)))")
 end
