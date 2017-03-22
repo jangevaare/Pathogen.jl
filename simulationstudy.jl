@@ -3,6 +3,7 @@ using PhyloTrees
 using PhyloModels
 using DataFrames
 using JLD
+using Distributions
 
 # Define event rate functions
 function sparks_func(parameters::Vector{Float64}, population::DataFrame, i::Int64)
