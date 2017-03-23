@@ -191,8 +191,8 @@ for i = 1:10
 elapsedtime = now() - starttime
 
 save("/home/jangevaare/Documents/Pathogen/simulation_replicate$i _scenario$j.jld",
-     "phylodynamicILM_trace", phylodynamicILM_trace[end-40000:end],
-     "phylogenetic_trace", phylogenetic_trace[end-40000:end],
+     "phylodynamicILM_trace", phylodynamicILM_trace[5002:45001],
+     "phylogenetic_trace", phylogenetic_trace[5002:45001],
      "events", events,
      "observations", observations,
      "observed_sequences", observed_sequences,
