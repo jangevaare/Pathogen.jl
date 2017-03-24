@@ -41,7 +41,7 @@ risk_funcs = RiskFunctions(sparks_func,
                            removal_func)
 
 # 10 replicates
-for i = 1:10
+for replicate = 1:10
   # Define population
   x_coordinates = rand(Uniform(0, 5), 25)
   y_coordinates = rand(Uniform(0, 5), 25)
@@ -50,7 +50,7 @@ for i = 1:10
 
   # 4 scenarios
   for j = 1:4
-    println("Starting replicate $i of scenario $j")
+    println("Starting replicate $replicate of scenario $j")
     # Parametrize event rate functions
     sparks_params = [0.0001]
     susceptibility_params = Float64[]
@@ -190,7 +190,7 @@ for i = 1:10
         [1/4; 1/4; 1/4; 1/8; 1/8])
 elapsedtime = now() - starttime
 
-save("/home/jangevaare/Documents/Pathogen/simulation_replicate$i _scenario$j.jld",
+save("/home/jangevaare/Documents/Pathogen/simulation_replicate$(replicate)_scenario$(j).jld",
      "phylodynamicILM_trace", phylodynamicILM_trace[5002:45001],
      "phylogenetic_trace", phylogenetic_trace[5002:45001],
      "events", events,
