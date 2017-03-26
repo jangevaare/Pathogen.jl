@@ -60,10 +60,37 @@ module Pathogen
   export
     ## Core
     RiskFunctions,
+      SEIR_RiskFunctions,
+      SIR_RiskFunctions,
+      SEI_RiskFunctions,
+      SI_RiskFunctions,
     RiskParameters,
-    Network,
+      SEIR_RiskParameters,
+      SIR_RiskParameters,
+      SEI_RiskParameters,
+      SI_RiskParameters,
     NetworkRates,
+    Rates,
+      SEIR_Rates,
+      SIR_Rates,
+      SEI_Rates,
+      SI_Rates,
+    Network,
+    States,
+      SEIR_States,
+      SIR_States,
+      SEI_States,
+      SI_States,
     Events,
+      SEIR_Events,
+      SIR_Events,
+      SEI_Events,
+      SI_Events,
+    EventObservations,
+      SEIR_EventObservations,
+      SIR_EventObservations,
+      SEI_EventObservations,
+      SI_EventObservations,
 
     ## Utilities
     generate_tree,
@@ -73,7 +100,6 @@ module Pathogen
     ## Simulation
     initialize_simulation,
     simulate!,
-    EventObservations,
     observe,
 
     ## Inference
