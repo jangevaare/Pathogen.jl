@@ -1,21 +1,4 @@
 """
-update_network!(network::Network,
-                event::Tuple{Int64, Int64})
-
-A function to update a `Network` object based on an event occurence
-"""
-function update_network!(network::Network,
-                         event::Tuple{Int64, Int64})
-  if event[1] == 1
-    network.external[event[2]] = true
-  elseif event[1] == 2
-    network.internal[event[2]] = true
-  end
-  return network
-end
-
-
-"""
 initialize_simulation(population::DataFrame,
                       riskfuncs::RiskFunctions,
                       riskparams::RiskParameters)
