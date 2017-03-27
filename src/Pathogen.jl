@@ -47,6 +47,7 @@ module Pathogen
   include("functions/update_network!.jl")
   include("functions/initialize_simulation.jl")
   include("functions/simulate!.jl")
+  include("functions/findstate.jl")
 
   export
     SEIR_RiskFunctions,
