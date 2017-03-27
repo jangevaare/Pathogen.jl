@@ -10,7 +10,7 @@ module Pathogen
   using RecipesBase
   using ProgressMeter
 
-  # Functions to be extended
+  # Methods
   import
     Base.getindex,
     Base.push!,
@@ -28,86 +28,36 @@ module Pathogen
     PhyloModels.logprior,
     PhyloModels.propose
 
-  # Source files
-  ## Core
-  include("core/risks.jl")
-  include("core/states.jl")
-  include("core/rates.jl")
-  include("core/events.jl")
-  include("core/networks.jl")
-  include("core/observe.jl")
+  # Types
+  include("types/RiskFunctions.jl")
+  include("types/RiskParameters.jl")
+  include("types/States.jl")
+  include("types/Rates.jl")
+  include("types/Network.jl")
+  include("types/Events.jl")
+  include("types/Event.jl")
+  include("types/EventObservations.jl")
 
-  ## Utilities
-  include("utilities/pathways.jl")
-  include("utilities/states.jl")
-  include("utilities/trees.jl")
-  include("utilities/plotting.jl")
+  # Functions
+  include("functions/initialize_rates.jl")
+  include("functions/generate_event.jl")
+  include("functions/update_states!.jl")
+  include("functions/update_rates!.jl")
+  include("functions/update_events!.jl")
+  include("functions/update_network!.jl")
+  include("functions/initialize_simulation.jl")
+  include("functions/simulate!.jl")
 
-  ## Simulation
-  include("simulation.jl")
-
-  ## Inference
-  include("inference/risks.jl")
-  include("inference/events.jl")
-  include("inference/networks.jl")
-  include("inference/loglikelihood.jl")
-  include("inference/mcmc.jl")
-
-  ## Visualization
-  include("plotrecipes.jl")
-
-  # New types and functions
   export
-    ## Core
-    RiskFunctions,
-      SEIR_RiskFunctions,
-      SIR_RiskFunctions,
-      SEI_RiskFunctions,
-      SI_RiskFunctions,
-    RiskParameters,
-      SEIR_RiskParameters,
-      SIR_RiskParameters,
-      SEI_RiskParameters,
-      SI_RiskParameters,
-    NetworkRates,
-    Rates,
-      SEIR_Rates,
-      SIR_Rates,
-      SEI_Rates,
-      SI_Rates,
-    Network,
-    States,
-      SEIR_States,
-      SIR_States,
-      SEI_States,
-      SI_States,
-    Events,
-      SEIR_Events,
-      SIR_Events,
-      SEI_Events,
-      SI_Events,
-    EventObservations,
-      SEIR_EventObservations,
-      SIR_EventObservations,
-      SEI_EventObservations,
-      SI_EventObservations,
-
-    ## Utilities
-    generate_tree,
-    pathwayto,
-    pathwayfrom,
-
-    ## Simulation
+    SEIR_RiskFunctions,
+    SIR_RiskFunctions,
+    SEI_RiskFunctions,
+    SI_RiskFunctions,
+    SEIR_RiskParameters,
+    SIR_RiskParameters,
+    SEI_RiskParameters,
+    SI_RiskParameters,
     initialize_simulation,
-    simulate!,
-    observe,
+    simulate!
 
-    ## Inference
-    RiskParameterPriors,
-    generate_events,
-    PathogenTrace,
-    PathogenIteration,
-    initialize_mcmc,
-    mcmc!,
-    propose
 end
