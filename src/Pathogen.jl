@@ -47,6 +47,7 @@ module Pathogen
   include("functions/update_network!.jl")
   include("functions/initialize_simulation.jl")
   include("functions/simulate!.jl")
+  include("functions/observe.jl")
   include("functions/findstate.jl")
 
   export
@@ -59,6 +60,7 @@ module Pathogen
     SEI_RiskParameters,
     SI_RiskParameters,
     initialize_simulation,
-    simulate!
+    simulate!,
+    observe
 
 end
