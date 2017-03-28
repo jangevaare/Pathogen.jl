@@ -9,13 +9,15 @@
     label := "S"
     time, count
   end
-  @series begin
-    seriestype := :steppost
-    seriescolor --> :lightblue4
-    time, count = epiplot(events, :E)
-    xlims --> (-1., maximum(time)+1.)
-    label := "E"
-    time, count
+  if typeof(events) in [SEIR_Events; SEI_Events]
+    @series begin
+      seriestype := :steppost
+      seriescolor --> :lightblue4
+      time, count = epiplot(events, :E)
+      xlims --> (-1., maximum(time)+1.)
+      label := "E"
+      time, count
+    end
   end
   @series begin
     seriestype := :steppost
@@ -25,13 +27,15 @@
     label := "I"
     time, count
   end
-  @series begin
-    seriestype := :steppost
-    seriescolor --> :yellow
-    time, count = epiplot(events, :R)
-    xlims --> (-1., maximum(time)+1.)
-    label := "R"
-    time, count
+  if typeof(events) in [SEIR_Events; SIR_Events]
+    @series begin
+      seriestype := :steppost
+      seriescolor --> :yellow
+      time, count = epiplot(events, :R)
+      xlims --> (-1., maximum(time)+1.)
+      label := "R"
+      time, count
+    end
   end
 end
 
@@ -39,7 +43,7 @@ end
 @recipe function plot(population::DataFrame,
                       events::Events,
                       network::Network,
-                      time::Real,
+                      time::Float64,
                       paths=true::Bool)
   xguide --> ""
   yguide --> ""
@@ -62,12 +66,14 @@ end
     label := "S"
     x, y
   end
-  @series begin
-    x, y = popplot(population, events, time, :E)
-    seriestype := :scatter
-    seriescolor --> :lightblue4
-    label := "E"
-    x, y
+  if typeof(events) in [SEIR_Events; SEI_Events]
+    @series begin
+      x, y = popplot(population, events, time, :E)
+      seriestype := :scatter
+      seriescolor --> :lightblue4
+      label := "E"
+      x, y
+    end
   end
   @series begin
     x, y = popplot(population, events, time, :I)
@@ -76,11 +82,13 @@ end
     label := "I"
     x, y
   end
-  @series begin
-    x, y = popplot(population, events, time, :R)
-    seriestype := :scatter
-    seriescolor --> :yellow
-    label := "R"
-    x, y
+  if typeof(events) in [SEIR_Events; SIR_Events]
+    @series begin
+      x, y = popplot(population, events, time, :R)
+      seriestype := :scatter
+      seriescolor --> :yellow
+      label := "R"
+      x, y
+    end
   end
 end

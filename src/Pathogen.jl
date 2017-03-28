@@ -55,6 +55,7 @@ module Pathogen
   include("functions/popplot.jl")
   include("functions/pathplot.jl")
   include("functions/epiplot.jl")
+  include("functions/plot.jl")
 
   export
     SEIR_RiskFunctions,
