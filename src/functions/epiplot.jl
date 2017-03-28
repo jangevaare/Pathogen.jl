@@ -1,46 +1,12 @@
-function popplot(population::DataFrame,
-                 events::Events,
-                 time::Float64,
+"""
+epiplot(events::Events,
+        state::Symbol)
+
+Return counts of individuals in a specified disease state and the associated
+time point
+"""
+function epiplot(events::Events,
                  state::Symbol)
-  if !(state in [:S; :E; :I; :R])
-    throw("State must be specified as :S, :E, :I or :R")
-  end
-  x = [NaN]
-  y = [NaN]
-  for i = 1:events.individuals
-    if findstate(events, i, time) == state
-      push!(x, population[:x][i])
-      push!(y, population[:y][i])
-    end
-  end
-  return x, y
-end
-
-
-function pathplot(population::DataFrame,
-                  events::Events,
-                  network::Network,
-                  time::Float64)
-  states = [findstate(events, i, time) for i = 1:events.individuals]
-  # Count how many paths their are
-  x = Array(Float64, (2, 0))
-  y = Array(Float64, (2, 0))
-  for i = 1:length(states)
-    # If state is exposed, infected, or removed...
-    if states[i] in [:E; :I; :R]
-      # If exposure is not from external source...
-      if !network.external[i]
-        source = findfirst(network.internal[:, i])
-        x = hcat(x, population[:x][[i; source]])
-        y = hcat(y, population[:y][[i; source]])
-      end
-    end
-  end
-  return x, y
-end
-
-
-function epiplot(events::Events, state::Symbol)
   if !(state in [:S, :E, :I, :R])
     throw("State must be specified as :S, :E, :I or :R")
   end

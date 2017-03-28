@@ -50,8 +50,11 @@ module Pathogen
   include("functions/observe.jl")
   include("functions/pathwayto.jl")
   include("functions/pathwayfrom.jl")
-  include("generate_tree.jl")
+  include("functions/generate_tree.jl")
   include("functions/findstate.jl")
+  include("functions/popplot.jl")
+  include("functions/pathplot.jl")
+  include("functions/epiplot.jl")
 
   export
     SEIR_RiskFunctions,
