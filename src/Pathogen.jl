@@ -31,12 +31,15 @@ module Pathogen
   # Types
   include("types/RiskFunctions.jl")
   include("types/RiskParameters.jl")
+  include("types/RiskParameterPriors.jl")
   include("types/States.jl")
   include("types/Rates.jl")
   include("types/Network.jl")
   include("types/Events.jl")
   include("types/Event.jl")
   include("types/EventObservations.jl")
+  include("types/PathogenIteration.jl")
+  include("types/PathogenTrace.jl")
 
   # Functions
   include("functions/initialize_rates.jl")
@@ -56,6 +59,9 @@ module Pathogen
   include("functions/pathplot.jl")
   include("functions/epiplot.jl")
   include("functions/plot.jl")
+  include("functions/propose.jl")
+  include("functions/logprior.jl")
+  include("functions/MHaccept.jl")
 
   export
     SEIR_RiskFunctions,
@@ -66,6 +72,10 @@ module Pathogen
     SIR_RiskParameters,
     SEI_RiskParameters,
     SI_RiskParameters,
+    SEIR_RiskParameterPriors,
+    SIR_RiskParameterPriors,
+    SEI_RiskParameterPriors,
+    SI_RiskParameterPriors,
     initialize_simulation,
     simulate!,
     observe,
