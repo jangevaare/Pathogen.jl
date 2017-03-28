@@ -48,6 +48,9 @@ module Pathogen
   include("functions/initialize_simulation.jl")
   include("functions/simulate!.jl")
   include("functions/observe.jl")
+  include("functions/pathwayto.jl")
+  include("functions/pathwayfrom.jl")
+  include("generate_tree.jl")
   include("functions/findstate.jl")
 
   export
@@ -61,6 +64,7 @@ module Pathogen
     SI_RiskParameters,
     initialize_simulation,
     simulate!,
-    observe
+    observe,
+    generate_tree
 
 end
