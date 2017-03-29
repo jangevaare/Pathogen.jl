@@ -345,3 +345,208 @@ function propose(currentstate::SI_RiskParameters,
                            newstate[inds[2]+1:inds[3]],
                            newstate[inds[3]+1:inds[4]])
 end
+
+
+"""
+propose(i::Int64,
+        j::Int64,
+        events::SEIR_Events,
+        network::Network,
+        observations::EventObservations,
+        variance::Float64,
+        exposureextent::Float64,
+        infectionextent::Float64,
+        removalextent::Float64)
+
+Event time augmentation for a single event time
+"""
+function propose(i::Int64,
+                 j::Int64,
+                 events::SEIR_Events,
+                 network::Network,
+                 observations::EventObservations,
+                 variance::Float64,
+                 exposureextent::Float64,
+                 infectionextent::Float64,
+                 removalextent::Float64)
+  exposed = copy(events.exposed)
+  infected = copy(events.infected)
+  removed = copy(events.removed)
+  pathfrom = pathwayfrom(i, network, 1)
+  pathto = pathwayto(i, network, 2)
+  # Exposure time
+  if j == 1
+    if length(pathto) > 1
+      exposure_lb = maximum([infected[i]-exposureextent;
+                             infected[pathto[2]]])
+      exposure_ub = minimum([infected[i];
+                             removed[pathto[2]]])
+      exposed[i] = rand(TruncatedNormal(exposed[i], variance, exposure_lb, exposure_ub))
+    else
+      exposure_lb = infected[i]-exposureextent
+      exposure_ub = infected[i]
+      exposed[i] = rand(TruncatedNormal(exposed[i], variance, exposure_lb, exposure_ub))
+    end
+  # Infection time
+  elseif j == 2
+    infection_lb = maximum([exposed[i];
+                            observations.infected[i]-infectionextent])
+    infection_ub = minimum([exposed[pathfrom[2:end]];
+                            observations.infected[i]])
+    infected[i] = rand(TruncatedNormal(infected[i], variance, infection_lb, infection_ub))
+  # Removal time
+  elseif j == 3
+    removal_lb = maximum([exposed[pathfrom[2:end]];
+                          observations.infected[i];
+                          observations.removed[i]-removalextent])
+    removal_ub = observations.removed[i]
+    removed[i] = rand(TruncatedNormal(removed[i], variance, removal_lb, removal_ub))
+  end
+  return SEIR_Events(exposed,
+                     infected,
+                     removed)
+end
+
+
+"""
+propose(i::Int64,
+        j::Int64,
+        events::SIR_Events,
+        network::Network,
+        observations::EventObservations,
+        variance::Float64,
+        infectionextent::Float64,
+        removalextent::Float64)
+
+Event time augmentation for a single event time
+"""
+function propose(i::Int64,
+                 j::Int64,
+                 events::SIR_Events,
+                 network::Network,
+                 observations::EventObservations,
+                 variance::Float64,
+                 infectionextent::Float64,
+                 removalextent::Float64)
+  infected = copy(events.infected)
+  removed = copy(events.removed)
+  pathfrom = pathwayfrom(i, network, 1)
+  pathto = pathwayto(i, network, 2)
+  # Infection time
+  elseif j == 1
+    if length(pathto) > 1
+      infection_lb = maximum([infected[pathto[2]]];
+                              observations.infected[i]-infectionextent])
+      infection_ub = minimum([removed[pathto[2]]];
+                              infected[pathfrom[2:end]];
+                              observations.infected[i]])
+      infected[i] = rand(TruncatedNormal(infected[i], variance, infection_lb, infection_ub))
+    else
+      infection_lb = observations.infected[i]-infectionextent
+      infection_ub = minimum([infected[pathfrom[2:end]];
+                              observations.infected[i]])
+      infected[i] = rand(TruncatedNormal(infected[i], variance, infection_lb, infection_ub))
+    end
+  # Removal time
+  elseif j == 2
+    removal_lb = maximum([infected[pathfrom[2:end]];
+                          observations.infected[i];
+                          observations.removed[i]-removalextent])
+    removal_ub = observations.removed[i]
+    removed[i] = rand(TruncatedNormal(removed[i], variance, removal_lb, removal_ub))
+  end
+  return SIR_Events(infected,
+                    removed)
+end
+
+
+"""
+propose(i::Int64,
+        j::Int64,
+        events::SEI_Events,
+        network::Network,
+        observations::EventObservations,
+        variance::Float64,
+        exposureextent::Float64,
+        infectionextent::Float64,
+        removalextent::Float64)
+
+Event time augmentation for a single event time
+"""
+function propose(i::Int64,
+                 j::Int64,
+                 events::SEI_Events,
+                 network::Network,
+                 observations::EventObservations,
+                 variance::Float64,
+                 exposureextent::Float64,
+                 infectionextent::Float64)
+  exposed = copy(events.exposed)
+  infected = copy(events.infected)
+  pathfrom = pathwayfrom(i, network, 1)
+  pathto = pathwayto(i, network, 2)
+  # Exposure time
+  if j == 1
+    if length(pathto) > 1
+      exposure_lb = maximum([infected[i]-exposureextent;
+                             infected[pathto[2]]])
+      exposure_ub = infected[i]
+      exposed[i] = rand(TruncatedNormal(exposed[i], variance, exposure_lb, exposure_ub))
+    else
+      exposure_lb = infected[i]-exposureextent
+      exposure_ub = infected[i]
+      exposed[i] = rand(TruncatedNormal(exposed[i], variance, exposure_lb, exposure_ub))
+    end
+  # Infection time
+  elseif j == 2
+    infection_lb = maximum([exposed[i];
+                            observations.infected[i]-infectionextent])
+    infection_ub = minimum([exposed[pathfrom[2:end]];
+                            observations.infected[i]])
+    infected[i] = rand(TruncatedNormal(infected[i], variance, infection_lb, infection_ub))
+  end
+  return SEI_Events(exposed,
+                    infected)
+end
+
+
+"""
+propose(i::Int64,
+        j::Int64,
+        events::SI_Events,
+        network::Network,
+        observations::EventObservations,
+        variance::Float64,
+        infectionextent::Float64,
+        removalextent::Float64)
+
+Event time augmentation for a single event time
+"""
+function propose(i::Int64,
+                 j::Int64,
+                 events::SI_Events,
+                 network::Network,
+                 observations::EventObservations,
+                 variance::Float64,
+                 infectionextent::Float64)
+  infected = copy(events.infected)
+  removed = copy(events.removed)
+  pathfrom = pathwayfrom(i, network, 1)
+  pathto = pathwayto(i, network, 2)
+  # Infection time
+  elseif j == 1
+    if length(pathto) > 1
+      infection_lb = maximum([infected[pathto[2]]];
+                              observations.infected[i]-infectionextent])
+      infection_ub = minimum([infected[pathfrom[2:end]];
+                              observations.infected[i]])
+      infected[i] = rand(TruncatedNormal(infected[i], variance, infection_lb, infection_ub))
+    else
+      infection_lb = observations.infected[i]-infectionextent
+      infection_ub = minimum([infected[pathfrom[2:end]];
+                              observations.infected[i]])
+      infected[i] = rand(TruncatedNormal(infected[i], variance, infection_lb, infection_ub))
+    end
+  end
+  return SI_Events(infected)
+end

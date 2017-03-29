@@ -8,7 +8,7 @@ function initialize_mcmc(event_obs::EventObservations,
                          riskfuncs::RiskFunctions,
                          substitutionmodel_priors::SubstitutionModelPrior,
                          population::DataFrame)
-  riskparameter_proposal = rand(riskparameter_priors)
+  riskparameter_proposal = propose(riskparameter_priors)
   substitutionmodel_proposal = rand(substitutionmodel_priors)
   lprior = logprior(riskparameter_priors,
                     riskparameter_proposal)
@@ -18,7 +18,7 @@ function initialize_mcmc(event_obs::EventObservations,
                                              events_proposal,
                                              riskfuncs,
                                              population)
-  network_proposal = rand(network_rates)
+  network_proposal = propose(network_rates)
   tree_proposal = generate_tree(events_proposal,
                                event_obs,
                                network_proposal)
@@ -134,7 +134,7 @@ function mcmc!(pathogen_trace::PathogenTrace,
                                    network_previous,
                                    network_rates)
       elseif iterationtype == 5
-        network_proposal = rand(network_rates)
+        network_proposal = propose(network_rates)
       else
         network_proposal = copy(network_previous)
       end

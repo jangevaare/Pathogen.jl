@@ -51,6 +51,7 @@ module Pathogen
   include("functions/initialize_simulation.jl")
   include("functions/simulate!.jl")
   include("functions/observe.jl")
+  include("functions/generate_events.jl")
   include("functions/pathwayto.jl")
   include("functions/pathwayfrom.jl")
   include("functions/generate_tree.jl")
@@ -79,6 +80,7 @@ module Pathogen
     initialize_simulation,
     simulate!,
     observe,
-    generate_tree
+    generate_tree,
+    generate_events
 
 end
