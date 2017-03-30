@@ -64,6 +64,8 @@ module Pathogen
   include("functions/logprior.jl")
   include("functions/loglikelihood.jl")
   include("functions/MHaccept.jl")
+  include("initialize_mcmc.jl")
+  include("mcmc!.jl")
 
   export
     SEIR_RiskFunctions,
@@ -78,10 +80,16 @@ module Pathogen
     SIR_RiskParameterPriors,
     SEI_RiskParameterPriors,
     SI_RiskParameterPriors,
+    SEIR_EventObservations,
+    SIR_EventObservations,
+    SEI_EventObservations,
+    SI_EventObservations,
     initialize_simulation,
     simulate!,
     observe,
     generate_tree,
-    generate_events
+    generate_events,
+    initialize_mcmc,
+    mcmc!
 
 end
