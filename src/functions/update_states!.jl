@@ -1,11 +1,11 @@
 """
 update_states!(states::SEIR_States,
-               event::Tuple{Int64, Int64})
+               event::SEIR_Event)
 
 A function to update a `States` object based on an event occurence
 """
 function update_states!(states::SEIR_States,
-                        event::Tuple{Int64, Int64})
+                        event::SEIR_Event)
   # External exposure
   if event[1] == 1
     individual = event[2]
@@ -36,12 +36,12 @@ end
 
 """
 update_states!(states::SIR_States,
-               event::Tuple{Int64, Int64})
+               event::SIR_Event)
 
 A function to update a `States` object based on an event occurence
 """
 function update_states!(states::SIR_States,
-                        event::Tuple{Int64, Int64})
+                        event::SIR_Event)
   # External infection
   if event[1] == 1
     individual = event[2]
@@ -66,12 +66,12 @@ end
 
 """
 update_states!(states::SEI_States,
-               event::Tuple{Int64, Int64})
+               event::SEI_Event)
 
 A function to update a `States` object based on an event occurence
 """
 function update_states!(states::SEI_States,
-                        event::Tuple{Int64, Int64})
+                        event::SEI_Event)
   # External exposure
   if event[1] == 1
     individual = event[2]
@@ -96,12 +96,12 @@ end
 
 """
 update_states!(states::SI_States,
-               event::Tuple{Int64, Int64})
+               event::SI_Event)
 
 A function to update a `States` object based on an event occurence
 """
 function update_states!(states::SI_States,
-                        event::Tuple{Int64, Int64})
+                        event::SI_Event)
   # External infection
   if event[1] == 1
     individual = event[2]

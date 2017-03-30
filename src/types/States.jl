@@ -4,7 +4,7 @@ abstract States
 """
 State of individuals in a population at a given time in an SEIR model
 """
-type SEIR_States
+type SEIR_States <: States
   susceptible::Vector{Bool}
   exposed::Vector{Bool}
   infected::Vector{Bool}
@@ -25,7 +25,7 @@ end
 """
 State of individuals in a population at a given time in an SIR model
 """
-type SIR_States
+type SIR_States <: States
   susceptible::Vector{Bool}
   infected::Vector{Bool}
   removed::Vector{Bool}
@@ -44,7 +44,7 @@ end
 """
 State of individuals in a population at a given time in an SEI model
 """
-type SEI_States
+type SEI_States <: States
   susceptible::Vector{Bool}
   exposed::Vector{Bool}
   infected::Vector{Bool}
@@ -63,7 +63,7 @@ end
 """
 State of individuals in a population at a given time in an SI model
 """
-type SI_States
+type SI_States <: States
   susceptible::Vector{Bool}
   infected::Vector{Bool}
   individuals::Int64
