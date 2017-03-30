@@ -62,6 +62,7 @@ module Pathogen
   include("functions/plot.jl")
   include("functions/propose.jl")
   include("functions/logprior.jl")
+  include("functions/loglikelihood.jl")
   include("functions/MHaccept.jl")
 
   export

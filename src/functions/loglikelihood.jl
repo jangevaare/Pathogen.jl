@@ -1,15 +1,15 @@
 """
-loglikelihood(riskparams::RiskParameters,
-              events::Events,
-              riskfuncs::RiskFunctions,
+loglikelihood(riskparams::SEIR_RiskParameters,
+              events::SEIR_Events,
+              riskfuncs::SEIR_RiskFunctions,
               population::DataFrame)
 
 Calculates the log likelihood of a continuous time individual level model of
 infectious disease transmission
 """
-function loglikelihood(riskparams::RiskParameters,
-                       events::Events,
-                       riskfuncs::RiskFunctions,
+function loglikelihood(riskparams::SEIR_RiskParameters,
+                       events::SEIR_Events,
+                       riskfuncs::SEIR_RiskFunctions,
                        population::DataFrame)
   # Initialize
   ll = 0.
@@ -32,10 +32,10 @@ function loglikelihood(riskparams::RiskParameters,
     individual, eventtype = ind2sub(size(eventtimes), eventorder[i])
 
     # Find the rate total
-    ratetotal = sum([sum(rates[1]);
-                     sum(rates[2]);
-                     sum(rates[3]);
-                     sum(rates[4])])
+    ratetotal = sum([sum(rates.exposure.external);
+                     sum(rates.exposure.internal);
+                     sum(rates.infection);
+                     sum(rates.removal)])
 
     if i > 1
       # Find the time difference between consecutive events
