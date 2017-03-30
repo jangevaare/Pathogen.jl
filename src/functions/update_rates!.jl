@@ -11,7 +11,7 @@ A function to update a `Rates` object based on an event occurence
 function update_rates!(rates::SEIR_Rates,
                        states::SEIR_States,
                        event::SEIR_Event,
-                       population::SEIR_DataFrame,
+                       population::DataFrame,
                        riskfuncs::SEIR_RiskFunctions,
                        riskparams::SEIR_RiskParameters)
   # External exposure
@@ -61,7 +61,7 @@ A function to update a `Rates` object based on an event occurence
 function update_rates!(rates::SIR_Rates,
                        states::SIR_States,
                        event::SIR_Event,
-                       population::SIR_DataFrame,
+                       population::DataFrame,
                        riskfuncs::SIR_RiskFunctions,
                        riskparams::SIR_RiskParameters)
   # External infection
@@ -111,7 +111,7 @@ A function to update a `Rates` object based on an event occurence
 function update_rates!(rates::SEI_Rates,
                        states::SEI_States,
                        event::SEI_Event,
-                       population::SEI_DataFrame,
+                       population::DataFrame,
                        riskfuncs::SEI_RiskFunctions,
                        riskparams::SEI_RiskParameters)
   # External exposure
@@ -153,7 +153,7 @@ A function to update a `Rates` object based on an event occurence
 function update_rates!(rates::SI_Rates,
                        states::SI_States,
                        event::SI_Event,
-                       population::SI_DataFrame,
+                       population::DataFrame,
                        riskfuncs::SI_RiskFunctions,
                        riskparams::SI_RiskParameters)
   # External infection

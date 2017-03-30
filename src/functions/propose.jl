@@ -222,7 +222,7 @@ propose(riskpriors::SI_RiskParameterPriors)
 
 Randomly generate a set of `SI_RiskParameters` from their prior distributions
 """
-function propose(riskpriors::SIR_RiskParameterPriors)
+function propose(riskpriors::SI_RiskParameterPriors)
   sparks = Float64[]
   susceptibility = Float64[]
   transmissibility = Float64[]
@@ -433,11 +433,11 @@ function propose(i::Int64,
   pathfrom = pathwayfrom(i, network, 1)
   pathto = pathwayto(i, network, 2)
   # Infection time
-  elseif j == 1
+  if j == 1
     if length(pathto) > 1
-      infection_lb = maximum([infected[pathto[2]]];
+      infection_lb = maximum([infected[pathto[2]];
                               observations.infected[i]-infectionextent])
-      infection_ub = minimum([removed[pathto[2]]];
+      infection_ub = minimum([removed[pathto[2]];
                               infected[pathfrom[2:end]];
                               observations.infected[i]])
       infected[i] = rand(TruncatedNormal(infected[i], variance, infection_lb, infection_ub))
@@ -534,9 +534,9 @@ function propose(i::Int64,
   pathfrom = pathwayfrom(i, network, 1)
   pathto = pathwayto(i, network, 2)
   # Infection time
-  elseif j == 1
+  if j == 1
     if length(pathto) > 1
-      infection_lb = maximum([infected[pathto[2]]];
+      infection_lb = maximum([infected[pathto[2]];
                               observations.infected[i]-infectionextent])
       infection_ub = minimum([infected[pathfrom[2:end]];
                               observations.infected[i]])
