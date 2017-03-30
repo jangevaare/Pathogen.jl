@@ -9,10 +9,3 @@ Pathogen.jl utilizes the packages [PhyloTrees.jl](https://github.com/jangevaare/
 
 
 ![Phylodynamic simulation](epianimation.gif?raw=true)
-
-
-## Package installation
-
-
-    Pkg.update()
-    Pkg.clone("https://github.com/jangevaare/Pathogen.jl")

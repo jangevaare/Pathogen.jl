@@ -64,8 +64,8 @@ module Pathogen
   include("functions/logprior.jl")
   include("functions/loglikelihood.jl")
   include("functions/MHaccept.jl")
-  include("initialize_mcmc.jl")
-  include("mcmc!.jl")
+  include("functions/initialize_mcmc.jl")
+  include("functions/mcmc!.jl")
 
   export
     SEIR_RiskFunctions,
