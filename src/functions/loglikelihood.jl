@@ -14,7 +14,7 @@ function loglikelihood(riskparams::SEIR_RiskParameters,
   # Initialize
   ll = 0.
   eventtimes = [events.exposed events.infected events.removed]
-  states = States(population)
+  states = SEIR_States(population)
   rates = initialize_rates(states, population, riskfuncs, riskparams)
   network_rates = NetworkRates(events.individuals)
 
@@ -84,7 +84,7 @@ function loglikelihood(riskparams::SIR_RiskParameters,
   # Initialize
   ll = 0.
   eventtimes = [events.infected events.removed]
-  states = States(population)
+  states = SIR_States(population)
   rates = initialize_rates(states, population, riskfuncs, riskparams)
   network_rates = NetworkRates(events.individuals)
 
@@ -153,7 +153,7 @@ function loglikelihood(riskparams::SEI_RiskParameters,
   # Initialize
   ll = 0.
   eventtimes = [events.exposed events.infected]
-  states = States(population)
+  states = SEI_States(population)
   rates = initialize_rates(states, population, riskfuncs, riskparams)
   network_rates = NetworkRates(events.individuals)
 
@@ -222,7 +222,7 @@ function loglikelihood(riskparams::SI_RiskParameters,
   # Initialize
   ll = 0.
   eventtimes = events.infected
-  states = States(population)
+  states = SI_States(population)
   rates = initialize_rates(states, population, riskfuncs, riskparams)
   network_rates = NetworkRates(events.individuals)
 
