@@ -1,8 +1,11 @@
+# Set the event extents for generation of the initial event times
+initial_event_extents = SEIR_EventExtents(21., 1., 1.)
+
 # Generate initial event times for MCMC based on observations
-initial_events = generate_events(observations, 21., 1., 1.)
+initial_events = generate_events(observations, initial_event_extents)
 
 # Set the event extents for data augmentation
-event_extents = SEIR_EventExtents(Inf, 2.0, 2.0)
+event_extents = SEIR_EventExtents(Inf, 2., 2.)
 
 # Set prior distributions
 riskparameter_priors = SEIR_RiskParameterPriors([Uniform(0., 0.001)],

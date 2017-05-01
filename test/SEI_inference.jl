@@ -1,5 +1,8 @@
+# Set the event extents for generation of the initial event times
+initial_event_extents = SEI_EventExtents(21., 1.)
+
 # Generate initial event times for MCMC based on observations
-initial_events = generate_events(observations, 21., 1.)
+initial_events = generate_events(observations, initial_event_extents)
 
 # Set the event extents for data augmentation
 event_extents = SEI_EventExtents(Inf, 2.)
