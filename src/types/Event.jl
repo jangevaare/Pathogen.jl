@@ -6,7 +6,7 @@ type SEIR_Event <: Event
 
   function SEIR_Event(eventtype::Int64,
                       eventindex::Int64)
-    if !(1 <= eventtype <= 4)
+    if !(0 <= eventtype <= 4)
       error("Invalid event type")
     end
     return new(eventtype, eventindex)
@@ -19,7 +19,7 @@ type SIR_Event <: Event
 
   function SIR_Event(eventtype::Int64,
                      eventindex::Int64)
-    if !(1 <= eventtype <= 3)
+    if !(0 <= eventtype <= 3)
       error("Invalid event type")
     end
     return new(eventtype, eventindex)
@@ -32,7 +32,7 @@ type SEI_Event <: Event
 
   function SEI_Event(eventtype::Int64,
                      eventindex::Int64)
-    if !(1 <= eventtype <= 3)
+    if !(0 <= eventtype <= 3)
       error("Invalid event type")
     end
     return new(eventtype, eventindex)
@@ -45,7 +45,7 @@ type SI_Event <: Event
 
   function SI_Event(eventtype::Int64,
                     eventindex::Int64)
-    if !(1 <= eventtype <= 2)
+    if !(0 <= eventtype <= 2)
       error("Invalid event type")
     end
     return new(eventtype, eventindex)

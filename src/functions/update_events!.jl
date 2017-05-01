@@ -45,7 +45,7 @@ function update_events!(events::SIR_Events,
     events.infected[individual] = time
   # Internal infection
   elseif event[1] == 2
-    individual = ind2sub((length(events.exposed),length(events.exposed)), event[2])[2]
+    individual = ind2sub((length(events.infected),length(events.infected)), event[2])[2]
     events.infected[individual] = time
   # Removal
   elseif event[1] == 3
@@ -99,7 +99,7 @@ function update_events!(events::SI_Events,
     events.infected[individual] = time
   # Internal infection
   elseif event[1] == 2
-    individual = ind2sub((length(events.exposed),length(events.exposed)), event[2])[2]
+    individual = ind2sub((length(events.infected),length(events.infected)), event[2])[2]
     events.infected[individual] = time
   end
   return events
