@@ -352,11 +352,9 @@ propose(i::Int64,
         j::Int64,
         events::SEIR_Events,
         network::Network,
-        observations::EventObservations,
+        observations::SEIR_EventObservations,
         variance::Float64,
-        exposureextent::Float64,
-        infectionextent::Float64,
-        removalextent::Float64)
+        event_extents::SEIR_EventExtents)
 
 Event time augmentation for a single event time
 """
@@ -364,11 +362,9 @@ function propose(i::Int64,
                  j::Int64,
                  events::SEIR_Events,
                  network::Network,
-                 observations::EventObservations,
+                 observations::SEIR_EventObservations,
                  variance::Float64,
-                 exposureextent::Float64,
-                 infectionextent::Float64,
-                 removalextent::Float64)
+                 event_extents::SEIR_EventExtents)
   exposed = copy(events.exposed)
   infected = copy(events.infected)
   removed = copy(events.removed)
@@ -377,20 +373,20 @@ function propose(i::Int64,
   # Exposure time
   if j == 1
     if length(pathto) > 1
-      exposure_lb = maximum([infected[i]-exposureextent;
+      exposure_lb = maximum([infected[i]-event_extents.exposure;
                              infected[pathto[2]]])
       exposure_ub = minimum([infected[i];
                              removed[pathto[2]]])
       exposed[i] = rand(TruncatedNormal(exposed[i], variance, exposure_lb, exposure_ub))
     else
-      exposure_lb = infected[i]-exposureextent
+      exposure_lb = infected[i]-event_extents.exposure
       exposure_ub = infected[i]
       exposed[i] = rand(TruncatedNormal(exposed[i], variance, exposure_lb, exposure_ub))
     end
   # Infection time
   elseif j == 2
     infection_lb = maximum([exposed[i];
-                            observations.infected[i]-infectionextent])
+                            observations.infected[i]-event_extents.infection])
     infection_ub = minimum([exposed[pathfrom[2:end]];
                             observations.infected[i]])
     infected[i] = rand(TruncatedNormal(infected[i], variance, infection_lb, infection_ub))
@@ -398,7 +394,7 @@ function propose(i::Int64,
   elseif j == 3
     removal_lb = maximum([exposed[pathfrom[2:end]];
                           observations.infected[i];
-                          observations.removed[i]-removalextent])
+                          observations.removed[i]-event_extents.removal])
     removal_ub = observations.removed[i]
     removed[i] = rand(TruncatedNormal(removed[i], variance, removal_lb, removal_ub))
   end
@@ -413,10 +409,9 @@ propose(i::Int64,
         j::Int64,
         events::SIR_Events,
         network::Network,
-        observations::EventObservations,
+        observations::SIR_EventObservations,
         variance::Float64,
-        infectionextent::Float64,
-        removalextent::Float64)
+        event_extents::SIR_EventExtents)
 
 Event time augmentation for a single event time
 """
@@ -424,10 +419,9 @@ function propose(i::Int64,
                  j::Int64,
                  events::SIR_Events,
                  network::Network,
-                 observations::EventObservations,
+                 observations::SIR_EventObservations,
                  variance::Float64,
-                 infectionextent::Float64,
-                 removalextent::Float64)
+                 event_extents::SIR_EventExtents)
   infected = copy(events.infected)
   removed = copy(events.removed)
   pathfrom = pathwayfrom(i, network, 1)
@@ -436,13 +430,13 @@ function propose(i::Int64,
   if j == 1
     if length(pathto) > 1
       infection_lb = maximum([infected[pathto[2]];
-                              observations.infected[i]-infectionextent])
+                              observations.infected[i]-event_extents.infection])
       infection_ub = minimum([removed[pathto[2]];
                               infected[pathfrom[2:end]];
                               observations.infected[i]])
       infected[i] = rand(TruncatedNormal(infected[i], variance, infection_lb, infection_ub))
     else
-      infection_lb = observations.infected[i]-infectionextent
+      infection_lb = observations.infected[i]-event_extents.infection
       infection_ub = minimum([infected[pathfrom[2:end]];
                               observations.infected[i]])
       infected[i] = rand(TruncatedNormal(infected[i], variance, infection_lb, infection_ub))
@@ -451,7 +445,7 @@ function propose(i::Int64,
   elseif j == 2
     removal_lb = maximum([infected[pathfrom[2:end]];
                           observations.infected[i];
-                          observations.removed[i]-removalextent])
+                          observations.removed[i]-event_extents.removal])
     removal_ub = observations.removed[i]
     removed[i] = rand(TruncatedNormal(removed[i], variance, removal_lb, removal_ub))
   end
@@ -465,11 +459,9 @@ propose(i::Int64,
         j::Int64,
         events::SEI_Events,
         network::Network,
-        observations::EventObservations,
+        observations::SEI_EventObservations,
         variance::Float64,
-        exposureextent::Float64,
-        infectionextent::Float64,
-        removalextent::Float64)
+        event_extents::SEI_EventExtents)
 
 Event time augmentation for a single event time
 """
@@ -477,10 +469,9 @@ function propose(i::Int64,
                  j::Int64,
                  events::SEI_Events,
                  network::Network,
-                 observations::EventObservations,
+                 observations::SEI_EventObservations,
                  variance::Float64,
-                 exposureextent::Float64,
-                 infectionextent::Float64)
+                 event_extents::SEI_EventExtents)
   exposed = copy(events.exposed)
   infected = copy(events.infected)
   pathfrom = pathwayfrom(i, network, 1)
@@ -488,19 +479,19 @@ function propose(i::Int64,
   # Exposure time
   if j == 1
     if length(pathto) > 1
-      exposure_lb = maximum([infected[i]-exposureextent;
+      exposure_lb = maximum([infected[i]-event_extents.exposure;
                              infected[pathto[2]]])
       exposure_ub = infected[i]
       exposed[i] = rand(TruncatedNormal(exposed[i], variance, exposure_lb, exposure_ub))
     else
-      exposure_lb = infected[i]-exposureextent
+      exposure_lb = infected[i]-event_extents.exposure
       exposure_ub = infected[i]
       exposed[i] = rand(TruncatedNormal(exposed[i], variance, exposure_lb, exposure_ub))
     end
   # Infection time
   elseif j == 2
     infection_lb = maximum([exposed[i];
-                            observations.infected[i]-infectionextent])
+                            observations.infected[i]-event_extents.infection])
     infection_ub = minimum([exposed[pathfrom[2:end]];
                             observations.infected[i]])
     infected[i] = rand(TruncatedNormal(infected[i], variance, infection_lb, infection_ub))
@@ -515,10 +506,9 @@ propose(i::Int64,
         j::Int64,
         events::SI_Events,
         network::Network,
-        observations::EventObservations,
+        observations::SI_EventObservations,
         variance::Float64,
-        infectionextent::Float64,
-        removalextent::Float64)
+        event_extents::SI_EventExtents)
 
 Event time augmentation for a single event time
 """
@@ -528,7 +518,7 @@ function propose(i::Int64,
                  network::Network,
                  observations::EventObservations,
                  variance::Float64,
-                 infectionextent::Float64)
+                 event_extents::SI_EventExtents)
   infected = copy(events.infected)
   removed = copy(events.removed)
   pathfrom = pathwayfrom(i, network, 1)
@@ -537,12 +527,12 @@ function propose(i::Int64,
   if j == 1
     if length(pathto) > 1
       infection_lb = maximum([infected[pathto[2]];
-                              observations.infected[i]-infectionextent])
+                              observations.infected[i]-event_extents.infection])
       infection_ub = minimum([infected[pathfrom[2:end]];
                               observations.infected[i]])
       infected[i] = rand(TruncatedNormal(infected[i], variance, infection_lb, infection_ub))
     else
-      infection_lb = observations.infected[i]-infectionextent
+      infection_lb = observations.infected[i]-event_extents.infection
       infection_ub = minimum([infected[pathfrom[2:end]];
                               observations.infected[i]])
       infected[i] = rand(TruncatedNormal(infected[i], variance, infection_lb, infection_ub))

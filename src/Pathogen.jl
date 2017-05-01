@@ -38,6 +38,7 @@ module Pathogen
   include("types/Events.jl")
   include("types/Event.jl")
   include("types/EventObservations.jl")
+  include("types/EventExtents.jl")
   include("types/PathogenIteration.jl")
   include("types/PathogenTrace.jl")
 
@@ -84,6 +85,10 @@ module Pathogen
     SIR_EventObservations,
     SEI_EventObservations,
     SI_EventObservations,
+    SEIR_EventExtents,
+    SIR_EventExtents,
+    SEI_EventExtents,
+    SI_EventExtents,
     initialize_simulation,
     simulate!,
     observe,

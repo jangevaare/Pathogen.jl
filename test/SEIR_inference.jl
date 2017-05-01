@@ -1,6 +1,9 @@
 # Generate initial event times for MCMC based on observations
 initial_events = generate_events(observations, 21., 1., 1.)
 
+# Set the event extents for data augmentation
+event_extents = SEIR_EventExtents(Inf, 2.0, 2.0)
+
 # Set prior distributions
 riskparameter_priors = SEIR_RiskParameterPriors([Uniform(0., 0.001)],
                                                  UnivariateDistribution[],
@@ -32,9 +35,7 @@ mcmc!(phylodynamicILM_trace,
       transition_kernel_var1,
       transition_kernel_var2,
       1.0,
-      Inf,
-      2.,
-      2.,
+      event_extents,
       observations,
       observed_sequences,
       riskparameter_priors,
