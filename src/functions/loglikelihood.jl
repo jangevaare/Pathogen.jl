@@ -59,7 +59,7 @@ function loglikelihood(riskparams::SEIR_RiskParameters,
     # For non-exposure events
     else
       # loglikelihood contribution of a non-exposure event
-      ll += log(rates[eventtype+1][individual]/ratetotal)
+      ll += log(rates[eventtype][individual]/ratetotal)
       update_states!(states, SEIR_Event(eventtype+1, individual))
       update_rates!(rates, states, SEIR_Event(eventtype+1, individual), population, riskfuncs, riskparams)
     end
@@ -128,7 +128,7 @@ function loglikelihood(riskparams::SIR_RiskParameters,
     # For non-exposure events
     else
       # loglikelihood contribution of a non-exposure event
-      ll += log(rates[eventtype+1][individual]/ratetotal)
+      ll += log(rates[eventtype][individual]/ratetotal)
       update_states!(states, SIR_Event(eventtype+1, individual))
       update_rates!(rates, states, SIR_Event(eventtype+1, individual), population, riskfuncs, riskparams)
     end
@@ -197,7 +197,7 @@ function loglikelihood(riskparams::SEI_RiskParameters,
     # For non-exposure events
     else
       # loglikelihood contribution of a non-exposure event
-      ll += log(rates[eventtype+1][individual]/ratetotal)
+      ll += log(rates[eventtype][individual]/ratetotal)
       update_states!(states, SEI_Event(eventtype+1, individual))
       update_rates!(rates, states, SEI_Event(eventtype+1, individual), population, riskfuncs, riskparams)
     end
