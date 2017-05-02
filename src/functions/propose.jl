@@ -520,7 +520,6 @@ function propose(i::Int64,
                  variance::Float64,
                  event_extents::SI_EventExtents)
   infected = copy(events.infected)
-  removed = copy(events.removed)
   pathfrom = pathwayfrom(i, network, 1)
   pathto = pathwayto(i, network, 2)
   # Infection time
