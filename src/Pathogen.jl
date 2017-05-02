@@ -10,7 +10,7 @@ module Pathogen
   using RecipesBase
   using ProgressMeter
 
-  # Functions to be extended
+  # Methods
   import
     Base.getindex,
     Base.push!,
@@ -28,60 +28,73 @@ module Pathogen
     PhyloModels.logprior,
     PhyloModels.propose
 
-  # Source files
-  ## Core
-  include("core/risks.jl")
-  include("core/states.jl")
-  include("core/rates.jl")
-  include("core/events.jl")
-  include("core/networks.jl")
-  include("core/observe.jl")
+  # Types
+  include("types/RiskFunctions.jl")
+  include("types/RiskParameters.jl")
+  include("types/RiskParameterPriors.jl")
+  include("types/States.jl")
+  include("types/Rates.jl")
+  include("types/Network.jl")
+  include("types/Events.jl")
+  include("types/Event.jl")
+  include("types/EventObservations.jl")
+  include("types/EventExtents.jl")
+  include("types/PathogenIteration.jl")
+  include("types/PathogenTrace.jl")
 
-  ## Utilities
-  include("utilities/pathways.jl")
-  include("utilities/states.jl")
-  include("utilities/trees.jl")
-  include("utilities/plotting.jl")
+  # Functions
+  include("functions/initialize_rates.jl")
+  include("functions/generate_event.jl")
+  include("functions/update_states!.jl")
+  include("functions/update_rates!.jl")
+  include("functions/update_events!.jl")
+  include("functions/update_network!.jl")
+  include("functions/initialize_simulation.jl")
+  include("functions/simulate!.jl")
+  include("functions/observe.jl")
+  include("functions/generate_events.jl")
+  include("functions/pathwayto.jl")
+  include("functions/pathwayfrom.jl")
+  include("functions/generate_tree.jl")
+  include("functions/findstate.jl")
+  include("functions/popplot.jl")
+  include("functions/pathplot.jl")
+  include("functions/epiplot.jl")
+  include("functions/plot.jl")
+  include("functions/propose.jl")
+  include("functions/logprior.jl")
+  include("functions/loglikelihood.jl")
+  include("functions/MHaccept.jl")
+  include("functions/initialize_mcmc.jl")
+  include("functions/mcmc!.jl")
 
-  ## Simulation
-  include("simulation.jl")
-
-  ## Inference
-  include("inference/risks.jl")
-  include("inference/events.jl")
-  include("inference/networks.jl")
-  include("inference/loglikelihood.jl")
-  include("inference/mcmc.jl")
-
-  ## Visualization
-  include("plotrecipes.jl")
-
-  # New types and functions
   export
-    ## Core
-    RiskFunctions,
-    RiskParameters,
-    Network,
-    NetworkRates,
-    Events,
-
-    ## Utilities
-    generate_tree,
-    pathwayto,
-    pathwayfrom,
-
-    ## Simulation
+    SEIR_RiskFunctions,
+    SIR_RiskFunctions,
+    SEI_RiskFunctions,
+    SI_RiskFunctions,
+    SEIR_RiskParameters,
+    SIR_RiskParameters,
+    SEI_RiskParameters,
+    SI_RiskParameters,
+    SEIR_RiskParameterPriors,
+    SIR_RiskParameterPriors,
+    SEI_RiskParameterPriors,
+    SI_RiskParameterPriors,
+    SEIR_EventObservations,
+    SIR_EventObservations,
+    SEI_EventObservations,
+    SI_EventObservations,
+    SEIR_EventExtents,
+    SIR_EventExtents,
+    SEI_EventExtents,
+    SI_EventExtents,
     initialize_simulation,
     simulate!,
-    EventObservations,
     observe,
-
-    ## Inference
-    RiskParameterPriors,
+    generate_tree,
     generate_events,
-    PathogenTrace,
-    PathogenIteration,
     initialize_mcmc,
-    mcmc!,
-    propose
+    mcmc!
+
 end
