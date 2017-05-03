@@ -89,6 +89,7 @@ module Pathogen
     SIR_EventExtents,
     SEI_EventExtents,
     SI_EventExtents,
+    Network,
     initialize_simulation,
     simulate!,
     observe,
