@@ -1,4 +1,21 @@
 """
+propose(currentstate::SubstitutionModel,
+        variance::Array{Float64})
+
+Generate a `SubstitutionModel` proposal using the multivariate normal
+distribution as the transition kernel, with a previous set of
+`SubstitutionModel` parameters as the mean vector and a transition kernel
+variance as the variance-covariance matrix
+"""
+function propose(currentstate::SubstitutionModel,
+                 variance::Array{Float64})
+  newstate = copy(currentstate)
+  newstate.Θ = rand(MvNormal(newstate.Θ, variance))
+  return newstate
+end
+
+
+"""
 propose(network_rates::NetworkRates)
 
 Probablistically generate a network object based on exposure network rates
