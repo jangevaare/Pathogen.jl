@@ -34,12 +34,9 @@ function initialize_mcmc(event_obs::EventObservations,
                                substitutionmodel_proposal,
                                seq_obs)
   lposterior = lprior + llikelihood
-  pathogen_trace = PathogenTrace([riskparameter_proposal],
-                                 [events_proposal],
-                                 [network_proposal],
-                                 [lposterior])
-  phylo_trace = PhyloTrace([substitutionmodel_proposal],
-                           [tree_proposal],
-                           [lposterior])
-  return pathogen_trace, phylo_trace
+  return PathogenTrace([riskparameter_proposal],
+                       [substitutionmodel_proposal],
+                       [events_proposal],
+                       [network_proposal],
+                       [lposterior])
 end

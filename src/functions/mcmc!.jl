@@ -1,6 +1,5 @@
 """
 mcmc!(pathogen_trace::PathogenTrace,
-      phylo_trace::PhyloTrace,
       n::Int64,
       thin::Int64,
       ILM_kernel_variance::Array{Float64, 2},
@@ -18,7 +17,6 @@ mcmc!(pathogen_trace::PathogenTrace,
 Phylodynamic ILM MCMC
 """
 function mcmc!(pathogen_trace::PathogenTrace,
-               phylo_trace::PhyloTrace,
                n::Int64,
                thin::Int64,
                ILM_kernel_variance::Array{Float64, 2},
@@ -31,7 +29,8 @@ function mcmc!(pathogen_trace::PathogenTrace,
                riskfuncs::RiskFunctions,
                substitutionmodel_priors::SubstitutionModelPrior,
                population::DataFrame,
-               iterprob::Vector{Float64})
+               iterprob::Vector{Float64},
+               acceptance_rates=false::Bool)
   if thin < 0
     error("Thinning rate can not be less than 1")
   end
@@ -50,12 +49,12 @@ function mcmc!(pathogen_trace::PathogenTrace,
     validevents = find(!isnan(event_obs.infected))
     eventdims = (individuals, 1)
   end
+  acceptance_rates_array = fill(0, (2, length(iterprob)))
   validexposures = find(!isnan(event_obs.infected))
   riskparameters_previous = copy(pathogen_trace.riskparameters[end])
-  substitutionmodel_previous = copy(phylo_trace.substitutionmodel[end])
+  substitutionmodel_previous = copy(pathogen_trace.substitutionmodel[end])
   events_previous = copy(pathogen_trace.events[end])
   network_previous = copy(pathogen_trace.network[end])
-  tree_previous = phylo_trace.tree[end]
   lposterior_previous = copy(pathogen_trace.logposterior[end])
 
   for i = 1:n
@@ -70,7 +69,7 @@ function mcmc!(pathogen_trace::PathogenTrace,
     end
 
     if iterationtype == 2
-      substitutionmodel_proposal = propose(phylo_trace.substitutionmodel[end],
+      substitutionmodel_proposal = propose(pathogen_trace.substitutionmodel[end],
                                            phylogenetic_kernel_variance)
     else
       substitutionmodel_proposal = copy(substitutionmodel_previous)
@@ -120,23 +119,30 @@ function mcmc!(pathogen_trace::PathogenTrace,
 
     lposterior = lprior + llikelihood
 
+    if acceptance_rates
+      acceptance_rates_array[1, iterationtype] += 1
+    end
     if MHaccept(lposterior, lposterior_previous)
       riskparameters_previous = riskparameter_proposal
       substitutionmodel_previous = substitutionmodel_proposal
       events_previous = events_proposal
       network_previous = network_proposal
-      tree_previous = tree_proposal
       lposterior_previous = lposterior
+      if acceptance_rates
+        acceptance_rates_array[2, iterationtype] += 1
+      end
     end
     if mod(i, thin) == 0
       push!(pathogen_trace, PathogenIteration(copy(riskparameters_previous),
+                                              copy(substitutionmodel_previous),
                                               copy(events_previous),
                                               copy(network_previous),
                                               copy(lposterior_previous)))
-      push!(phylo_trace, PhyloIteration(copy(substitutionmodel_previous),
-                                        tree_previous,
-                                        copy(lposterior_previous)))
     end
   end
-  return pathogen_trace, phylo_trace
+  if acceptance_rates
+    return pathogen_trace, acceptance_rates_array
+  else
+    return pathogen_trace
+  end
 end

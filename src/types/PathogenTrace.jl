@@ -3,6 +3,7 @@ MCMC trace
 """
 type PathogenTrace
   riskparameters::Vector{RiskParameters}
+  substitutionmodel::Vector{SubstitutionModel}
   events::Vector{Events}
   network::Vector{Network}
   logposterior::Vector{Float64}
@@ -11,6 +12,7 @@ end
 
 function push!(trace::PathogenTrace, iteration::PathogenIteration)
   push!(trace.riskparameters, iteration.riskparameters)
+  push!(trace.substitutionmodel, iteration.substitutionmodel)
   push!(trace.events, iteration.events)
   push!(trace.network, iteration.network)
   push!(trace.logposterior, iteration.logposterior)
@@ -20,6 +22,7 @@ end
 
 function append!(trace1::PathogenTrace, trace2::PathogenTrace)
   append!(trace1.riskparameters, trace2.riskparameters)
+  append!(trace1.substitutionmodel, trace2.substitutionmodel)
   append!(trace1.events, trace2.events)
   append!(trace1.network, trace2.network)
   append!(trace1.logposterior, trace2.logposterior)
@@ -29,6 +32,7 @@ end
 
 function deleteat!(trace::PathogenTrace, inds)
   deleteat!(trace.riskparameters, inds)
+  deleteat!(trace.substitutionmodel, inds)
   deleteat!(trace.events, inds)
   deleteat!(trace.network, inds)
   deleteat!(trace.logposterior, inds)
@@ -43,6 +47,7 @@ end
 
 function getindex(trace::PathogenTrace, i)
   return PathogenTrace(trace.riskparameters[i],
+                       trace.substitutionmodel[i],
                        trace.events[i],
                        trace.network[i],
                        trace.logposterior[i])

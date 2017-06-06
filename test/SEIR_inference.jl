@@ -18,13 +18,13 @@ riskparameter_priors = SEIR_RiskParameterPriors([Uniform(0., 0.001)],
 substitutionmodel_priors = JC69Prior([Uniform(0., 2e-5)])
 
 # Initialize MCMC
-phylodynamicILM_trace, phylogenetic_trace = initialize_mcmc(observations,
-                                                            observed_sequences,
-                                                            initial_events,
-                                                            riskparameter_priors,
-                                                            risk_funcs,
-                                                            substitutionmodel_priors,
-                                                            population)
+phylodynamicILM_trace = initialize_mcmc(observations,
+                                        observed_sequences,
+                                        initial_events,
+                                        riskparameter_priors,
+                                        risk_funcs,
+                                        substitutionmodel_priors,
+                                        population)
 
 # Transition kernels
 transition_kernel_var1 = diagm([0.0000025; 0.005; 0.01; 0.000625; 0.0025])
@@ -32,7 +32,6 @@ transition_kernel_var2 = diagm([2.5e-8])
 
 # Run MCMC
 mcmc!(phylodynamicILM_trace,
-      phylogenetic_trace,
       1000,
       10,
       transition_kernel_var1,
