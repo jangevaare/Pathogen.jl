@@ -25,8 +25,7 @@ module Pathogen
     Base.deleteat!,
     PhyloModels.simulate!,
     PhyloModels.loglikelihood,
-    PhyloModels.logprior,
-    PhyloModels.propose
+    PhyloModels.logprior
 
   # Types
   include("types/RiskFunctions.jl")

@@ -43,7 +43,7 @@ end
 @recipe function plot(population::DataFrame,
                       events::Events,
                       network::Network,
-                      time::Float64,
+                      time=Inf::Float64,
                       paths=true::Bool)
   xguide --> ""
   yguide --> ""
