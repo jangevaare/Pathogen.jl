@@ -1,4 +1,4 @@
-abstract RiskFunctions
+abstract type RiskFunctions end
 
 
 """

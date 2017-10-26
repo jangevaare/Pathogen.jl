@@ -29,24 +29,27 @@ states, rates, events, network = simulate!(50,
 observations = observe(events, Uniform(0., 0.5), Uniform(0., 0.5))
 
 # Generate the associated phylogenetic tree
-tree = generate_tree(events, observations, network)
+trees, tree_ids, leaf_ids = generate_tree(events, observations, network)
 
-# Set up a Dict for sequence data
-node_data = Dict{Int64, Sequence}()
+# Set up a vector of Dicts for sequence data
+tree_data = fill(Dict{Int64, Sequence}(), length(trees))
 
 # Define a substitution model
-substitution_model = JC69([1.0e-5])
+substitution_model = JC69([1.0e-4])
+SNPs = 50
+site_rates = fill(1., SNPs)
 
-# Set the root sequence
-node_data[findroots(tree)[1]] = simulate(1000, substitution_model)
+@simd for i = 1:length(trees)
+    # Set the root sequences
+    tree_data[i][1] = simulate(SNPs, substitution_model)
+    # Simulate remaining sequences
+    simulate!(tree_data[i], trees[i], substitution_model, site_rates)
+end
 
-# Simulate remaining sequences
-site_rates = fill(1., 1000)
-simulate!(node_data, tree, substitution_model, site_rates)
+# Set up a vector of Dicts for observed sequences
+observed_sequences = Dict{Int64, Sequence}()
 
 # Extract observed sequences
-observed_nodes = findleaves(tree)
-observed_sequences = Dict{Int64, Sequence}()
-for i in observed_nodes
-  observed_sequences[i] = node_data[i]
+for i in 1:observations.individuals
+    observed_sequences[i] = tree_data[tree_ids[i]][leaf_ids[i]]
 end

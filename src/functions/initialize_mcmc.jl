@@ -27,10 +27,12 @@ function initialize_mcmc(event_obs::EventObservations,
                                              riskfuncs,
                                              population)
   network_proposal = propose(network_rates)
-  tree_proposal = generate_tree(events_proposal,
-                                event_obs,
-                                network_proposal)
+  tree_proposal, tree_ids, leaf_ids = generate_tree(events_proposal,
+                                                    event_obs,
+                                                    network_proposal)
   llikelihood += loglikelihood(tree_proposal,
+                               tree_ids,
+                               leaf_ids,
                                substitutionmodel_proposal,
                                seq_obs)
   lposterior = lprior + llikelihood

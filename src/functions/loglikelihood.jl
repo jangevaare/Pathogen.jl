@@ -1,4 +1,30 @@
 """
+loglikelihood(trees::Vector{Tree},
+              tree_ids::Vector{Nullable{Int64}},
+              leaf_ids::Vector{Nullable{Int64}},
+              substitutionmodel::SubstitutionModel,
+              seq_obs::Dict{Int64, Sequence})
+
+Calculates loglikehoods for a vector of Trees
+"""
+function loglikelihood(trees::Vector{Tree},
+                       tree_ids::Vector{Nullable{Int64}},
+                       leaf_ids::Vector{Nullable{Int64}},
+                       substitutionmodel::SubstitutionModel,
+                       individual_data::Dict{Int64, Sequence})
+    node_data = fill(Dict{Int64, Sequence}, length(trees))
+    @simd for i in keys(individual_data)
+        node_data[get(tree_ids[i])][get(leaf_ids[i])] = individual_data[i]
+    end
+    ll = 0.
+    @simd for i = 1:length(trees)
+        ll += loglikelihood(trees[i], substitutionmodel, node_data[i])
+    end
+    return ll
+end
+
+
+"""
 loglikelihood(riskparams::SEIR_RiskParameters,
               events::SEIR_Events,
               riskfuncs::SEIR_RiskFunctions,
