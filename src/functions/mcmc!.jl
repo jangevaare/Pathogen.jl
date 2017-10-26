@@ -37,20 +37,20 @@ function mcmc!(pathogen_trace::PathogenTrace,
   progressbar = Progress(n, 5, "Performing $n iterations", 25)
   individuals = event_obs.individuals
   if typeof(event_obs) == SEIR_EventObservations
-    validevents = find([!isnan(event_obs.infected) !isnan(event_obs.infected) !isnan(event_obs.removed)])
+    validevents = find([.!isnan.(event_obs.infected) .!isnan.(event_obs.infected) .!isnan.(event_obs.removed)])
     eventdims = (individuals, 3)
   elseif typeof(event_obs) == SIR_EventObservations
-    validevents = find([!isnan(event_obs.infected) !isnan(event_obs.removed)])
+    validevents = find([.!isnan.(event_obs.infected) .!isnan.(event_obs.removed)])
     eventdims = (individuals, 2)
   elseif typeof(event_obs) == SEI_EventObservations
-    validevents = find([!isnan(event_obs.infected) !isnan(event_obs.infected)])
+    validevents = find([.!isnan.(event_obs.infected) .!isnan.(event_obs.infected)])
     eventdims = (individuals, 2)
   elseif typeof(event_obs) == SI_EventObservations
-    validevents = find(!isnan(event_obs.infected))
+    validevents = find(.!isnan.(event_obs.infected))
     eventdims = (individuals, 1)
   end
   acceptance_rates_array = fill(0, (2, length(iterprob)))
-  validexposures = find(!isnan(event_obs.infected))
+  validexposures = find(.!isnan.(event_obs.infected))
   riskparameters_previous = copy(pathogen_trace.riskparameters[end])
   substitutionmodel_previous = copy(pathogen_trace.substitutionmodel[end])
   events_previous = copy(pathogen_trace.events[end])
@@ -107,10 +107,12 @@ function mcmc!(pathogen_trace::PathogenTrace,
         network_proposal = copy(network_previous)
       end
 
-      tree_proposal = generate_tree(events_proposal,
-                                    event_obs,
-                                    network_proposal)
+      tree_proposal, tree_ids, leaf_ids = generate_tree(events_proposal,
+                                                        event_obs,
+                                                        network_proposal)
       llikelihood += loglikelihood(tree_proposal,
+                                   tree_ids,
+                                   leaf_ids,
                                    substitutionmodel_proposal,
                                    seq_obs)
     else

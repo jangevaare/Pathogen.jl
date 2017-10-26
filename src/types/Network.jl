@@ -20,7 +20,7 @@ type Network
                    internal::Array{Bool, 2})
     if !(length(external) == size(internal, 1) == size(internal, 2))
       throw(BoundsError)
-    elseif any([any(internal[:,i]) for i = 1:length(external)] & external)
+    elseif any([any(internal[:,i]) for i = 1:length(external)] .& external)
       error("Multiple exposures per individual detected")
     end
     return new(external, internal)

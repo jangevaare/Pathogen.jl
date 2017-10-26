@@ -8,13 +8,13 @@ loglikelihood(trees::Vector{Tree},
 Calculates loglikehoods for a vector of Trees
 """
 function loglikelihood(trees::Vector{Tree},
-                       tree_ids::Vector{Nullable{Int64}},
-                       leaf_ids::Vector{Nullable{Int64}},
+                       tree_ids::Dict{Int64, Int64},
+                       leaf_ids::Dict{Int64, Int64},
                        substitutionmodel::SubstitutionModel,
                        individual_data::Dict{Int64, Sequence})
-    node_data = fill(Dict{Int64, Sequence}, length(trees))
-    @simd for i in keys(individual_data)
-        node_data[get(tree_ids[i])][get(leaf_ids[i])] = individual_data[i]
+    node_data = fill(Dict{Int64, Sequence}(), length(trees))
+    for i in keys(individual_data)
+        node_data[tree_ids[i]][leaf_ids[i]] = individual_data[i]
     end
     ll = 0.
     @simd for i = 1:length(trees)

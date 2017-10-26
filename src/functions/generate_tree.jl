@@ -12,8 +12,12 @@ function generate_tree(events::SEIR_Events,
   trees = Tree[]
   eventtimes = [events.exposed observations.infected]
   eventorder = sortperm(eventtimes[:])
-  # Tree | Exposure | Observation Internal Node | Observation Leaf Node
-  eventnodes = fill(Nullable{Int64}(), (events.individuals, 4))
+
+  exposure_tree = Dict{Int64, Int64}()
+  exposure_internal = Dict{Int64, Int64}()
+  observation_internal = Dict{Int64, Int64}()
+  observation_leaf = Dict{Int64, Int64}()
+
   pathways = [pathwayfrom(i, network) for i = 1:events.individuals]
 
   # Determine significant exposures (results in a observation in the future)
@@ -45,8 +49,8 @@ function generate_tree(events::SEIR_Events,
           push!(trees, Tree(height))
           addnode!(trees[tree])
 
-          eventnodes[event_individual, 1] = tree
-          eventnodes[event_individual, 2] = node
+          exposure_tree[event_individual] = tree
+          exposure_internal[event_individual] = node
 
         # For significant internal exposure events...
         else
@@ -55,36 +59,36 @@ function generate_tree(events::SEIR_Events,
           source = findfirst(network.internal[:, event_individual])
 
           # Previous significant exposures from this exposure source
-          source_priorexposures = network.internal[source, :][:] .& (eventtimes[:, 1] .< eventtimes[eventorder[i]]) .& significant_exposures
+          source_priorexposures = find(network.internal[source, :][:] .& (eventtimes[:, 1] .< eventtimes[eventorder[i]]) .& significant_exposures)
 
           # For when the exposure source has yet to be detected...
           if isnan(eventtimes[source, 2]) || eventtimes[source, 2] > eventtimes[event_individual, 1]
 
             # When there have been prior exposures from this undetected source
-            if any(source_priorexposures)
-              tree = get(eventnodes[source, 1])
-              parentnode = get(eventnodes[source_priorexposures, 2][indmax(eventtimes[source_priorexposures, 1])])
+            if length(source_priorexposures) > 0
+              tree = exposure_tree[source]
+              parentnode = exposure_internal[source_priorexposures[indmax(eventtimes[source_priorexposures, 1])]]
               branch_length = eventtimes[eventorder[i]] - maximum(eventtimes[source_priorexposures, 1])
 
             # When there have not been any prior exposures from this undetected source
             else
-              tree = get(eventnodes[source, 1])
-              parentnode = get(eventnodes[source, 2])
+              tree = exposure_tree[source]
+              parentnode = exposure_internal[source]
               branch_length = eventtimes[eventorder[i]] - eventtimes[source, 1]
             end
 
           # For when the exposure source has been detected...
           else
             # And detection of exposure source is most recent, relevant event...
-            if !any(source_priorexposures) || all(eventtimes[source, 2] .> eventtimes[source_priorexposures, 1])
-              tree = get(eventnodes[source, 1])
-              parentnode = get(eventnodes[source, 3])
+            if length(source_priorexposures) == 0 || all(eventtimes[source, 2] .> eventtimes[source_priorexposures, 1])
+              tree = exposure_tree[source]
+              parentnode = observation_internal[source]
               branch_length = eventtimes[eventorder[i]] - eventtimes[source, 2]
 
             # Or some prior exposure is most recent, relevant event...
             else
-              tree = get(eventnodes[source, 1])
-              parentnode = get(eventnodes[source_priorexposures, 1][indmax(eventtimes[source_priorexposures, 1])])
+              tree = exposure_tree[source]
+              parentnode = exposure_internal[source_priorexposures[indmax(eventtimes[source_priorexposures, 1])]]
               branch_length = eventtimes[eventorder[i]] - maximum(eventtimes[source_priorexposures, 1])
             end
           end
@@ -92,8 +96,8 @@ function generate_tree(events::SEIR_Events,
           branch!(trees[tree], parentnode, branch_length)
 
           # Record tree and node ID
-          eventnodes[event_individual, 1] = tree
-          eventnodes[event_individual, 2] = length(trees[tree].nodes)
+          exposure_tree[event_individual] = tree
+          exposure_internal[event_individual] = length(trees[tree].nodes)
         end
       end
 
@@ -105,35 +109,36 @@ function generate_tree(events::SEIR_Events,
                             (eventtimes[:, 1] .< eventtimes[eventorder[i]]) .&
                             significant_exposures)
       if length(priorexposures) > 0
-        tree = get(eventnodes[event_individual, 1])
+        tree = exposure_tree[event_individual]
+
         # Parent node is the internal node associated with the final pre-observation exposure
-        parentnode = get(eventnodes[priorexposures[indmax(eventtimes[priorexposures, 1])], 2])
+        parentnode = exposure_internal[priorexposures[indmax(eventtimes[priorexposures, 1])]]
         branch_length = eventtimes[eventorder[i]] - maximum(eventtimes[priorexposures, 1])
 
       # Individual has not exposed others prior to being observed as infected
       else
-        tree = get(eventnodes[event_individual, 1])
-        parentnode = get(eventnodes[event_individual, 2])
+        tree = exposure_tree[event_individual]
+        parentnode = exposure_internal[event_individual]
         branch_length = eventtimes[eventorder[i]] - eventtimes[event_individual, 1]
       end
 
       # Individual goes on to have significant exposures
       if any(network.internal[event_individual, :][:] .& (eventtimes[:, 1] .>= eventtimes[eventorder[i]]) .& significant_exposures)
         branch!(trees[tree], parentnode, branch_length)
-        eventnodes[event_individual, 3] = length(trees[tree].nodes)
+        observation_internal[event_individual] = length(trees[tree].nodes)
 
         # Add zero-length branch so observation event is a leaf node
-        branch!(trees[tree], get(eventnodes[event_individual, 3]), 0.)
+        branch!(trees[tree], observation_internal[event_individual], 0.)
 
       # Individual does not go one to have any significant exposures
       else
         branch!(trees[tree], parentnode, branch_length)
       end
-    # Record node ID
-    eventnodes[event_individual, 4] = length(trees[tree].nodes)
+      # Record node ID
+      observation_leaf[event_individual] = length(trees[tree].nodes)
     end
   end
-  return trees, eventnodes[:, [1]], eventnodes[:, [4]]
+  return trees, exposure_tree, observation_leaf
 end
 
 

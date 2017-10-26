@@ -51,5 +51,7 @@ observed_sequences = Dict{Int64, Sequence}()
 
 # Extract observed sequences
 for i in 1:observations.individuals
-    observed_sequences[i] = tree_data[tree_ids[i]][leaf_ids[i]]
+    if !isnan(observations.infected[i])
+        observed_sequences[i] = tree_data[tree_ids[i]][leaf_ids[i]]
+    end
 end
