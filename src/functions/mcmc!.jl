@@ -93,7 +93,7 @@ function mcmc!(pathogen_trace::PathogenTrace,
                                                    events_proposal,
                                                    riskfuncs,
                                                    population)
-        if j = m
+        if j == m
           # 95% of the time, propose a single change to tree
           if rand() < 0.95
             # Only sample individuals which have the possibility of having an internal
