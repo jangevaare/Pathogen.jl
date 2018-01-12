@@ -111,6 +111,14 @@ function mcmc!(pathogen_trace::PathogenTrace,
         else
           network_proposal = copy(network_previous)
         end
+
+        # Find loglikelihood of transmission network if rates from ILM were not
+        # used in the generation of the proposal
+        if !conditional_network_proposals
+          llikelihood += loglikelihood(network_proposal,
+                                       network_rates)
+        end
+
         # Generate a tree
         tree_proposal = generate_tree(events_proposal,
                                       event_obs,

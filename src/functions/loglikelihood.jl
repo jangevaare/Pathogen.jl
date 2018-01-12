@@ -1,4 +1,27 @@
 """
+loglikelihood(network::Network,
+              networkrates::NetworkRates)
+"""
+function loglikelihood(network::Network,
+                       networkrates::NetworkRates)
+  # Initialize
+  ll = 0.
+  exposed = find([any(network.internal[:, i]) | network.external[i] for i = 1:length(network.external)])
+  for i in exposed
+    if ll == -Inf
+      break
+    elseif isnan(ll)
+      break
+    end
+    denominator = networkrates.external[i] + sum(networkrates.internal[:, i])
+    numerator = networkrates.external[network.external[i]] + sum(networkrates.internal[:, network.internal[:, i]])
+    ll += log(numerator/denominator)
+  end
+  return ll
+end
+
+
+"""
 loglikelihood(riskparams::SEIR_RiskParameters,
               events::SEIR_Events,
               riskfuncs::SEIR_RiskFunctions,
