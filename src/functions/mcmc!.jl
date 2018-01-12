@@ -29,6 +29,7 @@ function mcmc!(pathogen_trace::PathogenTrace,
                riskfuncs::RiskFunctions,
                substitutionmodel_priors::SubstitutionModelPrior,
                population::DataFrame,
+               conditional_network_proposals=true::Bool,
                acceptance_rates=false::Bool)
   if thin < 0
     error("Thinning rate can not be less than 1")
@@ -102,10 +103,10 @@ function mcmc!(pathogen_trace::PathogenTrace,
             network_proposal = propose(k,
                                        network_previous,
                                        network_rates,
-                                       userates)
+                                       conditional_network_proposals)
           else
             network_proposal = propose(network_rates,
-                                      userates)
+                                       conditional_network_proposals)
           end
         else
           network_proposal = copy(network_previous)
