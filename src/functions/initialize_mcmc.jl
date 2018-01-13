@@ -5,7 +5,8 @@ initialize_mcmc(event_obs::EventObservations,
                 riskparameter_priors::RiskParameterPriors,
                 riskfuncs::RiskFunctions,
                 substitutionmodel_priors::SubstitutionModelPrior,
-                population::DataFrame)
+                population::DataFrame;
+                conditional_network_proposals=true::Bool)
 
 Initialize MCMC
 """
@@ -15,7 +16,8 @@ function initialize_mcmc(event_obs::EventObservations,
                          riskparameter_priors::RiskParameterPriors,
                          riskfuncs::RiskFunctions,
                          substitutionmodel_priors::SubstitutionModelPrior,
-                         population::DataFrame)
+                         population::DataFrame;
+                         conditional_network_proposals=true::Bool)
   riskparameter_proposal = propose(riskparameter_priors)
   substitutionmodel_proposal = rand(substitutionmodel_priors)
   lprior = logprior(riskparameter_priors,
@@ -26,7 +28,11 @@ function initialize_mcmc(event_obs::EventObservations,
                                              events_proposal,
                                              riskfuncs,
                                              population)
-  network_proposal = propose(network_rates)
+  network_proposal = propose(network_rates,
+                             conditional_network_proposals = conditional_network_proposals)
+  if !conditional_network_proposals
+    llikelihood += loglikelihood(network_proposal, network_rates)
+  end
   tree_proposal = generate_tree(events_proposal,
                                 event_obs,
                                 network_proposal)

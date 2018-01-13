@@ -1,4 +1,4 @@
-abstract RiskParameterPriors
+abstract type RiskParameterPriors end
 
 
 """

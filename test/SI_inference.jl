@@ -30,8 +30,8 @@ transition_kernel_var2 = diagm([2.5e-8])
 
 # Run MCMC
 mcmc!(phylodynamicILM_trace,
-      1000,
-      10,
+      100,
+      2,
       transition_kernel_var1,
       transition_kernel_var2,
       1.0,
@@ -41,5 +41,4 @@ mcmc!(phylodynamicILM_trace,
       riskparameter_priors,
       risk_funcs,
       substitutionmodel_priors,
-      population,
-      [1/4; 1/4; 1/4; 1/8; 1/8])
+      population)

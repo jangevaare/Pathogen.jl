@@ -1,4 +1,4 @@
-abstract Events
+abstract type Events end
 
 
 """
