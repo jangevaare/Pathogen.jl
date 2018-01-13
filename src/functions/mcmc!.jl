@@ -11,8 +11,9 @@ mcmc!(pathogen_trace::PathogenTrace,
       riskparameter_priors::RiskParameterPriors,
       riskfuncs::RiskFunctions,
       substitutionmodel_priors::SubstitutionModelPrior,
-      population::DataFrame,
-      iterprob::Vector{Float64})
+      population::DataFrame;
+      acceptance_rates=false::Bool,
+      conditional_network_proposals=true::Bool)
 
 Phylodynamic ILM MCMC
 """
@@ -28,29 +29,31 @@ function mcmc!(pathogen_trace::PathogenTrace,
                riskparameter_priors::RiskParameterPriors,
                riskfuncs::RiskFunctions,
                substitutionmodel_priors::SubstitutionModelPrior,
-               population::DataFrame,
-               conditional_network_proposals=true::Bool,
-               acceptance_rates=false::Bool)
-  if thin < 0
-    error("Thinning rate can not be less than 1")
+               population::DataFrame;
+               acceptance_rates=false::Bool,
+               conditional_network_proposals=true::Bool)
+  if n < 1
+    error("The number of iterations must be > 0")
+  elseif mod(n, thin) != 0
+    error("The number of iterations must be a multiple of the thinning rate")
   end
   progressbar = Progress(n, 5, "Performing $n iterations", 25)
   individuals = event_obs.individuals
   if typeof(event_obs) == SEIR_EventObservations
-    validevents = find([!isnan(event_obs.infected) !isnan(event_obs.infected) !isnan(event_obs.removed)])
+    validevents = find([.!isnan.(event_obs.infected) .!isnan.(event_obs.infected) .!isnan.(event_obs.removed)])
     eventdims = (individuals, 3)
   elseif typeof(event_obs) == SIR_EventObservations
-    validevents = find([!isnan(event_obs.infected) !isnan(event_obs.removed)])
+    validevents = find([.!isnan.(event_obs.infected) .!isnan.(event_obs.removed)])
     eventdims = (individuals, 2)
   elseif typeof(event_obs) == SEI_EventObservations
-    validevents = find([!isnan(event_obs.infected) !isnan(event_obs.infected)])
+    validevents = find([.!isnan.(event_obs.infected) .!isnan.(event_obs.infected)])
     eventdims = (individuals, 2)
   elseif typeof(event_obs) == SI_EventObservations
-    validevents = find(!isnan(event_obs.infected))
+    validevents = find(.!isnan.(event_obs.infected))
     eventdims = (individuals, 1)
   end
   acceptance_rates_array = fill(0, (2, 3))
-  validexposures = find(!isnan(event_obs.infected))
+  validexposures = find(.!isnan.(event_obs.infected))
   riskparameters_previous = copy(pathogen_trace.riskparameters[end])
   substitutionmodel_previous = copy(pathogen_trace.substitutionmodel[end])
   events_previous = copy(pathogen_trace.events[end])
@@ -71,6 +74,9 @@ function mcmc!(pathogen_trace::PathogenTrace,
                                          ILM_kernel_variance)
         substitutionmodel_proposal = propose(substitutionmodel_previous,
                                              phylogenetic_kernel_variance)
+      else
+        riskparameter_proposal = copy(riskparameters_previous)
+        substitutionmodel_proposal = copy(substitutionmodel_previous)
       end
 
       if 1 < j & j < m
@@ -103,18 +109,27 @@ function mcmc!(pathogen_trace::PathogenTrace,
             network_proposal = propose(k,
                                        network_previous,
                                        network_rates,
-                                       conditional_network_proposals)
+                                       conditional_network_proposals = conditional_network_proposals)
           else
             network_proposal = propose(network_rates,
-                                       conditional_network_proposals)
+                                       conditional_network_proposals = conditional_network_proposals)
           end
         else
           network_proposal = copy(network_previous)
         end
+
+        # Find loglikelihood of transmission network if rates from ILM were not
+        # used in the generation of the proposal
+        if !conditional_network_proposals
+          llikelihood += loglikelihood(network_proposal,
+                                       network_rates)
+        end
+
         # Generate a tree
         tree_proposal = generate_tree(events_proposal,
                                       event_obs,
                                       network_proposal)
+
         # Calculate the tree's loglikelihood
         llikelihood += loglikelihood(tree_proposal,
                                      substitutionmodel_proposal,
@@ -126,7 +141,7 @@ function mcmc!(pathogen_trace::PathogenTrace,
       lposterior = lprior + llikelihood
 
       if acceptance_rates
-        if j = 1
+        if j == 1
           acceptance_rates_array[1, 1] += 1
         elseif 1 < j & j < m
           acceptance_rates_array[1, 2] += 1
@@ -141,7 +156,7 @@ function mcmc!(pathogen_trace::PathogenTrace,
         network_previous = network_proposal
         lposterior_previous = lposterior
         if acceptance_rates
-          if j = 1
+          if j == 1
             acceptance_rates_array[2, 1] += 1
           elseif 1 < j & j < m
             acceptance_rates_array[2, 2] += 1

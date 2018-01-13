@@ -1,4 +1,24 @@
 """
+loglikelihood(network::Network,
+              networkrates::NetworkRates)
+"""
+function loglikelihood(network::Network,
+                       networkrates::NetworkRates)
+  # Initialize
+  ll = 0.
+  exposed = find([any(network.internal[:, i]) | network.external[i] for i = 1:length(network.external)])
+  for i in exposed
+    ll == -Inf && break
+    # Numerator
+    ll = log(networkrates.external[network.external[i]] + sum(networkrates.internal[:, network.internal[:, i]]))
+    # Denominator
+    ll -= log(networkrates.external[i] + sum(networkrates.internal[:, i]))
+  end
+  return ll
+end
+
+
+"""
 loglikelihood(riskparams::SEIR_RiskParameters,
               events::SEIR_Events,
               riskfuncs::SEIR_RiskFunctions,
@@ -60,8 +80,8 @@ function loglikelihood(riskparams::SEIR_RiskParameters,
     else
       # loglikelihood contribution of a non-exposure event
       ll += log(rates[eventtype][individual]/ratetotal)
-      update_states!(states, SEIR_Event(eventtype+1, individual))
-      update_rates!(rates, states, SEIR_Event(eventtype+1, individual), population, riskfuncs, riskparams)
+      update_states!(states, SEIR_Event(eventtype + 1, individual))
+      update_rates!(rates, states, SEIR_Event(eventtype + 1, individual), population, riskfuncs, riskparams)
     end
   end
   return ll, network_rates

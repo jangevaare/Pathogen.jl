@@ -1,4 +1,4 @@
-abstract EventExtents
+abstract type EventExtents end
 
 type SEIR_EventExtents <: EventExtents
   exposure::Float64

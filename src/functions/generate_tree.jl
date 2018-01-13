@@ -1,45 +1,53 @@
 """
+generate_tree(events::Events,
+              observations::EventObservations,
+              network::Network;
+              roottime=0.::Float64)
+
 Generates a phylogenetic tree based on observations and transmission network
 """
 function generate_tree(events::Events,
                        observations::EventObservations,
-                       network::Network)
+                       network::Network;
+                       roottime=0.::Float64)
   # Initialization and error checking
   # Determine significant exposures (or infections)
   # Exposures that result in a observation are considered significant
   events_type = typeof(events)
   tree = Tree()
-  eventorder = sortperm(eventtimes[:])
-  eventnodes = fill(Nullable{Int64}(), (events.individuals, 3))
   pathways = [pathwayfrom(i, network) for i = 1:events.individuals]
-  if events_type == :SEIR_Events
-    if typeof(observations) != :SEIR_EventObservations
+  eventtimes = fill(NaN, (events.individuals, 2))
+  significant_exposures = Int64[]
+  if events_type == SEIR_Events
+    if typeof(observations) != SEIR_EventObservations
       error("Mismatch in the subtypes of `Events` and `EventObservations`")
     end
     eventtimes = [events.exposed observations.infected]
     significant_exposures = [any(observations.infected[pathways[i]] .>= events.exposed[i]) for i = 1:events.individuals]
-  elseif events_type == :SIR_Events
-    if typeof(observations) != :SIR_EventObservations
+  elseif events_type == SIR_Events
+    if typeof(observations) != SIR_EventObservations
       error("Mismatch in the subtypes of `Events` and `EventObservations`")
     end
     eventtimes = [events.infected observations.infected]
     significant_exposures = [any(observations.infected[pathways[i]] .>= events.infected[i]) for i = 1:events.individuals]
-  elseif events_type == :SEI_Events
-    if typeof(observations) != :SEI_EventObservations
+  elseif events_type == SEI_Events
+    if typeof(observations) != SEI_EventObservations
       error("Mismatch in the subtypes of `Events` and `EventObservations`")
     end
     eventtimes = [events.exposed observations.infected]
     significant_exposures = [any(observations.infected[pathways[i]] .>= events.exposed[i]) for i = 1:events.individuals]
-  elseif events_type == :SI_Events
-    if typeof(observations) != :SI_EventObservations
+  elseif events_type == SI_Events
+    if typeof(observations) != SI_EventObservations
       error("Mismatch in the subtypes of `Events` and `EventObservations`")
     end
     eventtimes = [events.infected observations.infected]
     significant_exposures = [any(observations.infected[pathways[i]] .>= events.infected[i]) for i = 1:events.individuals]
   end
+  eventorder = sortperm(eventtimes[:])
+  eventnodes = fill(Nullable{Int64}(), (events.individuals, 3))
 
   # Add a node for each infection observation event
-  infection_observations = find(!isnan(observations.infected))
+  infection_observations = find(.!isnan.(observations.infected))
   addnodes!(tree, length(infection_observations))
 
   for i = 1:length(infection_observations)
@@ -49,7 +57,6 @@ function generate_tree(events::Events,
   # Add a root node
   addnode!(tree)
   rootnode = length(tree.nodes)
-  roottime = minimum(eventtimes)
 
   # Iterate through all events to build tree
   for i = 1:length(eventorder)
@@ -80,7 +87,7 @@ function generate_tree(events::Events,
           source = findfirst(network.internal[:, event[1]])
 
           # Previous significant exposures from this exposure source
-          source_priorexposures = network.internal[source, :][:] & (eventtimes[:, 1] .< eventtimes[eventorder[i]]) & significant_exposures
+          source_priorexposures = network.internal[source, :][:] .& (eventtimes[:, 1] .< eventtimes[eventorder[i]]) .& significant_exposures
 
           # For when the exposure source has yet to be detected...
           if isnan(eventtimes[source, 2]) || eventtimes[source, 2] > eventtimes[event[1], 1]
@@ -120,7 +127,7 @@ function generate_tree(events::Events,
     elseif event[2] == 2
 
       # Individual has had significant exposures prior to being observed as infected
-      priorexposures = network.internal[event[1], :][:] & (eventtimes[:, 1] .< eventtimes[eventorder[i]]) & significant_exposures
+      priorexposures = network.internal[event[1], :][:] .& (eventtimes[:, 1] .< eventtimes[eventorder[i]]) .& significant_exposures
       if any(priorexposures)
         parentnode = get(eventnodes[priorexposures, 1][indmax(eventtimes[priorexposures, 1])])
         branch_length = eventtimes[eventorder[i]] - maximum(eventtimes[priorexposures, 1])
@@ -132,7 +139,7 @@ function generate_tree(events::Events,
       end
 
       # Individual goes on to have significant exposures
-      if any(network.internal[event[1], :][:] & (eventtimes[:, 1] .>= eventtimes[eventorder[i]]) & significant_exposures)
+      if any(network.internal[event[1], :][:] .& (eventtimes[:, 1] .>= eventtimes[eventorder[i]]) .& significant_exposures)
         branch!(tree, parentnode, branch_length)
         eventnodes[event[1], 2] = length(tree.nodes)
 
