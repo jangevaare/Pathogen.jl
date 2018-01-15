@@ -1,4 +1,4 @@
-abstract Event
+abstract type Event end
 
 type SEIR_Event <: Event
   eventtype::Int64

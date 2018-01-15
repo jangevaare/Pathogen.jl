@@ -1,4 +1,4 @@
-abstract EventObservations
+abstract type EventObservations end
 
 
 """

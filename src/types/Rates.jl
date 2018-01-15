@@ -26,7 +26,7 @@ function copy(x::NetworkRates)
 end
 
 
-abstract Rates
+abstract type Rates end
 
 
 """
