@@ -1,15 +1,13 @@
 """
 generate_tree(events::Events,
               observations::EventObservations,
-              network::Network;
-              roottime=0.::Float64)
+              network::Network)
 
 Generates a phylogenetic tree based on observations and transmission network
 """
 function generate_tree(events::Events,
                        observations::EventObservations,
-                       network::Network;
-                       roottime=0.::Float64)
+                       network::Network)
   # Initialization and error checking
   # Determine significant exposures (or infections)
   # Exposures that result in a observation are considered significant
@@ -57,6 +55,7 @@ function generate_tree(events::Events,
   # Add a root node
   addnode!(tree)
   rootnode = length(tree.nodes)
+  roottime = minimum(eventtimes[.!isnan.(eventtimes)])
 
   # Iterate through all events to build tree
   for i = 1:length(eventorder)
