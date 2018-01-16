@@ -10,7 +10,11 @@ function loglikelihood(network::Network,
   for i in exposed
     ll == -Inf && break
     # Numerator
-    ll = log(networkrates.external[network.external[i]] + sum(networkrates.internal[:, network.internal[:, i]]))
+    if network.external[i]
+      ll += log(networkrates.external[i])
+    else
+      ll += log(networkrates.internal[:, i][network.internal[:, i]][1])
+    end
     # Denominator
     ll -= log(networkrates.external[i] + sum(networkrates.internal[:, i]))
   end
