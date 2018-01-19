@@ -26,15 +26,13 @@ phylodynamicILM_trace = initialize_mcmc(observations,
                                         population)
 
 # Transition kernels
-transition_kernel_var1 = diagm([0.0000025; 0.005; 0.01; 0.0025])
-transition_kernel_var2 = diagm([2.5e-8])
+transition_kernel = [0.0000025; 0.005; 0.01; 0.0025; 2.5e-8]
 
 # Run MCMC
 mcmc!(phylodynamicILM_trace,
       100,
       2,
-      transition_kernel_var1,
-      transition_kernel_var2,
+      transition_kernel,
       1.0,
       event_extents,
       observations,

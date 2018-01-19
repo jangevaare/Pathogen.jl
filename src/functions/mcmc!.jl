@@ -20,8 +20,7 @@ Phylodynamic ILM MCMC
 function mcmc!(pathogen_trace::PathogenTrace,
                n::Int64,
                thin::Int64,
-               ILM_kernel_variance::Array{Float64, 2},
-               phylogenetic_kernel_variance::Array{Float64, 2},
+               parameter_variance::Vector{Float64},
                event_variance::Float64,
                event_extents::EventExtents,
                event_obs::EventObservations,
@@ -32,12 +31,17 @@ function mcmc!(pathogen_trace::PathogenTrace,
                population::DataFrame;
                acceptance_rates=false::Bool,
                conditional_network_proposals=true::Bool)
+  riskparameter_params = length(riskparameter_priors)
+  substitutionmodel_params = length(pathogen_trace.substitutionmodel[1].Θ)
   if n < 1
     error("The number of iterations must be > 0")
   elseif mod(n, thin) != 0
     error("The number of iterations must be a multiple of the thinning rate")
+  elseif (riskparameter_params + substitutionmodel_params) != length(parameter_variance)
+    error("The number of transition kernel variances provided does not match with the total number of model parameters")
   end
-  progressbar = Progress(n, 5, "Performing $n iterations", 25)
+
+  progressbar = Progress(n, 5, "Performing $n iterations", 20)
   individuals = event_obs.individuals
   if typeof(event_obs) == SEIR_EventObservations
     validevents = find([.!isnan.(event_obs.infected) .!isnan.(event_obs.infected) .!isnan.(event_obs.removed)])
@@ -52,7 +56,7 @@ function mcmc!(pathogen_trace::PathogenTrace,
     validevents = find(.!isnan.(event_obs.infected))
     eventdims = (individuals, 1)
   end
-  acceptance_rates_array = fill(0, (2, 3))
+  acceptance_rates_array = fill(0, (2, riskparameter_params + substitutionmodel_params + 2))
   validexposures = find(.!isnan.(event_obs.infected))
   riskparameters_previous = copy(pathogen_trace.riskparameters[end])
   substitutionmodel_previous = copy(pathogen_trace.substitutionmodel[end])
@@ -63,27 +67,34 @@ function mcmc!(pathogen_trace::PathogenTrace,
   # One substep for parameter updates
   # One substep for exposure network update
   # One substep for each eventtime to be augmented
-  m = length(validevents) + 1 + 1
+  o = riskparameter_params + substitutionmodel_params + length(validevents) + 1
 
   for i = 1:n
-    next!(progressbar, showvalues = [("accepted parameter set proposals", "$(acceptance_rates_array[2, 1])/$(acceptance_rates_array[1, 1])");
-                                     ("accepted event proposals", "$(acceptance_rates_array[2, 2])/$(acceptance_rates_array[1, 2])");
-                                     ("accepted network proposals", "$(acceptance_rates_array[2, 3])/$(acceptance_rates_array[1, 3])")])
+    next!(progressbar, showvalues = [("Parameter proposals", "$(acceptance_rates_array[2, 1:(riskparameter_params + substitutionmodel_params)])/$(acceptance_rates_array[1, 1])");
+                                     ("Event proposals", "$(acceptance_rates_array[2, end-1])/$(acceptance_rates_array[1, end-1])");
+                                     ("Network proposals", "$(acceptance_rates_array[2, end])/$(acceptance_rates_array[1, end])")])
+    parameter_order = sample(1:(riskparameter_params + substitutionmodel_params),
+                             (riskparameter_params + substitutionmodel_params),
+                             replace=false)
     augmentation_order = sample(validevents, length(validevents), replace=false)
-    for j = 1:m
-      if j == 1
-        riskparameter_proposal = propose(riskparameters_previous,
-                                         ILM_kernel_variance)
-        substitutionmodel_proposal = propose(substitutionmodel_previous,
-                                             phylogenetic_kernel_variance)
-      else
-        riskparameter_proposal = copy(riskparameters_previous)
-        substitutionmodel_proposal = copy(substitutionmodel_previous)
+    for j = 1:o
+      riskparameter_proposal = copy(riskparameters_previous)
+      substitutionmodel_proposal = copy(substitutionmodel_previous)
+      if j <= riskparameter_params + substitutionmodel_params
+        k = parameter_order[j]
+        if k <= riskparameter_params
+          riskparameter_proposal[k] = rand(Normal(riskparameter_proposal[k],
+                                                  parameter_variance[k]))
+        else
+          substitutionmodel_proposal.Θ[k-riskparameter_params] = rand(Normal(substitutionmodel_proposal.Θ[k-riskparameter_params],
+                                                                             parameter_variance[k]))
+        end
       end
 
-      if 1 < j & j < m
-        k, l = ind2sub(eventdims, augmentation_order[j-1])
-        events_proposal = propose(k, l,
+      if (riskparameter_params + substitutionmodel_params) < j & j < o
+        k = augmentation_order[j - (riskparameter_params + substitutionmodel_params)]
+        l, m = ind2sub(eventdims, k)
+        events_proposal = propose(l, m,
                                   events_previous,
                                   network_previous,
                                   event_obs,
@@ -102,7 +113,7 @@ function mcmc!(pathogen_trace::PathogenTrace,
                                                    events_proposal,
                                                    riskfuncs,
                                                    population)
-        if j == m
+        if j == o
           # Only sample individuals which have the possibility of having an internal
           # exoposure (assuming all have the possibility of external exposure)
           candidates = find(sum(network_rates.internal, 1) .> 0)
@@ -147,25 +158,26 @@ function mcmc!(pathogen_trace::PathogenTrace,
 
       lposterior = lprior + llikelihood
 
-      if j == 1
-        acceptance_rates_array[1, 1] += 1
-      elseif 1 < j & j < m
-        acceptance_rates_array[1, 2] += 1
-      elseif j == m
-        acceptance_rates_array[1, 3] += 1
+      if j <= (riskparameter_params + substitutionmodel_params)
+        acceptance_rates_array[1, parameter_order[j]] += 1
+      elseif j < o
+        acceptance_rates_array[1, end-1] += 1
+      else
+        acceptance_rates_array[1, end] += 1
       end
+
       if MHaccept(lposterior, lposterior_previous)
         riskparameters_previous = riskparameter_proposal
         substitutionmodel_previous = substitutionmodel_proposal
         events_previous = events_proposal
         network_previous = network_proposal
         lposterior_previous = lposterior
-        if j == 1
-          acceptance_rates_array[2, 1] += 1
-        elseif 1 < j & j < m
-          acceptance_rates_array[2, 2] += 1
-        elseif j == m
-          acceptance_rates_array[2, 3] += 1
+        if j <= (riskparameter_params + substitutionmodel_params)
+          acceptance_rates_array[2, parameter_order[j]] += 1
+        elseif j < o
+          acceptance_rates_array[2, end-1] += 1
+        else
+          acceptance_rates_array[2, end] += 1
         end
       end
       if mod(i, thin) == 0

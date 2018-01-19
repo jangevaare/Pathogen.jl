@@ -13,6 +13,7 @@ module Pathogen
   # Methods
   import
     Base.getindex,
+    Base.setindex!,
     Base.push!,
     Base.append!,
     Base.rand,
