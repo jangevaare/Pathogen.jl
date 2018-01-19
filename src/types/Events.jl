@@ -36,6 +36,11 @@ type SEIR_Events <: Events
 end
 
 
+function show(io::IO, object::SEIR_Events)
+  print(io, "SEIR Events object\nExposures: $(sum(.!isnan.(object.exposed)))\nInfections: $(sum(.!isnan.(object.infected)))\nRemovals: $(sum(.!isnan.(object.removed)))")
+end
+
+
 function copy(events::SEIR_Events)
   return SEIR_Events(copy(events.exposed),
                      copy(events.infected),
@@ -70,6 +75,11 @@ type SIR_Events <: Events
                removed,
                individuals)
   end
+end
+
+
+function show(io::IO, object::SIR_Events)
+  print(io, "SIR Events object\nInfections: $(sum(.!isnan.(object.infected)))\nRemovals: $(sum(.!isnan.(object.removed)))")
 end
 
 
@@ -115,6 +125,11 @@ function copy(events::SEI_Events)
 end
 
 
+function show(io::IO, object::SEI_Events)
+  print(io, "SEI Events object\nExposures: $(sum(.!isnan.(object.exposed)))\nInfections: $(sum(.!isnan.(object.infected)))")
+end
+
+
 """
 All SI relevant event times
 """
@@ -134,6 +149,11 @@ type SI_Events <: Events
     return new(infected,
                individuals)
   end
+end
+
+
+function show(io::IO, object::SI_Events)
+  print(io, "SI Events object\nInfections: $(sum(.!isnan.(object.infected)))")
 end
 
 

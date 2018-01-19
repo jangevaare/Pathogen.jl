@@ -66,7 +66,9 @@ function mcmc!(pathogen_trace::PathogenTrace,
   m = length(validevents) + 1 + 1
 
   for i = 1:n
-    next!(progressbar)
+    next!(progressbar, showvalues = [("accepted parameter set proposals", "$(acceptance_rates_array[2, 1])/$(acceptance_rates_array[1, 1])");
+                                     ("accepted event proposals", "$(acceptance_rates_array[2, 2])/$(acceptance_rates_array[1, 2])");
+                                     ("accepted network proposals", "$(acceptance_rates_array[2, 3])/$(acceptance_rates_array[1, 3])")])
     augmentation_order = sample(validevents, length(validevents), replace=false)
     for j = 1:m
       if j == 1
@@ -145,14 +147,12 @@ function mcmc!(pathogen_trace::PathogenTrace,
 
       lposterior = lprior + llikelihood
 
-      if acceptance_rates
-        if j == 1
-          acceptance_rates_array[1, 1] += 1
-        elseif 1 < j & j < m
-          acceptance_rates_array[1, 2] += 1
-        elseif j == m
-          acceptance_rates_array[1, 3] += 1
-        end
+      if j == 1
+        acceptance_rates_array[1, 1] += 1
+      elseif 1 < j & j < m
+        acceptance_rates_array[1, 2] += 1
+      elseif j == m
+        acceptance_rates_array[1, 3] += 1
       end
       if MHaccept(lposterior, lposterior_previous)
         riskparameters_previous = riskparameter_proposal
@@ -160,14 +160,12 @@ function mcmc!(pathogen_trace::PathogenTrace,
         events_previous = events_proposal
         network_previous = network_proposal
         lposterior_previous = lposterior
-        if acceptance_rates
-          if j == 1
-            acceptance_rates_array[2, 1] += 1
-          elseif 1 < j & j < m
-            acceptance_rates_array[2, 2] += 1
-          elseif j == m
-            acceptance_rates_array[2, 3] += 1
-          end
+        if j == 1
+          acceptance_rates_array[2, 1] += 1
+        elseif 1 < j & j < m
+          acceptance_rates_array[2, 2] += 1
+        elseif j == m
+          acceptance_rates_array[2, 3] += 1
         end
       end
       if mod(i, thin) == 0
