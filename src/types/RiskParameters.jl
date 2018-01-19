@@ -24,29 +24,6 @@ function copy(x::SEIR_RiskParameters)
 end
 
 
-function length(x::SEIR_RiskParameters)
-  return sum([length(x.sparks);
-              length(x.susceptibility);
-              length(x.transmissibility);
-              length(x.infectivity);
-              length(x.latency);
-              length(x.removal)])
-end
-
-
-function getindex(x::SEIR_RiskParameters,
-                  i::Int64)
-  indices = cumsum([length(x.sparks);
-                    length(x.susceptibility);
-                    length(x.transmissibility);
-                    length(x.infectivity);
-                    length(x.latency);
-                    length(x.removal)])
-  riskfunc = findfirst(i .<= indices)
-  return getfield(x, riskfunc)[end - (indices[riskfunc] - i)]
-end
-
-
 """
 Parameter vectors for `SIR_RiskFunctions`
 """
@@ -65,27 +42,6 @@ function copy(x::SIR_RiskParameters)
                             copy(x.transmissibility),
                             copy(x.infectivity),
                             copy(x.removal))
-end
-
-
-function length(x::SIR_RiskParameters)
-  return sum([length(x.sparks);
-              length(x.susceptibility);
-              length(x.transmissibility);
-              length(x.infectivity);
-              length(x.removal)])
-end
-
-
-function getindex(x::SIR_RiskParameters,
-                  i::Int64)
-  indices = cumsum([length(x.sparks);
-                    length(x.susceptibility);
-                    length(x.transmissibility);
-                    length(x.infectivity);
-                    length(x.removal)])
-  riskfunc = findfirst(i .<= indices)
-  return getfield(x, riskfunc)[end - (indices[riskfunc] - i)]
 end
 
 
@@ -110,27 +66,6 @@ function copy(x::SEI_RiskParameters)
 end
 
 
-function length(x::SEI_RiskParameters)
-  return sum([length(x.sparks);
-              length(x.susceptibility);
-              length(x.transmissibility);
-              length(x.infectivity);
-              length(x.latency)])
-end
-
-
-function getindex(x::SEI_RiskParameters,
-                  i::Int64)
-  indices = cumsum([length(x.sparks);
-                    length(x.susceptibility);
-                    length(x.transmissibility);
-                    length(x.infectivity);
-                    length(x.latency)])
-  riskfunc = findfirst(i .<= indices)
-  return getfield(x, riskfunc)[end - (indices[riskfunc] - i)]
-end
-
-
 """
 Parameter vectors for `SI_RiskFunctions`
 """
@@ -150,22 +85,92 @@ function copy(x::SI_RiskParameters)
 end
 
 
-function length(x::SI_RiskParameters)
-  return sum([length(x.sparks);
-              length(x.susceptibility);
-              length(x.transmissibility);
-              length(x.infectivity)])
+function length(x::RiskParameters)
+  params = sum([length(x.sparks);
+                length(x.susceptibility);
+                length(x.transmissibility);
+                length(x.infectivity)])
+  if typeof(x) in [SEIR_RiskParameters;
+                   SEI_RiskParameters]
+    params += length(x.latency)
+  end
+  if typeof(x) in [SEIR_RiskParameters;
+                   SIR_RiskParameters]
+    params += length(x.removal)
+  end
+  return params
 end
 
 
-function getindex(x::SI_RiskParameters,
+function getindex(x::RiskParameters,
                   i::Int64)
-  indices = cumsum([length(x.sparks);
-                    length(x.susceptibility);
-                    length(x.transmissibility);
-                    length(x.infectivity)])
+  indices = Int64[]
+  if typeof(x) == SEIR_RiskParameters
+    indices = cumsum([length(x.sparks);
+                      length(x.susceptibility);
+                      length(x.transmissibility);
+                      length(x.infectivity);
+                      length(x.latency);
+                      length(x.removal)])
+  elseif typeof(x) == SIR_RiskParameters
+    indices = cumsum([length(x.sparks);
+                      length(x.susceptibility);
+                      length(x.transmissibility);
+                      length(x.infectivity);
+                      length(x.removal)])
+  elseif typeof(x) == SEI_RiskParameters
+    indices = cumsum([length(x.sparks);
+                      length(x.susceptibility);
+                      length(x.transmissibility);
+                      length(x.infectivity);
+                      length(x.latency)])
+  elseif typeof(x) == SI_RiskParameters
+    indices = cumsum([length(x.sparks);
+                      length(x.susceptibility);
+                      length(x.transmissibility);
+                      length(x.infectivity)])
+  else
+    error("Unrecognized Risk Parameter type")
+  end
   riskfunc = findfirst(i .<= indices)
   return getfield(x, riskfunc)[end - (indices[riskfunc] - i)]
+end
+
+
+function setindex!(x::RiskParameters,
+                   z::Float64,
+                   i::Int64)
+  indices = Int64[]
+  if typeof(x) == SEIR_RiskParameters
+    indices = cumsum([length(x.sparks);
+                      length(x.susceptibility);
+                      length(x.transmissibility);
+                      length(x.infectivity);
+                      length(x.latency);
+                      length(x.removal)])
+  elseif typeof(x) == SIR_RiskParameters
+    indices = cumsum([length(x.sparks);
+                      length(x.susceptibility);
+                      length(x.transmissibility);
+                      length(x.infectivity);
+                      length(x.removal)])
+  elseif typeof(x) == SEI_RiskParameters
+    indices = cumsum([length(x.sparks);
+                      length(x.susceptibility);
+                      length(x.transmissibility);
+                      length(x.infectivity);
+                      length(x.latency)])
+  elseif typeof(x) == SI_RiskParameters
+    indices = cumsum([length(x.sparks);
+                      length(x.susceptibility);
+                      length(x.transmissibility);
+                      length(x.infectivity)])
+  else
+    error("Unrecognized Risk Parameter type")
+  end
+  riskfunc = findfirst(i .<= indices)
+  getfield(x, riskfunc)[end - (indices[riskfunc] - i)] = z
+  return x
 end
 
 

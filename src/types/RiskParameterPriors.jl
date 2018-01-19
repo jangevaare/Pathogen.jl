@@ -47,3 +47,20 @@ type SI_RiskParameterPriors <: RiskParameterPriors
   transmissibility::Vector{UnivariateDistribution}
   infectivity::Vector{UnivariateDistribution}
 end
+
+
+function length(x::RiskParameterPriors)
+  params = sum([length(x.sparks);
+                length(x.susceptibility);
+                length(x.transmissibility);
+                length(x.infectivity)])
+  if typeof(x) in [SEIR_RiskParameterPriors;
+                   SEI_RiskParameterPriors]
+    params += length(x.latency)
+  end
+  if typeof(x) in [SEIR_RiskParameterPriors;
+                   SIR_RiskParameterPriors]
+    params += length(x.removal)
+  end
+  return params
+end
