@@ -101,18 +101,23 @@ function mcmc!(pathogen_trace::PathogenTrace,
                                                    riskfuncs,
                                                    population)
         if j == m
+          # Only sample individuals which have the possibility of having an internal
+          # exoposure (assuming all have the possibility of external exposure)
+          candidates = find(sum(network_rates.internal, 1) .> 0)
+          if length(candidates) > 0
           # 95% of the time, propose a single change to tree
-          if rand() < 0.95
-            # Only sample individuals which have the possibility of having an internal
-            # exoposure (assuming all have the possibility of external exposure)
-            k = sample(find(sum(network_rates.internal, 1) .> 0))
-            network_proposal = propose(k,
-                                       network_previous,
-                                       network_rates,
-                                       conditional_network_proposals = conditional_network_proposals)
+            if rand() < 0.95
+              k = sample(candidates)
+              network_proposal = propose(k,
+                                         network_previous,
+                                         network_rates,
+                                         conditional_network_proposals = conditional_network_proposals)
+            else
+              network_proposal = propose(network_rates,
+                                         conditional_network_proposals = conditional_network_proposals)
+            end
           else
-            network_proposal = propose(network_rates,
-                                       conditional_network_proposals = conditional_network_proposals)
+            network_proposal = copy(network_previous)
           end
         else
           network_proposal = copy(network_previous)
