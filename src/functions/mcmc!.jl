@@ -131,6 +131,7 @@ function mcmc!(pathogen_trace::PathogenTrace,
             end
           else
             network_proposal = copy(network_previous)
+            llikelihood += -Inf
           end
         else
           network_proposal = copy(network_previous)
