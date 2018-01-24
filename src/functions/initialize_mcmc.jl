@@ -1,24 +1,25 @@
 """
 initialize_mcmc(event_obs::EventObservations,
+                event_extents::EventExtents,
                 seq_obs::Dict{Int64, Sequence},
-                events_proposal::Events,
                 riskparameter_priors::RiskParameterPriors,
                 riskfuncs::RiskFunctions,
                 substitutionmodel_priors::SubstitutionModelPrior,
                 population::DataFrame;
-                conditional_network_proposals=true::Bool)
+                conditional_network_proposals=true::Bool,
+                attempts=100::Int64)
 
 Initialize MCMC
 """
 function initialize_mcmc(event_obs::EventObservations,
+                         event_extents::EventExtents,
                          seq_obs::Dict{Int64, Sequence},
-                         events_proposal::Events,
                          riskparameter_priors::RiskParameterPriors,
                          riskfuncs::RiskFunctions,
                          substitutionmodel_priors::SubstitutionModelPrior,
                          population::DataFrame;
                          conditional_network_proposals=true::Bool,
-                         attempts=20::Int64)
+                         attempts=100::Int64)
   if attempts < 1
     error("Must make at least one initialization attempt")
   end
@@ -28,6 +29,7 @@ function initialize_mcmc(event_obs::EventObservations,
                                     Network[],
                                     [-Inf])
   for i = 1:attempts
+    events_proposal = initialize_events(event_obs, event_extents)
     riskparameter_proposal = propose(riskparameter_priors)
     substitutionmodel_proposal = rand(substitutionmodel_priors)
     lprior = logprior(riskparameter_priors,

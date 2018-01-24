@@ -1,11 +1,11 @@
 """
-generate_events(observations::SEIR_EventObservations,
-                event_extents::SEIR_EventExtents)
+initialize_events(observations::SEIR_EventObservations,
+                  event_extents::SEIR_EventExtents)
 
 Generate some initial `SEIR_Events` from `SEIR_EventObservations`
 """
-function generate_events(observations::SEIR_EventObservations,
-                         event_extents::SEIR_EventExtents)
+function initialize_events(observations::SEIR_EventObservations,
+                           event_extents::SEIR_EventExtents)
   removed = fill(NaN, observations.individuals)
   infected = fill(NaN, observations.individuals)
   exposed = fill(NaN, observations.individuals)
@@ -32,13 +32,13 @@ end
 
 
 """
-generate_events(observations::SIR_EventObservations,
-                event_extents::SIR_EventExtents)
+initialize_events(observations::SIR_EventObservations,
+                  event_extents::SIR_EventExtents)
 
 Generate some initial `SIR_Events` from `SIR_EventObservations`
 """
-function generate_events(observations::SIR_EventObservations,
-                         event_extents::SIR_EventExtents)
+function initialize_events(observations::SIR_EventObservations,
+                           event_extents::SIR_EventExtents)
   removed = fill(NaN, observations.individuals)
   infected = fill(NaN, observations.individuals)
   for i = 1:observations.individuals
@@ -60,12 +60,12 @@ end
 
 
 """
-generate_events(observations::SEI_EventObservations,
-                event_extents::SEI_EventExtents)
+initialize_events(observations::SEI_EventObservations,
+                  event_extents::SEI_EventExtents)
 
 Generate some initial `SEI_Events` from `SEI_EventObservations`
 """
-function generate_events(observations::SEI_EventObservations,
+function initialize_events(observations::SEI_EventObservations,
                          event_extents::SEI_EventExtents)
   infected = fill(NaN, observations.individuals)
   exposed = fill(NaN, observations.individuals)
@@ -85,13 +85,13 @@ end
 
 
 """
-generate_events(observations::SI_EventObservations,
-                infectionextent::Float64)
+initialize_events(observations::SI_EventObservations,
+                  event_extents::SI_EventExtents)
 
 Generate some initial `SI_Events` from `SI_EventObservations`
 """
-function generate_events(observations::SI_EventObservations,
-                         event_extents::SI_EventExtents)
+function initialize_events(observations::SI_EventObservations,
+                           event_extents::SI_EventExtents)
   infected = fill(NaN, observations.individuals)
   for i = 1:observations.individuals
     if !isnan(observations.infected[i])
