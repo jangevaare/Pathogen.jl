@@ -19,7 +19,7 @@ phylodynamicILM_trace = initialize_mcmc(observations,
                                         substitutionmodel_priors,
                                         population)
 
-# Transition kernels
+# Transition kernel
 transition_kernel = [0.0000025; 0.005; 0.01; 0.0025; 2.5e-8]
 
 # Set the event extents for data augmentation
@@ -37,4 +37,26 @@ mcmc!(phylodynamicILM_trace,
       riskparameter_priors,
       risk_funcs,
       substitutionmodel_priors,
+      population)
+
+# Initialize MCMC
+ILM_trace = initialize_mcmc(observations,
+                            initial_event_extents,
+                            riskparameter_priors,
+                            risk_funcs,
+                            population)
+
+# Transition kernel
+transition_kernel = transition_kernel[1:end-1]
+
+# Run MCMC
+mcmc!(ILM_trace,
+      100,
+      2,
+      transition_kernel,
+      1.0,
+      event_extents,
+      observations,
+      riskparameter_priors,
+      risk_funcs,
       population)
