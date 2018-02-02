@@ -183,7 +183,7 @@ function mcmc!(pathogen_trace::PathogenTrace,
           acceptance_rates_array[2, end] += 1
         end
       end
-      if mod(i, thin) == 0
+      if (j == o) & (mod(i, thin) == 0)
         push!(pathogen_trace, PathogenIteration(copy(riskparameters_previous),
                                                 copy(substitutionmodel_previous),
                                                 copy(events_previous),
@@ -364,7 +364,7 @@ function mcmc!(pathogen_trace::PathogenTrace,
           acceptance_rates_array[2, end] += 1
         end
       end
-      if mod(i, thin) == 0
+      if (j == o) & (mod(i, thin) == 0)
         push!(pathogen_trace, PathogenIteration(copy(riskparameters_previous),
                                                 copy(substitutionmodel_previous),
                                                 copy(events_previous),

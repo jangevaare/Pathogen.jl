@@ -160,3 +160,37 @@ end
 function copy(events::SI_Events)
   return SI_Events(copy(events.infected))
 end
+
+
+function convert(::Type{Array{Float64, 2}}, x::SEIR_Events)
+  return [x.exposed x.infected x.removed]
+end
+
+
+function convert(::Type{Array{Float64, 2}}, x::SIR_Events)
+  return [x.infected x.removed]
+end
+
+
+function convert(::Type{Array{Float64, 2}}, x::SEI_Events)
+  return [x.exposed x.infected]
+end
+
+
+function convert(::Type{Array{Float64, 2}}, x::SI_Events)
+  return [x.infected]
+end
+
+
+function convert(::Type{Vector{Float64}}, x::T) where T <: Events
+  return convert(Array{Float64, 2}, x)[:]
+end
+
+
+function convert(::Type{Array{Float64, 2}}, x::Vector{T}) where T <: Events
+  y = fill(NaN, (length(x), length(convert(Vector{Float64}, x[1]))))
+  for i = 1:length(x)
+    y[i,:] = convert(Vector{Float64}, x[i])
+  end
+  return y
+end

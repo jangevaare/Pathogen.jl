@@ -61,3 +61,6 @@ mcmc!(ILM_trace,
       riskparameter_priors,
       risk_funcs,
       population)
+
+@test mod(length(convert(Vector{Float64}, ILM_trace.events[1])), ILM_trace.events[1].individuals) == 0
+@test size(Array{Float64, 2}(ILM_trace.events), 1) == 51

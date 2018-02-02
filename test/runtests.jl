@@ -1,3 +1,4 @@
+using Base.Test
 using Pathogen
 using DataFrames
 using Distributions
