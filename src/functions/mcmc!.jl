@@ -170,19 +170,20 @@ function mcmc!(pathogen_trace::PathogenTrace,
       end
 
       if MHaccept(lposterior, lposterior_previous)
-        riskparameters_previous = riskparameter_proposal
-        substitutionmodel_previous = substitutionmodel_proposal
-        events_previous = events_proposal
-        network_previous = network_proposal
-        lposterior_previous = lposterior
+        lposterior_previous = copy(lposterior)
         if j <= (riskparameter_params + substitutionmodel_params)
           acceptance_rates_array[2, parameter_order[j]] += 1
+          riskparameters_previous = copy(riskparameter_proposal)
+          substitutionmodel_previous = copy(substitutionmodel_proposal)
         elseif j < o
           acceptance_rates_array[2, end-1] += 1
-        else
+          events_previous = copy(events_proposal)
+        elseif j == o
           acceptance_rates_array[2, end] += 1
+          network_previous = copy(network_proposal)
         end
       end
+
       if (j == o) & (mod(i, thin) == 0)
         push!(pathogen_trace, PathogenIteration(copy(riskparameters_previous),
                                                 copy(substitutionmodel_previous),
@@ -351,17 +352,17 @@ function mcmc!(pathogen_trace::PathogenTrace,
       end
 
       if MHaccept(lposterior, lposterior_previous)
-        riskparameters_previous = riskparameter_proposal
-        substitutionmodel_previous = substitutionmodel_proposal
-        events_previous = events_proposal
-        network_previous = network_proposal
-        lposterior_previous = lposterior
+        lposterior_previous = copy(lposterior)
         if j <= riskparameter_params
           acceptance_rates_array[2, parameter_order[j]] += 1
+          riskparameters_previous = copy(riskparameter_proposal)
+          substitutionmodel_previous = copy(substitutionmodel_proposal)
         elseif j < o
           acceptance_rates_array[2, end-1] += 1
-        else
+          events_previous = copy(events_proposal)
+        elseif j == o
           acceptance_rates_array[2, end] += 1
+          network_previous = copy(network_proposal)
         end
       end
       if (j == o) & (mod(i, thin) == 0)

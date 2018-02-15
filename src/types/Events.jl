@@ -182,12 +182,12 @@ function convert(::Type{Array{Float64, 2}}, x::SI_Events)
 end
 
 
-function convert(::Type{Vector{Float64}}, x::T) where T <: Events
+function convert(::Type{Array{Float64, 1}}, x::T) where T <: Events
   return convert(Array{Float64, 2}, x)[:]
 end
 
 
-function convert(::Type{Array{Float64, 2}}, x::Vector{T}) where T <: Events
+function convert(::Type{Array{Float64, 2}}, x::Array{T, 1}) where T <: Events
   y = fill(NaN, (length(x), length(convert(Vector{Float64}, x[1]))))
   for i = 1:length(x)
     y[i,:] = convert(Vector{Float64}, x[i])
