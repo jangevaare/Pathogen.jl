@@ -16,7 +16,7 @@ function initialize_rates(states::SEIR_States,
   # Exposure
   for i in find(states.susceptible)
     # External exposure
-    rates.exposure.external[i] = riskfuncs.sparks(riskparams.sparks, population, i)
+    rates.exposure.external[i] = riskfuncs.susceptibility(riskparams.susceptibility, population, i) * riskfuncs.sparks(riskparams.sparks, population, i)
 
     # Internal exposure
     @simd for k in find(states.infected)
@@ -58,7 +58,7 @@ function initialize_rates(states::SIR_States,
   # Infection
   for i in find(states.susceptible)
     # External infection
-    rates.infection.external[i] = riskfuncs.sparks(riskparams.sparks, population, i)
+    rates.infection.external[i] = riskfuncs.susceptibility(riskparams.susceptibility, population, i) * riskfuncs.sparks(riskparams.sparks, population, i)
 
     # Internal infection
     @simd for k in find(states.infected)
@@ -95,7 +95,7 @@ function initialize_rates(states::SEI_States,
   # Exposure
   for i in find(states.susceptible)
     # External exposure
-    rates.exposure.external[i] = riskfuncs.sparks(riskparams.sparks, population, i)
+    rates.exposure.external[i] = riskfuncs.susceptibility(riskparams.susceptibility, population, i) * riskfuncs.sparks(riskparams.sparks, population, i)
 
     # Internal exposure
     @simd for k in find(states.infected)
@@ -132,7 +132,7 @@ function initialize_rates(states::SI_States,
   # Infection
   for i in find(states.susceptible)
     # External infection
-    rates.infection.external[i] = riskfuncs.sparks(riskparams.sparks, population, i)
+    rates.infection.external[i] = riskfuncs.susceptibility(riskparams.susceptibility, population, i) * riskfuncs.sparks(riskparams.sparks, population, i)
 
     # Internal infection
     @simd for k in find(states.infected)
