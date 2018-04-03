@@ -177,7 +177,7 @@ function convert(::Type{Array{Float64, 2}}, x::SEI_Events)
 end
 
 
-function convert(::Type{Array{Float64, 2}}, x::SI_Events)
+function convert(::Type{Array{Float64, 1}}, x::SI_Events)
   return [x.infected]
 end
 
@@ -188,9 +188,9 @@ end
 
 
 function convert(::Type{Array{Float64, 2}}, x::Array{T, 1}) where T <: Events
-  y = fill(NaN, (length(x), length(convert(Vector{Float64}, x[1]))))
+  y = fill(NaN, (length(x), length(convert(Array{Float64, 1}, x[1]))))
   for i = 1:length(x)
-    y[i,:] = convert(Vector{Float64}, x[i])
+    y[i,:] = convert(Array{Float64, 1}, x[i])
   end
   return y
 end

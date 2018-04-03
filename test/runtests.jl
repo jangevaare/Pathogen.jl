@@ -5,6 +5,9 @@ using Distributions
 using PhyloTrees
 using PhyloModels
 
+# Set RNG seed
+srand(5432)
+
 include("population.jl")
 include("riskfunctions.jl")
 include("SEIR_simulation.jl")
