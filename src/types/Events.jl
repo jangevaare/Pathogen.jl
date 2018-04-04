@@ -178,7 +178,7 @@ end
 
 
 function convert(::Type{Array{Float64, 1}}, x::SI_Events)
-  return [x.infected]
+  return x.infected
 end
 
 
