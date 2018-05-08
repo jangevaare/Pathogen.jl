@@ -1,6 +1,6 @@
-function update!(states::States{T},
+function update!(states::Vector{DiseaseState},
                  event::Event{T}) where T <: EpidemicModel
-  next!(states[event.individual])
+  next!{T}(states[event.individual])
   return states
 end
 
@@ -31,7 +31,7 @@ function update!(events::Events{T},
 end
 
 function update!(rates::Rates{T},
-                 tr:: TransmissionRates,
+                 tr::TransmissionRates,
                  event::Event{T}
                  states::States{T},
                  pop::DataFrame,
@@ -61,7 +61,7 @@ function update!(rates::Rates{T},
   return rates
 end
 
-function update!(tr:: TransmissionRates,
+function update!(tr::TransmissionRates,
                  event::Event{T}
                  states::States{T},
                  pop::DataFrame,

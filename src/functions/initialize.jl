@@ -22,7 +22,6 @@ function initialize(::Type{TransmissionRates},
   return rates
 end
 
-
 function initialize(::Type{EventRates{T}},
                     tr::TransmissionRates,
                     states::States{T},

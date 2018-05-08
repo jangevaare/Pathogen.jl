@@ -4,19 +4,19 @@ struct Events{T} where T <: EpidemicModel
   removed::Vector{Float64}
   individuals::Int64
 
-  function Events{T}(individuals::Int64)
+  function Events{T}(individuals::Int64) where T <: EpidemicModel
     return _init_Events!(new(), individuals)
   end
 
-  function Events{T}(individuals::Int64, x::Vector{Float64}, y::Vector{Float64}, z::Vector{Float64})
+  function Events{T}(individuals::Int64, x::Vector{Float64}, y::Vector{Float64}, z::Vector{Float64}) where T <: EpidemicModel
     return _init_Events!(new(), x, y, z)
   end
 
-  function Events{T}(individuals::Int64, x::Vector{Float64}, y::Vector{Float64})
+  function Events{T}(individuals::Int64, x::Vector{Float64}, y::Vector{Float64}) where T <: EpidemicModel
     return _init_Events!(new(), x, y)
   end
 
-  function Events{T}(individuals::Int64, x::Vector{Float64})
+  function Events{T}(individuals::Int64, x::Vector{Float64}) where T <: EpidemicModel
     return _init_Events!(new(), x)
   end
 end
@@ -54,7 +54,7 @@ function _init_Events!(x::Events{SEIR},
                        infected::Vector{Float64},
                        removed::Vector{Float64})
   if length(unique([length(exposed); length(infected); length(removed)])) !== 1
-    error("Event time vectors do not match")
+    error("Event time vectors do not have matching lengths")
   end
   x.exposed = exposed
   x.infected = infected
@@ -67,7 +67,7 @@ function _init_Events!(x::Events{SEI},
                        exposed::Vector{Float64},
                        infected::Vector{Float64})
   if length(unique([length(exposed); length(infected)])) !== 1
-    error("Event time vectors do not match")
+    error("Event time vectors do not have matching lengths")
   end
   x.exposed = exposed
   x.infected = infected
@@ -79,7 +79,7 @@ function _init_Events!(x::Events{SIR},
                        infected::Vector{Float64},
                        removed::Vector{Float64})
   if length(unique([length(infected); length(removed)])) !== 1
-    error("Event time vectors do not match")
+    error("Event time vectors do not have matching lengths")
   end
   x.infected = infected
   x.removed = removed

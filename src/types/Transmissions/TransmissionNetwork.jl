@@ -20,12 +20,10 @@ type TransmissionNetwork
   end
 end
 
-
 function copy(x::TransmissionNetwork)
   return TransmissionNetwork(copy(x.external),
                              copy(x.internal))
 end
-
 
 function show(io::IO, object::TransmissionNetwork)
   print(io, "TransmissionNetwork with $(sum(object.external)) external, and $(sum(object.internal))

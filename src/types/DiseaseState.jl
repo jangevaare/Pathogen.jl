@@ -9,8 +9,8 @@ const State_E = DiseaseState(0b0010)
 const State_I = DiseaseState(0b0100)
 const State_R = DiseaseState(0b1000)
 
-_DiseaseStateVector = [State_S; State_E; State_I; State_R]
-_DiseaseStateCharVector = ['S'; 'E'; 'I'; 'R']
+const _DiseaseStateVector = [State_S; State_E; State_I; State_R]
+const _DiseaseStateCharVector = ['S'; 'E'; 'I'; 'R']
 
 # `DiseaseState` conversion to/from `Char`
 function Base.convert(::Type{Char}, x::DiseaseState)
@@ -43,22 +43,26 @@ function Base.show(io::IO, x::DiseaseState)
   return print(convert(Char, x))
 end
 
-function Base.next!{SEIR}(x::DiseaseState)
-  states = [State_S; State_E; State_I; State_R]
-  return states[findfirst(x .== states) + 1]
+const _state_progressions = Dict{DataType, Vector{DiseaseState}}()
+_state_progressions[SEIR] = [State_S; State_E; State_I; State_R]
+_state_progressions[SEI] = [State_S; State_E; State_I]
+_state_progressions[SIR] = [State_S; State_I; State_R]
+_state_progressions[SI] = [State_S; State_I]
+
+function advance(x::DiseaseState, ::Type{T}) where T <: EpidemicModel
+  current_index = findfirst(x .== _state_progressions[T])
+  return _state_progressions[T][current_index + 1]
 end
 
-function Base.next!{SIR}(x::DiseaseState)
-  states = [State_S; State_I; State_R]
-  return states[findfirst(x .== states) + 1]
+function regress(x::DiseaseState, ::Type{T}) where T <: EpidemicModel
+  current_index = findfirst(x .== _state_progressions[T])
+  return _state_progressions[T][current_index - 1]
 end
 
-function Base.next!{SEI}(x::DiseaseState)
-  states = [State_S; State_E; State_I]
-  return states[findfirst(x .== states) + 1]
+function advance!(x::DiseaseState, ::Type{T}) where T <: EpidemicModel
+  x = advance(x, T)
 end
 
-function Base.next!{SI}(x::DiseaseState)
-  states = [State_S; State_I]
-  return states[findfirst(x .== states) + 1]
+function regress!(x::DiseaseState, ::Type{T}) where T <: EpidemicModel
+  x = regress(x, T)
 end

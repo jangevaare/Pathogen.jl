@@ -10,10 +10,10 @@ struct EventRates{T <: EpidemicModel}
   end
 
   function EventRates{T}(v...)
-    if unique(length.(v)) != 1:
+    if unique(length.(v)) != 1
       error("Mismatch in length of rate vectors")
     end
-    return _init_EventRates!(new{T}(), v...)
+    return _init_EventRates!(new{T}(), v)
   end
 end
 
@@ -47,4 +47,16 @@ end
 
 function _init_EventRates!(x::EventRates{T}, individuals::Int64) where T <: EpidemicModel
   return _init_EventRates!(x, fill(0., individuals), fill(0., individuals), fill(0., individuals))
+end
+
+function Base.getindex(x::EventRates{T}, new_state::DiseaseState) where T <: EpidemicModel
+  if new_state == State_E
+    return x.exposure
+  elseif new_state == State_I
+    return x.infection
+  elseif new_state == State_R
+    return x.removal
+  else
+    error()
+  end
 end
