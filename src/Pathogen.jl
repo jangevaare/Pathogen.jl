@@ -21,7 +21,7 @@ module Pathogen
   include("types/Risks/RiskPriors.jl")
   include("types/Transmissions/Transmission.jl")
   include("types/Transmissions/TransmissionNetwork.jl")
-  include("types/Transmissions/TransmissionRate.jl")
+  include("types/Transmissions/TransmissionRates.jl")
   include("types/Simulation.jl")
 
   # Functions

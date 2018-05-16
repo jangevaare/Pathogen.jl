@@ -1,23 +1,24 @@
-struct Events{T} where T <: EpidemicModel
+struct Events{T <: EpidemicModel}
   exposed::Vector{Float64}
   infected::Vector{Float64}
   removed::Vector{Float64}
   individuals::Int64
 
   function Events{T}(individuals::Int64) where T <: EpidemicModel
-    return _init_Events!(new(), individuals)
+    return _init_Events!(new{T}(), individuals)
   end
 
-  function Events{T}(individuals::Int64, x::Vector{Float64}, y::Vector{Float64}, z::Vector{Float64}) where T <: EpidemicModel
-    return _init_Events!(new(), x, y, z)
-  end
-
-  function Events{T}(individuals::Int64, x::Vector{Float64}, y::Vector{Float64}) where T <: EpidemicModel
-    return _init_Events!(new(), x, y)
-  end
-
-  function Events{T}(individuals::Int64, x::Vector{Float64}) where T <: EpidemicModel
-    return _init_Events!(new(), x)
+  function Events{T}(v...) where T <: EpidemicModel
+    function _init_Events!(x::Events{SIR}, v)
+      if unique(length.(v)) != 1
+        error("Mismatch in length of event time vectors")
+      end
+      x.infected = v[1]
+      x.removed = v[2]
+      x.individuals = length(x.infected)
+      return x
+    end
+    return _init_Events!(new{T}(), v)
   end
 end
 
@@ -49,48 +50,43 @@ function _init_Events!(x::Events{SI}, individuals::Int64)
   return x
 end
 
-function _init_Events!(x::Events{SEIR},
-                       exposed::Vector{Float64},
-                       infected::Vector{Float64},
-                       removed::Vector{Float64})
-  if length(unique([length(exposed); length(infected); length(removed)])) !== 1
-    error("Event time vectors do not have matching lengths")
+function _init_Events!(x::Events{SEIR}, v)
+  if length(v) !=3
+    error("Incorrect number of event time vectors provided for SEIR models")
   end
-  x.exposed = exposed
-  x.infected = infected
-  x.removed = removed
-  x.individuals = length(infected)
+  x.exposed = v[1]
+  x.infected = v[2]
+  x.removed = v[3]
+  x.individuals = length(x.infected)
   return x
 end
 
-function _init_Events!(x::Events{SEI},
-                       exposed::Vector{Float64},
-                       infected::Vector{Float64})
-  if length(unique([length(exposed); length(infected)])) !== 1
-    error("Event time vectors do not have matching lengths")
+function _init_Events!(x::Events{SEI}, v)
+  if length(v) !=2
+    error("Incorrect number of event time vectors provided for SEI models")
   end
-  x.exposed = exposed
-  x.infected = infected
-  x.individuals = length(infected)
+  x.exposed = v[1]
+  x.infected = v[2]
+  x.individuals = length(x.infected)
   return x
 end
 
-function _init_Events!(x::Events{SIR},
-                       infected::Vector{Float64},
-                       removed::Vector{Float64})
-  if length(unique([length(infected); length(removed)])) !== 1
-    error("Event time vectors do not have matching lengths")
+function _init_Events!(x::Events{SIR}, v)
+  if length(v) !=2
+    error("Incorrect number of event time vectors provided for SIR models")
   end
-  x.infected = infected
-  x.removed = removed
-  x.individuals = length(infected)
+  x.infected = v[1]
+  x.removed = v[2]
+  x.individuals = length(x.infected)
   return x
 end
 
-function _init_Events!(x::Events{SI},
-                       infected::Vector{Float64})
-  x.infected = infected
-  x.individuals = length(infected)
+function _init_Events!(x::Events{SI}, v)
+  if length(v) !=1
+    error("Incorrect number of event time vectors provided for SI models")
+  end
+  x.infected = v[1]
+  x.individuals = length(x.infected)
   return x
 end
 
@@ -138,7 +134,7 @@ function copy(events::Events{SIR})
                      copy(x.removed))
 end
 
-function copy(events::SI_Events)
+function copy(events::Events{SI})
   return Events{SI}(copy(x.infected))
 end
 

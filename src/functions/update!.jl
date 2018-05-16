@@ -30,10 +30,10 @@ function update!(events::Events{T},
   return events
 end
 
-function update!(rates::Rates{T},
+function update!(rates::EventRates{T},
                  tr::TransmissionRates,
-                 event::Event{T}
-                 states::States{T},
+                 event::Event{T},
+                 states::Vector{DiseaseState},
                  pop::DataFrame,
                  rf::RiskFunctions{T},
                  rp::RiskParameters{T}) where T <: EpidemicModel
@@ -62,8 +62,8 @@ function update!(rates::Rates{T},
 end
 
 function update!(tr::TransmissionRates,
-                 event::Event{T}
-                 states::States{T},
+                 event::Event{T},
+                 states::Vector{DiseaseState},
                  pop::DataFrame,
                  rf::RiskFunctions{T},
                  rp::RiskParameters{T}) where T <: EpidemicModel

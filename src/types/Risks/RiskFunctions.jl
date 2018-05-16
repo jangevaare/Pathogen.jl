@@ -6,12 +6,15 @@ struct RiskFunctions{T <: EpidemicModel}
   latency::Function
   removal::Function
 
-  function RiskFunctions{T}(f...)
-    return _init_RiskFunctions!(new{T}(), f...)
+  function RiskFunctions{T}(f...) where T <: EpidemicModel
+    return _init_RiskFunctions!(new{T}(), f)
   end
 end
 
-function _init_RiskFunctions!(x::RiskFunctions{SEIR}, f...)
+function _init_RiskFunctions!(x::RiskFunctions{SEIR}, f)
+  if length(f) != 6
+    error("Incorrect number of risk functions for SEIR models")
+  end
   x.sparks = f[1]
   x.susceptibility = f[2]
   x.transmissibility = f[3]
@@ -21,7 +24,10 @@ function _init_RiskFunctions!(x::RiskFunctions{SEIR}, f...)
   return x
 end
 
-function _init_RiskFunctions!(x::RiskFunctions{SEI}, f...)
+function _init_RiskFunctions!(x::RiskFunctions{SEI}, f)
+  if length(f) != 5
+    error("Incorrect number of risk functions for SEI models")
+  end
   x.sparks = f[1]
   x.susceptibility = f[2]
   x.transmissibility = f[3]
@@ -30,7 +36,10 @@ function _init_RiskFunctions!(x::RiskFunctions{SEI}, f...)
   return x
 end
 
-function _init_RiskFunctions!(x::RiskFunctions{SIR}, f...)
+function _init_RiskFunctions!(x::RiskFunctions{SIR}, f)
+  if length(f) != 5
+    error("Incorrect number of risk functions for SIR models")
+  end
   x.sparks = f[1]
   x.susceptibility = f[2]
   x.transmissibility = f[3]
@@ -39,7 +48,10 @@ function _init_RiskFunctions!(x::RiskFunctions{SIR}, f...)
   return x
 end
 
-function _init_RiskFunctions!(x::RiskFunctions{SI}, f...)
+function _init_RiskFunctions!(x::RiskFunctions{SI}, f)
+  if length(f) != 6
+    error("Incorrect number of risk functions for SI models")
+  end
   x.sparks = f[1]
   x.susceptibility = f[2]
   x.transmissibility = f[3]

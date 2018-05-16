@@ -1,16 +1,7 @@
-"""
-observe(events::SEIR_Events,
-        delay_infected::UnivariateDistribution,
-        delay_removed::UnivariateDistribution,
-        force = false::Bool)
-
-Make event time observations from a simulation. Force option ensures all
-infections are observed.
-"""
-function observe(events::SEIR_Events,
+function observe(events::Events{T},
                  delay_infected::UnivariateDistribution,
                  delay_removed::UnivariateDistribution,
-                 force = false::Bool)
+                 force = false::Bool) where T <: Union{SEIR, SIR}
   infected = fill(NaN, events.individuals)
   removed = fill(NaN, events.individuals)
   if force
@@ -28,23 +19,12 @@ function observe(events::SEIR_Events,
       end
     end
   end
-  return SEIR_EventObservations(infected, removed)
+  return EventObservations{T}(infected, removed)
 end
 
-
-"""
-observe(events::SIR_Events,
-        delay_infected::UnivariateDistribution,
-        delay_removed::UnivariateDistribution,
-        force = false::Bool)
-
-Make event time observations from a simulation. Force option ensures all
-infections are observed.
-"""
-function observe(events::SIR_Events,
+function observe(events::Events{T},
                  delay_infected::UnivariateDistribution,
-                 delay_removed::UnivariateDistribution,
-                 force = false::Bool)
+                 force = false::Bool) where T <: Union{SEI, SI}
   infected = fill(NaN, events.individuals)
   removed = fill(NaN, events.individuals)
   if force
@@ -62,39 +42,5 @@ function observe(events::SIR_Events,
       end
     end
   end
-  return SIR_EventObservations(infected, removed)
-end
-
-
-"""
-observe(events::SEI_Events,
-        delay_infected::UnivariateDistribution)
-
-Make event time observations from a simulation. Force option ensures all
-infections are observed.
-"""
-function observe(events::SEI_Events,
-                 delay_infected::UnivariateDistribution)
-  infected = fill(NaN, events.individuals)
-  @simd for i in find(.!isnan.(events.infected))
-    infected[i] = events.infected[i] + rand(delay_infected)
-  end
-  return SEI_EventObservations(infected)
-end
-
-
-"""
-observe(events::SI_Events,
-        delay_infected::UnivariateDistribution)
-
-Make event time observations from a simulation. Force option ensures all
-infections are observed.
-"""
-function observe(events::SI_Events,
-                 delay_infected::UnivariateDistribution)
-  infected = fill(NaN, events.individuals)
-  @simd for i in find(.!isnan.(events.infected))
-    infected[i] = events.infected[i] + rand(delay_infected)
-  end
-  return SI_EventObservations(infected)
+  return EventObservations{T}(infected)
 end

@@ -1,4 +1,4 @@
-struct RiskParameters{T} where T <: EpidemicModel
+struct RiskParameters{T <: EpidemicModel}
   sparks::Vector{Float64}
   susceptibility::Vector{Float64}
   transmissibility::Vector{Float64}
@@ -6,12 +6,15 @@ struct RiskParameters{T} where T <: EpidemicModel
   latency::Vector{Float64}
   removal::Vector{Float64}
 
-  function RiskParameters{T}(f...)
-    return _init_RiskParameters!(new{T}(), f...)
+  function RiskParameters{T}(f...) where T <: EpidemicModel
+    return _init_RiskParameters!(new{T}(), f)
   end
 end
 
-function _init_RiskParameters!(x::RiskParameters{SEIR}, f...)
+function _init_RiskParameters!(x::RiskParameters{SEIR}, f)
+  if length(f) != 6
+    error("Incorrect number of risk parameter vectors for SEIR models")
+  end
   x.sparks = f[1]
   x.susceptibility = f[2]
   x.transmissibility = f[3]
@@ -21,7 +24,10 @@ function _init_RiskParameters!(x::RiskParameters{SEIR}, f...)
   return x
 end
 
-function _init_RiskParameters!(x::RiskParameters{SEI}, f...)
+function _init_RiskParameters!(x::RiskParameters{SEI}, f)
+  if length(f) != 5
+    error("Incorrect number of risk parameter vectors for SEI models")
+  end
   x.sparks = f[1]
   x.susceptibility = f[2]
   x.transmissibility = f[3]
@@ -30,7 +36,10 @@ function _init_RiskParameters!(x::RiskParameters{SEI}, f...)
   return x
 end
 
-function _init_RiskParameters!(x::RiskParameters{SIR}, f...)
+function _init_RiskParameters!(x::RiskParameters{SIR}, f)
+  if length(f) != 5
+    error("Incorrect number of risk parameter vectors for SIR models")
+  end
   x.sparks = f[1]
   x.susceptibility = f[2]
   x.transmissibility = f[3]
@@ -39,7 +48,10 @@ function _init_RiskParameters!(x::RiskParameters{SIR}, f...)
   return x
 end
 
-function _init_RiskParameters!(x::RiskParameters{SI}, f...)
+function _init_RiskParameters!(x::RiskParameters{SI}, f)
+  if length(f) != 4
+    error("Incorrect number of risk parameter vectors for SI models")
+  end
   x.sparks = f[1]
   x.susceptibility = f[2]
   x.transmissibility = f[3]
@@ -129,10 +141,12 @@ function Base.setindex!(x::RiskParameters{T},
   return x
 end
 
-function Base.convert(::Type{Vector}, x::RiskParameters{T}) where T <: EpidemicModel
+function Base.convert(::Type{Vector},
+                      x::RiskParameters{T}) where T <: EpidemicModel
   return [x[i] for i = 1:length(x)]
 end
 
-function Base.convert(::Type{Array{Float64}, 2}, x::Vector{RiskParameters})
+function Base.convert(::Type{Array{Float64, 2}},
+                      x::Vector{RiskParameters{T}}) where T <: EpidemicModel
   return [x[i][j] for i = 1:length(x), j = 1:length(x[1])]
 end

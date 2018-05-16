@@ -1,4 +1,4 @@
-struct RiskPriors{T} where T <: EpidemicModel
+struct RiskPriors{T <: EpidemicModel}
   sparks::Vector{UnivariateDistribution}
   susceptibility::Vector{UnivariateDistribution}
   transmissibility::Vector{UnivariateDistribution}
@@ -6,12 +6,15 @@ struct RiskPriors{T} where T <: EpidemicModel
   latency::Vector{UnivariateDistribution}
   removal::Vector{UnivariateDistribution}
 
-  function RiskPriors{T}(f...)
-    return _init_RiskPriors!(new{T}(), f...)
+  function RiskPriors{T}(f...) where T <: EpidemicModel
+    return _init_RiskPriors!(new{T}(), f)
   end
 end
 
-function _init_RiskPriors!(x::RiskPriors{SEIR}, f...)
+function _init_RiskPriors!(x::RiskPriors{SEIR}, f)
+  if length(f) != 6
+    error("Incorrect number of risk parameter priors for SEIR models")
+  end
   x.sparks = f[1]
   x.susceptibility = f[2]
   x.transmissibility = f[3]
@@ -21,7 +24,10 @@ function _init_RiskPriors!(x::RiskPriors{SEIR}, f...)
   return x
 end
 
-function _init_RiskPriors!(x::RiskPriors{SEI}, f...)
+function _init_RiskPriors!(x::RiskPriors{SEI}, f)
+  if length(f) != 5
+    error("Incorrect number of risk parameter priors for SEI models")
+  end
   x.sparks = f[1]
   x.susceptibility = f[2]
   x.transmissibility = f[3]
@@ -30,7 +36,10 @@ function _init_RiskPriors!(x::RiskPriors{SEI}, f...)
   return x
 end
 
-function _init_RiskPriors!(x::RiskPriors{SIR}, f...)
+function _init_RiskPriors!(x::RiskPriors{SIR}, f)
+  if length(f) != 5
+    error("Incorrect number of risk parameter priors for SIR models")
+  end
   x.sparks = f[1]
   x.susceptibility = f[2]
   x.transmissibility = f[3]
@@ -39,7 +48,10 @@ function _init_RiskPriors!(x::RiskPriors{SIR}, f...)
   return x
 end
 
-function _init_RiskPriors!(x::RiskPriors{SI}, f...)
+function _init_RiskPriors!(x::RiskPriors{SI}, f)
+  if length(f) != 4
+    error("Incorrect number of risk parameter priors for SI models")
+  end
   x.sparks = f[1]
   x.susceptibility = f[2]
   x.transmissibility = f[3]

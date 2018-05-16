@@ -5,11 +5,11 @@ struct EventRates{T <: EpidemicModel}
   individuals::Int64
   # TODO: add reference to `TransmissionRates`?
 
-  function EventRates{T}(individuals::Int64)
+  function EventRates{T}(individuals::Int64) where T <: EpidemicModel
     return _init_EventRates(new{T}(), individuals)
   end
 
-  function EventRates{T}(v...)
+  function EventRates{T}(v...) where T <: EpidemicModel
     if unique(length.(v)) != 1
       error("Mismatch in length of rate vectors")
     end
@@ -17,7 +17,7 @@ struct EventRates{T <: EpidemicModel}
   end
 end
 
-function _init_EventRates!(x::EventRates{SEIR}, v...)
+function _init_EventRates!(x::EventRates{SEIR}, v)
   x.exposure = v[1]
   x.infection = v[2]
   x.removal = v[3]
@@ -25,29 +25,42 @@ function _init_EventRates!(x::EventRates{SEIR}, v...)
   return x
 end
 
-function _init_EventRates!(x::EventRates{SEI}, v...)
+function _init_EventRates!(x::EventRates{SEIR}, individuals::Int64)
+  return _init_EventRates!(x, fill(0., individuals), fill(0., individuals), fill(0., individuals))
+end
+
+function _init_EventRates!(x::EventRates{SEI}, v)
   x.exposure = v[1]
   x.infection = v[2]
   x.individuals = length(x.infection)
   return x
 end
 
-function _init_EventRates!(x::EventRates{SIR}, v...)
+function _init_EventRates!(x::EventRates{SEI}, individuals::Int64)
+  return _init_EventRates!(x, fill(0., individuals), fill(0., individuals))
+end
+
+function _init_EventRates!(x::EventRates{SIR}, v)
   x.infection = v[1]
   x.removal = v[2]
   x.individuals = length(x.infection)
   return x
 end
 
-function _init_EventRates!(x::EventRates{SI}, v...)
+function _init_EventRates!(x::EventRates{SIR}, individuals::Int64)
+  return _init_EventRates!(x, fill(0., individuals), fill(0., individuals))
+end
+
+function _init_EventRates!(x::EventRates{SI}, v)
   x.infection = v[1]
   x.individuals = length(x.infection)
   return x
 end
 
-function _init_EventRates!(x::EventRates{T}, individuals::Int64) where T <: EpidemicModel
-  return _init_EventRates!(x, fill(0., individuals), fill(0., individuals), fill(0., individuals))
+function _init_EventRates!(x::EventRates{SI}, individuals::Int64)
+  return _init_EventRates!(x, fill(0., individuals))
 end
+
 
 function Base.getindex(x::EventRates{T}, new_state::DiseaseState) where T <: EpidemicModel
   if new_state == State_E

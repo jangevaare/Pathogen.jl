@@ -1,5 +1,5 @@
 function initialize(::Type{TransmissionRates},
-                    states::States{T},
+                    states::Vector{DiseaseState},
                     pop::DataFrame,
                     rf::RiskFunctions{T},
                     rp::RiskParameters{T}) where T <: EpidemicModel
@@ -15,8 +15,8 @@ function initialize(::Type{TransmissionRates},
     # Internal exposure
     @simd for k in find(states .== State_I)
       tr.internal[k, i] = rf.susceptibility(rp.susceptibility, pop, i) *
-                                            rf.transmissibility(rp.transmissibility, pop, k) *
-                                            rf.infectivity(rp.infectivity, pop, i, k)
+                          rf.transmissibility(rp.transmissibility, pop, k) *
+                          rf.infectivity(rp.infectivity, pop, i, k)
     end
   end
   return rates
@@ -24,7 +24,7 @@ end
 
 function initialize(::Type{EventRates{T}},
                     tr::TransmissionRates,
-                    states::States{T},
+                    states::Vector{DiseaseState},
                     pop::DataFrame,
                     rf::RiskFunctions{T},
                     rp::RiskParameters{T}) where T <: EpidemicModel

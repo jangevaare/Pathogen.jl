@@ -17,7 +17,8 @@ function generate(::Type{Event{T}},
     new_state = _state_progressions[T][new_state_index+1]
     # Generate event indvidual
     id = findfirst(rand(Multinomial(1, rates[new_state] ./ totals[new_state_index])))
-  return Event{T}(time, id, new_state)
+    return Event{T}(time, id, new_state)
+  end
 end
 
 function generate(::Type{Transmission}, tr::TransmissionRates, id::Int64)

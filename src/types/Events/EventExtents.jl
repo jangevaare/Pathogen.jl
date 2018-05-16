@@ -3,10 +3,12 @@ struct EventExtents{T <: EpidemicModel}
   infection::Float64
   removal::Float64
 
-  EventExtents{T}(v...) = _init_EventExtents!(new{T}(), v...)
+  function EventExtents{T}(v...) where T <: EpidemicModel
+    return _init_EventExtents!(new{T}(), v)
+  end
 end
 
-function _init_EventExtents!(x::EventExtents{SEIR}, v...)
+function _init_EventExtents!(x::EventExtents{SEIR}, v)
   if length(v) !=3
     error("Incorrect number of event extents provided for SEIR models")
   end
@@ -16,7 +18,7 @@ function _init_EventExtents!(x::EventExtents{SEIR}, v...)
   return x
 end
 
-function _init_EventExtents!(x::EventExtents{SEI}, v...)
+function _init_EventExtents!(x::EventExtents{SEI}, v)
   if length(v) !=2
     error("Incorrect number of event extents provided for SEI models")
   end
@@ -25,7 +27,7 @@ function _init_EventExtents!(x::EventExtents{SEI}, v...)
   return x
 end
 
-function _init_EventExtents!(x::EventExtents{SIR}, v...)
+function _init_EventExtents!(x::EventExtents{SIR}, v)
   if length(v) !=2
     error("Incorrect number of event extents provided for SIR models")
   end
@@ -34,7 +36,7 @@ function _init_EventExtents!(x::EventExtents{SIR}, v...)
   return x
 end
 
-function _init_EventExtents!(x::EventExtents{SI}, v...)
+function _init_EventExtents!(x::EventExtents{SI}, v)
   if length(v) !=1
     error("Incorrect number of event extents provided for SEIR models")
   end
