@@ -1,4 +1,4 @@
-struct Events{T <: EpidemicModel}
+mutable struct Events{T <: EpidemicModel}
   exposed::Vector{Float64}
   infected::Vector{Float64}
   removed::Vector{Float64}

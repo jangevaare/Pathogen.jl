@@ -1,4 +1,4 @@
-struct RiskFunctions{T <: EpidemicModel}
+mutable struct RiskFunctions{T <: EpidemicModel}
   sparks::Function
   susceptibility::Function
   transmissibility::Function

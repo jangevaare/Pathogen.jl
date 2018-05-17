@@ -1,4 +1,4 @@
-struct Simulation{T <: EpidemicModel}
+mutable struct Simulation{T <: EpidemicModel}
   iterations::Int64
   population::DataFrame
   risk_functions::RiskFunctions{T}
@@ -9,9 +9,9 @@ struct Simulation{T <: EpidemicModel}
   events::Events{T}
   transmission_network::TransmissionNetwork
 
-  function Simulation{T}(pop::DataFrame,
-                         rf::RiskFunctions{T},
-                         rp::RiskParameters{T}) where T <: EpidemicModel
+  function Simulation(pop::DataFrame,
+                      rf::RiskFunctions{T},
+                      rp::RiskParameters{T}) where T <: EpidemicModel
 
     n_ids = length(pop)
 
@@ -29,7 +29,7 @@ struct Simulation{T <: EpidemicModel}
     event.time == Inf && error("Invalid simulation initialization")
 
     # Set time to 0.
-    event.time = 0.
+    #event.time = 0.
 
     # Update `Events` and `States`
     update!(events, event)
@@ -37,7 +37,7 @@ struct Simulation{T <: EpidemicModel}
 
     # If a transmission, generate the source before an update to `TransmissionRates` occurs
     if event.new_state in [State_E; State_I]
-      xfer = generate(Transmission, tr)
+      xfer = generate(Transmission, tr, event.individual)
       update!(net, xfer)
     end
 
@@ -46,6 +46,6 @@ struct Simulation{T <: EpidemicModel}
     update!(tr, event, states, pop, rf, rp)
 
     # Return initialized simulation objects
-    return new{T}(1, pop, rf, rp, states, tr, rates, events, xfer)
+    return new{T}(1, pop, rf, rp, states, tr, rates, events, net)
   end
 end

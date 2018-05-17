@@ -1,4 +1,4 @@
-struct EventExtents{T <: EpidemicModel}
+mutable struct EventExtents{T <: EpidemicModel}
   exposure::Float64
   infection::Float64
   removal::Float64

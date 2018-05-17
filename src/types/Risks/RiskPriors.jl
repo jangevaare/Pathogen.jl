@@ -1,4 +1,4 @@
-struct RiskPriors{T <: EpidemicModel}
+mutable struct RiskPriors{T <: EpidemicModel}
   sparks::Vector{UnivariateDistribution}
   susceptibility::Vector{UnivariateDistribution}
   transmissibility::Vector{UnivariateDistribution}

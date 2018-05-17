@@ -1,4 +1,4 @@
-type TransmissionNetwork
+mutable struct TransmissionNetwork
   external::Vector{Bool}
   internal::Array{Bool, 2}
 

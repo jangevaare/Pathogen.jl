@@ -4,7 +4,7 @@ function initialize(::Type{TransmissionRates},
                     rf::RiskFunctions{T},
                     rp::RiskParameters{T}) where T <: EpidemicModel
 
-  n_ids = states.individuals
+  n_ids = length(states)
   tr = TransmissionRates(n_ids)
 
   for i in find(states .== State_S)
@@ -19,7 +19,7 @@ function initialize(::Type{TransmissionRates},
                           rf.infectivity(rp.infectivity, pop, i, k)
     end
   end
-  return rates
+  return tr
 end
 
 function initialize(::Type{EventRates{T}},
@@ -29,15 +29,15 @@ function initialize(::Type{EventRates{T}},
                     rf::RiskFunctions{T},
                     rp::RiskParameters{T}) where T <: EpidemicModel
 
-  n_ids = states.individuals
-  rates = Rates{T}(n_ids)
+  n_ids = length(states)
+  rates = EventRates{T}(n_ids)
 
-  @simd for i = 1:n_ids
+  for i = 1:n_ids
     if states[i] == State_S
       if T in [SEIR; SEI]
-        rates.exposure[i] = tr.external[i] + sum(tr.external[:,i])
+        rates.exposure[i] = tr.external[i] + sum(tr.internal[:,i])
       elseif T in [SIR; SI]
-        rates.infection[i] = tr.external[i] + sum(tr.external[:,i])
+        rates.infection[i] = tr.external[i] + sum(tr.internal[:,i])
       end
     elseif states[i] == State_E
       rates.infection[i] = rf.latency(rp.latency, pop, i)

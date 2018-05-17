@@ -1,4 +1,4 @@
-struct EventObservations{T <: EpidemicModel}
+mutable struct EventObservations{T <: EpidemicModel}
   infected::Vector{Float64}
   removed::Vector{Float64}
   individuals::Int64

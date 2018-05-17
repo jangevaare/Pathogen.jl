@@ -5,8 +5,10 @@ module Pathogen
   # Dependencies
   using DataFrames
   using Distributions
-  using RecipesBase
-  using ProgressMeter
+  # using RecipesBase
+  # using ProgressMeter
+
+  import Base.length
 
   # Types
   include("types/EpidemicModel.jl")
@@ -30,12 +32,15 @@ module Pathogen
   include("functions/observe.jl")
   include("functions/update!.jl")
 
+  # Helpers
+  include("helpers/RiskFunctions.jl")
+
   export
     SEIR, SEI, SIR, SI,
     DiseaseState, DiseaseStates,
-    # EventExtents,
-    # EventObservations,
-    RiskFunctions, RiskParameters, #RiskPriors,
-    Simulation
+    RiskFunctions, RiskParameters, RiskPriors,
+    Simulation,
+    EventExtents,
+    EventObservations
 
 end

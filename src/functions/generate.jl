@@ -7,7 +7,7 @@ function generate(::Type{Event{T}},
     time = time
     new_state = _state_progressions[T][findfirst(ctotals .== Inf) + 1]
     id = findfirst(rates[new_state] .== Inf)
-  elseif total == 0.
+  elseif ctotals[end] == 0.
     time = Inf
   else
     # Generate event time

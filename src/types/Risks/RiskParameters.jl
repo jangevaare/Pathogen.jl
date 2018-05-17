@@ -1,4 +1,4 @@
-struct RiskParameters{T <: EpidemicModel}
+mutable struct RiskParameters{T <: EpidemicModel}
   sparks::Vector{Float64}
   susceptibility::Vector{Float64}
   transmissibility::Vector{Float64}

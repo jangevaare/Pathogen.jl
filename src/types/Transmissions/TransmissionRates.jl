@@ -1,4 +1,4 @@
-struct TransmissionRates
+mutable struct TransmissionRates
   external::Array{Float64, 1}
   internal::Array{Float64, 2}
   # TODO: Add reference back to `EventRates`?
