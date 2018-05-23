@@ -8,7 +8,7 @@ module Pathogen
   # using RecipesBase
   # using ProgressMeter
 
-  import Base.length
+  import Base.length, Base.convert, Base.show, Base.copy
 
   # Types
   include("types/EpidemicModel.jl")
@@ -31,6 +31,8 @@ module Pathogen
   include("functions/generate.jl")
   include("functions/observe.jl")
   include("functions/update!.jl")
+  include("functions/next!.jl")
+  include("functions/simulate!.jl")
 
   # Helpers
   include("helpers/RiskFunctions.jl")
@@ -39,7 +41,7 @@ module Pathogen
     SEIR, SEI, SIR, SI,
     DiseaseState, DiseaseStates,
     RiskFunctions, RiskParameters, RiskPriors,
-    Simulation,
+    Simulation, next!, simulate!,
     EventExtents,
     EventObservations
 

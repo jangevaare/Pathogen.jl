@@ -49,7 +49,7 @@ function _init_RiskFunctions!(x::RiskFunctions{SIR}, f)
 end
 
 function _init_RiskFunctions!(x::RiskFunctions{SI}, f)
-  if length(f) != 6
+  if length(f) != 4
     error("Incorrect number of risk functions for SI models")
   end
   x.sparks = f[1]

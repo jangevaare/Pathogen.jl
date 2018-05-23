@@ -1,10 +1,13 @@
 abstract type Transmission end
 
-struct ExogenousTransmission
+struct ExogenousTransmission <: Transmission
   individual::Int64
 end
 
-struct EndogenousTransmission
+struct EndogenousTransmission <: Transmission
   individual::Int64
   source::Int64
+end
+
+struct NoTransmission <: Transmission
 end

@@ -1,4 +1,4 @@
-struct Event{T <: EpidemicModel}
+mutable struct Event{T <: EpidemicModel}
   time::Float64
   individual::Int64
   new_state::DiseaseState
@@ -16,4 +16,20 @@ struct Event{T <: EpidemicModel}
     new_state in _state_progressions[T] || error("Invalid disease state provided for $(T) Epidemic Models.")
     return new{T}(time, id, new_state)
   end
+end
+
+function _new_transmission(e::Event{SEIR})
+    return e.new_state == State_E
+end
+
+function _new_transmission(e::Event{SEI})
+    return e.new_state == State_E
+end
+
+function _new_transmission(e::Event{SIR})
+    return e.new_state == State_I
+end
+
+function _new_transmission(e::Event{SI})
+    return e.new_state == State_I
 end
