@@ -35,33 +35,40 @@ pop = DataFrame(x = x_coordinates,
 
   sim = Simulation(pop, rf, rp)
 
-  simulate!(sim, nmax=50)
+  simulate!(sim, tmax=100.0)
 
   @test length(sim.disease_states) == n
   @test size(sim.transmission_network.internal) == (n, n)
+
+  obs = observe(sim, Uniform(), Uniform())
+  @test length(obs.infected) == n
 end
 
 @testset "SEI Simulation" begin
   # Some commonly used functions/examples provided in helpers/RiskFunctions.jl
   # For SEIR, risk functions and parameters in order of: sparks, susceptibility, transmissibility, infectivity, latency, and removal
+
   rf = RiskFunctions{SEI}(Pathogen._constant,
-                          Pathogen._coefficient,
-                          Pathogen._powerlaw,
-                          Pathogen._one,
-                          Pathogen._constant)
+                        Pathogen._coefficient,
+                        Pathogen._powerlaw,
+                        Pathogen._one,
+                        Pathogen._constant)
 
   rp = RiskParameters{SEI}([0.001],
-                           [1.0],
-                           [2.0, 5.0],
-                           Float64[],
-                           [0.1])
+                         [1.0],
+                         [2.0, 5.0],
+                         Float64[],
+                         [0.1])
 
   sim = Simulation(pop, rf, rp)
 
-  simulate!(sim, nmax=50)
+  simulate!(sim, tmax=100.0)
 
   @test length(sim.disease_states) == n
   @test size(sim.transmission_network.internal) == (n, n)
+
+  obs = observe(sim, Uniform())
+  @test length(obs.infected) == n
 end
 
 @testset "SIR Simulation" begin
@@ -81,10 +88,13 @@ end
 
   sim = Simulation(pop, rf, rp)
 
-  simulate!(sim, nmax=50)
+  simulate!(sim, tmax=100.0)
 
   @test length(sim.disease_states) == n
   @test size(sim.transmission_network.internal) == (n, n)
+
+  obs = observe(sim, Uniform(), Uniform())
+  @test length(obs.infected) == n
 end
 
 @testset "SI Simulation" begin
@@ -102,8 +112,11 @@ end
 
   sim = Simulation(pop, rf, rp)
 
-  simulate!(sim, nmax=50, pmax=60.0)
+  simulate!(sim, tmax=100.0)
 
   @test length(sim.disease_states) == n
   @test size(sim.transmission_network.internal) == (n, n)
+
+  obs = observe(sim, Uniform())
+  @test length(obs.infected) == n
 end

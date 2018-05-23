@@ -43,6 +43,6 @@ module Pathogen
     RiskFunctions, RiskParameters, RiskPriors,
     Simulation, next!, simulate!,
     EventExtents,
-    EventObservations
+    EventObservations, observe
 
 end

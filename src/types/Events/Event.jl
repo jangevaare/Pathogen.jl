@@ -18,18 +18,10 @@ mutable struct Event{T <: EpidemicModel}
   end
 end
 
-function _new_transmission(e::Event{SEIR})
+function _new_transmission(e::Event{T}) where T <: Union{SEIR, SEI}
     return e.new_state == State_E
 end
 
-function _new_transmission(e::Event{SEI})
-    return e.new_state == State_E
-end
-
-function _new_transmission(e::Event{SIR})
-    return e.new_state == State_I
-end
-
-function _new_transmission(e::Event{SI})
+function _new_transmission(e::Event{T}) where T <: Union{SIR, SI}
     return e.new_state == State_I
 end
