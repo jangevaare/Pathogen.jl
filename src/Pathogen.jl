@@ -25,6 +25,7 @@ module Pathogen
   include("types/Transmissions/TransmissionNetwork.jl")
   include("types/Transmissions/TransmissionRates.jl")
   include("types/Simulation.jl")
+  include("types/MCMC.jl")
 
   # Functions
   include("functions/initialize.jl")
@@ -43,6 +44,7 @@ module Pathogen
     RiskFunctions, RiskParameters, RiskPriors,
     Simulation, next!, simulate!,
     EventExtents,
-    EventObservations, observe
+    EventObservations, observe,
+    MCMC
 
 end

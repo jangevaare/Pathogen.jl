@@ -16,7 +16,7 @@ pop = DataFrame(x = x_coordinates,
                 riskfactor1 = riskfactor1)
 
 
-@testset "SEIR Simulation" begin
+@testset "SEIR Models" begin
   # Some commonly used functions/examples provided in helpers/RiskFunctions.jl
   # For SEIR, risk functions and parameters in order of: sparks, susceptibility, transmissibility, infectivity, latency, and removal
   rf = RiskFunctions{SEIR}(Pathogen._constant,
@@ -26,14 +26,14 @@ pop = DataFrame(x = x_coordinates,
                            Pathogen._constant,
                            Pathogen._constant)
 
-  rp = RiskParameters{SEIR}([0.001],
+  rparams = RiskParameters{SEIR}([0.001],
                             [1.0],
                             [2.0, 5.0],
                             Float64[],
                             [0.1],
                             [0.05])
 
-  sim = Simulation(pop, rf, rp)
+  sim = Simulation(pop, rf, rparams)
 
   simulate!(sim, tmax=100.0)
 
@@ -42,6 +42,15 @@ pop = DataFrame(x = x_coordinates,
 
   obs = observe(sim, Uniform(), Uniform())
   @test length(obs.infected) == n
+
+  rpriors = RiskPriors{SEIR}([Uniform(0.0, 0.01)],
+                             [Uniform(0.0, 2.0)],
+                             [Uniform(0.0, 4.0); Uniform(1.0, 8.0)],
+                             UnivariateDistribution[],
+                             [Uniform(0.0, 1.0)],
+                             [Uniform(0.0, 1.0)])
+
+  mcmc = MCMC(obs, pop, rf, rpriors)
 end
 
 @testset "SEI Simulation" begin
@@ -54,13 +63,13 @@ end
                         Pathogen._one,
                         Pathogen._constant)
 
-  rp = RiskParameters{SEI}([0.001],
+  rparams = RiskParameters{SEI}([0.001],
                          [1.0],
                          [2.0, 5.0],
                          Float64[],
                          [0.1])
 
-  sim = Simulation(pop, rf, rp)
+  sim = Simulation(pop, rf, rparams)
 
   simulate!(sim, tmax=100.0)
 
@@ -69,6 +78,14 @@ end
 
   obs = observe(sim, Uniform())
   @test length(obs.infected) == n
+
+  rpriors = RiskPriors{SEI}([Uniform(0.0, 0.01)],
+                            [Uniform(0.0, 2.0)],
+                            [Uniform(0.0, 4.0); Uniform(1.0, 8.0)],
+                            UnivariateDistribution[],
+                            [Uniform(0.0, 1.0)])
+
+  mcmc = MCMC(obs, pop, rf, rpriors)
 end
 
 @testset "SIR Simulation" begin
@@ -80,13 +97,13 @@ end
                            Pathogen._one,
                            Pathogen._constant)
 
-  rp = RiskParameters{SIR}([0.001],
+  rparams = RiskParameters{SIR}([0.001],
                            [1.0],
                            [2.0, 5.0],
                            Float64[],
                            [0.05])
 
-  sim = Simulation(pop, rf, rp)
+  sim = Simulation(pop, rf, rparams)
 
   simulate!(sim, tmax=100.0)
 
@@ -95,6 +112,14 @@ end
 
   obs = observe(sim, Uniform(), Uniform())
   @test length(obs.infected) == n
+
+  rpriors = RiskPriors{SIR}([Uniform(0.0, 0.01)],
+                            [Uniform(0.0, 2.0)],
+                            [Uniform(0.0, 4.0); Uniform(1.0, 8.0)],
+                            UnivariateDistribution[],
+                            [Uniform(0.0, 1.0)])
+
+  mcmc = MCMC(obs, pop, rf, rpriors)
 end
 
 @testset "SI Simulation" begin
@@ -105,12 +130,12 @@ end
                          Pathogen._powerlaw,
                          Pathogen._one)
 
-  rp = RiskParameters{SI}([0.001],
+  rparams = RiskParameters{SI}([0.001],
                           [1.0],
                           [2.0, 5.0],
                           Float64[])
 
-  sim = Simulation(pop, rf, rp)
+  sim = Simulation(pop, rf, rparams)
 
   simulate!(sim, tmax=100.0)
 
@@ -119,4 +144,11 @@ end
 
   obs = observe(sim, Uniform())
   @test length(obs.infected) == n
+
+  rpriors = RiskPriors{SI}([Uniform(0.0, 0.01)],
+                             [Uniform(0.0, 2.0)],
+                             [Uniform(0.0, 4.0); Uniform(1.0, 8.0)],
+                             UnivariateDistribution[])
+
+  mcmc = MCMC(obs, pop, rf, rpriors)
 end
