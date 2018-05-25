@@ -1,155 +1,128 @@
 mutable struct Events{T <: EpidemicModel}
-  exposed::Vector{Float64}
-  infected::Vector{Float64}
-  removed::Vector{Float64}
+  exposure::Vector{Float64}
+  infection::Vector{Float64}
+  removal::Vector{Float64}
   individuals::Int64
 
-  function Events{T}(individuals::Int64) where T <: EpidemicModel
-    return _init_Events!(new{T}(), individuals)
+  function Events{T}(n::Int64) where T <: SEIR
+    x = new{T}(fill(NaN, n), fill(NaN, n), fill(NaN, n), n)
+    return x
   end
 
-  function Events{T}(v...) where T <: EpidemicModel
-    function _init_Events!(x::Events{SIR}, v)
-      if unique(length.(v)) != 1
-        error("Mismatch in length of event time vectors")
-      end
-      x.infected = v[1]
-      x.removed = v[2]
-      x.individuals = length(x.infected)
-      return x
-    end
-    return _init_Events!(new{T}(), v)
+  function Events{T}(n::Int64) where T <: SEI
+    x = new{T}()
+    x.exposure = fill(NaN, n)
+    x.infection = fill(NaN, n)
+    x.individuals = n
+    return x
+  end
+
+  function Events{T}(n::Int64) where T <: SIR
+    x = new{T}()
+    x.infection = fill(NaN, n)
+    x.removal = fill(NaN, n)
+    x.individuals = n
+    return x
+  end
+
+  function Events{T}(n::Int64) where T <: SI
+    x = new{T}()
+    x.infection = fill(NaN, n)
+    x.individuals = n
+    return x
+  end
+
+  function Events{T}(e::V, i::V, r::V) where {T <: SEIR, V <: Vector{Float64}}
+    @boundscheck unique(length.(e, i, r)) != 1 && error("Event time vectors of inequal length")
+    return new{T}(e, i, r, length(i))
+  end
+
+function Events{T}(e::V, i::V) where {T <: SEI, V <: Vector{Float64}}
+    @boundscheck unique(length.(e, i)) != 1 && error("Event time vectors of inequal length")
+    x = new{T}()
+    x.exposure = e
+    x.infection = i
+    x.individuals = length(i)
+    return x
+  end
+
+  function Events{T}(i::V, r::V) where {T <: SIR, V <: Vector{Float64}}
+    @boundscheck unique(length.(i, r)) != 1 && error("Event time vectors of inequal length")
+    x = new{T}()
+    x.infection = i
+    x.removal = r
+    x.individuals = length(i)
+    return x
+  end
+
+  function Events{T}(i::V) where {T <: SI, V <: Vector{Float64}}
+    x = new{T}()
+    x.infection = i
+    x.individuals = length(i)
+    return x
   end
 end
 
-function _init_Events!(x::Events{SEIR}, individuals::Int64)
-  x.exposed = fill(NaN, individuals)
-  x.infected = fill(NaN, individuals)
-  x.removed = fill(NaN, individuals)
-  x.individuals = individuals
-  return x
-end
-
-function _init_Events!(x::Events{SEI}, individuals::Int64)
-  x.exposed = fill(NaN, individuals)
-  x.infected = fill(NaN, individuals)
-  x.individuals = individuals
-  return x
-end
-
-function _init_Events!(x::Events{SIR}, individuals::Int64)
-  x.infected = fill(NaN, individuals)
-  x.removed = fill(NaN, individuals)
-  x.individuals = individuals
-  return x
-end
-
-function _init_Events!(x::Events{SI}, individuals::Int64)
-  x.infected = fill(NaN, individuals)
-  x.individuals = individuals
-  return x
-end
-
-function _init_Events!(x::Events{SEIR}, v)
-  if length(v) !=3
-    error("Incorrect number of event time vectors provided for SEIR models")
-  end
-  x.exposed = v[1]
-  x.infected = v[2]
-  x.removed = v[3]
-  x.individuals = length(x.infected)
-  return x
-end
-
-function _init_Events!(x::Events{SEI}, v)
-  if length(v) !=2
-    error("Incorrect number of event time vectors provided for SEI models")
-  end
-  x.exposed = v[1]
-  x.infected = v[2]
-  x.individuals = length(x.infected)
-  return x
-end
-
-function _init_Events!(x::Events{SIR}, v)
-  if length(v) !=2
-    error("Incorrect number of event time vectors provided for SIR models")
-  end
-  x.infected = v[1]
-  x.removed = v[2]
-  x.individuals = length(x.infected)
-  return x
-end
-
-function _init_Events!(x::Events{SI}, v)
-  if length(v) !=1
-    error("Incorrect number of event time vectors provided for SI models")
-  end
-  x.infected = v[1]
-  x.individuals = length(x.infected)
-  return x
-end
-
-function convert(::Type{Array{Float64, 2}}, x::Events{SEIR})
+function Base.convert(::Type{Array{Float64, 2}}, x::Events{SEIR})
   return [x.exposed x.infected x.removed]
 end
 
-function convert(::Type{Array{Float64, 2}}, x::Events{SEI})
+function Base.convert(::Type{Array{Float64, 2}}, x::Events{SEI})
   return [x.exposed x.infected]
 end
 
-function convert(::Type{Array{Float64, 2}}, x::Events{SIR})
+function Base.Base.convert(::Type{Array{Float64, 2}}, x::Events{SIR})
   return [x.infected x.removed]
 end
 
-function convert(::Type{Array{Float64, 1}}, x::Events{SI})
+function Base.convert(::Type{Array{Float64, 1}}, x::Events{SI})
   return x.infected
 end
 
-function convert(::Type{Array{Float64, 1}}, x::Events{T}) where T <: EpidemicModel
-  return convert(Array{Float64, 2}, x)[:]
+function Base.convert(::Type{Array{Float64, 1}}, x::Events{T}) where T <: EpidemicModel
+  returnBase.convert(Array{Float64, 2}, x)[:]
 end
 
-function convert(::Type{Array{Float64, 2}}, x::Array{Events{T}, 1}) where T <: EpidemicModel
+function Base.convert(::Type{Array{Float64, 2}}, x::Array{Events{T}, 1}) where T <: EpidemicModel
   y = fill(NaN, (length(x), length(convert(Array{Float64, 1}, x[1]))))
   for i = 1:length(x)
-    y[i,:] = convert(Array{Float64, 1}, x[i])
+    y[i,:] =Base.convert(Array{Float64, 1}, x[i])
   end
   return y
 end
 
-function copy(x::Events{SEIR})
+function Base.copy(x::Events{SEIR})
   return Events{SEIR}(copy(x.exposed),
-                      copy(x.infected),
-                      copy(x.removed))
+                     Base.copy(x.infected),
+                     Base.copy(x.removed))
 end
 
-function copy(events::Events{SEI})
+function Base.copy(events::Events{SEI})
   return Events{SEI}(copy(x.exposed),
-                     copy(x.infected))
+                    Base.copy(x.infected))
 end
 
-function copy(events::Events{SIR})
+function Base.copy(events::Events{SIR})
   return Events{SIR}(copy(x.infected),
-                     copy(x.removed))
+                    Base.copy(x.removed))
 end
 
-function copy(events::Events{SI})
+function Base.copy(events::Events{SI})
   return Events{SI}(copy(x.infected))
 end
 
-function show(io::IO, object::Events{SEIR})
+function Base.show(io::IO, object::Events{SEIR})
   print(io, "SEIR Events object\nExposures: $(sum(.!isnan.(object.exposed)))\nInfections: $(sum(.!isnan.(object.infected)))\nRemovals: $(sum(.!isnan.(object.removed)))")
 end
 
-function show(io::IO, object::Events{SEI})
+function Base.show(io::IO, object::Events{SEI})
   print(io, "SEI Events object\nExposures: $(sum(.!isnan.(object.exposed)))\nInfections: $(sum(.!isnan.(object.infected)))")
 end
 
-function show(io::IO, object::Events{SIR})
+function Base.show(io::IO, object::Events{SIR})
   print(io, "SIR Events object\nInfections: $(sum(.!isnan.(object.infected)))\nRemovals: $(sum(.!isnan.(object.removed)))")
 end
 
-function show(io::IO, object::Events{SI})
+function Base.show(io::IO, object::Events{SI})
   print(io, "SI Events object\nInfections: $(sum(.!isnan.(object.infected)))")
 end

@@ -42,9 +42,10 @@ module Pathogen
     SEIR, SEI, SIR, SI,
     DiseaseState, DiseaseStates,
     RiskFunctions, RiskParameters, RiskPriors,
-    Simulation, next!, simulate!,
-    EventExtents,
-    EventObservations, observe,
+    Simulation,
+    next!, simulate!,
+    EventObservations, EventExtents,
+    observe,
     MCMC
 
 end

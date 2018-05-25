@@ -1,49 +1,19 @@
 mutable struct EventObservations{T <: EpidemicModel}
-  infected::Vector{Float64}
-  removed::Vector{Float64}
+  infection::Vector{Float64}
+  removal::Vector{Float64}
   individuals::Int64
 
-  function EventObservations{T}(individuals::Int64) where T <: EpidemicModel
-    return _init_EventObservations!(new{T}(), individuals)
+  function EventObservations{T}(i, r) where T <: Union{SEIR, SIR}
+    if length(i) != length(r)
+      error("Length of infection and removal times must be equal")
+    end
+    return new{T}(i, r, length(i))
   end
 
-  function EventObservations{T}(x::Vector{Float64}, y::Vector{Float64}) where T <: Union{SEIR, SIR}
-    return _init_EventObservations!(new{T}(), x, y)
+  function EventObservations{T}(i) where T <: Union{SEI, SI}
+    x = new{T}()
+    x.infection = i
+    x.individuals = length(i)
+    return x
   end
-
-  function EventObservations{T}(x::Vector{Float64}) where T <: Union{SEI, SI}
-    return _init_EventObservations!(new{T}(), x)
-  end
-end
-
-function _init_EventObservations!(x::EventObservations{T}, individuals::Int64) where T <: Union{SEIR, SIR}
-  x.individuals = individuals
-  x.infected = fill(NaN, x.individuals)
-  x.removed = fill(NaN, x.individuals)
-  return x
-end
-
-function _init_EventObservations!(x::EventObservations{T}, individuals::Int64) where T <: Union{SEI, SI}
-  x.individuals = individuals
-  x.infected = fill(NaN, x.individuals)
-  return x
-end
-
-function _init_EventObservations!(x::EventObservations{T},
-                                  infected::Vector{Float64},
-                                  removed::Vector{Float64}) where T <: Union{SEIR, SIR}
-  if length(infected) != length(removed)
-    error("Length of infection and removal times must be equal")
-  end
-  x.individuals = length(infected)
-  x.infected = infected
-  x.removed = removed
-  return x
-end
-
-function _init_EventObservations!(x::EventObservations{T},
-                                  infected::Vector{Float64}) where T <: Union{SEI, SI}
-  x.individuals = length(infected)
-  x.infected = infected
-  return x
 end

@@ -37,3 +37,9 @@ function generate(::Type{Transmission}, tr::TransmissionRates, event::Event{T}) 
     return NoTransmission()
   end
 end
+
+function generate(::Type{Events{T}},
+                  observations::EventObservations{T},
+                  extents::EventExtents{T}) where T <: EpidemicModel
+  # TODO
+end

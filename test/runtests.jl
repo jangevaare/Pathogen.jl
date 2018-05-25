@@ -16,7 +16,7 @@ pop = DataFrame(x = x_coordinates,
                 riskfactor1 = riskfactor1)
 
 
-@testset "SEIR Models" begin
+@testset "SEIR Model" begin
   # Some commonly used functions/examples provided in helpers/RiskFunctions.jl
   # For SEIR, risk functions and parameters in order of: sparks, susceptibility, transmissibility, infectivity, latency, and removal
   rf = RiskFunctions{SEIR}(Pathogen._constant,
@@ -41,7 +41,7 @@ pop = DataFrame(x = x_coordinates,
   @test size(sim.transmission_network.internal) == (n, n)
 
   obs = observe(sim, Uniform(), Uniform())
-  @test length(obs.infected) == n
+  @test length(obs.infection) == n
 
   rpriors = RiskPriors{SEIR}([Uniform(0.0, 0.01)],
                              [Uniform(0.0, 2.0)],
@@ -50,10 +50,11 @@ pop = DataFrame(x = x_coordinates,
                              [Uniform(0.0, 1.0)],
                              [Uniform(0.0, 1.0)])
 
-  mcmc = MCMC(obs, pop, rf, rpriors)
+  ee = EventExtents{SEIR}(20.0, 2.0, 2.0)
+  mcmc = MCMC(obs, ee, pop, rf, rpriors)
 end
 
-@testset "SEI Simulation" begin
+@testset "SEI Model" begin
   # Some commonly used functions/examples provided in helpers/RiskFunctions.jl
   # For SEIR, risk functions and parameters in order of: sparks, susceptibility, transmissibility, infectivity, latency, and removal
 
@@ -77,7 +78,7 @@ end
   @test size(sim.transmission_network.internal) == (n, n)
 
   obs = observe(sim, Uniform())
-  @test length(obs.infected) == n
+  @test length(obs.infection) == n
 
   rpriors = RiskPriors{SEI}([Uniform(0.0, 0.01)],
                             [Uniform(0.0, 2.0)],
@@ -85,10 +86,11 @@ end
                             UnivariateDistribution[],
                             [Uniform(0.0, 1.0)])
 
-  mcmc = MCMC(obs, pop, rf, rpriors)
+  ee = EventExtents{SEI}(20.0, 2.0)
+  mcmc = MCMC(obs, ee, pop, rf, rpriors)
 end
 
-@testset "SIR Simulation" begin
+@testset "SIR Model" begin
   # Some commonly used functions/examples provided in helpers/RiskFunctions.jl
   # For SEIR, risk functions and parameters in order of: sparks, susceptibility, transmissibility, infectivity, latency, and removal
   rf = RiskFunctions{SIR}(Pathogen._constant,
@@ -111,7 +113,7 @@ end
   @test size(sim.transmission_network.internal) == (n, n)
 
   obs = observe(sim, Uniform(), Uniform())
-  @test length(obs.infected) == n
+  @test length(obs.infection) == n
 
   rpriors = RiskPriors{SIR}([Uniform(0.0, 0.01)],
                             [Uniform(0.0, 2.0)],
@@ -119,10 +121,11 @@ end
                             UnivariateDistribution[],
                             [Uniform(0.0, 1.0)])
 
-  mcmc = MCMC(obs, pop, rf, rpriors)
+  ee = EventExtents{SIR}(2.0, 2.0)
+  mcmc = MCMC(obs, ee, pop, rf, rpriors)
 end
 
-@testset "SI Simulation" begin
+@testset "SI Model" begin
   # Some commonly used functions/examples provided in helpers/RiskFunctions.jl
   # For SEIR, risk functions and parameters in order of: sparks, susceptibility, transmissibility, infectivity, latency, and removal
   rf = RiskFunctions{SI}(Pathogen._constant,
@@ -143,12 +146,13 @@ end
   @test size(sim.transmission_network.internal) == (n, n)
 
   obs = observe(sim, Uniform())
-  @test length(obs.infected) == n
+  @test length(obs.infection) == n
 
   rpriors = RiskPriors{SI}([Uniform(0.0, 0.01)],
                              [Uniform(0.0, 2.0)],
                              [Uniform(0.0, 4.0); Uniform(1.0, 8.0)],
                              UnivariateDistribution[])
 
-  mcmc = MCMC(obs, pop, rf, rpriors)
+  ee = EventExtents{SI}(2.0)
+  mcmc = MCMC(obs, ee, pop, rf, rpriors)
 end

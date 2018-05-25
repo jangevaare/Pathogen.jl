@@ -26,11 +26,11 @@ function update!(events::Events{T},
 
   id = event.individual
   if event.new_state == State_E
-    events.exposed[id] = event.time
+    events.exposure[id] = event.time
   elseif event.new_state == State_I
-    events.infected[id] = event.time
+    events.infection[id] = event.time
   elseif event.new_state == State_R
-    events.removed[id] = event.time
+    events.removal[id] = event.time
   end
   return events
 end

@@ -6,57 +6,42 @@ mutable struct RiskParameters{T <: EpidemicModel}
   latency::Vector{Float64}
   removal::Vector{Float64}
 
-  function RiskParameters{T}(f...) where T <: EpidemicModel
-    return _init_RiskParameters!(new{T}(), f)
+  function RiskParameters{T}(sp::V, su::V, tr::V, in::V, la::V, re::V) where
+    {T <: SEIR, V <: Vector{Float64}}
+    return new{T}(sp, su, tr, in, la, re)
   end
-end
 
-function _init_RiskParameters!(x::RiskParameters{SEIR}, f)
-  if length(f) != 6
-    error("Incorrect number of risk parameter vectors for SEIR models")
+  function RiskParameters{T}(sp::V, su::V, tr::V, in::V, la::V) where
+    {T <: SEI, V <: Vector{Float64}}
+    x = new{T}()
+    x.sparks = sp
+    x.susceptibility = su
+    x.transmissibility = tr
+    x.infectivity = in
+    x.latency = la
+    return x
   end
-  x.sparks = f[1]
-  x.susceptibility = f[2]
-  x.transmissibility = f[3]
-  x.infectivity = f[4]
-  x.latency = f[5]
-  x.removal = f[6]
-  return x
-end
 
-function _init_RiskParameters!(x::RiskParameters{SEI}, f)
-  if length(f) != 5
-    error("Incorrect number of risk parameter vectors for SEI models")
+  function RiskParameters{T}(sp::V, su::V, tr::V, in::V, re::V) where
+    {T <: SIR, V <: Vector{Float64}}
+    x = new{T}()
+    x.sparks = sp
+    x.susceptibility = su
+    x.transmissibility = tr
+    x.infectivity = in
+    x.removal = re
+    return x
   end
-  x.sparks = f[1]
-  x.susceptibility = f[2]
-  x.transmissibility = f[3]
-  x.infectivity = f[4]
-  x.latency = f[5]
-  return x
-end
 
-function _init_RiskParameters!(x::RiskParameters{SIR}, f)
-  if length(f) != 5
-    error("Incorrect number of risk parameter vectors for SIR models")
+  function RiskParameters{T}(sp::V, su::V, tr::V, in::V) where
+    {T <: SI, V <: Vector{Float64}}
+    x = new{T}()
+    x.sparks = sp
+    x.susceptibility = su
+    x.transmissibility = tr
+    x.infectivity = in
+    return x
   end
-  x.sparks = f[1]
-  x.susceptibility = f[2]
-  x.transmissibility = f[3]
-  x.infectivity = f[4]
-  x.removal = f[5]
-  return x
-end
-
-function _init_RiskParameters!(x::RiskParameters{SI}, f)
-  if length(f) != 4
-    error("Incorrect number of risk parameter vectors for SI models")
-  end
-  x.sparks = f[1]
-  x.susceptibility = f[2]
-  x.transmissibility = f[3]
-  x.infectivity = f[4]
-  return x
 end
 
 function Base.copy(x::RiskParameters{SEIR})
@@ -123,8 +108,8 @@ function Base.getindex(x::RiskParameters{T},
 end
 
 function Base.setindex!(x::RiskParameters{T},
-                   z::Float64,
-                   i::Int64) where T <: EpidemicModel
+                        z::Float64,
+                        i::Int64) where T <: EpidemicModel
   indices = [length(x.sparks)
              length(x.susceptibility)
              length(x.transmissibility)
