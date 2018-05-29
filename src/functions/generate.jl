@@ -55,8 +55,7 @@ function generate(::Type{Events},
         events.exposure[i] = rand(Uniform(e_lb, e_ub))
       end
       if removed_state && !isnan(obs.removal[i])
-        r_lb = maximum([obs.infection[i];
-                              obs.removal[i] - extents.removal])
+        r_lb = maximum([obs.infection[i]; obs.removal[i] - extents.removal])
         r_ub = obs.removal[i]
         events.removal[i] = rand(Uniform(r_lb, r_ub))
       end
@@ -67,4 +66,30 @@ end
 
 function generate(::Type{Events}, mcmc::MCMC{T}) where T <: EpidemicModel
   return generate(Events, mcmc.observations, mcmc.event_extents)
+end
+
+function generate(::Type{RiskParameters}, rpriors::RiskPriors{T}) where T <: EpidemicModel
+  sp = [rand(x) for x in rpriors.sparks]
+  su = [rand(x) for x in rpriors.susceptibility]
+  tr = [rand(x) for x in rpriors.transmissibility]
+  in = [rand(x) for x in rpriors.infectivity]
+  if T in [SEIR; SEI]
+    la = [rand(x) for x in rpriors.latency]
+  end
+  if T in [SEIR; SIR]
+    re = [rand(x) for x in rpriors.removal]
+  end
+  if T == SEIR
+    return RiskParameters{T}(sp, su, tr, in, la, re)
+  elseif T == SEI
+    return RiskParameters{T}(sp, su, tr, in, la)
+  elseif T == SIR
+    return RiskParameters{T}(sp, su, tr, in, re)
+  elseif T == SIR
+    return RiskParameters{T}(sp, su, tr, in)
+  end
+end
+
+function generate(::Type{RiskParameters}, mcmc::MCMC{T}) where T <: EpidemicModel
+  return generate(RiskParameters, mcmc.risk_priors)
 end

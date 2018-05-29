@@ -52,5 +52,6 @@ end
 
 function initialize(::Type{Trace}, mcmc::MCMC{T}) where T <: EpidemicModel
   events = generate(Events, mcmc)
+  rparams = generate(RiskParameters, mcmc)
   #TODO
 end

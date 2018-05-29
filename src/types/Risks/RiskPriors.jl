@@ -108,11 +108,11 @@ function Base.setindex!(x::RiskPriors{T},
                         i::Int64) where T <: EpidemicModel
   indices = [length(x.sparks)
              length(x.susceptibility)
-             length(x.transmissibility)
-             length(x.infectivity)]
+             length(x.transmissibility)]
   if T in [SEIR; SEI]
     push!(indices, length(x.latency))
   end
+  push!(indices, length(x.infectivity))
   if T in [SEIR; SIR]
     push!(indices, length(x.removal))
   end

@@ -1,11 +1,3 @@
-mutable struct Trace{T <: EpidemicModel}
-  iterations::Int64
-  events::Vector{Events{T}}
-  network::Vector{TransmissionNetwork}
-  risk_parameters::Vector{RiskParameters}
-  log_posterior::Vector{Float64}
-end
-
 mutable struct MCMC{T <: EpidemicModel}
   observations::EventObservations{T}
   event_extents::EventExtents{T}
