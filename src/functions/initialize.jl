@@ -50,8 +50,7 @@ function initialize(::Type{EventRates{T}},
   return rates
 end
 
-function initialize(::Type{Trace{T}},
-                    mcmc::MCMC{T}) where T <: EpidemicModel
-  events = generate(Events{T}, mcmc.event_observations, mcmc.event_extents)
+function initialize(::Type{Trace}, mcmc::MCMC{T}) where T <: EpidemicModel
+  events = generate(Events, mcmc)
   #TODO
 end

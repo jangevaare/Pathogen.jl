@@ -38,8 +38,33 @@ function generate(::Type{Transmission}, tr::TransmissionRates, event::Event{T}) 
   end
 end
 
-function generate(::Type{Events{T}},
-                  observations::EventObservations{T},
+function generate(::Type{Events},
+                  obs::EventObservations{T},
                   extents::EventExtents{T}) where T <: EpidemicModel
-  # TODO
+  events = Events{T}(obs.individuals)
+  exposed_state = T in [SEIR; SEI]
+  removed_state = T in [SEIR; SIR]
+  for i = 1:obs.individuals
+    if !isnan(obs.infection[i])
+      i_lb = obs.infection[i] - extents.infection
+      i_ub = obs.infection[i]
+      events.infection[i] = rand(Uniform(i_lb, i_ub))
+      if exposed_state
+        e_lb = events.infection[i] - extents.exposure
+        e_ub = events.infection[i]
+        events.exposure[i] = rand(Uniform(e_lb, e_ub))
+      end
+      if removed_state && !isnan(obs.removal[i])
+        r_lb = maximum([obs.infection[i];
+                              obs.removal[i] - extents.removal])
+        r_ub = obs.removal[i]
+        events.removal[i] = rand(Uniform(r_lb, r_ub))
+      end
+    end
+  end
+  return events
+end
+
+function generate(::Type{Events}, mcmc::MCMC{T}) where T <: EpidemicModel
+  return generate(Events, mcmc.observations, mcmc.event_extents)
 end

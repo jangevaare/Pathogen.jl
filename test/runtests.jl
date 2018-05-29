@@ -27,11 +27,11 @@ pop = DataFrame(x = x_coordinates,
                            Pathogen._constant)
 
   rparams = RiskParameters{SEIR}([0.001],
-                            [1.0],
-                            [2.0, 5.0],
-                            Float64[],
-                            [0.1],
-                            [0.05])
+                                 [1.0],
+                                 [2.0, 5.0],
+                                 Float64[],
+                                 [0.1],
+                                 [0.05])
 
   sim = Simulation(pop, rf, rparams)
 
@@ -65,10 +65,10 @@ end
                         Pathogen._constant)
 
   rparams = RiskParameters{SEI}([0.001],
-                         [1.0],
-                         [2.0, 5.0],
-                         Float64[],
-                         [0.1])
+                                [1.0],
+                                [2.0, 5.0],
+                                Float64[],
+                                [0.1])
 
   sim = Simulation(pop, rf, rparams)
 
@@ -100,10 +100,10 @@ end
                            Pathogen._constant)
 
   rparams = RiskParameters{SIR}([0.001],
-                           [1.0],
-                           [2.0, 5.0],
-                           Float64[],
-                           [0.05])
+                                [1.0],
+                                [2.0, 5.0],
+                                Float64[],
+                                [0.05])
 
   sim = Simulation(pop, rf, rparams)
 
@@ -134,9 +134,9 @@ end
                          Pathogen._one)
 
   rparams = RiskParameters{SI}([0.001],
-                          [1.0],
-                          [2.0, 5.0],
-                          Float64[])
+                               [1.0],
+                               [2.0, 5.0],
+                               Float64[])
 
   sim = Simulation(pop, rf, rparams)
 
@@ -149,9 +149,9 @@ end
   @test length(obs.infection) == n
 
   rpriors = RiskPriors{SI}([Uniform(0.0, 0.01)],
-                             [Uniform(0.0, 2.0)],
-                             [Uniform(0.0, 4.0); Uniform(1.0, 8.0)],
-                             UnivariateDistribution[])
+                           [Uniform(0.0, 2.0)],
+                           [Uniform(0.0, 4.0); Uniform(1.0, 8.0)],
+                           UnivariateDistribution[])
 
   ee = EventExtents{SI}(2.0)
   mcmc = MCMC(obs, ee, pop, rf, rpriors)
