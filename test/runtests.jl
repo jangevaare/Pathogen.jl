@@ -59,10 +59,10 @@ end
   # For SEIR, risk functions and parameters in order of: sparks, susceptibility, transmissibility, infectivity, latency, and removal
 
   rf = RiskFunctions{SEI}(Pathogen._constant,
-                        Pathogen._coefficient,
-                        Pathogen._powerlaw,
-                        Pathogen._one,
-                        Pathogen._constant)
+                          Pathogen._coefficient,
+                          Pathogen._powerlaw,
+                          Pathogen._one,
+                          Pathogen._constant)
 
   rparams = RiskParameters{SEI}([0.001],
                                 [1.0],
@@ -94,10 +94,10 @@ end
   # Some commonly used functions/examples provided in helpers/RiskFunctions.jl
   # For SEIR, risk functions and parameters in order of: sparks, susceptibility, transmissibility, infectivity, latency, and removal
   rf = RiskFunctions{SIR}(Pathogen._constant,
-                           Pathogen._coefficient,
-                           Pathogen._powerlaw,
-                           Pathogen._one,
-                           Pathogen._constant)
+                          Pathogen._coefficient,
+                          Pathogen._powerlaw,
+                          Pathogen._one,
+                          Pathogen._constant)
 
   rparams = RiskParameters{SIR}([0.001],
                                 [1.0],

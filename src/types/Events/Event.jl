@@ -25,3 +25,7 @@ end
 function _new_transmission(e::Event{T}) where T <: Union{SIR, SI}
     return e.new_state == State_I
 end
+
+function _time(x::Event{T}) where T <: EpidemicModel
+  return x.time
+end

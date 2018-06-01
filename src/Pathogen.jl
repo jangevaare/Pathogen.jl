@@ -35,6 +35,7 @@ module Pathogen
   include("functions/update!.jl")
   include("functions/next!.jl")
   include("functions/simulate!.jl")
+  include("functions/loglikelihood.jl")
 
   # Helpers
   include("helpers/RiskFunctions.jl")
