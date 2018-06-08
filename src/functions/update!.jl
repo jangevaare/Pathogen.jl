@@ -21,20 +21,6 @@ function update!(net::TransmissionNetwork,
   return net
 end
 
-function update!(events::Events{T},
-                 event::Event{T}) where T <: EpidemicModel
-
-  id = event.individual
-  if event.new_state == State_E
-    events.exposure[id] = event.time
-  elseif event.new_state == State_I
-    events.infection[id] = event.time
-  elseif event.new_state == State_R
-    events.removal[id] = event.time
-  end
-  return events
-end
-
 function update!(tr::TransmissionRates,
                  event::Event{T},
                  states::Vector{DiseaseState},

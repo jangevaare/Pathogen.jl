@@ -1,7 +1,7 @@
 function next!(s::Simulation{T}) where T <: EpidemicModel
   event = generate(Event{T}, s.event_rates, s.time)
   if event.time < Inf
-    update!(s.events, event)
+    push!(s.events, event)
     update!(s.disease_states, event)
     # Checks if a _new_transmission within function
     # Could make this into a single function for conveinence (also appears in Simulation.jl)
@@ -30,7 +30,7 @@ function next!(s::Simulation{T}) where T <: EpidemicModel
   end
   # Update simulation time
   s.time = event.time
-  
+
   # Return updated Simulation object
   return s
 end

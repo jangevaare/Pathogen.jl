@@ -7,7 +7,7 @@ mutable struct Simulation{T <: EpidemicModel}
   disease_states::Vector{DiseaseState}
   transmission_rates::TransmissionRates
   event_rates::EventRates{T}
-  events::Events{T}
+  events::Vector{Event{T}}
   transmission_network::TransmissionNetwork
 
   function Simulation(pop::DataFrame,
@@ -20,7 +20,7 @@ mutable struct Simulation{T <: EpidemicModel}
     states = fill(State_S, n_ids)
     tr = initialize(TransmissionRates, states, pop, rf, rp)
     rates = initialize(EventRates{T}, tr, states, pop, rf, rp)
-    events = Events{T}(n_ids)
+    events = Event{T}[]
     net = TransmissionNetwork(n_ids)
 
     # Generate initial event
@@ -30,7 +30,7 @@ mutable struct Simulation{T <: EpidemicModel}
     event.time == Inf && error("Invalid simulation initialization")
 
     # Update `Events` and `States`
-    update!(events, event)
+    push!(events, event)
     update!(states, event)
 
     # If a new transmission, generate the source before an update to `TransmissionRates` occurs

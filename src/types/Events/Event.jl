@@ -29,3 +29,11 @@ end
 function _time(x::Event{T}) where T <: EpidemicModel
   return x.time
 end
+
+function _individual(x::Event{T}) where T <: EpidemicModel
+  return x.individual
+end
+
+function _new_state(x::Event{T}) where T <: EpidemicModel
+  return x.new_state
+end
