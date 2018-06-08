@@ -9,7 +9,6 @@ function next!(s::Simulation{T}) where T <: EpidemicModel
             generate(Transmission,
                      s.transmission_rates,
                      event))
-
     # Update `EventRates` before `TransmissionRates`
     update!(s.event_rates,
             s.transmission_rates,
@@ -24,13 +23,11 @@ function next!(s::Simulation{T}) where T <: EpidemicModel
             s.population,
             s.risk_functions,
             s.risk_parameters)
-
     # Count the iteration as having occurred.
     s.iterations += 1
   end
   # Update simulation time
   s.time = event.time
-
   # Return updated Simulation object
   return s
 end

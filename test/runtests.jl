@@ -52,6 +52,7 @@ pop = DataFrame(x = x_coordinates,
 
   ee = EventExtents{SEIR}(20.0, 2.0, 2.0)
   mcmc = MCMC(obs, ee, pop, rf, rpriors)
+  start!(mcmc)
 end
 
 @testset "SEI Model" begin
@@ -88,6 +89,7 @@ end
 
   ee = EventExtents{SEI}(20.0, 2.0)
   mcmc = MCMC(obs, ee, pop, rf, rpriors)
+  start!(mcmc)
 end
 
 @testset "SIR Model" begin
@@ -123,6 +125,7 @@ end
 
   ee = EventExtents{SIR}(2.0, 2.0)
   mcmc = MCMC(obs, ee, pop, rf, rpriors)
+  start!(mcmc)
 end
 
 @testset "SI Model" begin
@@ -155,4 +158,5 @@ end
 
   ee = EventExtents{SI}(2.0)
   mcmc = MCMC(obs, ee, pop, rf, rpriors)
+  start!(mcmc)
 end

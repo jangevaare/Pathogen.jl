@@ -24,7 +24,7 @@ module Pathogen
   include("types/Transmissions/TransmissionNetwork.jl")
   include("types/Transmissions/TransmissionRates.jl")
   include("types/Simulation.jl")
-  include("types/Trace.jl")
+  include("types/MarkovChain.jl")
   include("types/MCMC.jl")
 
   # Functions
@@ -35,6 +35,8 @@ module Pathogen
   include("functions/next!.jl")
   include("functions/simulate!.jl")
   include("functions/loglikelihood.jl")
+  include("functions/logpriors.jl")
+  include("functions/start!.jl")
 
   # Helpers
   include("helpers/RiskFunctions.jl")
@@ -47,6 +49,5 @@ module Pathogen
     next!, simulate!,
     EventObservations, EventExtents,
     observe,
-    MCMC
-
+    MCMC, start!
 end

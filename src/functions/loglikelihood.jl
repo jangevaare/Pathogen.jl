@@ -13,7 +13,7 @@ function loglikelihood(rp::RiskParameters{T},
   # We can use the Simulation struct to recreate epidemic
   s = Simulation(pop, rf, rp)
 
-  for i = 1:length(eventorder)
+  for i = 1:length(event_order)
     # For convenience...
     event = events[event_order[i]]
 
@@ -32,18 +32,18 @@ function loglikelihood(rp::RiskParameters{T},
     end
 
     # Get the individual rate asociated with the event that occurred
-    event_rate = pop.event_rates[event.new_state][event.individual]
+    event_rate = s.event_rates[event.new_state][event.individual]
 
     # Add the specific event contribution to loglikelihood
     ll += log(event_rate/rate_total)
 
     # Updates
-    update!(s.events, event)
+    push!(s.events, event)
     update!(s.disease_states, event)
     update!(s.transmission_network,
             generate(Transmission,
                      s.transmission_rates,
-                     queued_event))
+                     event))
     update!(s.event_rates,
             s.transmission_rates,
             event,

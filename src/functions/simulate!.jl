@@ -12,10 +12,10 @@ function simulate!(sim::Simulation{T}; tmax::Float64=Inf, nmax::Int64=1000, pmax
   while true
     next!(sim)
     if sim.time >= tmax
-      println("Simulation completed: time maximum reached")
+      println("Simulation stopped: simulation time maximum reached")
       break
     elseif sim.iterations >= nmax
-      println("Simulation completed: iteration maximum reached")
+      println("Simulation stopped: iteration maximum reached")
       break
     elseif pmax < Inf && time() >= stoptime
       println("Simulation stopped: processing time maximum reached")

@@ -48,16 +48,19 @@ function generate(::Type{Vector{Event{T}}},
     if !isnan(obs.infection[i])
       i_lb = obs.infection[i] - extents.infection
       i_ub = obs.infection[i]
-      push!(events, Event{T}(rand(Uniform(i_lb, i_ub)), i, State_I))
+      i_time = rand(Uniform(i_lb, i_ub))
+      push!(events, Event{T}(i_time, i, State_I))
       if exposed_state
-        e_lb = events.infection[i] - extents.exposure
-        e_ub = events.infection[i]
-        push!(events, Event{T}(rand(Uniform(e_lb, e_ub)), i, State_E))
+        e_lb = i_time - extents.exposure
+        e_ub = i_time
+        e_time = rand(Uniform(e_lb, e_ub))
+        push!(events, Event{T}(e_time, i, State_E))
       end
       if removed_state && !isnan(obs.removal[i])
         r_lb = maximum([obs.infection[i]; obs.removal[i] - extents.removal])
         r_ub = obs.removal[i]
-        push!(events, Event{T}(rand(Uniform(r_lb, r_ub)), i, State_R))
+        r_time = rand(Uniform(r_lb, r_ub))
+        push!(events, Event{T}(r_time, i, State_R))
       end
     end
   end
@@ -65,28 +68,44 @@ function generate(::Type{Vector{Event{T}}},
 end
 
 function generate(::Type{Vector{Event{T}}}, mcmc::MCMC{T}) where T <: EpidemicModel
-  return generate(Events, mcmc.observations, mcmc.event_extents)
+  return generate(Vector{Event{T}}, mcmc.observations, mcmc.event_extents)
 end
 
 function generate(::Type{RiskParameters}, rpriors::RiskPriors{T}) where T <: EpidemicModel
-  sp = [rand(x) for x in rpriors.sparks]
-  su = [rand(x) for x in rpriors.susceptibility]
-  tr = [rand(x) for x in rpriors.transmissibility]
-  in = [rand(x) for x in rpriors.infectivity]
+  sparks = Float64[rand(x) for x in rpriors.sparks]
+  susceptibility = Float64[rand(x) for x in rpriors.susceptibility]
+  transmissibility = Float64[rand(x) for x in rpriors.transmissibility]
+  infectivity = Float64[rand(x) for x in rpriors.infectivity]
   if T in [SEIR; SEI]
-    la = [rand(x) for x in rpriors.latency]
+    latency = Float64[rand(x) for x in rpriors.latency]
   end
   if T in [SEIR; SIR]
-    re = [rand(x) for x in rpriors.removal]
+    removal = Float64[rand(x) for x in rpriors.removal]
   end
   if T == SEIR
-    return RiskParameters{T}(sp, su, tr, in, la, re)
+    return RiskParameters{T}(sparks,
+                             susceptibility,
+                             transmissibility,
+                             infectivity,
+                             latency,
+                             removal)
   elseif T == SEI
-    return RiskParameters{T}(sp, su, tr, in, la)
+    return RiskParameters{T}(sparks,
+                             susceptibility,
+                             transmissibility,
+                             infectivity,
+                             latency)
   elseif T == SIR
-    return RiskParameters{T}(sp, su, tr, in, re)
-  elseif T == SIR
-    return RiskParameters{T}(sp, su, tr, in)
+    return RiskParameters{T}(sparks,
+                             susceptibility,
+                             transmissibility,
+                             infectivity,
+                             removal)
+  elseif T == SI
+    return RiskParameters{T}(sparks,
+                             susceptibility,
+                             transmissibility,
+                             infectivity)
   end
 end
 
