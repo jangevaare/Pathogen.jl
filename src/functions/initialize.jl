@@ -57,7 +57,7 @@ function initialize(::Type{MarkovChain}, mcmc::MCMC{T}; attempts::Int64=1000) wh
   max_lposterior = -Inf
   markov_chain = MarkovChain{T}()
   for i in 1:attempts
-    events = generate(Vector{Event{T}}, mcmc)
+    events = generate(Events, mcmc)
     rparams = generate(RiskParameters, mcmc)
     llikelihood, network = loglikelihood(rparams, mcmc.risk_functions, events, mcmc.population)
     lpriors = logpriors(rparams, mcmc.risk_priors)

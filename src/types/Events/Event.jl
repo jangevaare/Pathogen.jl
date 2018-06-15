@@ -18,6 +18,10 @@ mutable struct Event{T <: EpidemicModel}
   end
 end
 
+function Base.copy(x::Event{T}) where T <: EpidemicModel
+  return Event{T}(copy(x.time), copy(x.id), copy(x.new_state))
+end
+
 function _new_transmission(e::Event{T}) where T <: Union{SEIR, SEI}
     return e.new_state == State_E
 end

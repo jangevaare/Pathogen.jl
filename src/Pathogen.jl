@@ -14,6 +14,7 @@ module Pathogen
   include("types/EpidemicModel.jl")
   include("types/DiseaseState.jl")
   include("types/Events/Event.jl")
+  include("types/Events/Events.jl")
   include("types/Events/EventExtents.jl")
   include("types/Events/EventObservations.jl")
   include("types/Events/EventRates.jl")
@@ -28,8 +29,8 @@ module Pathogen
   include("types/MCMC.jl")
 
   # Functions
-  include("functions/initialize.jl")
   include("functions/generate.jl")
+  include("functions/initialize.jl")
   include("functions/observe.jl")
   include("functions/update!.jl")
   include("functions/next!.jl")
@@ -44,6 +45,7 @@ module Pathogen
   export
     SEIR, SEI, SIR, SI,
     DiseaseState, DiseaseStates,
+    State_S, State_E, State_I, State_R,
     RiskFunctions, RiskParameters, RiskPriors,
     Simulation,
     next!, simulate!,

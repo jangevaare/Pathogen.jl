@@ -42,6 +42,6 @@ function Base.getindex(x::EventRates{T}, new_state::DiseaseState) where T <: Epi
   elseif new_state == State_R
     return x.removal
   else
-    error()
+    error("Unrecognized indexing disease state")
   end
 end

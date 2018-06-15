@@ -1,12 +1,12 @@
 mutable struct MarkovChain{T <: EpidemicModel}
   iterations::Int64
-  events::Vector{Vector{Event{T}}}
+  events::Vector{Events{T}}
   network::Vector{TransmissionNetwork}
   risk_parameters::Vector{RiskParameters{T}}
   log_posterior::Vector{Float64}
 
   function MarkovChain(iterations::Int64,
-                       events::Vector{Vector{Event{T}}},
+                       events::Vector{Events{T}},
                        network::Vector{TransmissionNetwork},
                        risk_parameters::Vector{RiskParameters{T}},
                        log_posterior::Vector{Float64}) where T <: EpidemicModel

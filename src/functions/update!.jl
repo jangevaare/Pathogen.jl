@@ -1,3 +1,15 @@
+function update!(events::Events{T},
+                 event::Event{T}) where T <: EpidemicModel
+  if event.new_state == State_E
+    events.exposure[event.individual] = event.time
+  elseif event.new_state == State_I
+    events.infection[event.individual] = event.time
+  elseif event.new_state == State_R
+    events.removal[event.individual] = event.time
+  end
+  return events
+end
+
 function update!(states::Vector{DiseaseState},
                  event::Event{T}) where T <: EpidemicModel
   states[event.individual] = event.new_state

@@ -1,5 +1,5 @@
 mutable struct MCMC{T <: EpidemicModel}
-  observations::EventObservations{T}
+  event_observations::EventObservations{T}
   event_extents::EventExtents{T}
   population::DataFrame
   risk_functions::RiskFunctions{T}
