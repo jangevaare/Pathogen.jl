@@ -55,7 +55,20 @@ mutable struct Events{T <: EpidemicModel}
   function Events{T}(n_ids::Int64) where T <: SI
     return Events{T}(fill(NaN, n_ids))
   end
+
+  function Events{T}(a::Array{Float64,2}) where T <: EpidemicModel
+    if size(a, 2) == 4
+      return Events{T}(a[:,1], a[:,2], a[:,3], a[:,4])
+    elseif size(a, 2) == 3
+      return Events{T}(a[:,1], a[:,2], a[:,3])
+    elseif size(a, 2) == 2
+      return Events{T}(a[:,1], a[:,2])
+    else
+      error("Invalid array size for construction of an $(Events{T}) object")
+    end
+  end
 end
+
 
 function Base.getindex(x::Events{T}, new_state::DiseaseState) where T <: EpidemicModel
   if new_state == State_E
@@ -67,4 +80,12 @@ function Base.getindex(x::Events{T}, new_state::DiseaseState) where T <: Epidemi
   else
     error("Unrecognized indexing disease state")
   end
+end
+
+function Base.getindex(x::Events{T}, new_states::Vector{DiseaseState}) where T <: EpidemicModel
+  y = x[new_states[1]]
+  for i=2:length(new_states)
+    y = hcat(y, x[new_states[i]])
+  end
+  return y
 end

@@ -52,13 +52,15 @@ pop = DataFrame(x = x_coordinates,
 
   ee = EventExtents{SEIR}(20.0, 2.0, 2.0)
   mcmc = MCMC(obs, ee, pop, rf, rpriors)
-  start!(mcmc)
+  start!(mcmc, markov_chains=3)
+  @test length(mcmc.markov_chains) == 3
+  @test all([length(mcmc.markov_chains[i].risk_parameters[1]) for i=1:3] .== length(rparams))
+  while all([mcmc.markov_chains[i].iterations for i=1:3] .< 100)
+    next!(mcmc, diagm([0.0001; 0.01; 0.01; 0.01; 0.001; 0.001]), 0.5)
+  end
 end
 
 @testset "SEI Model" begin
-  # Some commonly used functions/examples provided in helpers/RiskFunctions.jl
-  # For SEIR, risk functions and parameters in order of: sparks, susceptibility, transmissibility, infectivity, latency, and removal
-
   rf = RiskFunctions{SEI}(Pathogen._constant,
                           Pathogen._coefficient,
                           Pathogen._powerlaw,
@@ -89,12 +91,15 @@ end
 
   ee = EventExtents{SEI}(20.0, 2.0)
   mcmc = MCMC(obs, ee, pop, rf, rpriors)
-  start!(mcmc)
+  start!(mcmc, markov_chains=3)
+  @test length(mcmc.markov_chains) == 3
+  @test all([length(mcmc.markov_chains[i].risk_parameters[1]) for i=1:3] .== length(rparams))
+  while all([mcmc.markov_chains[i].iterations for i=1:3] .< 100)
+    next!(mcmc, diagm([0.0001; 0.01; 0.01; 0.01; 0.001]), 0.5)
+  end
 end
 
 @testset "SIR Model" begin
-  # Some commonly used functions/examples provided in helpers/RiskFunctions.jl
-  # For SEIR, risk functions and parameters in order of: sparks, susceptibility, transmissibility, infectivity, latency, and removal
   rf = RiskFunctions{SIR}(Pathogen._constant,
                           Pathogen._coefficient,
                           Pathogen._powerlaw,
@@ -125,12 +130,15 @@ end
 
   ee = EventExtents{SIR}(2.0, 2.0)
   mcmc = MCMC(obs, ee, pop, rf, rpriors)
-  start!(mcmc)
+  start!(mcmc, markov_chains=3)
+  @test length(mcmc.markov_chains) == 3
+  @test all([length(mcmc.markov_chains[i].risk_parameters[1]) for i=1:3] .== length(rparams))
+  while all([mcmc.markov_chains[i].iterations for i=1:3] .< 100)
+    next!(mcmc, diagm([0.0001; 0.01; 0.01; 0.01; 0.001]), 0.5)
+  end
 end
 
 @testset "SI Model" begin
-  # Some commonly used functions/examples provided in helpers/RiskFunctions.jl
-  # For SEIR, risk functions and parameters in order of: sparks, susceptibility, transmissibility, infectivity, latency, and removal
   rf = RiskFunctions{SI}(Pathogen._constant,
                          Pathogen._coefficient,
                          Pathogen._powerlaw,
@@ -158,5 +166,10 @@ end
 
   ee = EventExtents{SI}(2.0)
   mcmc = MCMC(obs, ee, pop, rf, rpriors)
-  start!(mcmc)
+  start!(mcmc, markov_chains=3)
+  @test length(mcmc.markov_chains) == 3
+  @test all([length(mcmc.markov_chains[i].risk_parameters[1]) for i=1:3] .== length(rparams))
+  while all([mcmc.markov_chains[i].iterations for i=1:3] .< 100)
+    next!(mcmc, diagm([0.0001; 0.01; 0.01; 0.01]), 0.5)
+  end
 end

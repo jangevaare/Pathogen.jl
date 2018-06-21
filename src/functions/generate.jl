@@ -78,7 +78,7 @@ function generate(::Type{Event{T}},
                   obs::EventObservations,
                   events::Events{T}) where T <: EpidemicModel
   individual = last_event.individual
-  new_state = individual.new_state
+  new_state = last_event.new_state
   if new_state == State_E
     lb = events.infection[individual] - extents.exposure
     ub = events.infection[individual]
@@ -93,9 +93,9 @@ function generate(::Type{Event{T}},
       ub = obs.infection[individual]
     end
   elseif new_state == State_R
-    lb = maximum([observation.removal[individual] - extents.removal
+    lb = maximum([obs.removal[individual] - extents.removal
                   events.infection[individual]])
-    ub = observation.removal[individual]
+    ub = obs.removal[individual]
   end
   time = rand(TruncatedNormal(last_event.time, σ, lb, ub))
   return Event{T}(time, individual, new_state)

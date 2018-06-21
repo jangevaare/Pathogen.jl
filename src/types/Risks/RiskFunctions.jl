@@ -7,12 +7,10 @@ mutable struct RiskFunctions{T <: EpidemicModel}
   removal::Function
 
   function RiskFunctions{T}(sp, su, tr, in, la, re) where {T <: SEIR}
-
     return new{T}(sp, su, tr, in, la, re)
   end
 
   function RiskFunctions{T}(sp, su, tr, in, la) where {T <: SEI}
-
     x = new{T}()
     x.sparks = sp
     x.susceptibility = su
@@ -23,7 +21,6 @@ mutable struct RiskFunctions{T <: EpidemicModel}
   end
 
   function RiskFunctions{T}(sp, su, tr, in, re) where {T <: SIR}
-
     x = new{T}()
     x.sparks = sp
     x.susceptibility = su
@@ -34,7 +31,6 @@ mutable struct RiskFunctions{T <: EpidemicModel}
   end
 
   function RiskFunctions{T}(sp, su, tr, in) where {T <: SI}
-
     x = new{T}()
     x.sparks = sp
     x.susceptibility = su

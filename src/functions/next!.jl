@@ -43,37 +43,35 @@ function next!(mc::MarkovChain{T},
                σ::Float64) where T <: EpidemicModel
   # Initialize
   new_events = mc.events[end]
+  new_events_array = new_events[_state_progressions[T][2:end]]
   new_params = mc.risk_parameters[end]
   new_network = mc.network[end]
   new_lposterior = mc.log_posterior[end]
-
-  if T == SEIR
-    new_events = [mc.events[end].exposure mc.events[end].infection mc.events[end].removal]
-  elseif T == SEI
-    new_events = [mc.events[end].exposure mc.events[end].infection]
-  elseif T == SIR
-    new_events = [mc.events[end].infection mc.events[end].removal]
-  elseif T == SI
-    new_events = [mc.events[end].infection]
-  end
   # Randomize event time augmentation
-  event_indices = find(.!isnan.(new_events))
+  event_indices = find(.!isnan.(new_events_array[:]))
   augmentation_order = sample(event_indices, length(event_indices), replace=false)
   for i = 1:(length(event_indices) + 1)
     if i <= length(event_indices)
-      id, state_index = ind2sub(size(events.times), event_order[i])
-      time = s.events.times[event_order[i]]
+      id, state_index = ind2sub((new_events.individuals, length(_state_progressions[T][2:end])),
+                                  augmentation_order[i])
       new_state = _state_progressions[T][state_index+1]
+      time = new_events[new_state][id]
       proposed_event = generate(Event{T},
                                 Event{T}(time, id, new_state),
                                 σ,
                                 mcmc.event_extents,
-                                mcmc.event_observations)
-      proposed_events = [new_events[1:(event_id-1)]; proposed_event; new_events[(event_id+1):end]]
+                                mcmc.event_observations,
+                                new_events)
+      proposed_events_array = reshape([new_events_array[1:(augmentation_order[i]-1)]
+                                       proposed_event.time
+                                       new_events_array[(augmentation_order[i]+1):end]],
+                                      size(new_events_array))
+      proposed_events = Events{T}(proposed_events_array)
       proposed_params = new_params
     else
       # Propose new risk parameters
       proposed_events = new_events
+      proposed_events_array = new_events_array
       proposed_params = generate(RiskParameters{T}, new_params, Σ)
     end
     proposed_lprior = logpriors(proposed_params, mcmc.risk_priors)
@@ -87,9 +85,12 @@ function next!(mc::MarkovChain{T},
       else
         proposed_lposterior = -Inf
       end
+    else
+      proposed_lposterior = -Inf
     end
     if _accept(proposed_lposterior, new_lposterior)
       new_events = proposed_events
+      new_events_array = proposed_events_array
       new_params = proposed_params
       new_network = proposed_network
       new_lposterior = proposed_lposterior
@@ -98,7 +99,7 @@ function next!(mc::MarkovChain{T},
   mc.iterations += 1
   push!(mc.events, new_events)
   push!(mc.network, new_network)
-  push!(mc.params, new_params)
+  push!(mc.risk_parameters, new_params)
   push!(mc.log_posterior, new_lposterior)
   return mc
 end

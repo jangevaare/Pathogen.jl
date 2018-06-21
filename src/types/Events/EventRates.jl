@@ -45,3 +45,11 @@ function Base.getindex(x::EventRates{T}, new_state::DiseaseState) where T <: Epi
     error("Unrecognized indexing disease state")
   end
 end
+
+function Base.getindex(x::EventRates{T}, new_states::Vector{DiseaseState}) where T <: EpidemicModel
+  y = x[new_states[1]]
+  for i=2:length(new_states)
+    y = hcat(y, x[new_states[i]])
+  end
+  return y
+end

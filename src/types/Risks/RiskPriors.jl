@@ -72,33 +72,31 @@ function Base.copy(x::RiskPriors{SI})
                         copy(x.infectivity))
 end
 
-function length(x::RiskPriors{T}) where T <: EpidemicModel
-  params = sum([length(x.sparks)
-                length(x.susceptibility)
-                length(x.transmissibility)
-                length(x.infectivity)])
-  if T in [SEIR; SEI]
-    params += length(x.latency)
-  end
-  if T in [SEIR; SIR]
-    params += length(x.removal)
-  end
-  return params
-end
-
-function Base.getindex(x::RiskPriors{T},
-                       i::Int64) where T <: EpidemicModel
+function _indices(x::RiskPriors{T}; zeros::Bool=true) where T <: EpidemicModel
   indices = [length(x.sparks)
              length(x.susceptibility)
              length(x.transmissibility)
              length(x.infectivity)]
   if T in [SEIR; SEI]
     push!(indices, length(x.latency))
+  elseif zeros
+    push!(indices, 0)
   end
   if T in [SEIR; SIR]
     push!(indices, length(x.removal))
+  elseif zeros
+    push!(indices, 0)
   end
-  indices = cumsum(indices)
+  return cumsum(indices)
+end
+
+function length(x::RiskPriors{T}) where T <: EpidemicModel
+  return _indices(x)[end]
+end
+
+function Base.getindex(x::RiskPriors{T},
+                       i::Int64) where T <: EpidemicModel
+  indices = _indices(x, zeros = true)
   riskfunc = findfirst(i .<= indices)
   return getfield(x, riskfunc)[end - (indices[riskfunc] - i)]
 end
@@ -106,17 +104,7 @@ end
 function Base.setindex!(x::RiskPriors{T},
                         z::UnivariateDistribution,
                         i::Int64) where T <: EpidemicModel
-  indices = [length(x.sparks)
-             length(x.susceptibility)
-             length(x.transmissibility)]
-  if T in [SEIR; SEI]
-    push!(indices, length(x.latency))
-  end
-  push!(indices, length(x.infectivity))
-  if T in [SEIR; SIR]
-    push!(indices, length(x.removal))
-  end
-  indices = cumsum(indices)
+  indices = _indices(x, zeros = true)
   riskfunc = findfirst(i .<= indices)
   getfield(x, riskfunc)[end - (indices[riskfunc] - i)] = z
   return x

@@ -76,33 +76,31 @@ function Base.copy(x::RiskParameters{SI})
                             copy(x.infectivity))
 end
 
-function length(x::RiskParameters{T}) where T <: EpidemicModel
-  params = sum([length(x.sparks)
-                length(x.susceptibility)
-                length(x.transmissibility)
-                length(x.infectivity)])
+function _indices(x::RiskParameters{T}; zeros::Bool=true) where T <: EpidemicModel
+  indices = [length(x.sparks)
+             length(x.susceptibility)
+             length(x.transmissibility)
+             length(x.infectivity)]
   if T in [SEIR; SEI]
-    params += length(x.latency)
+    push!(indices, length(x.latency))
+  elseif zeros
+    push!(indices, 0)
   end
   if T in [SEIR; SIR]
-    params += length(x.removal)
+    push!(indices, length(x.removal))
+  elseif zeros
+    push!(indices, 0)
   end
-  return params
+  return cumsum(indices)
+end
+
+function length(x::RiskParameters{T}) where T <: EpidemicModel
+  return _indices(x)[end]
 end
 
 function Base.getindex(x::RiskParameters{T},
-                      i::Int64) where T <: EpidemicModel
-  indices = [length(x.sparks)
-             length(x.susceptibility)
-             length(x.transmissibility)]
-  if T in [SEIR; SEI]
-    push!(indices, length(x.latency))
-  end
-  push!(indices, length(x.infectivity))
-  if T in [SEIR; SIR]
-    push!(indices, length(x.removal))
-  end
-  indices = cumsum(indices)
+                       i::Int64) where T <: EpidemicModel
+  indices = _indices(x, zeros = true)
   riskfunc = findfirst(i .<= indices)
   return getfield(x, riskfunc)[end - (indices[riskfunc] - i)]
 end
@@ -110,17 +108,7 @@ end
 function Base.setindex!(x::RiskParameters{T},
                         z::Float64,
                         i::Int64) where T <: EpidemicModel
-  indices = [length(x.sparks)
-             length(x.susceptibility)
-             length(x.transmissibility)
-             length(x.infectivity)]
-  if T in [SEIR; SEI]
-    push!(indices, length(x.latency))
-  end
-  if T in [SEIR; SIR]
-    push!(indices, length(x.removal))
-  end
-  indices = cumsum(indices)
+  indices = _indices(x, zeros = true)
   riskfunc = findfirst(i .<= indices)
   getfield(x, riskfunc)[end - (indices[riskfunc] - i)] = z
   return x
@@ -137,17 +125,7 @@ function Base.convert(::Type{Array{Float64, 2}},
 end
 
 function _like(x::RiskParameters{T}, v::Vector{Float64}) where T <: EpidemicModel
-  indices = [length(x.sparks)
-             length(x.susceptibility)
-             length(x.transmissibility)
-             length(x.infectivity)]
-  if T in [SEIR; SEI]
-    push!(indices, length(x.latency))
-  end
-  if T in [SEIR; SIR]
-    push!(indices, length(x.removal))
-  end
-  indices = cumsum(indices)
+  indices = _indices(x, zeros=false)
   if indices[end] != length(v)
     error("Incompatiable parameter vector")
   end
