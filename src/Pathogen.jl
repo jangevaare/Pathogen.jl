@@ -5,10 +5,10 @@ module Pathogen
   # Dependencies
   using DataFrames
   using Distributions
-  # using RecipesBase
+  using RecipesBase
   # using ProgressMeter
 
-  import Base.length, Base.convert, Base.show, Base.copy
+  import Base.length, Base.convert, Base.show, Base.copy, RecipesBase.plot
 
   # Types
   include("types/EpidemicModel.jl")
@@ -42,6 +42,14 @@ module Pathogen
   # Helpers
   include("helpers/RiskFunctions.jl")
 
+  # Visualization
+  include("visualization/_count_by_state.jl")
+  include("visualization/_ids_by_state.jl")
+  include("visualization/_epidemic_curve.jl")
+  include("visualization/_population_plot.jl")
+  include("visualization/_pathway_to.jl")
+  include("visualization/plot.jl")
+
   export
     SEIR, SEI, SIR, SI,
     DiseaseState, DiseaseStates,
@@ -51,5 +59,6 @@ module Pathogen
     next!, simulate!,
     EventObservations, EventExtents,
     observe,
-    MCMC, start!
+    MCMC, start!,
+    plot
 end

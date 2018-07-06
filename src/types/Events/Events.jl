@@ -69,7 +69,6 @@ mutable struct Events{T <: EpidemicModel}
   end
 end
 
-
 function Base.getindex(x::Events{T}, new_state::DiseaseState) where T <: EpidemicModel
   if new_state == State_E
     return x.exposure
@@ -88,4 +87,14 @@ function Base.getindex(x::Events{T}, new_states::Vector{DiseaseState}) where T <
     y = hcat(y, x[new_states[i]])
   end
   return y
+end
+
+function Base.minimum(x::Events{T}) where T <: EpidemicModel
+  y = x[_state_progressions[T][2:end]]
+  return minimum(y[.!isnan.(y)])
+end
+
+function Base.maximum(x::Events{T}) where T <: EpidemicModel
+  y=x[_state_progressions[T][2:end]]
+  return maximum(y[.!isnan.(y)])
 end
