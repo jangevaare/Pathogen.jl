@@ -37,16 +37,15 @@
 end
 
 function plot(events::Events{T}) where T <: EpidemicModel
-  return plot(events, 0.0, maximum(events))
+  return plot(events, minimum(events), maximum(events))
 end
 
 @recipe function plot(network::TransmissionNetwork, pop::DataFrame, events::Events{T},  time::Float64) where T <: EpidemicModel
   xguide --> ""
   yguide --> ""
   legend --> :topright
-  xlims --> extrema(pop[:x]) .+ (-1, 1)
-  ylims --> extrema(pop[:y]) .+ (-1, 1)
-
+  xlims --> extrema(pop[:x]) .+ (sum(extrema(pop[:x]).*(-1,1)) .* (-0.05, 0.05))
+  ylims --> extrema(pop[:y]) .+ (sum(extrema(pop[:y]).*(-1,1)) .* (-0.05, 0.05))
   ids_susceptible = _ids_by_state(events, State_S, time)
   if T ∈ [SEIR; SEI]
     ids_exposed = _ids_by_state(events, State_E, time)

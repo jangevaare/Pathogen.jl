@@ -39,9 +39,6 @@ module Pathogen
   include("functions/logpriors.jl")
   include("functions/start!.jl")
 
-  # Helpers
-  include("helpers/RiskFunctions.jl")
-
   # Visualization
   include("visualization/_count_by_state.jl")
   include("visualization/_ids_by_state.jl")

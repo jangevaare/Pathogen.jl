@@ -3,6 +3,8 @@ using Pathogen
 using DataFrames
 using Distributions
 
+include(Pkg.dir("Pathogen")*"/examples/risk_functions.jl")
+
 # Set RNG seed
 srand(5432)
 
@@ -19,12 +21,12 @@ pop = DataFrame(x = x_coordinates,
 @testset "SEIR Model" begin
   # Some commonly used functions/examples provided in helpers/RiskFunctions.jl
   # For SEIR, risk functions and parameters in order of: sparks, susceptibility, transmissibility, infectivity, latency, and removal
-  rf = RiskFunctions{SEIR}(Pathogen._constant,
-                           Pathogen._coefficient,
-                           Pathogen._powerlaw,
-                           Pathogen._one,
-                           Pathogen._constant,
-                           Pathogen._constant)
+  rf = RiskFunctions{SEIR}(_constant,
+                           _coefficient,
+                           _powerlaw,
+                           _one,
+                           _constant,
+                           _constant)
 
   rparams = RiskParameters{SEIR}([0.001],
                                  [1.0],
@@ -61,11 +63,11 @@ pop = DataFrame(x = x_coordinates,
 end
 
 @testset "SEI Model" begin
-  rf = RiskFunctions{SEI}(Pathogen._constant,
-                          Pathogen._coefficient,
-                          Pathogen._powerlaw,
-                          Pathogen._one,
-                          Pathogen._constant)
+  rf = RiskFunctions{SEI}(_constant,
+                          _coefficient,
+                          _powerlaw,
+                          _one,
+                          _constant)
 
   rparams = RiskParameters{SEI}([0.001],
                                 [1.0],
@@ -100,11 +102,11 @@ end
 end
 
 @testset "SIR Model" begin
-  rf = RiskFunctions{SIR}(Pathogen._constant,
-                          Pathogen._coefficient,
-                          Pathogen._powerlaw,
-                          Pathogen._one,
-                          Pathogen._constant)
+  rf = RiskFunctions{SIR}(_constant,
+                          _coefficient,
+                          _powerlaw,
+                          _one,
+                          _constant)
 
   rparams = RiskParameters{SIR}([0.001],
                                 [1.0],
@@ -139,10 +141,10 @@ end
 end
 
 @testset "SI Model" begin
-  rf = RiskFunctions{SI}(Pathogen._constant,
-                         Pathogen._coefficient,
-                         Pathogen._powerlaw,
-                         Pathogen._one)
+  rf = RiskFunctions{SI}(_constant,
+                         _coefficient,
+                         _powerlaw,
+                         _one)
 
   rparams = RiskParameters{SI}([0.001],
                                [1.0],
