@@ -17,7 +17,6 @@ pop = DataFrame(x = x_coordinates,
                 y = y_coordinates,
                 riskfactor1 = riskfactor1)
 
-
 @testset "SEIR Model" begin
   # Some commonly used functions/examples provided in helpers/RiskFunctions.jl
   # For SEIR, risk functions and parameters in order of: sparks, susceptibility, transmissibility, infectivity, latency, and removal
@@ -57,9 +56,8 @@ pop = DataFrame(x = x_coordinates,
   start!(mcmc, markov_chains=3)
   @test length(mcmc.markov_chains) == 3
   @test all([length(mcmc.markov_chains[i].risk_parameters[1]) for i=1:3] .== length(rparams))
-  while all([mcmc.markov_chains[i].iterations for i=1:3] .< 100)
-    next!(mcmc, diagm([0.0001; 0.01; 0.01; 0.01; 0.001; 0.001]), 0.5)
-  end
+  iterate!(mcmc, 100, diagm([0.0001; 0.01; 0.01; 0.01; 0.001; 0.001]), 0.5)
+  @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
 end
 
 @testset "SEI Model" begin
@@ -96,9 +94,8 @@ end
   start!(mcmc, markov_chains=3)
   @test length(mcmc.markov_chains) == 3
   @test all([length(mcmc.markov_chains[i].risk_parameters[1]) for i=1:3] .== length(rparams))
-  while all([mcmc.markov_chains[i].iterations for i=1:3] .< 100)
-    next!(mcmc, diagm([0.0001; 0.01; 0.01; 0.01; 0.001]), 0.5)
-  end
+  iterate!(mcmc, 100, diagm([0.0001; 0.01; 0.01; 0.01; 0.001]), 0.5)
+  @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
 end
 
 @testset "SIR Model" begin
@@ -135,9 +132,8 @@ end
   start!(mcmc, markov_chains=3)
   @test length(mcmc.markov_chains) == 3
   @test all([length(mcmc.markov_chains[i].risk_parameters[1]) for i=1:3] .== length(rparams))
-  while all([mcmc.markov_chains[i].iterations for i=1:3] .< 100)
-    next!(mcmc, diagm([0.0001; 0.01; 0.01; 0.01; 0.001]), 0.5)
-  end
+  iterate!(mcmc, 100, diagm([0.0001; 0.01; 0.01; 0.01; 0.001]), 0.5)
+  @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
 end
 
 @testset "SI Model" begin
@@ -171,7 +167,6 @@ end
   start!(mcmc, markov_chains=3)
   @test length(mcmc.markov_chains) == 3
   @test all([length(mcmc.markov_chains[i].risk_parameters[1]) for i=1:3] .== length(rparams))
-  while all([mcmc.markov_chains[i].iterations for i=1:3] .< 100)
-    next!(mcmc, diagm([0.0001; 0.01; 0.01; 0.01]), 0.5)
-  end
+  iterate!(mcmc, 100, diagm([0.0001; 0.01; 0.01; 0.01]), 0.5)
+  @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
 end

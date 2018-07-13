@@ -6,7 +6,6 @@ module Pathogen
   using DataFrames
   using Distributions
   using RecipesBase
-  # using ProgressMeter
 
   import Base.length, Base.convert, Base.show, Base.copy, RecipesBase.plot
 
@@ -38,6 +37,7 @@ module Pathogen
   include("functions/loglikelihood.jl")
   include("functions/logpriors.jl")
   include("functions/start!.jl")
+  include("functions/iterate!.jl")
 
   # Visualization
   include("visualization/_count_by_state.jl")
@@ -56,6 +56,6 @@ module Pathogen
     next!, simulate!,
     EventObservations, EventExtents,
     observe,
-    MCMC, start!,
+    MCMC, start!, iterate!,
     plot
 end
