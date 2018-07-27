@@ -149,3 +149,7 @@ function _like(x::RiskParameters{T}, v::Vector{Float64}) where T <: EpidemicMode
                              v[(indices[3]+1):(indices[4])])
   end
 end
+
+function Base.show(io::IO, x::RiskParameters{T}) where T <: EpidemicModel
+  return print(io, "$T model risk function parameters")
+end

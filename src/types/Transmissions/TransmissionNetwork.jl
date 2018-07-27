@@ -26,6 +26,5 @@ function copy(x::TransmissionNetwork)
 end
 
 function show(io::IO, object::TransmissionNetwork)
-  print(io, "TransmissionNetwork with $(sum(object.external)) external, and $(sum(object.internal))
-             internal transmission(s)")
+  return print(io, "Transmission network with $(sum(object.external)) external, and $(sum(object.internal)) internal transmission(s)")
 end

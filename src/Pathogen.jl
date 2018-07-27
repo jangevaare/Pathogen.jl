@@ -3,11 +3,11 @@ __precompile__()
 module Pathogen
 
   # Dependencies
-  using DataFrames
-  using Distributions
-  using RecipesBase
+  using DataFrames, Distributions, RecipesBase, ProgressMeter
 
-  import Base.length, Base.convert, Base.show, Base.copy, RecipesBase.plot
+  import Base.length, Base.convert, Base.show, Base.copy
+  import RecipesBase.plot
+  import ProgressMeter.next!
 
   # Types
   include("types/EpidemicModel.jl")

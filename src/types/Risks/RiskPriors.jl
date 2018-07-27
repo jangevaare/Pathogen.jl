@@ -109,3 +109,7 @@ function Base.setindex!(x::RiskPriors{T},
   getfield(x, riskfunc)[end - (indices[riskfunc] - i)] = z
   return x
 end
+
+function Base.show(io::IO, x::RiskPriors{T}) where T <: EpidemicModel
+  return print(io, "$T model risk function priors")
+end

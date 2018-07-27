@@ -2,6 +2,10 @@ function _one(params::Vector{Float64}, pop::DataFrame, i::Int64)
   return 1.0
 end
 
+function _zero(params::Vector{Float64}, pop::DataFrame, i::Int64)
+  return 0.0
+end
+
 function _constant(params::Vector{Float64}, pop::DataFrame, i::Int64)
   return params[1]
 end

@@ -1,7 +1,8 @@
 function loglikelihood(rp::RiskParameters{T},
                        rf::RiskFunctions{T},
                        events::Events{T},
-                       pop::DataFrame) where T <: EpidemicModel
+                       pop::DataFrame;
+                       debug_level::Int64=0) where T <: EpidemicModel
   # Initialize
   ll = 0.
   # update_queue = Int64[] # See TODO below
@@ -20,38 +21,44 @@ function loglikelihood(rp::RiskParameters{T},
     event = Event{T}(time, individual, new_state)
     # Get event rate totals
     rate_total = sum(sum(s.event_rates[new_state]) for state in _state_progressions[T][2:end])
+    if debug_level >= 4
+      println("loglikelihood: event rate total $i = $(round(rate_total, 3))")
+    end
     if i > 1
       # Calculate length of inter-event period (ignore for 1st event)
       ΔT = event.time - last_event.time
       # Add event occurence contribution to loglikelihood
       ll += log(rate_total) - rate_total * ΔT
       # Stop log likelihood calculation anytime the loglikelihood goes to -Inf
-      ll == -Inf && break
+      if ll == -Inf
+        if debug_level >= 2
+          println("loglikelihood: event $i resulted in a -Inf loglikelihood (transition of individual $individual at t = $(round(time, 3)) to state $new_state)")
+        end
+        break
+      end
+      # Get the individual rate associated with the event that occurred
+      event_rate = s.event_rates[event.new_state][event.individual]
+      # Add the specific event contribution to loglikelihood
+      ll += log(event_rate/rate_total)
     end
-    # Get the individual rate asociated with the event that occurred
-    event_rate = s.event_rates[event.new_state][event.individual]
-    # Add the specific event contribution to loglikelihood
-    ll += log(event_rate/rate_total)
+
     # Updates
     last_event = event
     update!(s.disease_states, event)
     update!(s.transmission_network,
             generate(Transmission,
                      s.transmission_rates,
-                     event))
-    update!(s.event_rates,
-            s.transmission_rates,
-            event,
-            s.disease_states,
-            s.population,
-            s.risk_functions,
-            s.risk_parameters)
+                     event,
+                     debug_level = debug_level))
     update!(s.transmission_rates,
+            s.event_rates,
             event,
             s.disease_states,
             s.population,
             s.risk_functions,
-            s.risk_parameters)
+            s.risk_parameters,
+            debug_level = debug_level)
+
     # TODO Consider using a queue to eliminate sensitivity to simulataneous events
     # Add to queue
     # push!(update_queue, i)

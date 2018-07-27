@@ -1,9 +1,9 @@
 using Base.Test
+addprocs(3)
 using Pathogen
-using DataFrames
-using Distributions
 
-include(Pkg.dir("Pathogen")*"/examples/risk_functions.jl")
+@everywhere using DataFrames, Distributions
+@everywhere include(Pkg.dir("Pathogen")*"/examples/risk_functions.jl")
 
 # Set RNG seed
 srand(5432)
@@ -53,7 +53,7 @@ pop = DataFrame(x = x_coordinates,
 
   ee = EventExtents{SEIR}(20.0, 2.0, 2.0)
   mcmc = MCMC(obs, ee, pop, rf, rpriors)
-  start!(mcmc, markov_chains=3)
+  start!(mcmc, 3)
   @test length(mcmc.markov_chains) == 3
   @test all([length(mcmc.markov_chains[i].risk_parameters[1]) for i=1:3] .== length(rparams))
   iterate!(mcmc, 100, diagm([0.0001; 0.01; 0.01; 0.01; 0.001; 0.001]), 0.5)
@@ -91,7 +91,7 @@ end
 
   ee = EventExtents{SEI}(20.0, 2.0)
   mcmc = MCMC(obs, ee, pop, rf, rpriors)
-  start!(mcmc, markov_chains=3)
+  start!(mcmc, 3)
   @test length(mcmc.markov_chains) == 3
   @test all([length(mcmc.markov_chains[i].risk_parameters[1]) for i=1:3] .== length(rparams))
   iterate!(mcmc, 100, diagm([0.0001; 0.01; 0.01; 0.01; 0.001]), 0.5)
@@ -129,7 +129,7 @@ end
 
   ee = EventExtents{SIR}(2.0, 2.0)
   mcmc = MCMC(obs, ee, pop, rf, rpriors)
-  start!(mcmc, markov_chains=3)
+  start!(mcmc, 3)
   @test length(mcmc.markov_chains) == 3
   @test all([length(mcmc.markov_chains[i].risk_parameters[1]) for i=1:3] .== length(rparams))
   iterate!(mcmc, 100, diagm([0.0001; 0.01; 0.01; 0.01; 0.001]), 0.5)
@@ -164,7 +164,7 @@ end
 
   ee = EventExtents{SI}(2.0)
   mcmc = MCMC(obs, ee, pop, rf, rpriors)
-  start!(mcmc, markov_chains=3)
+  start!(mcmc, 3)
   @test length(mcmc.markov_chains) == 3
   @test all([length(mcmc.markov_chains[i].risk_parameters[1]) for i=1:3] .== length(rparams))
   iterate!(mcmc, 100, diagm([0.0001; 0.01; 0.01; 0.01]), 0.5)

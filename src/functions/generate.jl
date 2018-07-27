@@ -23,24 +23,42 @@ function generate(::Type{Event{T}},
   end
 end
 
-function generate(::Type{Transmission}, tr::TransmissionRates, event::Event{T}) where T <: EpidemicModel
+function generate(::Type{Transmission},
+                  tr::TransmissionRates,
+                  event::Event{T};
+                  debug_level::Int64=0) where T <: EpidemicModel
   id = event.individual
   if _new_transmission(event)
     external_or_internal = [tr.external[id]; sum(tr.internal[:,id])]
-    if rand() <= external_or_internal[1]/sum(external_or_internal)
+    if !any(external_or_internal .> 0.0)
+      if debug_level >= 4
+        println("generate: all transmission rates = 0.0, exogenous tranmission generated")
+      end
+      return ExogenousTransmission(id)
+    elseif rand() <= external_or_internal[1]/sum(external_or_internal)
+      if debug_level >= 4
+        println("generate: exogenous tranmission generated")
+      end
       return ExogenousTransmission(id)
     else
       source = findfirst(rand(Multinomial(1, tr.internal[:,id] ./ external_or_internal[2])))
+      if debug_level >= 4
+        println("generate: endogenous tranmission generated (source id = $source)")
+      end
       return EndogenousTransmission(id, source)
     end
   else
+    if debug_level >= 4
+      println("generate: no tranmission generated")
+    end
     return NoTransmission()
   end
 end
 
 function generate(::Type{Events{T}},
                   obs::EventObservations{T},
-                  extents::EventExtents{T}) where T <: EpidemicModel
+                  extents::EventExtents{T};
+                  debug_level::Int64=0) where T <: EpidemicModel
   events = Events{T}(obs.individuals)
   exposed_state = T in [SEIR; SEI]
   removed_state = T in [SEIR; SIR]
@@ -67,8 +85,8 @@ function generate(::Type{Events{T}},
   return events
 end
 
-function generate(::Type{Events}, mcmc::MCMC{T}) where T <: EpidemicModel
-  return generate(Events{T}, mcmc.event_observations, mcmc.event_extents)
+function generate(::Type{Events}, mcmc::MCMC{T}; debug_level::Int64=0) where T <: EpidemicModel
+  return generate(Events{T}, mcmc.event_observations, mcmc.event_extents, debug_level=debug_level)
 end
 
 function generate(::Type{Event{T}},

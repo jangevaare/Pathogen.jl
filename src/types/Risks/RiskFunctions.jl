@@ -39,3 +39,7 @@ mutable struct RiskFunctions{T <: EpidemicModel}
     return x
   end
 end
+
+function Base.show(io::IO, x::RiskFunctions{T}) where T <: EpidemicModel
+  return print(io, "$T model risk functions")
+end

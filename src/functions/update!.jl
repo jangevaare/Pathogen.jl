@@ -1,12 +1,6 @@
 function update!(events::Events{T},
                  event::Event{T}) where T <: EpidemicModel
-  if event.new_state == State_E
-    events.exposure[event.individual] = event.time
-  elseif event.new_state == State_I
-    events.infection[event.individual] = event.time
-  elseif event.new_state == State_R
-    events.removal[event.individual] = event.time
-  end
+  events[event.new_state][event.individual] = event.time
   return events
 end
 
@@ -38,8 +32,8 @@ function update!(tr::TransmissionRates,
                  states::Vector{DiseaseState},
                  pop::DataFrame,
                  rf::RiskFunctions{T},
-                 rp::RiskParameters{T}) where T <: EpidemicModel
-
+                 rp::RiskParameters{T};
+                 debug_level::Int64=0) where T <: EpidemicModel
   id = event.individual
   if _new_transmission(event)
     tr.external[id] = 0.
@@ -61,36 +55,78 @@ function update!(rates::EventRates{T},
                  states::Vector{DiseaseState},
                  pop::DataFrame,
                  rf::RiskFunctions{T},
-                 rp::RiskParameters{T}) where T <: EpidemicModel
+                 rp::RiskParameters{T};
+                 debug_level::Int64=0) where T <: EpidemicModel
   id = event.individual
   if event.new_state == State_E
     rates.exposure[id] = 0.
     rates.infection[id] = rf.latency(rp.latency, pop, id)
+    if debug_level >= 5
+      println("update!: exposure and infection rates for id = $id are now $(round(rates.exposure[id],3)), and $(round(rates.infection[id],3)) respectively")
+    end
   elseif event.new_state == State_I
     rates.infection[id] = 0.
+    if debug_level >= 5
+      println("update!: infection rate for id = $id is now $(round(rates.infection[id],3))")
+    end
     if T in [SEIR; SIR]
       rates.removal[id] = rf.removal(rp.removal, pop, id)
+      if debug_level >= 5
+        println("update!: removal rate for id = $id is now $(round(rates.removal[id],3))")
+      end
     end
     if T in [SEIR; SEI]
       @simd for i in find(states .== State_S)
+        # This assumes `TransmissionRates` already updated!
         rates.exposure[i] += tr.internal[id, i]
+        if debug_level >= 5
+          println("update!: overall exposure rate for id = $i is now $(round(rates.exposure[i], 3))")
+        end
       end
     elseif T in [SIR; SI]
       @simd for i in find(states .== State_S)
+        # This assumes `TransmissionRates` already updated!
         rates.infection[i] += tr.internal[id, i]
+        if debug_level >= 5
+          println("update!: overall infection rate for id = $i is now $(round(rates.infection[i], 3))")
+        end
       end
     end
   elseif event.new_state == State_R
     rates.removal[id] = 0.
-    if T in [SEIR; SEI]
+    if debug_level >= 5
+      println("update!: removal rate for id = $id is now $(round(rates.removal[id],3))")
+    end
+    if T == SEIR
       @simd for i in find(states .== State_S)
+        # This assumes `TransmissionRates` already updated!
         rates.exposure[i] = sum(tr.internal[:, i])
+        if debug_level >= 5
+          println("update!: overall exposure rate for id = $i is now $(round(rates.exposure[i], 3))")
+        end
       end
-    elseif T in [SIR; SI]
+    elseif T == SIR
       @simd for i in find(states .== State_S)
+        # This assumes `TransmissionRates` already updated!
         rates.infection[i] = sum(tr.internal[:, i])
+        if debug_level >= 5
+          println("update!: overall infection rate for id = $i is now $(round(rates.infection[i], 3))")
+        end
       end
     end
   end
   return rates
+end
+
+function update!(tr::TransmissionRates,
+                 rates::EventRates{T},
+                 event::Event{T},
+                 states::Vector{DiseaseState},
+                 pop::DataFrame,
+                 rf::RiskFunctions{T},
+                 rp::RiskParameters{T};
+                 debug_level::Int64=0) where T <: EpidemicModel
+  update!(tr, event, states, pop, rf, rp, debug_level = debug_level)
+  update!(rates, tr, event, states, pop, rf, rp, debug_level = debug_level)
+  return tr, rates
 end

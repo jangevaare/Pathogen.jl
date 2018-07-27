@@ -40,7 +40,7 @@ function Base.convert(::Type{DiseaseState}, x::Int64)
 end
 
 function Base.show(io::IO, x::DiseaseState)
-  return print(convert(Char, x))
+  return print(io, convert(Char, x))
 end
 
 const _state_progressions = Dict{DataType, Vector{DiseaseState}}()

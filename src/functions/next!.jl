@@ -3,21 +3,12 @@ function next!(s::Simulation{T}) where T <: EpidemicModel
   if event.time < Inf
     update!(s.events, event)
     update!(s.disease_states, event)
-    # Checks if a _new_transmission within function
-    # Could make this into a single function for conveinence (also appears in Simulation.jl)
     update!(s.transmission_network,
             generate(Transmission,
                      s.transmission_rates,
                      event))
-    # Update `EventRates` before `TransmissionRates`
-    update!(s.event_rates,
-            s.transmission_rates,
-            event,
-            s.disease_states,
-            s.population,
-            s.risk_functions,
-            s.risk_parameters)
     update!(s.transmission_rates,
+            s.event_rates,
             event,
             s.disease_states,
             s.population,
@@ -40,7 +31,8 @@ end
 function next!(mc::MarkovChain{T},
                mcmc::MCMC{T},
                Σ::Array{Float64, 2},
-               σ::Float64) where T <: EpidemicModel
+               σ::Float64;
+               debug_level::Int64 = 0) where T <: EpidemicModel
   # Initialize
   new_events = mc.events[end]
   new_events_array = new_events[_state_progressions[T][2:end]]
@@ -106,9 +98,10 @@ end
 
 function next!(mcmc::MCMC{T},
                Σ::Array{Float64, 2},
-               σ::Float64) where T <: EpidemicModel
+               σ::Float64;
+               debug_level::Int64 = 0) where T <: EpidemicModel
   @simd for mc in mcmc.markov_chains
-    next!(mc, mcmc, Σ, σ)
+    next!(mc, mcmc, Σ, σ, debug_level = debug_level)
   end
   return mcmc
 end

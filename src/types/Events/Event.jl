@@ -23,11 +23,11 @@ function Base.copy(x::Event{T}) where T <: EpidemicModel
 end
 
 function _new_transmission(e::Event{T}) where T <: Union{SEIR, SEI}
-    return e.new_state == State_E
+  return e.new_state == State_E
 end
 
 function _new_transmission(e::Event{T}) where T <: Union{SIR, SI}
-    return e.new_state == State_I
+  return e.new_state == State_I
 end
 
 function _time(x::Event{T}) where T <: EpidemicModel
@@ -40,4 +40,8 @@ end
 
 function _new_state(x::Event{T}) where T <: EpidemicModel
   return x.new_state
+end
+
+function Base.show(io::IO, x::Event{T}) where T <: EpidemicModel
+  return print(io, "Transition of individual $(x.individual) into $(x.new_state) state at t = $(x.time)")
 end

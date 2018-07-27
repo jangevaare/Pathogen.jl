@@ -27,3 +27,7 @@ mutable struct EventExtents{T <: EpidemicModel}
     return x
   end
 end
+
+function Base.show(io::IO, x::EventExtents{T}) where T <: EpidemicModel
+  print(io, "$T model event extents")
+end

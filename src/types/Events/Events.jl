@@ -95,6 +95,10 @@ function Base.minimum(x::Events{T}) where T <: EpidemicModel
 end
 
 function Base.maximum(x::Events{T}) where T <: EpidemicModel
-  y=x[_state_progressions[T][2:end]]
+  y = x[_state_progressions[T][2:end]]
   return maximum(y[.!isnan.(y)])
+end
+
+function Base.show(io::IO, x::Events{T}) where T <: EpidemicModel
+  return print(io, "$T model event times (n=$(x.individuals))")
 end

@@ -50,16 +50,19 @@ function initialize(::Type{EventRates{T}},
   return rates
 end
 
-function initialize(::Type{MarkovChain}, mcmc::MCMC{T}; attempts::Int64=1000) where T <: EpidemicModel
+function initialize(::Type{MarkovChain},
+                    mcmc::MCMC{T};
+                    attempts::Int64=1000,
+                    debug_level::Int64=0) where T <: EpidemicModel
   if attempts <= 0
     error("Must have at least 1 initialization attempt")
   end
   max_lposterior = -Inf
-  markov_chain = MarkovChain{T}()
+  local markov_chain
   for i in 1:attempts
-    events = generate(Events, mcmc)
+    events = generate(Events, mcmc, debug_level=debug_level)
     rparams = generate(RiskParameters, mcmc)
-    llikelihood, network = loglikelihood(rparams, mcmc.risk_functions, events, mcmc.population)
+    llikelihood, network = loglikelihood(rparams, mcmc.risk_functions, events, mcmc.population, debug_level=debug_level)
     lpriors = logpriors(rparams, mcmc.risk_priors)
     lposterior = llikelihood + lpriors
     if lposterior > max_lposterior

@@ -4,16 +4,12 @@ mutable struct MarkovChain{T <: EpidemicModel}
   network::Vector{TransmissionNetwork}
   risk_parameters::Vector{RiskParameters{T}}
   log_posterior::Vector{Float64}
+end
 
-  function MarkovChain(iterations::Int64,
-                       events::Vector{Events{T}},
-                       network::Vector{TransmissionNetwork},
-                       risk_parameters::Vector{RiskParameters{T}},
-                       log_posterior::Vector{Float64}) where T <: EpidemicModel
-    return new{T}(iterations, events, network, risk_parameters, log_posterior)
-  end
+function Base.length(x::MarkovChain{T}) where T <: EpidemicModel
+  return x.iterations
+end
 
-  function MarkovChain{T}() where T <: EpidemicModel
-    return new{T}()
-  end
+function Base.show(io::IO, x::MarkovChain{T}) where T <: EpidemicModel
+  return print(io, "$T model Markov chain (iterations = $(length(x))")
 end
