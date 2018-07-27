@@ -57,6 +57,7 @@ function initialize(::Type{MarkovChain},
   if attempts <= 0
     error("Must have at least 1 initialization attempt")
   end
+  pm = Progress(attempts, "Performing $attempts MCMC initialization attempts (pid = $(myid()))")
   max_lposterior = -Inf
   local markov_chain
   for i in 1:attempts
@@ -69,6 +70,7 @@ function initialize(::Type{MarkovChain},
       markov_chain = MarkovChain(0, [events], [network], [rparams], [lposterior])
       max_lposterior = lposterior
     end
+    next!(pm)
   end
   if max_lposterior > -Inf
     return markov_chain

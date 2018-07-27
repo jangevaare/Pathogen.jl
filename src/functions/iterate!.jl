@@ -4,7 +4,7 @@ function iterate!(mc::MarkovChain{T},
                   Σ::Array{Float64, 2},
                   σ::Float64;
                   debug_level::Int64=0) where T <: EpidemicModel
-  pm = Progress(n, "Performing $n MCMC iterations (process id = $(myid()))")
+  pm = Progress(n, "Performing $n MCMC iterations (pid = $(myid()))")
   for i = 1:n
     next!(pm)
     next!(mc, mcmc, Σ, σ, debug_level=debug_level)
