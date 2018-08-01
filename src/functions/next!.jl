@@ -42,7 +42,7 @@ function next!(mc::MarkovChain{T},
   # Randomize event time augmentation
   event_indices = find(.!isnan.(new_events_array[:]))
   augmentation_order = sample(event_indices, length(event_indices), replace=false)
-  for i = 1:(length(event_indices) + 1)
+  for i = 1:(length(event_indices))
     if i <= length(event_indices)
       id, state_index = ind2sub((new_events.individuals, length(_state_progressions[T][2:end])),
                                   augmentation_order[i])
@@ -68,10 +68,12 @@ function next!(mc::MarkovChain{T},
     end
     proposed_lprior = logpriors(proposed_params, mcmc.risk_priors)
     if proposed_lprior > -Inf
-      proposed_lliklihood, proposed_network = loglikelihood(proposed_params,
-                                                            mcmc.risk_functions,
-                                                            proposed_events,
-                                                            mcmc.population)
+      proposed_lliklihood = loglikelihood(proposed_params,
+                                          mcmc.risk_functions,
+                                          proposed_events,
+                                          mcmc.population,
+                                          transmission_network_output = false,
+                                          debug_level = debug_level)
       if proposed_lliklihood > -Inf
         proposed_lposterior = proposed_lprior + proposed_lliklihood
       else
@@ -81,14 +83,20 @@ function next!(mc::MarkovChain{T},
       proposed_lposterior = -Inf
     end
     if _accept(proposed_lposterior, new_lposterior)
+      new_params = proposed_params
       new_events = proposed_events
       new_events_array = proposed_events_array
-      new_params = proposed_params
-      new_network = proposed_network
       new_lposterior = proposed_lposterior
     end
   end
   mc.iterations += 1
+  new_network = loglikelihood(new_params,
+                              mcmc.risk_functions,
+                              new_events,
+                              mcmc.population,
+                              loglikelihood_output = false,
+                              transmission_network_output = true,
+                              debug_level = debug_level)
   push!(mc.events, new_events)
   push!(mc.network, new_network)
   push!(mc.risk_parameters, new_params)
