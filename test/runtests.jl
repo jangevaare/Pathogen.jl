@@ -1,5 +1,5 @@
 using Base.Test
-addprocs(3)
+#addprocs(3)
 using Pathogen
 
 @everywhere using DataFrames, Distributions
@@ -56,7 +56,7 @@ pop = DataFrame(x = x_coordinates,
   start!(mcmc, 3)
   @test length(mcmc.markov_chains) == 3
   @test all([length(mcmc.markov_chains[i].risk_parameters[1]) for i=1:3] .== length(rparams))
-  iterate!(mcmc, 100, diagm([0.0001; 0.01; 0.01; 0.01; 0.001; 0.001]), 0.5)
+  iterate!(mcmc, 100, diagm([0.0001; 0.01; 0.01; 0.01; 0.001; 0.001]), 0.5, debug_level = 4)
   @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
 end
 

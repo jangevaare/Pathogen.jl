@@ -53,7 +53,9 @@ function next!(mc::MarkovChain{T},
                                 σ,
                                 mcmc.event_extents,
                                 mcmc.event_observations,
-                                new_events)
+                                new_events,
+                                new_network,
+                                debug_level = debug_level)
       proposed_events_array = reshape([new_events_array[1:(augmentation_order[i]-1)]
                                        proposed_event.time
                                        new_events_array[(augmentation_order[i]+1):end]],

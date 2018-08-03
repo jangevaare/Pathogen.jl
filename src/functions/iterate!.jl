@@ -20,13 +20,13 @@ function iterate!(mcmc::MCMC{T},
   mc_Futures = Future[]
   for mc in mcmc.markov_chains
       if debug_level >= 3
-        println("iterate!: beginning iteration of Markov chain $i")
+        println("iterate!: beginning iteration of Markov chain")
       end
      push!(mc_Futures, @spawn iterate!(mc, mcmc, n, Σ, σ))
   end
   for mc in mc_Futures
     if debug_level >= 3
-      println("iterate!: waiting for iteration of Markov chain $i to complete")
+      println("iterate!: waiting for iteration of Markov chain to complete")
     end
     wait(mc)
   end
