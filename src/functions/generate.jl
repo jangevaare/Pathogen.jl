@@ -132,7 +132,7 @@ function generate(::Type{Event},
   if new_state == State_E
     lowerbounds = [events.infection[id] - extents.exposure]
     upperbounds = [events.infection[id]]
-    path_to = _pathway_to(id, network, depth = 1)
+    path_to = _pathway_to(id, network, depth = 1, debug_level = debug_level)
     if length(path_to) > 1
       parent_host = path_to[2]
       push!(lowerbounds, events.infection[parent_host])
@@ -141,7 +141,7 @@ function generate(::Type{Event},
       end
     end
   elseif new_state == State_I
-    path_from = _pathway_from(id, network, depth = 1)
+    path_from = _pathway_from(id, network, depth = 1, debug_level = debug_level)
     if T in [SEIR; SEI]
       lowerbounds = [obs.infection[id] - extents.infection
                      events.exposure[id]]
@@ -154,7 +154,7 @@ function generate(::Type{Event},
     elseif T in [SIR; SI]
       lowerbounds = [obs.infection[id] - extents.infection]
       upperbounds = [obs.infection[id]]
-      path_to = _pathway_to(id, network, depth = 1)
+      path_to = _pathway_to(id, network, depth = 1, debug_level = debug_level)
       if length(path_from) > 1
         child_hosts = path_from[2:end]
         append!(upperbounds, events.infection[child_hosts])
@@ -168,9 +168,9 @@ function generate(::Type{Event},
       end
     end
   elseif new_state == State_R
-    path_from = _pathway_from(id, network, depth = 1)
+    path_from = _pathway_from(id, network, depth = 1, debug_level = debug_level)
     lowerbounds = [obs.removal[id] - extents.removal
-                   events.infection[id]]
+                   obs.infection[id]]
     upperbounds = [obs.removal[id]]
     if length(path_from) > 1
       child_hosts = path_from[2:end]
@@ -182,7 +182,7 @@ function generate(::Type{Event},
     end
   end
   if debug_level >= 4
-    println("Transition of $id into $new_state with bounds: \n[max($(round(lowerbounds, 3))),\n min($(round(upperbounds, 3)))]")
+    println("generate: transition of $id into $new_state with bounds: \n  [max($(round.(lowerbounds, 3))),\n   min($(round.(upperbounds, 3)))]")
   end
   time = rand(TruncatedNormal(last_event.time,
                               σ,
@@ -190,7 +190,6 @@ function generate(::Type{Event},
                               minimum(upperbounds)))
   return Event{T}(time, id, new_state)
 end
-
 
 function generate(::Type{RiskParameters{T}}, rpriors::RiskPriors{T}) where T <: EpidemicModel
   sparks = Float64[rand(x) for x in rpriors.sparks]

@@ -86,10 +86,17 @@ function next!(mc::MarkovChain{T},
       proposed_lposterior = -Inf
     end
     if _accept(proposed_lposterior, new_lposterior)
+      if debug_level >=3
+        println("next!: MCMC proposal accepted (acceptance probability = $(round(min(1.0, exp(proposed_lposterior - new_lposterior)), 3)))")
+      end
       new_params = proposed_params
       new_events = proposed_events
       new_events_array = proposed_events_array
       new_lposterior = proposed_lposterior
+    else
+      if debug_level >=3
+        println("next!: MCMC proposal rejected (acceptance probability = $(round(min(1.0, exp(proposed_lposterior - new_lposterior)), 3)))")
+      end
     end
   end
   mc.iterations += 1
