@@ -89,7 +89,7 @@ function generate(::Type{Events}, mcmc::MCMC{T}; debug_level::Int64=0) where T <
   return generate(Events{T}, mcmc.event_observations, mcmc.event_extents, debug_level=debug_level)
 end
 
-function generate(::Type{Event{T}},
+function generate(::Type{Event},
                   last_event::Event{T},
                   σ::Float64,
                   extents::EventExtents{T},
@@ -119,7 +119,7 @@ function generate(::Type{Event{T}},
   return Event{T}(time, id, new_state)
 end
 
-function generate(::Type{Event{T}},
+function generate(::Type{Event},
                   last_event::Event{T},
                   σ::Float64,
                   extents::EventExtents{T},
@@ -177,7 +177,7 @@ function generate(::Type{Event{T}},
       if T == SEIR
         append!(lowerbounds, events.exposure[child_hosts])
       elseif T == SIR
-        append!(lowerbounds, events.exposure[child_hosts])
+        append!(lowerbounds, events.infection[child_hosts])
       end
     end
   end

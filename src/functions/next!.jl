@@ -44,11 +44,12 @@ function next!(mc::MarkovChain{T},
   augmentation_order = sample(event_indices, length(event_indices), replace=false)
   for i = 1:(length(event_indices))
     if i <= length(event_indices)
-      id, state_index = ind2sub((new_events.individuals, length(_state_progressions[T][2:end])),
-                                  augmentation_order[i])
+      id, state_index = ind2sub((new_events.individuals,
+                                 length(_state_progressions[T][2:end])),
+                                augmentation_order[i])
       new_state = _state_progressions[T][state_index+1]
       time = new_events[new_state][id]
-      proposed_event = generate(Event{T},
+      proposed_event = generate(Event,
                                 Event{T}(time, id, new_state),
                                 σ,
                                 mcmc.event_extents,
