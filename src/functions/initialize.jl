@@ -7,7 +7,7 @@ function initialize(::Type{TransmissionRates},
   n_ids = length(states)
   tr = TransmissionRates(n_ids)
 
-  for i in find(states .== State_S)
+  for i in findall(states .== State_S)
     # External exposure
     #tr.external[i] = rf.susceptibility(rp.susceptibility, pop, i) * rf.sparks(rp.sparks, pop, i)
     tr.external[i] = rf.sparks(rp.sparks, pop, i)

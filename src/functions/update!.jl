@@ -38,7 +38,7 @@ function update!(tr::TransmissionRates,
   if _new_transmission(event)
     tr.external[id] = 0.
     tr.internal[:, id] = 0.
-    for i in find(states .== State_S)
+    for i in findall(states .== State_S)
       tr.internal[id, i] = rf.susceptibility(rp.susceptibility, pop, i) *
                            rf.transmissibility(rp.transmissibility, pop, i, id) *
                            rf.infectivity(rp.infectivity, pop, id)
@@ -62,17 +62,17 @@ function update!(rates::EventRates{T},
     rates.exposure[id] = 0.
     rates.infection[id] = rf.latency(rp.latency, pop, id)
     if debug_level >= 5
-      println("update!: exposure and infection rates for id = $id are now $(round(rates.exposure[id],3)), and $(round(rates.infection[id],3)) respectively")
+      println("update!: exposure and infection rates for id = $id are now $(round(rates.exposure[id], digits=3)), and $(round(rates.infection[id], digits=3)) respectively")
     end
   elseif event.new_state == State_I
     rates.infection[id] = 0.
     if debug_level >= 5
-      println("update!: infection rate for id = $id is now $(round(rates.infection[id],3))")
+      println("update!: infection rate for id = $id is now $(round(rates.infection[id], digits=3))")
     end
     if T in [SEIR; SIR]
       rates.removal[id] = rf.removal(rp.removal, pop, id)
       if debug_level >= 5
-        println("update!: removal rate for id = $id is now $(round(rates.removal[id],3))")
+        println("update!: removal rate for id = $id is now $(round(rates.removal[id], digits=3))")
       end
     end
     if T in [SEIR; SEI]
@@ -95,7 +95,7 @@ function update!(rates::EventRates{T},
   elseif event.new_state == State_R
     rates.removal[id] = 0.
     if debug_level >= 5
-      println("update!: removal rate for id = $id is now $(round(rates.removal[id],3))")
+      println("update!: removal rate for id = $id is now $(round(rates.removal[id], digits=3))")
     end
     if T == SEIR
       @simd for i in find(states .== State_S)

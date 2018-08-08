@@ -25,7 +25,7 @@ function loglikelihood(rp::RiskParameters{T},
       # Get event rate totals
       rate_total = sum(sum(s.event_rates[new_state]) for state in _state_progressions[T][2:end])
       if debug_level >= 5
-        println("loglikelihood: event rate total $i = $(round(rate_total, 3))")
+        println("loglikelihood: event rate total $i = $(round(rate_total, digits=3))")
       end
       if i > 1
         # Calculate length of inter-event period (ignore for 1st event)
@@ -35,7 +35,7 @@ function loglikelihood(rp::RiskParameters{T},
         # Stop log likelihood calculation anytime the loglikelihood goes to -Inf
         if ll == -Inf
           if debug_level >= 2
-            println("loglikelihood: event $i resulted in a -Inf loglikelihood (transition of individual $individual at t = $(round(time, 3)) to state $new_state)")
+            println("loglikelihood: event $i resulted in a -Inf loglikelihood (transition of individual $individual at t = $(round(time, digits=3)) to state $new_state)")
           end
           break
         end

@@ -12,7 +12,7 @@ mutable struct TransmissionNetwork
     if !(length(external) == size(internal, 1) == size(internal, 2))
       throw(BoundsError)
     end
-    multiple_exposures = find((sum(internal, 1)[:] .+ external) .> 1)
+    multiple_exposures = findall((sum(internal, 1)[:] .+ external) .> 1)
     if length(multiple_exposures) > 0
       error("Multiple exposures detected for individual(s): $multiple_exposures")
     end
