@@ -1,4 +1,4 @@
-function generate(::Type{Event{T}},
+function generate(::Type{Event},
                   rates::EventRates{T},
                   time::Float64=0.0) where T <: EpidemicModel
   totals = [sum(rates[state]) for state in _state_progressions[T][2:end]]
@@ -55,7 +55,7 @@ function generate(::Type{Transmission},
   end
 end
 
-function generate(::Type{Events{T}},
+function generate(::Type{Events},
                   obs::EventObservations{T},
                   extents::EventExtents{T};
                   debug_level::Int64=0) where T <: EpidemicModel
@@ -74,7 +74,7 @@ function generate(::Type{Events{T}},
         e_time = rand(Uniform(e_lb, e_ub))
         update!(events, Event{T}(e_time, i, State_E))
       end
-      if removed_state && !isnan(obs.removal[i])
+      if removed_state & !isnan(obs.removal[i])
         r_lb = maximum([obs.infection[i]; obs.removal[i] - extents.removal])
         r_ub = obs.removal[i]
         r_time = rand(Uniform(r_lb, r_ub))
@@ -86,14 +86,14 @@ function generate(::Type{Events{T}},
 end
 
 function generate(::Type{Events}, mcmc::MCMC{T}; debug_level::Int64=0) where T <: EpidemicModel
-  return generate(Events{T}, mcmc.event_observations, mcmc.event_extents, debug_level=debug_level)
+  return generate(Events, mcmc.event_observations, mcmc.event_extents, debug_level=debug_level)
 end
 
 function generate(::Type{Event},
                   last_event::Event{T},
                   σ::Float64,
                   extents::EventExtents{T},
-                  obs::EventObservations,
+                  obs::EventObservations{T},
                   events::Events{T}) where T <: EpidemicModel
   id = last_event.individual
   new_state = last_event.new_state
@@ -125,69 +125,12 @@ function generate(::Type{Event},
                   extents::EventExtents{T},
                   obs::EventObservations,
                   events::Events{T},
-                  network::TransmissionNetwork;
-                  debug_level::Int64 = 0) where T <: EpidemicModel
-  id = last_event.individual
-  new_state = last_event.new_state
-  if new_state == State_E
-    lowerbounds = [events.infection[id] - extents.exposure]
-    upperbounds = [events.infection[id]]
-    path_to = _pathway_to(id, network, depth = 1, debug_level = debug_level)
-    if length(path_to) > 1
-      parent_host = path_to[2]
-      push!(lowerbounds, events.infection[parent_host])
-      if (T == SEIR) && !isnan(events.removal[parent_host])
-        push!(upperbounds, events.removal[parent_host])
-      end
-    end
-  elseif new_state == State_I
-    path_from = _pathway_from(id, network, depth = 1, debug_level = debug_level)
-    if T in [SEIR; SEI]
-      lowerbounds = [obs.infection[id] - extents.infection
-                     events.exposure[id]]
-      upperbounds = [obs.infection[id]
-                     events.exposure[id] + extents.exposure]
-      if length(path_from) > 1
-        child_hosts = path_from[2:end]
-        append!(upperbounds, events.exposure[child_hosts])
-      end
-    elseif T in [SIR; SI]
-      lowerbounds = [obs.infection[id] - extents.infection]
-      upperbounds = [obs.infection[id]]
-      path_to = _pathway_to(id, network, depth = 1, debug_level = debug_level)
-      if length(path_from) > 1
-        child_hosts = path_from[2:end]
-        append!(upperbounds, events.infection[child_hosts])
-      end
-      if length(path_to) > 1
-        parent_host = path_to[2]
-        push!(lowerbounds, events.infection[parent_host])
-        if (T == SIR) && !isnan(events.removal[parent_host])
-          push!(upperbounds, events.removal[parent_host])
-        end
-      end
-    end
-  elseif new_state == State_R
-    path_from = _pathway_from(id, network, depth = 1, debug_level = debug_level)
-    lowerbounds = [obs.removal[id] - extents.removal
-                   obs.infection[id]]
-    upperbounds = [obs.removal[id]]
-    if length(path_from) > 1
-      child_hosts = path_from[2:end]
-      if T == SEIR
-        append!(lowerbounds, events.exposure[child_hosts])
-      elseif T == SIR
-        append!(lowerbounds, events.infection[child_hosts])
-      end
-    end
-  end
-  if debug_level >= 4
-    println("generate: transition of $id into $new_state with bounds: \n  [max($(round.(lowerbounds, 3))),\n   min($(round.(upperbounds, 3)))]")
-  end
+                  network::TransmissionNetwork) where T <: EpidemicModel
+  lowerbound, upperbound = _bounds(last_event, extents, obs, events, network)
   time = rand(TruncatedNormal(last_event.time,
                               σ,
-                              maximum(lowerbounds),
-                              minimum(upperbounds)))
+                              lowerbound,
+                              upperbound))
   return Event{T}(time, id, new_state)
 end
 

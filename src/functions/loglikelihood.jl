@@ -24,7 +24,7 @@ function loglikelihood(rp::RiskParameters{T},
     if loglikelihood_output
       # Get event rate totals
       rate_total = sum(sum(s.event_rates[new_state]) for state in _state_progressions[T][2:end])
-      if debug_level >= 4
+      if debug_level >= 5
         println("loglikelihood: event rate total $i = $(round(rate_total, 3))")
       end
       if i > 1

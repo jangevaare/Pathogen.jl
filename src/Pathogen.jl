@@ -30,6 +30,8 @@ module Pathogen
   # Functions
   include("functions/_pathway_from.jl")
   include("functions/_pathway_to.jl")
+  include("functions/_accept.jl")
+  include("functions/_bounds.jl")
   include("functions/generate.jl")
   include("functions/initialize.jl")
   include("functions/observe.jl")

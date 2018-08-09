@@ -1,5 +1,5 @@
 function next!(s::Simulation{T}) where T <: EpidemicModel
-  event = generate(Event{T}, s.event_rates, s.time)
+  event = generate(Event, s.event_rates, s.time)
   if event.time < Inf
     update!(s.events, event)
     update!(s.disease_states, event)
@@ -21,11 +21,6 @@ function next!(s::Simulation{T}) where T <: EpidemicModel
   s.time = event.time
   # Return updated Simulation object
   return s
-end
-
-function _accept(lp1::Float64,
-                 lp2::Float64)
-  return rand() <= exp(lp1 - lp2)
 end
 
 function next!(mc::MarkovChain{T},
@@ -119,7 +114,7 @@ function next!(mcmc::MCMC{T},
                σ::Float64;
                debug_level::Int64 = 0) where T <: EpidemicModel
   @simd for mc in mcmc.markov_chains
-    next!(mc, mcmc, Σ, σ, debug_level = debug_level)
+    next!(mc, mcmc, Σ, σ)
   end
   return mcmc
 end

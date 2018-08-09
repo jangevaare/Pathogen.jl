@@ -7,7 +7,7 @@ function start!(mcmc::MCMC{T},
       if debug_level >= 3
         println("start!: creating Markov chain $i initialization Future")
       end
-     push!(mc_Futures, @spawn initialize(MarkovChain, mcmc, attempts=attempts, debug_level = debug_level))
+     push!(mc_Futures, @spawn initialize(MarkovChain, mcmc, attempts=attempts))
   end
   if debug_level >= 2
     println("start!: $markov_chains Markov chain initialization Futures successfully created")
@@ -28,7 +28,7 @@ end
 function start!(mcmc::MCMC{T};
                 attempts::Int64=1000,
                 debug_level::Int64=0) where T <: EpidemicModel
-  push!(mcmc.markov_chains, initialize(MarkovChain, mcmc, attempts=attempts, debug_level = debug_level))
+  push!(mcmc.markov_chains, initialize(MarkovChain, mcmc, attempts=attempts))
   if debug_level >= 1
     println("start!: 1 Markov Chain successfully initialized")
   end

@@ -126,7 +126,7 @@ function update!(tr::TransmissionRates,
                  rf::RiskFunctions{T},
                  rp::RiskParameters{T};
                  debug_level::Int64=0) where T <: EpidemicModel
-  update!(tr, event, states, pop, rf, rp, debug_level = debug_level)
-  update!(rates, tr, event, states, pop, rf, rp, debug_level = debug_level)
+  update!(tr, event, states, pop, rf, rp)
+  update!(rates, tr, event, states, pop, rf, rp)
   return tr, rates
 end

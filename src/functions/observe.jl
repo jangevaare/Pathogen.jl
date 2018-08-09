@@ -39,7 +39,7 @@ function observe(sim::Simulation{T},
                  delay_removal::UnivariateDistribution;
                  force::Bool = false,
                  debug_level::Int64 = 0) where T <: Union{SEIR, SIR}
-  return observe(sim.events, delay_infection, delay_removal, force=force, debug_level = debug_level)
+  return observe(sim.events, delay_infection, delay_removal, force=force)
 end
 
 function observe(events::Events{T},
@@ -58,5 +58,5 @@ end
 function observe(sim::Simulation{T},
                  delay_infection::UnivariateDistribution;
                  debug_level::Int64 = 0) where T <: Union{SEI, SI}
-  return observe(sim.events, delay_infection, debug_level = debug_level)
+  return observe(sim.events, delay_infection)
 end
