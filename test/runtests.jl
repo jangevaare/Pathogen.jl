@@ -1,4 +1,4 @@
-using Base.Test
+using Test
 #addprocs(3)
 using Pathogen
 
@@ -6,7 +6,7 @@ using Pathogen
 @everywhere include(Pkg.dir("Pathogen")*"/examples/risk_functions.jl")
 
 # Set RNG seed
-srand(5432)
+Random.seed!(5432)
 
 # Define population
 n = 25

@@ -35,7 +35,7 @@ function next!(mc::MarkovChain{T},
   new_network = mc.network[end]
   new_lposterior = mc.log_posterior[end]
   # Randomize event time augmentation
-  event_indices = find(.!isnan.(new_events_array[:]))
+  event_indices = findall(.!isnan.(new_events_array[:]))
   augmentation_order = sample(event_indices, length(event_indices), replace=false)
   for i = 1:(length(event_indices))
     if i <= length(event_indices)
@@ -82,7 +82,7 @@ function next!(mc::MarkovChain{T},
     end
     if _accept(proposed_lposterior, new_lposterior)
       if debug_level >=3
-        println("next!: MCMC proposal accepted (acceptance probability = $(round(min(1.0, exp(proposed_lposterior - new_lposterior)), 3)))")
+        println("next!: MCMC proposal accepted (acceptance probability = $(round(min(1.0, exp(proposed_lposterior - new_lposterior)), digits=3)))")
       end
       new_params = proposed_params
       new_events = proposed_events
@@ -90,7 +90,7 @@ function next!(mc::MarkovChain{T},
       new_lposterior = proposed_lposterior
     else
       if debug_level >=3
-        println("next!: MCMC proposal rejected (acceptance probability = $(round(min(1.0, exp(proposed_lposterior - new_lposterior)), 3)))")
+        println("next!: MCMC proposal rejected (acceptance probability = $(round(min(1.0, exp(proposed_lposterior - new_lposterior)), digits=3)))")
       end
     end
   end
