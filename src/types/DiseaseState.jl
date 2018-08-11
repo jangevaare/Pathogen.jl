@@ -14,16 +14,16 @@ const _DiseaseStateCharVector = ['S'; 'E'; 'I'; 'R']
 
 # `DiseaseState` conversion to/from `Char`
 function Base.convert(::Type{Char}, x::DiseaseState)
-  return _DiseaseStateCharVector[_DiseaseStateVector .== x][1]
+  return _DiseaseStateCharVector[_DiseaseStateVector .== Ref(x)][1]
 end
 
 function Base.convert(::Type{DiseaseState}, x::Char)
-  return _DiseaseStateVector[_DiseaseStateCharVector .== x][1]
+  return _DiseaseStateVector[_DiseaseStateCharVector .== Ref(x)][1]
 end
 
 # `DiseaseState` conversion to/from `BitArray`
 function Base.convert(::Type{BitArray{1}}, x::DiseaseState)
-  return BitArray(_DiseaseStateVector .== x)
+  return BitArray(_DiseaseStateVector .== Ref(x))
 end
 
 function Base.convert(::Type{DiseaseState}, x::BitArray{1})
@@ -50,12 +50,12 @@ _state_progressions[SIR] = [State_S; State_I; State_R]
 _state_progressions[SI] = [State_S; State_I]
 
 function advance(x::DiseaseState, ::Type{T}) where T <: EpidemicModel
-  current_index = findfirst(x .== _state_progressions[T])
+  current_index = findfirst(Ref(x) .== _state_progressions[T])
   return _state_progressions[T][current_index + 1]
 end
 
 function regress(x::DiseaseState, ::Type{T}) where T <: EpidemicModel
-  current_index = findfirst(x .== _state_progressions[T])
+  current_index = findfirst(Ref(x) .== _state_progressions[T])
   return _state_progressions[T][current_index - 1]
 end
 

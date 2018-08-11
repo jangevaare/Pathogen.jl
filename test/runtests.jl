@@ -1,12 +1,13 @@
-using Base.Test
+using Test, Distributed, Random, LinearAlgebra
+
 addprocs(3)
 using Pathogen
 
 @everywhere using DataFrames, Distributions
-@everywhere include(Pkg.dir("Pathogen")*"/examples/risk_functions.jl")
+@everywhere include(joinpath(@__DIR__, "../examples/risk_functions.jl"))
 
 # Set RNG seed
-srand(5432)
+Random.seed!(5432)
 
 # Define population
 n = 25
@@ -53,11 +54,27 @@ pop = DataFrame(x = x_coordinates,
 
   ee = EventExtents{SEIR}(20.0, 2.0, 2.0)
   mcmc = MCMC(obs, ee, pop, rf, rpriors)
-  start!(mcmc, 3)
+  start!(mcmc, 3, attempts=100)
   @test length(mcmc.markov_chains) == 3
   @test all([length(mcmc.markov_chains[i].risk_parameters[1]) for i=1:3] .== length(rparams))
-  iterate!(mcmc, 100, diagm([0.0001; 0.01; 0.01; 0.01; 0.001; 0.001]), 0.5)
-  @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
+
+  # Check bounds of Events initialization
+  for j = 1:3, i = 1:n
+    if !isnan(mcmc.markov_chains[j].events[1].exposure[i])
+      l, u = Pathogen._bounds(i, State_E, ee, obs, mcmc.markov_chains[j].events[1], mcmc.markov_chains[j].network[1])
+      @test l < u
+    end
+    if !isnan(mcmc.markov_chains[j].events[1].infection[i])
+      l, u = Pathogen._bounds(i, State_I, ee, obs, mcmc.markov_chains[j].events[1], mcmc.markov_chains[j].network[1])
+      @test l < u
+    end
+    if !isnan(mcmc.markov_chains[j].events[1].removal[i])
+      l, u = Pathogen._bounds(i, State_R, ee, obs, mcmc.markov_chains[j].events[1], mcmc.markov_chains[j].network[1])
+      @test l < u
+    end
+  end
+  # iterate!(mcmc, 100, Matrix(Diagonal([0.0001; 0.01; 0.01; 0.01; 0.001; 0.001])), 0.5)
+  # @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
 end
 
 @testset "SEI Model" begin
@@ -91,11 +108,23 @@ end
 
   ee = EventExtents{SEI}(20.0, 2.0)
   mcmc = MCMC(obs, ee, pop, rf, rpriors)
-  start!(mcmc, 3)
+  start!(mcmc, 3, attempts = 100)
   @test length(mcmc.markov_chains) == 3
   @test all([length(mcmc.markov_chains[i].risk_parameters[1]) for i=1:3] .== length(rparams))
-  iterate!(mcmc, 100, diagm([0.0001; 0.01; 0.01; 0.01; 0.001]), 0.5)
-  @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
+
+  # Check bounds of Events initialization
+  for j = 1:3, i = 1:n
+    if !isnan(mcmc.markov_chains[j].events[1].exposure[i])
+      l, u = Pathogen._bounds(i, State_E, ee, obs, mcmc.markov_chains[j].events[1], mcmc.markov_chains[j].network[1])
+      @test l < u
+    end
+    if !isnan(mcmc.markov_chains[j].events[1].infection[i])
+      l, u = Pathogen._bounds(i, State_I, ee, obs, mcmc.markov_chains[j].events[1], mcmc.markov_chains[j].network[1])
+      @test l < u
+    end
+  end
+  # iterate!(mcmc, 100, Matrix(Diagonal([0.0001; 0.01; 0.01; 0.01; 0.001])), 0.5)
+  # @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
 end
 
 @testset "SIR Model" begin
@@ -129,11 +158,23 @@ end
 
   ee = EventExtents{SIR}(2.0, 2.0)
   mcmc = MCMC(obs, ee, pop, rf, rpriors)
-  start!(mcmc, 3)
+  start!(mcmc, 3, attempts=100)
   @test length(mcmc.markov_chains) == 3
   @test all([length(mcmc.markov_chains[i].risk_parameters[1]) for i=1:3] .== length(rparams))
-  iterate!(mcmc, 100, diagm([0.0001; 0.01; 0.01; 0.01; 0.001]), 0.5)
-  @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
+
+  # Check bounds of Events initialization
+  for j = 1:3, i = 1:n
+    if !isnan(mcmc.markov_chains[j].events[1].infection[i])
+      l, u = Pathogen._bounds(i, State_I, ee, obs, mcmc.markov_chains[j].events[1], mcmc.markov_chains[j].network[1])
+      @test l < u
+    end
+    if !isnan(mcmc.markov_chains[j].events[1].removal[i])
+      l, u = Pathogen._bounds(i, State_R, ee, obs, mcmc.markov_chains[j].events[1], mcmc.markov_chains[j].network[1])
+      @test l < u
+    end
+  end
+  # iterate!(mcmc, 100, Matrix(Diagonal([0.0001; 0.01; 0.01; 0.01; 0.001])), 0.5)
+  # @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
 end
 
 @testset "SI Model" begin
@@ -164,9 +205,16 @@ end
 
   ee = EventExtents{SI}(2.0)
   mcmc = MCMC(obs, ee, pop, rf, rpriors)
-  start!(mcmc, 3)
+  start!(mcmc, 3, attempts=100)
   @test length(mcmc.markov_chains) == 3
   @test all([length(mcmc.markov_chains[i].risk_parameters[1]) for i=1:3] .== length(rparams))
-  iterate!(mcmc, 100, diagm([0.0001; 0.01; 0.01; 0.01]), 0.5)
-  @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
+  # Check bounds of Events initialization
+  for j = 1:3, i = 1:n
+    if !isnan(mcmc.markov_chains[j].events[1].infection[i])
+      l, u = Pathogen._bounds(i, State_I, ee, obs, mcmc.markov_chains[j].events[1], mcmc.markov_chains[j].network[1])
+      @test l < u
+    end
+  end
+  # iterate!(mcmc, 100, Matrix(Diagonal([0.0001; 0.01; 0.01; 0.01])), 0.5)
+  # @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
 end

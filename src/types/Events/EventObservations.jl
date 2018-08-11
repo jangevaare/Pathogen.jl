@@ -5,7 +5,7 @@ mutable struct EventObservations{T <: EpidemicModel}
 
   function EventObservations{T}(i, r) where T <: Union{SEIR, SIR}
     if length(i) != length(r)
-      error("Length of infection and removal times must be equal")
+      @error "Length of infection and removal times must be equal"
     end
     return new{T}(i, r, length(i))
   end
@@ -19,7 +19,7 @@ mutable struct EventObservations{T <: EpidemicModel}
 
   function EventObservations{T}(i::Array{Float64, 2}) where T <: Union{SEI, SI}
     if size(i, 2) != 1
-      error("Invalid Array dimensions for observations of a $T model")
+      @error "Invalid Array dimensions for observations of a $T model"
     end
     x = new{T}()
     x.infection = i[:,1]
@@ -29,7 +29,7 @@ mutable struct EventObservations{T <: EpidemicModel}
 
   function EventObservations{T}(ir::Array{Float64, 2}) where T <: Union{SEIR, SIR}
     if size(i, 2) != 2
-      error("Invalid Array dimensions for observations of a $T model")
+      @error "Invalid Array dimensions for observations of a $T model"
     end
     x = new{T}()
     x.infection = ir[:, 1]

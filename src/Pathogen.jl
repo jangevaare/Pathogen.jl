@@ -1,13 +1,10 @@
-__precompile__()
-
 module Pathogen
 
   # Dependencies
-  using DataFrames, Distributions, RecipesBase, ProgressMeter
+  using Distributed, DataFrames, Distributions, RecipesBase, LinearAlgebra, Logging, StatsBase
 
   import Base.length, Base.convert, Base.show, Base.copy
   import RecipesBase.plot
-  import ProgressMeter.next!
 
   # Types
   include("types/EpidemicModel.jl")
@@ -28,6 +25,10 @@ module Pathogen
   include("types/MCMC.jl")
 
   # Functions
+  include("functions/_pathway_from.jl")
+  include("functions/_pathway_to.jl")
+  include("functions/_accept.jl")
+  include("functions/_bounds.jl")
   include("functions/generate.jl")
   include("functions/initialize.jl")
   include("functions/observe.jl")
@@ -49,7 +50,7 @@ module Pathogen
 
   export
     SEIR, SEI, SIR, SI,
-    DiseaseState, DiseaseStates,
+    DiseaseState,
     State_S, State_E, State_I, State_R,
     RiskFunctions, RiskParameters, RiskPriors,
     Simulation,

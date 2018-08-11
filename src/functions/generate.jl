@@ -1,64 +1,48 @@
-function generate(::Type{Event{T}},
+function generate(::Type{Event},
                   rates::EventRates{T},
                   time::Float64=0.0) where T <: EpidemicModel
-  totals = [sum(rates[state]) for state in _state_progressions[T][2:end]]
-  ctotals = cumsum(totals)
-  if ctotals[end] == Inf
-    time = time
-    new_state = _state_progressions[T][findfirst(ctotals .== Inf) + 1]
-    id = findfirst(rates[new_state] .== Inf)
+  totals = Weights([sum(rates[state]) for state in _state_progressions[T][2:end]])
+  if sum(totals) == Inf
+    new_state = sample(_state_progressions[T][2:end], totals)
+    id = sample(1:rates.individuals, Weights(rates[new_state]))
     return Event{T}(time, id, new_state)
-  elseif ctotals[end] == 0.
-    time = Inf
-    return Event{T}(time)
+  elseif sum(totals) == 0.
+    return Event{T}(Inf)
   else
-    # Generate event time
-    time += rand(Exponential(1.0 / ctotals[end]))
     # Generate new state
-    new_state_index = findfirst(rand(Multinomial(1, totals ./ ctotals[end])))
-    new_state = _state_progressions[T][new_state_index+1]
+    new_state = sample(_state_progressions[T][2:end], totals)
     # Generate event individual
-    id = findfirst(rand(Multinomial(1, rates[new_state] ./ totals[new_state_index])))
-    return Event{T}(time, id, new_state)
+    id = sample(1:rates.individuals, Weights(rates[new_state]))
+    return Event{T}(rand(Exponential(1.0 / sum(totals))), id, new_state)
   end
 end
 
 function generate(::Type{Transmission},
                   tr::TransmissionRates,
-                  event::Event{T};
-                  debug_level::Int64=0) where T <: EpidemicModel
+                  event::Event{T}) where T <: EpidemicModel
   id = event.individual
   if _new_transmission(event)
-    external_or_internal = [tr.external[id]; sum(tr.internal[:,id])]
-    if !any(external_or_internal .> 0.0)
-      if debug_level >= 4
-        println("generate: all transmission rates = 0.0, exogenous tranmission generated")
-      end
+    external_or_internal = Weights([tr.external[id]; sum(tr.internal[:,id])])
+    if sum(external_or_internal) == 0.0
+      @debug "All transmission rates = 0.0, exogenous transmission generated"
       return ExogenousTransmission(id)
-    elseif rand() <= external_or_internal[1]/sum(external_or_internal)
-      if debug_level >= 4
-        println("generate: exogenous tranmission generated")
-      end
+    elseif sample([true; false], external_or_internal)
+      @debug "Exogenous tranmission generated"
       return ExogenousTransmission(id)
     else
-      source = findfirst(rand(Multinomial(1, tr.internal[:,id] ./ external_or_internal[2])))
-      if debug_level >= 4
-        println("generate: endogenous tranmission generated (source id = $source)")
-      end
+      source = sample(1:tr.individuals, Weights(tr.internal[:, id]))
+      @debug "Endogenous transmission generated (source id = $source)"
       return EndogenousTransmission(id, source)
     end
   else
-    if debug_level >= 4
-      println("generate: no tranmission generated")
-    end
+    @debug "No transmission generated"
     return NoTransmission()
   end
 end
 
-function generate(::Type{Events{T}},
+function generate(::Type{Events},
                   obs::EventObservations{T},
-                  extents::EventExtents{T};
-                  debug_level::Int64=0) where T <: EpidemicModel
+                  extents::EventExtents{T}) where T <: EpidemicModel
   events = Events{T}(obs.individuals)
   exposed_state = T in [SEIR; SEI]
   removed_state = T in [SEIR; SIR]
@@ -85,38 +69,53 @@ function generate(::Type{Events{T}},
   return events
 end
 
-function generate(::Type{Events}, mcmc::MCMC{T}; debug_level::Int64=0) where T <: EpidemicModel
-  return generate(Events{T}, mcmc.event_observations, mcmc.event_extents, debug_level=debug_level)
+function generate(::Type{Events}, mcmc::MCMC{T}) where T <: EpidemicModel
+  return generate(Events, mcmc.event_observations, mcmc.event_extents)
 end
 
-function generate(::Type{Event{T}},
+function generate(::Type{Event},
+                  last_event::Event{T},
+                  σ::Float64,
+                  extents::EventExtents{T},
+                  obs::EventObservations{T},
+                  events::Events{T}) where T <: EpidemicModel
+  id = last_event.individual
+  new_state = last_event.new_state
+  if new_state == State_E
+    lb = events.infection[id] - extents.exposure
+    ub = events.infection[id]
+  elseif new_state == State_I
+    if T in [SEIR; SEI]
+      lb = maximum([obs.infection[id] - extents.infection
+                    events.exposure[id]])
+      ub = minimum([obs.infection[id]
+                    events.exposure[id] + extents.exposure])
+    elseif T in [SIR; SI]
+      lb = obs.infection[id] - extents.infection
+      ub = obs.infection[id]
+    end
+  elseif new_state == State_R
+    lb = maximum([obs.removal[id] - extents.removal
+                  events.infection[id]])
+    ub = obs.removal[id]
+  end
+  time = rand(TruncatedNormal(last_event.time, σ, lb, ub))
+  return Event{T}(time, id, new_state)
+end
+
+function generate(::Type{Event},
                   last_event::Event{T},
                   σ::Float64,
                   extents::EventExtents{T},
                   obs::EventObservations,
-                  events::Events{T}) where T <: EpidemicModel
-  individual = last_event.individual
-  new_state = last_event.new_state
-  if new_state == State_E
-    lb = events.infection[individual] - extents.exposure
-    ub = events.infection[individual]
-  elseif new_state == State_I
-    if T in [SEIR; SEI]
-      lb = maximum([obs.infection[individual] - extents.infection
-                    events.exposure[individual]])
-      ub = minimum([obs.infection[individual]
-                    events.exposure[individual] + extents.exposure])
-    elseif T in [SIR; SI]
-      lb = obs.infection[individual] - extents.infection
-      ub = obs.infection[individual]
-    end
-  elseif new_state == State_R
-    lb = maximum([obs.removal[individual] - extents.removal
-                  events.infection[individual]])
-    ub = obs.removal[individual]
-  end
-  time = rand(TruncatedNormal(last_event.time, σ, lb, ub))
-  return Event{T}(time, individual, new_state)
+                  events::Events{T},
+                  network::TransmissionNetwork) where T <: EpidemicModel
+  lowerbound, upperbound = _bounds(last_event, extents, obs, events, network)
+  time = rand(TruncatedNormal(last_event.time,
+                              σ,
+                              lowerbound,
+                              upperbound))
+  return Event(time, last_event)
 end
 
 function generate(::Type{RiskParameters{T}}, rpriors::RiskPriors{T}) where T <: EpidemicModel

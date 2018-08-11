@@ -1,6 +1,6 @@
 function _epidemic_curve(events::Events{T}, state::DiseaseState, min::Float64, max::Float64) where T <: EpidemicModel
   if min >= max
-    error("Minimum time must be less than maximum time")
+    @error "Minimum time must be less than maximum time"
   end
   time = Float64[]
   count = Int64[]
@@ -14,7 +14,7 @@ function _epidemic_curve(events::Events{T}, state::DiseaseState, min::Float64, m
   elseif state == _state_progressions[T][end]
     times = events[state]
   else
-    error("Invalid state specified")
+    @error "Invalid state specified"
   end
   times = times[min .< times .< max]
   sort!(times)

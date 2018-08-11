@@ -6,7 +6,7 @@ mutable struct Events{T <: EpidemicModel}
 
   function Events{T}(e::V, i::V, r::V) where {T <: SEIR, V <: Vector{Float64}}
     if length(unique((length.([e; i; r])))) != 1
-      error("Length of event time vectors must be equal")
+      @error "Length of event time vectors must be equal"
     end
     return new{T}(e, i, r, length(i))
   end
@@ -17,7 +17,7 @@ mutable struct Events{T <: EpidemicModel}
 
   function Events{T}(e::V, i::V) where {T <: SEI, V <: Vector{Float64}}
     if length(unique((length.([e; i])))) != 1
-      error("Length of event time vectors must be equal")
+      @error "Length of event time vectors must be equal"
     end
     x = new{T}()
     x.exposure = e
@@ -32,7 +32,7 @@ mutable struct Events{T <: EpidemicModel}
 
   function Events{T}(i::V, r::V) where {T <: SIR, V <: Vector{Float64}}
     if length(unique((length.([i; r])))) != 1
-      error("Length of event time vectors must be equal")
+      @error "Length of event time vectors must be equal"
     end
     x = new{T}()
     x.infection = i
@@ -64,7 +64,7 @@ mutable struct Events{T <: EpidemicModel}
     elseif size(a, 2) == 2
       return Events{T}(a[:,1], a[:,2])
     else
-      error("Invalid array size for construction of an $(Events{T}) object")
+      @error "Invalid array size for construction of an $(Events{T}) object"
     end
   end
 end
@@ -77,7 +77,7 @@ function Base.getindex(x::Events{T}, new_state::DiseaseState) where T <: Epidemi
   elseif new_state == State_R
     return x.removal
   else
-    error("Unrecognized indexing disease state")
+    @error "Unrecognized indexing disease state"
   end
 end
 

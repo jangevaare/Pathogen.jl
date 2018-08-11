@@ -7,13 +7,13 @@ function initialize(::Type{TransmissionRates},
   n_ids = length(states)
   tr = TransmissionRates(n_ids)
 
-  for i in find(states .== State_S)
+  for i in findall(states .== State_S)
     # External exposure
     #tr.external[i] = rf.susceptibility(rp.susceptibility, pop, i) * rf.sparks(rp.sparks, pop, i)
     tr.external[i] = rf.sparks(rp.sparks, pop, i)
 
     # Internal exposure
-    @simd for k in find(states .== State_I)
+    @simd for k in findall(states .== State_I)
       tr.internal[k, i] = rf.susceptibility(rp.susceptibility, pop, i) *
                           rf.transmissibility(rp.transmissibility, pop, k) *
                           rf.infectivity(rp.infectivity, pop, i, k)
@@ -52,29 +52,27 @@ end
 
 function initialize(::Type{MarkovChain},
                     mcmc::MCMC{T};
-                    attempts::Int64=1000,
-                    debug_level::Int64=0) where T <: EpidemicModel
+                    attempts::Int64=1000) where T <: EpidemicModel
   if attempts <= 0
-    error("Must have at least 1 initialization attempt")
+    @error "Must have at least 1 initialization attempt"
   end
-  pm = Progress(attempts, "Performing $attempts MCMC initialization attempts (pid = $(myid()))")
   max_lposterior = -Inf
   local markov_chain
   for i in 1:attempts
-    events = generate(Events, mcmc, debug_level=debug_level)
+    events = generate(Events, mcmc)
     rparams = generate(RiskParameters, mcmc)
-    llikelihood, network = loglikelihood(rparams, mcmc.risk_functions, events, mcmc.population, debug_level=debug_level)
+    llikelihood, network = loglikelihood(rparams, mcmc.risk_functions, events, mcmc.population)
     lpriors = logpriors(rparams, mcmc.risk_priors)
     lposterior = llikelihood + lpriors
     if lposterior > max_lposterior
       markov_chain = MarkovChain(0, [events], [network], [rparams], [lposterior])
       max_lposterior = lposterior
     end
-    next!(pm)
+    @logmsg LogLevel(-5000) "Initialization progress" core = myid() progress = i/attempts
   end
   if max_lposterior > -Inf
     return markov_chain
   else
-    error("Failed to initialize Markov Chain")
+    @error "Failed to initialize Markov Chain"
   end
 end

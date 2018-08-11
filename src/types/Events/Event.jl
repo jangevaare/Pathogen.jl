@@ -5,7 +5,7 @@ mutable struct Event{T <: EpidemicModel}
 
   function Event{T}(time::Float64) where T <: EpidemicModel
     if time !== Inf
-      error("This initialization method is intended for when for generated event times of Inf, i.e. when an epidemic is complete and no further events are possible.")
+      @error "This initialization method is intended for when for generated event times of Inf, i.e. when an epidemic is complete and no further events are possible."
     end
     x = new{T}()
     x.time = Inf
@@ -13,8 +13,15 @@ mutable struct Event{T <: EpidemicModel}
   end
 
   function Event{T}(time::Float64, id::Int64, new_state::DiseaseState) where T <: EpidemicModel
-    new_state in _state_progressions[T] || error("Invalid disease state provided for $(T) Epidemic Models.")
-    return new{T}(time, id, new_state)
+    if new_state in _state_progressions[T]
+      return new{T}(time, id, new_state)
+    else
+      @error "Invalid disease state provided for $(T) Epidemic Models."
+    end
+  end
+
+  function Event(new_time::Float64, event::Event{T}) where T <: EpidemicModel
+    return Event{T}(new_time, event.individual, event.new_state)
   end
 end
 

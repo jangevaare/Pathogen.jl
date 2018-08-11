@@ -127,7 +127,7 @@ end
 function _like(x::RiskParameters{T}, v::Vector{Float64}) where T <: EpidemicModel
   indices = _indices(x, zeros=false)
   if indices[end] != length(v)
-    error("Incompatiable parameter vector")
+    @error "Incompatiable parameter vector"
   end
   if T == SEIR
     return RiskParameters{T}(v[1:(indices[1])],
