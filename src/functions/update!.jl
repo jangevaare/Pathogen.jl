@@ -39,7 +39,7 @@ function update!(tr::TransmissionRates,
     tr.internal[:, id] .= 0.0
   end
   if event.new_state == State_I
-    for i in findall(states .== State_S)
+    for i in findall(states .== Ref(State_S))
       tr.internal[id, i] = rf.susceptibility(rp.susceptibility, pop, i) *
                            rf.transmissibility(rp.transmissibility, pop, i, id) *
                            rf.infectivity(rp.infectivity, pop, id)
@@ -59,44 +59,44 @@ function update!(rates::EventRates{T},
                  rp::RiskParameters{T}) where T <: EpidemicModel
   id = event.individual
   if event.new_state == State_E
-    rates.exposure[id] = 0.
+    rates.exposure[id] = 0.0
     rates.infection[id] = rf.latency(rp.latency, pop, id)
-    @logmsg LogLevel(-5000) "Overall exposure rate for i = $id is now $(round(rates.exposure[id], digits=3))"
-    @logmsg LogLevel(-5000) "Infection rate for i = $id is now $(round(rates.infection[id], digits=3))"
+    @logmsg LogLevel(-5000) "Exposure rate total for i = $id updated"  λ = rates.exposure[id]
+    @logmsg LogLevel(-5000) "Infection rate for i = $id updated" λ = rates.infection[id]
   elseif event.new_state == State_I
-    rates.infection[id] = 0.
-    @logmsg LogLevel(-5000) "Infection rate for i = $id is now $(round(rates.infection[id], digits=3))"
+    rates.infection[id] = 0.0
+    @logmsg LogLevel(-5000) "Infection rate for i = $id updated" λ = rates.infection[id]
     if T in [SEIR; SIR]
       rates.removal[id] = rf.removal(rp.removal, pop, id)
-      @logmsg LogLevel(-5000) "Removal rate for i = $id is now $(round(rates.removal[id], digits=3))"
+      @logmsg LogLevel(-5000) "Removal rate for i = $id updated" λ = rates.removal[id]
     end
     if T in [SEIR; SEI]
-      @simd for i in findall(states .== State_S)
+      @simd for i in findall(states .== Ref(State_S))
         # This assumes `TransmissionRates` already updated!
         rates.exposure[i] += tr.internal[id, i]
-        @logmsg LogLevel(-5000) "Overall exposure rate for i = $i is now $(round(rates.exposure[i], digits=3))"
+        @logmsg LogLevel(-5000) "Exposure rate total for i = $id updated"  λ = rates.exposure[id]
       end
     elseif T in [SIR; SI]
-      @simd for i in findall(states .== State_S)
+      @simd for i in findall(states .== Ref(State_S))
         # This assumes `TransmissionRates` already updated!
         rates.infection[i] += tr.internal[id, i]
-        @logmsg LogLevel(-5000) "Overall infection rate for i = $i is now $(round(rates.infection[i], digits=3))"
+        @logmsg LogLevel(-5000) "Infection rate total for i = $id updated"  λ = rates.infection[id]
       end
     end
   elseif event.new_state == State_R
-    rates.removal[id] = 0.
-    @logmsg LogLevel(-5000) "Removal rate for i = $id is now $(round(rates.removal[id], digits=3))"
+    rates.removal[id] = 0.0
+    @logmsg LogLevel(-5000) "Removal rate for i = $id updated" λ = rates.removal[id]
     if T == SEIR
-      @simd for i in findall(states .== State_S)
+      @simd for i in findall(states .== Ref(State_S))
         # This assumes `TransmissionRates` already updated!
         rates.exposure[i] = sum(tr.internal[:, i])
-        @logmsg LogLevel(-5000) "Overall exposure rate for i = $i is now $(round(rates.exposure[i], digits=3))"
+        @logmsg LogLevel(-5000) "Exposure rate total for i = $i updated"  λ = rates.exposure[i]
       end
     elseif T == SIR
-      @simd for i in findall(states .== State_S)
+      @simd for i in findall(states .== Ref(State_S))
         # This assumes `TransmissionRates` already updated!
         rates.infection[i] = sum(tr.internal[:, i])
-        @logmsg LogLevel(-5000) "Overall infection rate for i = $i is now $(round(rates.infection[i], digits=3))"
+        @logmsg LogLevel(-5000) "Infection rate for i = $i updated" λ = rates.infection[i]
       end
     end
   end

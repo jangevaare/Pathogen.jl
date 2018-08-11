@@ -7,13 +7,13 @@ function initialize(::Type{TransmissionRates},
   n_ids = length(states)
   tr = TransmissionRates(n_ids)
 
-  for i in findall(states .== State_S)
+  for i in findall(states .== Ref(State_S))
     # External exposure
     #tr.external[i] = rf.susceptibility(rp.susceptibility, pop, i) * rf.sparks(rp.sparks, pop, i)
     tr.external[i] = rf.sparks(rp.sparks, pop, i)
 
     # Internal exposure
-    @simd for k in findall(states .== State_I)
+    @simd for k in findall(states .== Ref(State_I))
       tr.internal[k, i] = rf.susceptibility(rp.susceptibility, pop, i) *
                           rf.transmissibility(rp.transmissibility, pop, k) *
                           rf.infectivity(rp.infectivity, pop, i, k)

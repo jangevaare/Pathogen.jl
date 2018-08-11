@@ -4,11 +4,18 @@ os:
   - linux
   - osx
 julia:
-  - release
+  - 0.7
+  - 1.0
   - nightly
+
 notifications:
   email: false
+
 matrix:
   allow_failures:
     - julia: nightly
   fast_finish: true
+
+branches:
+  only:
+    - master
