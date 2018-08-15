@@ -1,6 +1,8 @@
 function next!(s::Simulation{T}) where T <: EpidemicModel
   event = generate(Event, s.event_rates, s.time)
-  if event.time < Inf
+  if event.time < s.time
+    @error "Time of a new event must be >= that of the previous event"
+  elseif event.time < Inf
     update!(s.events, event)
     update!(s.disease_states, event)
     update!(s.transmission_network,

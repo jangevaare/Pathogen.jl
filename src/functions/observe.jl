@@ -12,19 +12,19 @@ function observe(events::Events{T},
         infection_delay_ub = events.removal[i] - events.infection[i]
         infection[i] = events.infection[i] + rand(Truncated(delay_infection, 0., infection_delay_ub))
         removal[i] = events.removal[i] + rand(delay_removal)
-        @debug "Removal observation of i = $i at t = $(round(removal[i], digits=3)) (actual removal at t = $(round(events.removal[i], digits=3))"
+        @debug "Removal observation of i = $i at t = $(round(removal[i], digits=3)) (actual removal at t = $(round(events.removal[i], digits=3)))"
       end
-      @debug "Infection observation of i = $i at t = $(round(infection[i], digits=3)) (actual infection onset at t = $(round(events.infection[i], digits=3))"
+      @debug "Infection observation of i = $i at t = $(round(infection[i], digits=3)) (actual infection onset at t = $(round(events.infection[i], digits=3)))"
     end
   else
     @simd for i in findall(.!isnan.(events.infection))
       infection_delay = rand(delay_infection)
       if isnan(events.removal[i]) || infection_delay + events.infection[i] < events.removal[i]
         infection[i] = events.infection[i] + infection_delay
-        @debug "Infection observation of i = $i t = $(round(infection[i], digits=3)) (actual infection onset at t = $(round(events.infection[i], digits=3))"
+        @debug "Infection observation of i = $i t = $(round(infection[i], digits=3)) (actual infection onset at t = $(round(events.infection[i], digits=3)))"
         if !isnan(events.removal[i])
           removal[i] = events.removal[i] + rand(delay_removal)
-          @debug "Removal observation of i = $i at t = $(round(removal[i], digits=3)) (actual removal at t = $(round(events.removal[i], digits=3))"
+          @debug "Removal observation of i = $i at t = $(round(removal[i], digits=3)) (actual removal at t = $(round(events.removal[i], digits=3)))"
         end
       end
     end
@@ -44,7 +44,7 @@ function observe(events::Events{T},
   infection = fill(NaN, events.individuals)
   @simd for i in findall(.!isnan.(events.infection))
     infection[i] = events.infection[i] + rand(delay_infection)
-    @debug "Infection observation of i = $i at t = $(round(infection[i], digits=3)) (actual infection onset at t = $(round(events.infection[i], digits=3))"
+    @debug "Infection observation of i = $i at t = $(round(infection[i], digits=3))) (actual infection onset at t = $(round(events.infection[i], digits=3)))"
   end
   return EventObservations{T}(infection)
 end

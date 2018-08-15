@@ -6,14 +6,14 @@ function generate(::Type{Event},
     new_state = sample(_state_progressions[T][2:end], totals)
     id = sample(1:rates.individuals, Weights(rates[new_state]))
     return Event{T}(time, id, new_state)
-  elseif sum(totals) == 0.
+  elseif sum(totals) == 0.0
     return Event{T}(Inf)
   else
     # Generate new state
     new_state = sample(_state_progressions[T][2:end], totals)
     # Generate event individual
     id = sample(1:rates.individuals, Weights(rates[new_state]))
-    return Event{T}(rand(Exponential(1.0 / sum(totals))), id, new_state)
+    return Event{T}(time + rand(Exponential(1.0 / sum(totals))), id, new_state)
   end
 end
 
@@ -35,7 +35,7 @@ function generate(::Type{Transmission},
       return EndogenousTransmission(id, source)
     end
   else
-    @debug "No transmission generated"
+    @logmsg LogLevel(-3000) "No transmission generated"
     return NoTransmission()
   end
 end

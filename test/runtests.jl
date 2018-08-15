@@ -1,4 +1,4 @@
-using Test, Distributed, Random, LinearAlgebra
+using Test, Distributed, Random, LinearAlgebra, Logging
 
 addprocs(3)
 using Pathogen
@@ -8,6 +8,8 @@ using Pathogen
 
 # Set RNG seed
 Random.seed!(5432)
+
+# global_logger(ConsoleLogger(stderr, LogLevel(-1000)))
 
 # Define population
 n = 25
@@ -39,6 +41,12 @@ pop = DataFrame(x = x_coordinates,
 
   simulate!(sim, tmax=100.0)
 
+  state_counts = [Pathogen._count_by_state(sim.events, State_S, 50.0)
+                  Pathogen._count_by_state(sim.events, State_E, 50.0)
+                  Pathogen._count_by_state(sim.events, State_I, 50.0)
+                  Pathogen._count_by_state(sim.events, State_R, 50.0)]
+
+  @test sum(state_counts) == n
   @test length(sim.disease_states) == n
   @test size(sim.transmission_network.internal) == (n, n)
 
@@ -73,8 +81,8 @@ pop = DataFrame(x = x_coordinates,
       @test l < u
     end
   end
-  # iterate!(mcmc, 100, Matrix(Diagonal([0.0001; 0.01; 0.01; 0.01; 0.001; 0.001])), 0.5)
-  # @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
+  iterate!(mcmc, 100, Matrix(Diagonal([0.0001; 0.01; 0.01; 0.01; 0.001; 0.001])), 0.5)
+  @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
 end
 
 @testset "SEI Model" begin
@@ -93,6 +101,12 @@ end
   sim = Simulation(pop, rf, rparams)
 
   simulate!(sim, tmax=100.0)
+
+  state_counts = [Pathogen._count_by_state(sim.events, State_S, 50.0)
+                  Pathogen._count_by_state(sim.events, State_E, 50.0)
+                  Pathogen._count_by_state(sim.events, State_I, 50.0)]
+
+  @test sum(state_counts) == n
 
   @test length(sim.disease_states) == n
   @test size(sim.transmission_network.internal) == (n, n)
@@ -123,8 +137,8 @@ end
       @test l < u
     end
   end
-  # iterate!(mcmc, 100, Matrix(Diagonal([0.0001; 0.01; 0.01; 0.01; 0.001])), 0.5)
-  # @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
+  iterate!(mcmc, 100, Matrix(Diagonal([0.0001; 0.01; 0.01; 0.01; 0.001])), 0.5)
+  @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
 end
 
 @testset "SIR Model" begin
@@ -143,6 +157,12 @@ end
   sim = Simulation(pop, rf, rparams)
 
   simulate!(sim, tmax=100.0)
+
+  state_counts = [Pathogen._count_by_state(sim.events, State_S, 50.0)
+                  Pathogen._count_by_state(sim.events, State_I, 50.0)
+                  Pathogen._count_by_state(sim.events, State_R, 50.0)]
+
+  @test sum(state_counts) == n
 
   @test length(sim.disease_states) == n
   @test size(sim.transmission_network.internal) == (n, n)
@@ -173,8 +193,8 @@ end
       @test l < u
     end
   end
-  # iterate!(mcmc, 100, Matrix(Diagonal([0.0001; 0.01; 0.01; 0.01; 0.001])), 0.5)
-  # @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
+  iterate!(mcmc, 100, Matrix(Diagonal([0.0001; 0.01; 0.01; 0.01; 0.001])), 0.5)
+  @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
 end
 
 @testset "SI Model" begin
@@ -191,6 +211,11 @@ end
   sim = Simulation(pop, rf, rparams)
 
   simulate!(sim, tmax=100.0)
+
+  state_counts = [Pathogen._count_by_state(sim.events, State_S, 50.0)
+                  Pathogen._count_by_state(sim.events, State_I, 50.0)]
+
+  @test sum(state_counts) == n
 
   @test length(sim.disease_states) == n
   @test size(sim.transmission_network.internal) == (n, n)
@@ -215,6 +240,6 @@ end
       @test l < u
     end
   end
-  # iterate!(mcmc, 100, Matrix(Diagonal([0.0001; 0.01; 0.01; 0.01])), 0.5)
-  # @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
+  iterate!(mcmc, 100, Matrix(Diagonal([0.0001; 0.01; 0.01; 0.01])), 0.5)
+  @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
 end

@@ -25,3 +25,7 @@ mutable struct Simulation{T <: EpidemicModel}
     return new{T}(0.0, 0, pop, rf, rp, states, tr, rates, events, net)
   end
 end
+
+function Base.show(io::IO, x::Simulation{T}) where T <: EpidemicModel
+  return print(io, "$T epidemic simulation")
+end
