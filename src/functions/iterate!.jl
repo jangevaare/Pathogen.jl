@@ -3,9 +3,24 @@ function iterate!(mc::MarkovChain{T},
                   n::Int64,
                   Σ::Array{Float64, 2},
                   σ::Float64) where T <: EpidemicModel
+  pmeter = Progress(n, "MCMC progress")
   for i = 1:n
     next!(mc, mcmc, Σ, σ)
-    @logmsg LogLevel(-5000) "MCMC progress" maxlog=1 core = myid() progress = i/n
+    next!(pmeter)
+    @logmsg LogLevel(-5000) "MCMC progress" progress = i/n
+  end
+  return mc
+end
+
+function iterate!(mc::MarkovChain{T},
+                  mcmc::MCMC{T},
+                  n::Int64,
+                  Σ::Array{Float64, 2},
+                  σ::Float64,
+                  progress_channel::RemoteChannel) where T <: EpidemicModel
+  for i = 1:n
+    next!(mc, mcmc, Σ, σ)
+    put!(progress_channel, true)
   end
   return mc
 end
@@ -14,16 +29,20 @@ function iterate!(mcmc::MCMC{T},
                   n::Int64,
                   Σ::Array{Float64, 2},
                   σ::Float64) where T <: EpidemicModel
+  pmeter = Progress(n*length(mcmc.markov_chains), "MCMC progress")
+  pchannel = RemoteChannel(()->Channel{Bool}(10), 1)
   mc_Futures = Future[]
   for mc in mcmc.markov_chains
-    @debug "Beginning Markov chain iteration"
-    push!(mc_Futures, @spawn iterate!(mc, mcmc, n, Σ, σ))
+    @debug "Starting MCMC..."
+    push!(mc_Futures, @spawn iterate!(mc, mcmc, n, Σ, σ, pchannel))
   end
-  for mc in mc_Futures
-    @debug "Waiting for Markov chain iteration to complete"
-    wait(mc)
+  @debug "MCMC in progress..."
+  while !all(isready.(mc_Futures))
+    take!(pchannel) && next!(pmeter)
   end
+  close(pchannel)
+  finish!(pmeter)
   mcmc.markov_chains = [fetch(i) for i in mc_Futures]
-  @info "$n iterations for $(length(mcmc.markov_chains)) Markov chains successfully completed"
+  @debug "MCMC complete..."
   return mcmc
 end

@@ -1,10 +1,11 @@
 module Pathogen
 
   # Dependencies
-  using Distributed, DataFrames, Distributions, RecipesBase, LinearAlgebra, Logging, StatsBase
+  using Distributed, DataFrames, Distributions, RecipesBase, LinearAlgebra, Logging, StatsBase, ProgressMeter
 
   import Base.length, Base.convert, Base.show, Base.copy
   import RecipesBase.plot
+  import ProgressMeter.next!
 
   # Types
   include("types/EpidemicModel.jl")

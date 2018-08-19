@@ -1,4 +1,4 @@
-using Test, Distributed, Random, LinearAlgebra, Logging
+using Test, Distributed, Random, LinearAlgebra, Logging, ProgressMeter
 
 addprocs(3)
 using Pathogen

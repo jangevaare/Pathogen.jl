@@ -38,7 +38,7 @@ function next!(mc::MarkovChain{T},
   # Randomize event time augmentation
   event_indices = findall(.!isnan.(new_events_array[:]))
   aug_order = sample(event_indices, length(event_indices), replace=false)
-  for i = 1:(length(event_indices))
+  for i = 1:(length(event_indices)+1)
     if i <= length(event_indices)
       id, state_index = Tuple(CartesianIndices((new_events.individuals,
                                           length(_state_progressions[T][2:end])))[aug_order[i]])
