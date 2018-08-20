@@ -1,4 +1,4 @@
-function _pathway_to(population::DataFrame,
+function _pathway_to(population::Population,
                      network::TransmissionNetwork,
                      i::Int64)
   if !network.external[i] && any(network.internal[:, i])

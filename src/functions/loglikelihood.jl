@@ -1,7 +1,7 @@
 function loglikelihood(rp::RiskParameters{T},
                        rf::RiskFunctions{T},
                        events::Events{T},
-                       pop::DataFrame;
+                       pop::Population;
                        loglikelihood_output::Bool=true,
                        transmission_network_output::Bool=true) where T <: EpidemicModel
   # Initialize

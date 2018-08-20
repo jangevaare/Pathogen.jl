@@ -10,6 +10,7 @@ module Pathogen
   # Types
   include("types/EpidemicModel.jl")
   include("types/DiseaseState.jl")
+  include("types/Population.jl")
   include("types/Events/Event.jl")
   include("types/Events/Events.jl")
   include("types/Events/EventExtents.jl")
@@ -54,6 +55,7 @@ module Pathogen
     DiseaseState,
     State_S, State_E, State_I, State_R,
     RiskFunctions, RiskParameters, RiskPriors,
+    Population,
     Simulation,
     next!, simulate!,
     EventObservations, EventExtents,

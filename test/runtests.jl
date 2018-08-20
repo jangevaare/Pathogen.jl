@@ -1,9 +1,8 @@
-using Test, Distributed, Random, LinearAlgebra, Logging, ProgressMeter
+using Test, Distributed, Random, LinearAlgebra, Logging, ProgressMeter, Distances
 
 addprocs(3)
-using Pathogen
 
-@everywhere using DataFrames, Distributions
+@everywhere using DataFrames, Distributions, Pathogen
 @everywhere include(joinpath(@__DIR__, "../examples/risk_functions.jl"))
 
 # Set RNG seed
@@ -13,12 +12,11 @@ Random.seed!(5432)
 
 # Define population
 n = 25
-x_coordinates = rand(Uniform(0, 5), n)
-y_coordinates = rand(Uniform(0, 5), n)
-riskfactor1 = rand(Gamma(), n)
-pop = DataFrame(x = x_coordinates,
-                y = y_coordinates,
-                riskfactor1 = riskfactor1)
+risks = DataFrame(x = rand(Uniform(0, 5), n),
+                  y = rand(Uniform(0, 5), n),
+                  riskfactor1 = rand(Gamma(), n))
+pop = Population(risks)
+pop.distances = [euclidean([risks[:x][i]; risks[:y][i]], [risks[:x][j]; risks[:y][j]]) for i = 1:n, j = 1:n]
 
 @testset "SEIR Model" begin
   # Some commonly used functions/examples provided in helpers/RiskFunctions.jl

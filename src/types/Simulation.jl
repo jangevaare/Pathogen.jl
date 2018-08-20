@@ -1,7 +1,7 @@
 mutable struct Simulation{T <: EpidemicModel}
   time::Float64
   iterations::Int64
-  population::DataFrame
+  population::Population
   risk_functions::RiskFunctions{T}
   risk_parameters::RiskParameters{T}
   disease_states::Vector{DiseaseState}
@@ -10,11 +10,11 @@ mutable struct Simulation{T <: EpidemicModel}
   events::Events{T}
   transmission_network::TransmissionNetwork
 
-  function Simulation(pop::DataFrame,
+  function Simulation(pop::Population,
                       rf::RiskFunctions{T},
                       rp::RiskParameters{T}) where T <: EpidemicModel
 
-    n_ids = size(pop, 1)
+    n_ids = pop.individuals
 
     # Initialize everything
     states = fill(State_S, n_ids)

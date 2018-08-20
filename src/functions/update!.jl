@@ -30,7 +30,7 @@ end
 function update!(tr::TransmissionRates,
                  event::Event{T},
                  states::Vector{DiseaseState},
-                 pop::DataFrame,
+                 pop::Population,
                  rf::RiskFunctions{T},
                  rp::RiskParameters{T}) where T <: EpidemicModel
   id = event.individual
@@ -54,7 +54,7 @@ function update!(rates::EventRates{T},
                  tr::TransmissionRates,
                  event::Event{T},
                  states::Vector{DiseaseState},
-                 pop::DataFrame,
+                 pop::Population,
                  rf::RiskFunctions{T},
                  rp::RiskParameters{T}) where T <: EpidemicModel
   id = event.individual
@@ -107,7 +107,7 @@ function update!(tr::TransmissionRates,
                  rates::EventRates{T},
                  event::Event{T},
                  states::Vector{DiseaseState},
-                 pop::DataFrame,
+                 pop::Population,
                  rf::RiskFunctions{T},
                  rp::RiskParameters{T}) where T <: EpidemicModel
   update!(tr, event, states, pop, rf, rp)
