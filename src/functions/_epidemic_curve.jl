@@ -6,7 +6,7 @@ function _epidemic_curve(events::Events{T}, state::DiseaseState, min::Float64, m
   if state == _state_progressions[T][1]
     nextstate = _state_progressions[T][2]
     times = events[nextstate]
-  elseif state ∈ _state_progressions[T][2:end-1]
+  elseif state in _state_progressions[T][2:end-1]
     nextstate = advance(state, T)
     times = events[[state; nextstate]][:]
   elseif state == _state_progressions[T][end]

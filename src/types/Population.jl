@@ -37,3 +37,7 @@ mutable struct Population
     return x
   end
 end
+
+function Base.show(io::IO, x::Population)
+  return print(io, "Population object (n=$(x.individuals)")
+end

@@ -9,7 +9,7 @@
     label := "S"
     time, count
   end
-  if T ∈ [SEIR; SEI]
+  if T in [SEIR; SEI]
     @series begin
       seriestype := :steppost
       seriescolor --> :lightblue4
@@ -25,7 +25,7 @@
     label := "I"
     time, count
   end
-  if T ∈ [SEIR; SIR]
+  if T in [SEIR; SIR]
     @series begin
       seriestype := :steppost
       seriescolor --> :yellow
@@ -47,11 +47,11 @@ end
   xlims --> extrema(pop.risks[:x]) .+ (sum(extrema(pop.risks[:x]).*(-1,1)) .* (-0.05, 0.05))
   ylims --> extrema(pop.risks[:y]) .+ (sum(extrema(pop.risks[:y]).*(-1,1)) .* (-0.05, 0.05))
   ids_susceptible = _ids_by_state(events, State_S, time)
-  if T ∈ [SEIR; SEI]
+  if T in [SEIR; SEI]
     ids_exposed = _ids_by_state(events, State_E, time)
-    for i ∈ ids_exposed
+    for i in ids_exposed
       @series begin
-        x, y = _pathway_to(pop, network, i)
+        x, y = _plot_pathway(pop, network, i)
         seriestype := :path
         seriescolor := :black
         label := ""
@@ -60,20 +60,20 @@ end
     end
   end
   ids_infected = _ids_by_state(events, State_I, time)
-  for i ∈ ids_infected
+  for i in ids_infected
     @series begin
-      x, y = _pathway_to(pop, network, i)
+      x, y = _plot_pathway(pop, network, i)
       seriestype := :path
       seriescolor := :black
       label := ""
       x, y
     end
   end
-  if T ∈ [SEIR; SIR]
+  if T in [SEIR; SIR]
     ids_removed = _ids_by_state(events, State_R, time)
-    for i ∈ ids_removed
+    for i in ids_removed
       @series begin
-        x, y = _pathway_to(pop, network, i)
+        x, y = _plot_pathway(pop, network, i)
         seriestype := :path
         seriescolor := :black
         label := ""
@@ -82,15 +82,15 @@ end
     end
   end
   @series begin
-    x, y = _population_plot(pop, ids_susceptible)
+    x, y = _plot_population(pop, ids_susceptible)
     seriestype := :scatter
     seriescolor --> :purple
     label := "S"
     x, y
   end
-  if T ∈ [SEIR; SEI]
+  if T in [SEIR; SEI]
     @series begin
-      x, y = _population_plot(pop, ids_exposed)
+      x, y = _plot_population(pop, ids_exposed)
       seriestype := :scatter
       seriescolor --> :lightblue4
       label := "E"
@@ -98,15 +98,15 @@ end
     end
   end
   @series begin
-    x, y = _population_plot(pop, ids_infected)
+    x, y = _plot_population(pop, ids_infected)
     seriestype := :scatter
     seriescolor --> :lightgreen
     label := "I"
     x, y
   end
-  if T ∈ [SEIR; SIR]
+  if T in [SEIR; SIR]
     @series begin
-      x, y = _population_plot(pop, ids_removed)
+      x, y = _plot_population(pop, ids_removed)
       seriestype := :scatter
       seriescolor --> :yellow
       label := "R"

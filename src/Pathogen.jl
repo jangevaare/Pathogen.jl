@@ -41,14 +41,12 @@ module Pathogen
   include("functions/logpriors.jl")
   include("functions/start!.jl")
   include("functions/iterate!.jl")
-
-  # Visualization
-  include("visualization/_count_by_state.jl")
-  include("visualization/_ids_by_state.jl")
-  include("visualization/_epidemic_curve.jl")
-  include("visualization/_population_plot.jl")
-  include("visualization/_pathway_to.jl")
-  include("visualization/plot.jl")
+  include("functions/_count_by_state.jl")
+  include("functions/_ids_by_state.jl")
+  include("functions/_epidemic_curve.jl")
+  include("functions/_plot_population.jl")
+  include("functions/_plot_pathway.jl")
+  include("functions/plot.jl")
 
   export
     SEIR, SEI, SIR, SI,
