@@ -36,8 +36,17 @@
   end
 end
 
-function plot(events::Events{T}) where T <: EpidemicModel
+@recipe function plot(events::Events{T}) where T <: EpidemicModel
   return plot(events, minimum(events), maximum(events))
+end
+
+@recipe function plot(mcmc::MCMC{T}, mc::Int64, iter::Int64) where T <: EpidemicModel
+  if !(1 <= mc <= length(mcmc.markov_chains))
+    @error "Invalid Markov Chain specification"
+  elseif !(1 <= iter <= mcmc.markov_chains[mc].iterations)
+    @error "Invalid iteration specification"
+  end
+  return plot(mcmc.markov_chains[mc].events[iter])
 end
 
 @recipe function plot(network::TransmissionNetwork, pop::Population, events::Events{T},  time::Float64) where T <: EpidemicModel
@@ -46,6 +55,7 @@ end
   legend --> :topright
   xlims --> extrema(pop.risks[:x]) .+ (sum(extrema(pop.risks[:x]).*(-1,1)) .* (-0.05, 0.05))
   ylims --> extrema(pop.risks[:y]) .+ (sum(extrema(pop.risks[:y]).*(-1,1)) .* (-0.05, 0.05))
+  aspect_ratio --> :equal
   ids_susceptible = _ids_by_state(events, State_S, time)
   if T in [SEIR; SEI]
     ids_exposed = _ids_by_state(events, State_E, time)
@@ -113,4 +123,23 @@ end
       x, y
     end
   end
+end
+
+@recipe function plot(mcmc::MCMC{T}, mc::Int64, iter::Int64, time::Float64) where T <: EpidemicModel
+  if !(1 <= mc <= length(mcmc.markov_chains))
+    @error "Invalid Markov Chain specification"
+  elseif !(1 <= iter <= mcmc.markov_chains[mc].iterations)
+    @error "Invalid iteration specification"
+  end
+  return plot(mcmc.markov_chains[mc].transmission_network[iter],
+              mcmc.population,
+              mcmc.markov_chains[mc].events[iter],
+              time)
+end
+
+@recipe function plot(x::Vector{RiskParameters{T}}) where T <: EpidemicModel
+  xguide --> "Iterations"
+  yguide --> "Value"
+  lab = [latexstring("\\Theta_{$i}") for i = 1:length(x[1])]'
+  convert(Array{Float64, 2}, x)
 end

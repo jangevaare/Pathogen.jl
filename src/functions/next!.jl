@@ -33,7 +33,7 @@ function next!(mc::MarkovChain{T},
   new_events = mc.events[end]
   new_events_array = new_events[_state_progressions[T][2:end]]
   new_params = mc.risk_parameters[end]
-  new_network = mc.network[end]
+  new_network = mc.transmission_network[end]
   new_lposterior = mc.log_posterior[end]
   # Randomize event time augmentation
   event_indices = findall(.!isnan.(new_events_array[:]))
@@ -96,7 +96,7 @@ function next!(mc::MarkovChain{T},
                               loglikelihood_output = false,
                               transmission_network_output = true)
   push!(mc.events, new_events)
-  push!(mc.network, new_network)
+  push!(mc.transmission_network, new_network)
   push!(mc.risk_parameters, new_params)
   push!(mc.log_posterior, new_lposterior)
   return mc

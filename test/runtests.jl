@@ -67,15 +67,15 @@ pop.distances = [euclidean([risks[:x][i]; risks[:y][i]], [risks[:x][j]; risks[:y
   # Check bounds of Events initialization
   for j = 1:3, i = 1:n
     if !isnan(mcmc.markov_chains[j].events[1].exposure[i])
-      l, u = Pathogen._bounds(i, State_E, ee, obs, mcmc.markov_chains[j].events[1], mcmc.markov_chains[j].network[1])
+      l, u = Pathogen._bounds(i, State_E, ee, obs, mcmc.markov_chains[j].events[1], mcmc.markov_chains[j].transmission_network[1])
       @test l < u
     end
     if !isnan(mcmc.markov_chains[j].events[1].infection[i])
-      l, u = Pathogen._bounds(i, State_I, ee, obs, mcmc.markov_chains[j].events[1], mcmc.markov_chains[j].network[1])
+      l, u = Pathogen._bounds(i, State_I, ee, obs, mcmc.markov_chains[j].events[1], mcmc.markov_chains[j].transmission_network[1])
       @test l < u
     end
     if !isnan(mcmc.markov_chains[j].events[1].removal[i])
-      l, u = Pathogen._bounds(i, State_R, ee, obs, mcmc.markov_chains[j].events[1], mcmc.markov_chains[j].network[1])
+      l, u = Pathogen._bounds(i, State_R, ee, obs, mcmc.markov_chains[j].events[1], mcmc.markov_chains[j].transmission_network[1])
       @test l < u
     end
   end
@@ -127,11 +127,11 @@ end
   # Check bounds of Events initialization
   for j = 1:3, i = 1:n
     if !isnan(mcmc.markov_chains[j].events[1].exposure[i])
-      l, u = Pathogen._bounds(i, State_E, ee, obs, mcmc.markov_chains[j].events[1], mcmc.markov_chains[j].network[1])
+      l, u = Pathogen._bounds(i, State_E, ee, obs, mcmc.markov_chains[j].events[1], mcmc.markov_chains[j].transmission_network[1])
       @test l < u
     end
     if !isnan(mcmc.markov_chains[j].events[1].infection[i])
-      l, u = Pathogen._bounds(i, State_I, ee, obs, mcmc.markov_chains[j].events[1], mcmc.markov_chains[j].network[1])
+      l, u = Pathogen._bounds(i, State_I, ee, obs, mcmc.markov_chains[j].events[1], mcmc.markov_chains[j].transmission_network[1])
       @test l < u
     end
   end
@@ -183,11 +183,11 @@ end
   # Check bounds of Events initialization
   for j = 1:3, i = 1:n
     if !isnan(mcmc.markov_chains[j].events[1].infection[i])
-      l, u = Pathogen._bounds(i, State_I, ee, obs, mcmc.markov_chains[j].events[1], mcmc.markov_chains[j].network[1])
+      l, u = Pathogen._bounds(i, State_I, ee, obs, mcmc.markov_chains[j].events[1], mcmc.markov_chains[j].transmission_network[1])
       @test l < u
     end
     if !isnan(mcmc.markov_chains[j].events[1].removal[i])
-      l, u = Pathogen._bounds(i, State_R, ee, obs, mcmc.markov_chains[j].events[1], mcmc.markov_chains[j].network[1])
+      l, u = Pathogen._bounds(i, State_R, ee, obs, mcmc.markov_chains[j].events[1], mcmc.markov_chains[j].transmission_network[1])
       @test l < u
     end
   end
@@ -234,7 +234,7 @@ end
   # Check bounds of Events initialization
   for j = 1:3, i = 1:n
     if !isnan(mcmc.markov_chains[j].events[1].infection[i])
-      l, u = Pathogen._bounds(i, State_I, ee, obs, mcmc.markov_chains[j].events[1], mcmc.markov_chains[j].network[1])
+      l, u = Pathogen._bounds(i, State_I, ee, obs, mcmc.markov_chains[j].events[1], mcmc.markov_chains[j].transmission_network[1])
       @test l < u
     end
   end

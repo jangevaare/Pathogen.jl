@@ -22,7 +22,7 @@ function _powerlaw(params::Vector{Float64}, pop::Population, i::Int64, k::Int64)
   α = params[1]
   β = params[2]
   d = pop.distances[k, i]
-  return α * d^-β
+  return α * (d^(-β))
 end
 
 function _powerlaw_w_intercept(params::Vector{Float64}, pop::Population, i::Int64, k::Int64)
@@ -30,18 +30,18 @@ function _powerlaw_w_intercept(params::Vector{Float64}, pop::Population, i::Int6
   β = params[2]
   γ = params[3]
   d = pop.distances[k, i]
-  return (α * d^(-β)) + γ
+  return (α * (d^(-β))) + γ
 end
 
 function _gaussian(params::Vector{Float64}, pop::Population, i::Int64, k::Int64)
   σ = params[1]
-  d = pop.distances[k, i] / σ
-  return pdf(Normal(), d)
+  d = pop.distances[k, i]
+  return pdf(Normal(0.0, σ), d)
 end
 
 function _gaussian_w_intercept(params::Vector{Float64}, pop::Population, i::Int64, k::Int64)
   σ = params[1]
   γ = params[2]
-  d = pop.distances[k, i] / σ
-  return pdf(Normal(), d) + γ
+  d = pop.distances[k, i]
+  return pdf(Normal(0.0, σ), d) + γ
 end
