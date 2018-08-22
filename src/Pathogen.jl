@@ -1,7 +1,7 @@
 module Pathogen
 
   # Dependencies
-  using Distributed, DataFrames, Distributions, RecipesBase, LinearAlgebra, Logging, StatsBase, ProgressMeter
+  using Distributed, DataFrames, Distributions, RecipesBase, Logging, StatsBase, ProgressMeter
 
   import Base.length, Base.convert, Base.show, Base.copy
   import RecipesBase.plot

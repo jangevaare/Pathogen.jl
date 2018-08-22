@@ -1,4 +1,4 @@
-using Test, Distributed, Random, LinearAlgebra, Logging, ProgressMeter, Distances
+using Test, Distributed, Random, LinearAlgebra, Distances
 
 addprocs(3)
 
