@@ -138,8 +138,8 @@ end
 end
 
 @recipe function plot(x::Vector{RiskParameters{T}}) where T <: EpidemicModel
-  xguide --> "Iterations"
+  xguide --> "Iteration"
   yguide --> "Value"
-  lab = [latexstring("\\Theta_{$i}") for i = 1:length(x[1])]'
+  lab = [latexstring("\\Theta_{$i}") for i = 1:length(x[1])]
   convert(Array{Float64, 2}, x)
 end
