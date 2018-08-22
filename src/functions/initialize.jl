@@ -47,7 +47,8 @@ function initialize(::Type{EventRates{T}},
 end
 
 function initialize(::Type{MarkovChain},
-                    mcmc::MCMC{T};
+                    mcmc::MCMC{T},
+                    progress_channel::RemoteChannel;
                     attempts::Int64=1000) where T <: EpidemicModel
   if attempts <= 0
     @error "Must have at least 1 initialization attempt"
@@ -64,7 +65,8 @@ function initialize(::Type{MarkovChain},
       markov_chain = MarkovChain(0, [events], [network], [rparams], [lposterior])
       max_lposterior = lposterior
     end
-    @logmsg LogLevel(-5000) "Initialization progress" core = myid() progress = i/attempts
+    put!(progress_channel, true)
+    @logmsg LogLevel(-5000) "Initialization progress" progress = i/attempts
   end
   if max_lposterior > -Inf
     return markov_chain
