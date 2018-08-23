@@ -74,3 +74,45 @@ function _bounds(last_event::Event{T},
                  last_event.new_state,
                  extents, obs, events, network)
 end
+
+
+function _bounds(id::Int64,
+                 new_state::DiseaseState,
+                 extents::EventExtents{T},
+                 obs::EventObservations{T},
+                 events::Events{T}) where T <: EpidemicModel
+  if new_state == State_E
+    lowerbounds = [events.infection[id] - extents.exposure]
+    upperbounds = [events.infection[id]]
+  elseif new_state == State_I
+    if T in [SEIR; SEI]
+      lowerbounds = [obs.infection[id] - extents.infection
+                     events.exposure[id]]
+      upperbounds = [obs.infection[id]
+                     events.exposure[id] + extents.exposure]
+    elseif T in [SIR; SI]
+      lowerbounds = [obs.infection[id] - extents.infection]
+      upperbounds = [obs.infection[id]]
+    end
+  elseif new_state == State_R
+    lowerbounds = [obs.removal[id] - extents.removal
+                   obs.infection[id]]
+    upperbounds = [obs.removal[id]]
+  end
+  @debug "Transition of $id into $new_state with bounds: \n  [max($(round.(lowerbounds, digits=3))),\n   min($(round.(upperbounds, digits=3)))]"
+  lowerbound = maximum(lowerbounds)
+  upperbound = minimum(upperbounds)
+  if lowerbound >= upperbound
+    @warn "Lower >= upper bound for transition of i=$id into $new_state" lower = lowerbounds upper = upperbounds
+  end
+  return lowerbound, upperbound
+end
+
+function _bounds(last_event::Event{T},
+                 extents::EventExtents{T},
+                 obs::EventObservations{T},
+                 events::Events{T}) where T <: EpidemicModel
+  return _bounds(last_event.individual,
+                 last_event.new_state,
+                 extents, obs, events)
+end

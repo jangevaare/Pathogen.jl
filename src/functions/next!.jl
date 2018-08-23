@@ -28,7 +28,8 @@ end
 function next!(mc::MarkovChain{T},
                mcmc::MCMC{T},
                Σ::Array{Float64, 2},
-               σ::Float64) where T <: EpidemicModel
+               σ::Float64;
+               condition_on_network::Bool=false) where T <: EpidemicModel
   # Initialize
   new_events = mc.events[end]
   new_events_array = new_events[_state_progressions[T][2:end]]
@@ -44,13 +45,22 @@ function next!(mc::MarkovChain{T},
                                           length(_state_progressions[T][2:end])))[aug_order[i]])
       new_state = _state_progressions[T][state_index+1]
       time = new_events[new_state][id]
-      proposed_event = generate(Event,
-                                Event{T}(time, id, new_state),
-                                σ,
-                                mcmc.event_extents,
-                                mcmc.event_observations,
-                                new_events,
-                                new_network)
+      if condition_on_network
+        proposed_event = generate(Event,
+                                  Event{T}(time, id, new_state),
+                                  σ,
+                                  mcmc.event_extents,
+                                  mcmc.event_observations,
+                                  new_events,
+                                  new_network)
+      else
+        proposed_event = generate(Event,
+                                  Event{T}(time, id, new_state),
+                                  σ,
+                                  mcmc.event_extents,
+                                  mcmc.event_observations,
+                                  new_events)
+      end
       proposed_events_array = reshape([new_events_array[1:(aug_order[i]-1)]
                                        proposed_event.time
                                        new_events_array[(aug_order[i]+1):end]],
