@@ -3,7 +3,8 @@ function loglikelihood(rp::RiskParameters{T},
                        events::Events{T},
                        pop::Population;
                        loglikelihood_output::Bool=true,
-                       transmission_network_output::Bool=true) where T <: EpidemicModel
+                       transmission_network_output::Bool=true,
+                       early_decision_value::Float64=-Inf) where T <: EpidemicModel
   # Initialize
   ll = 0.
   # update_queue = Int64[] # See TODO below
@@ -30,8 +31,11 @@ function loglikelihood(rp::RiskParameters{T},
         # Add event occurence contribution to loglikelihood
         ll += log(rate_total) - rate_total * ΔT
         # Stop log likelihood calculation anytime the loglikelihood goes to -Inf
-        if ll == -Inf
-          @debug "Event $i resulted in a -Inf loglikelihood (transition of individual $id at t = $(round(time, 3)) to state $new_state)"
+        if ll <= early_decision_value
+          if ll == -Inf
+            @debug "Event $i resulted in a -Inf loglikelihood (transition of individual $id at t = $(round(time, 3)) to state $new_state)"
+          end
+          ll = -Inf
           break
         end
         # Get the individual rate associated with the event that occurred

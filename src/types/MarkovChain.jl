@@ -11,5 +11,5 @@ function Base.length(x::MarkovChain{T}) where T <: EpidemicModel
 end
 
 function Base.show(io::IO, x::MarkovChain{T}) where T <: EpidemicModel
-  return print(io, "$T model Markov chain (iterations = $(length(x))")
+  return print(io, "$T model Markov chain (iterations = $(length(x)))")
 end

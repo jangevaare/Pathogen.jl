@@ -58,9 +58,9 @@ function initialize(::Type{MarkovChain},
   for i in 1:attempts
     events = generate(Events, mcmc)
     rparams = generate(RiskParameters, mcmc)
-    llikelihood, network = loglikelihood(rparams, mcmc.risk_functions, events, mcmc.population)
-    lpriors = logpriors(rparams, mcmc.risk_priors)
-    lposterior = llikelihood + lpriors
+    lprior = logpriors(rparams, mcmc.risk_priors)
+    llikelihood, network = loglikelihood(rparams, mcmc.risk_functions, events, mcmc.population, early_decision_value = max_lposterior - lprior)
+    lposterior = llikelihood + lprior
     if lposterior > max_lposterior
       markov_chain = MarkovChain(0, [events], [network], [rparams], [lposterior])
       max_lposterior = lposterior

@@ -29,7 +29,8 @@ function next!(mc::MarkovChain{T},
                mcmc::MCMC{T},
                Σ::Array{Float64, 2},
                σ::Float64;
-               condition_on_network::Bool=false) where T <: EpidemicModel
+               condition_on_network::Bool=false,
+               event_batches::Int64=1) where T <: EpidemicModel
   # Initialize
   new_events = mc.events[end]
   new_events_array = new_events[_state_progressions[T][2:end]]
@@ -39,33 +40,56 @@ function next!(mc::MarkovChain{T},
   # Randomize event time augmentation
   event_indices = findall(.!isnan.(new_events_array[:]))
   aug_order = sample(event_indices, length(event_indices), replace=false)
-  for i = 1:(length(event_indices)+1)
-    if i <= length(event_indices)
-      id, state_index = Tuple(CartesianIndices((new_events.individuals,
-                                          length(_state_progressions[T][2:end])))[aug_order[i]])
-      new_state = _state_progressions[T][state_index+1]
-      time = new_events[new_state][id]
-      if condition_on_network
-        proposed_event = generate(Event,
-                                  Event{T}(time, id, new_state),
-                                  σ,
-                                  mcmc.event_extents,
-                                  mcmc.event_observations,
-                                  new_events,
-                                  new_network)
-      else
-        proposed_event = generate(Event,
-                                  Event{T}(time, id, new_state),
-                                  σ,
-                                  mcmc.event_extents,
-                                  mcmc.event_observations,
-                                  new_events)
+  if event_batches < 0
+    @error "Cannot have negative amount of event batches"
+  end
+  if event_batches > length(aug_order)
+    @warn "More event batches than there are events to augment, setting to maximum"
+    event_batches = length(aug_order)
+  end
+  batch_size = fld(length(aug_order), event_batches)
+  for i = 1:(event_batches + 1)
+    if i <= event_batches
+      for j = (batch_size*(i-1) + 1):minimum([(batch_size*i + 1); length(aug_order)])
+        id, state_index = Tuple(CartesianIndices((new_events.individuals,
+                                            length(_state_progressions[T][2:end])))[aug_order[j]])
+        new_state = _state_progressions[T][state_index+1]
+        time = new_events[new_state][id]
+        # Conditioning on network means that only event times valid under current network will be proposed. This is useful for models which may have additional contributions to the logposterior based on network, and require more modest network proposals (e.g. phylodynamic models).
+        if condition_on_network
+          proposed_event = generate(Event,
+                                    Event{T}(time, id, new_state),
+                                    σ,
+                                    mcmc.event_extents,
+                                    mcmc.event_observations,
+                                    new_events,
+                                    new_network)
+        else
+          proposed_event = generate(Event,
+                                    Event{T}(time, id, new_state),
+                                    σ,
+                                    mcmc.event_extents,
+                                    mcmc.event_observations,
+                                    new_events)
+        end
+        # For the first event of batch, we'll create an events array from current Markov chain position
+        # For other events in batch, we'll update proposal itself
+        if j == (batch_size*(i-1) + 1)
+          proposed_events_array = reshape([new_events_array[1:(aug_order[j]-1)]
+                                           proposed_event.time
+                                           new_events_array[(aug_order[j]+1):end]],
+                                          size(new_events_array))
+        else
+          proposed_events_array = reshape([proposed_events_array[1:(aug_order[j]-1)]
+                                           proposed_event.time
+                                           proposed_events_array[(aug_order[j]+1):end]],
+                                          size(new_events_array))
+        end
+        # Only need to generate new `Events` on last event of batch
+        if j == minimum([(batch_size*i + 1); length(aug_order)])
+          proposed_events = Events{T}(proposed_events_array)
+        end
       end
-      proposed_events_array = reshape([new_events_array[1:(aug_order[i]-1)]
-                                       proposed_event.time
-                                       new_events_array[(aug_order[i]+1):end]],
-                                      size(new_events_array))
-      proposed_events = Events{T}(proposed_events_array)
       proposed_params = new_params
     else
       # Propose new risk parameters
@@ -74,21 +98,22 @@ function next!(mc::MarkovChain{T},
       proposed_params = generate(RiskParameters{T}, new_params, Σ)
     end
     proposed_lprior = logpriors(proposed_params, mcmc.risk_priors)
-    if proposed_lprior > -Inf
+    # Based on the logprior and competiting MCMC iteration, this loglikelihood is required for acceptance
+    # Calculating this in advance allows us to cut loglikelihood calculation short if it goes below threshold
+    ll_acceptance_threshold = log(rand()) + new_lposterior - proposed_lprior
+    if ll_acceptance_threshold < Inf
       proposed_lliklihood = loglikelihood(proposed_params,
                                           mcmc.risk_functions,
                                           proposed_events,
                                           mcmc.population,
-                                          transmission_network_output = false)
-      if proposed_lliklihood > -Inf
-        proposed_lposterior = proposed_lprior + proposed_lliklihood
-      else
-        proposed_lposterior = -Inf
-      end
+                                          transmission_network_output = false,
+                                          early_decision_value = ll_acceptance_threshold)
+      proposed_lposterior = proposed_lprior + proposed_lliklihood
     else
+      proposed_lliklihood = -Inf
       proposed_lposterior = -Inf
     end
-    if _accept(proposed_lposterior, new_lposterior)
+    if proposed_lliklihood >= ll_acceptance_threshold
       @debug "MCMC proposal accepted (acceptance probability = $(round(min(1.0, exp(proposed_lposterior - new_lposterior)), digits=3)))"
       new_params = proposed_params
       new_events = proposed_events
