@@ -79,7 +79,7 @@ pop.distances = [euclidean([risks[:x][i]; risks[:y][i]], [risks[:x][j]; risks[:y
       @test l < u
     end
   end
-  iterate!(mcmc, 100, Matrix(Diagonal([0.0001; 0.01; 0.01; 0.01; 0.001; 0.001])), 0.5)
+  iterate!(mcmc, 100, 0.5)
   @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
 end
 
@@ -135,7 +135,7 @@ end
       @test l < u
     end
   end
-  iterate!(mcmc, 100, Matrix(Diagonal([0.0001; 0.01; 0.01; 0.01; 0.001])), 0.5)
+  iterate!(mcmc, 100, 0.5)
   @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
 end
 
@@ -191,7 +191,7 @@ end
       @test l < u
     end
   end
-  iterate!(mcmc, 100, Matrix(Diagonal([0.0001; 0.01; 0.01; 0.01; 0.001])), 0.5)
+  iterate!(mcmc, 100, 0.5)
   @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
 end
 
@@ -238,6 +238,6 @@ end
       @test l < u
     end
   end
-  iterate!(mcmc, 100, Matrix(Diagonal([0.0001; 0.01; 0.01; 0.01])), 0.5)
+  iterate!(mcmc, 100, 0.5)
   @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
 end
