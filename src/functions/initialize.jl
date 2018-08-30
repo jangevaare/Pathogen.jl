@@ -62,7 +62,7 @@ function initialize(::Type{MarkovChain},
     llikelihood, network = loglikelihood(rparams, mcmc.risk_functions, events, mcmc.population, early_decision_value = max_lposterior - lprior)
     lposterior = llikelihood + lprior
     if lposterior > max_lposterior
-      markov_chain = MarkovChain(0, [events], [network], [rparams], [lposterior])
+      markov_chain = MarkovChain(events, network, rparams, lposterior)
       max_lposterior = lposterior
     end
     put!(progress_channel, true)
