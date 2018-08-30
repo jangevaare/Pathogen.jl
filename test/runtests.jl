@@ -1,8 +1,8 @@
-using Test, Distributed, Random, LinearAlgebra, Distances
+using Test, Distributed, Random, LinearAlgebra, Distances, DataFrames, Distributions
 
 addprocs(3)
 
-@everywhere using DataFrames, Distributions, Pathogen
+@everywhere using Pathogen
 @everywhere include(joinpath(@__DIR__, "../examples/risk_functions.jl"))
 
 # Set RNG seed
