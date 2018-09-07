@@ -1,4 +1,4 @@
-using Test, Distributed, Random, LinearAlgebra, Distances, DataFrames, Distributions
+using Test, Distributed, Random, LinearAlgebra, Distances, DataFrames, Distributions, Pathogen
 
 addprocs(3)
 
