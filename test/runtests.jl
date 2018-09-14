@@ -35,7 +35,12 @@ pop.distances = [euclidean([risks[:x][i]; risks[:y][i]], [risks[:x][j]; risks[:y
                                  [0.1],
                                  [0.05])
 
-  sim = Simulation(pop, rf, rparams)
+  # sim = Simulation(pop, rf, rparams)
+  sim = Simulation(pop,
+                   [State_I; fill(State_S, n-1)],
+                   0.0,
+                   rf,
+                   rparams)
 
   simulate!(sim, tmax=100.0)
 
@@ -96,7 +101,11 @@ end
                                 Float64[],
                                 [0.1])
 
-  sim = Simulation(pop, rf, rparams)
+  sim = Simulation(pop,
+                 [State_I; fill(State_S, n-1)],
+                 0.0,
+                 rf,
+                 rparams)
 
   simulate!(sim, tmax=100.0)
 
@@ -152,7 +161,11 @@ end
                                 Float64[],
                                 [0.05])
 
-  sim = Simulation(pop, rf, rparams)
+  sim = Simulation(pop,
+                 [State_I; fill(State_S, n-1)],
+                 0.0,
+                 rf,
+                 rparams)
 
   simulate!(sim, tmax=100.0)
 
@@ -206,7 +219,11 @@ end
                                [2.0, 5.0],
                                Float64[])
 
-  sim = Simulation(pop, rf, rparams)
+  sim = Simulation(pop,
+                 [State_I; fill(State_S, n-1)],
+                 0.0,
+                 rf,
+                 rparams)
 
   simulate!(sim, tmax=100.0)
 
