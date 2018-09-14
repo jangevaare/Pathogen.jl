@@ -1,6 +1,6 @@
 function generate(::Type{Event},
                   rates::EventRates{T},
-                  time::Float64=0.0) where T <: EpidemicModel
+                  time::Float64) where T <: EpidemicModel
   totals = Weights([sum(rates[state]) for state in _state_progressions[T][2:end]])
   if sum(totals) == Inf
     new_state = sample(_state_progressions[T][2:end], totals)
@@ -47,7 +47,7 @@ function generate(::Type{Events},
   exposed_state = T in [SEIR; SEI]
   removed_state = T in [SEIR; SIR]
   for i = 1:obs.individuals
-    if !isnan(obs.infection[i])
+    if obs.infection[i] > -Inf
       i_lb = obs.infection[i] - extents.infection
       i_ub = obs.infection[i]
       i_time = rand(Uniform(i_lb, i_ub))
@@ -58,7 +58,7 @@ function generate(::Type{Events},
         e_time = rand(Uniform(e_lb, e_ub))
         update!(events, Event{T}(e_time, i, State_E))
       end
-      if removed_state && !isnan(obs.removal[i])
+      if removed_state && obs.removal[i] > -Inf
         r_lb = maximum([obs.infection[i]; obs.removal[i] - extents.removal])
         r_ub = obs.removal[i]
         r_time = rand(Uniform(r_lb, r_ub))

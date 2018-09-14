@@ -67,6 +67,20 @@ mutable struct Events{T <: EpidemicModel}
       @error "Invalid array size for construction of an $(Events{T}) object"
     end
   end
+
+  function Events{T}(x::Vector{DiseaseState}) where T <: EpidemicModel
+    events = Events{T}(length(x))
+    for i = 1:length(x)
+      if x[i] in _state_progressions[T]
+        for j = _state_progressions[T][2:findfirst(Ref(x[i]) .== _state_progressions[T])]
+          events[j][i] = -Inf
+        end
+      else
+        @error "Invalid initial state for individual $i"
+      end
+    end
+    return events
+  end
 end
 
 function Base.getindex(x::Events{T}, new_state::DiseaseState) where T <: EpidemicModel
