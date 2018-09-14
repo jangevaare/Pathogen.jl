@@ -5,10 +5,10 @@ function observe(events::Events{T},
   infection = fill(NaN, events.individuals)
   removal = fill(NaN, events.individuals)
   if force
-    @simd for i in findall(.!isnan.(events.infection))
+    @simd for i in findall(events.infection .> -Inf)
       if isnan(events.removal[i])
         infection[i] = events.infection[i] + rand(delay_infection)
-      else
+      elseif events.removal[i] > -Inf
         infection_delay_ub = events.removal[i] - events.infection[i]
         infection[i] = events.infection[i] + rand(Truncated(delay_infection, 0., infection_delay_ub))
         removal[i] = events.removal[i] + rand(delay_removal)
@@ -17,7 +17,7 @@ function observe(events::Events{T},
       @debug "Infection observation of i = $i at t = $(round(infection[i], digits=3)) (actual infection onset at t = $(round(events.infection[i], digits=3)))"
     end
   else
-    @simd for i in findall(.!isnan.(events.infection))
+    @simd for i in findall(events.infection .> -Inf)
       infection_delay = rand(delay_infection)
       if isnan(events.removal[i]) || infection_delay + events.infection[i] < events.removal[i]
         infection[i] = events.infection[i] + infection_delay
@@ -42,7 +42,7 @@ end
 function observe(events::Events{T},
                  delay_infection::UnivariateDistribution) where T <: Union{SEI, SI}
   infection = fill(NaN, events.individuals)
-  @simd for i in findall(.!isnan.(events.infection))
+  @simd for i in findall(events.infection .> -Inf)
     infection[i] = events.infection[i] + rand(delay_infection)
     @debug "Infection observation of i = $i at t = $(round(infection[i], digits=3))) (actual infection onset at t = $(round(events.infection[i], digits=3)))"
   end
