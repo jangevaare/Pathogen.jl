@@ -1,19 +1,24 @@
 function loglikelihood(rp::RiskParameters{T},
                        rf::RiskFunctions{T},
                        events::Events{T},
-                       pop::Population;
+                       pop::Population,
+                       starting_states::Vector{DiseaseState};
+                       starting_time::Float64=0.0,
                        loglikelihood_output::Bool=true,
                        transmission_network_output::Bool=true,
                        early_decision_value::Float64=-Inf) where T <: EpidemicModel
   # Initialize
   ll = 0.
-  # update_queue = Int64[] # See TODO below
   # We can use the Simulation struct to recreate epidemic
-  s = Simulation(pop, rf, rp)
+  s = Simulation(pop, starting_states, starting_time, rf, rp)
   s.events = events
   # Event order
-  event_order = sortperm(events[_state_progressions[T][2:end]][:])
+  event_array = convert(Array{Float64, 2}, events)[:]
+  # To cause event ordering to ignore -Inf event times (i.e. events that led to starting states) set to NaN
+  event_array[event_array .== -Inf] .= NaN
+  event_order = sortperm(event_array)
   local last_event
+  local ΔT
   for i = 1:length(event_order)
     id, state_index = Tuple(CartesianIndices((events.individuals,
                                         length(_state_progressions[T][2:end])))[event_order[i]])
@@ -25,24 +30,25 @@ function loglikelihood(rp::RiskParameters{T},
       # Get event rate totals
       rate_total = sum(sum(s.event_rates[new_state]) for state in _state_progressions[T][2:end])
       @logmsg LogLevel(-5000) "Event rate total $i = $(round(rate_total, 3))"
-      if i > 1
-        # Calculate length of inter-event period (ignore for 1st event)
+      if i == 1
+        ΔT = event.time - starting_time
+      else
         ΔT = event.time - last_event.time
-        # Add event occurence contribution to loglikelihood
-        ll += log(rate_total) - rate_total * ΔT
-        # Stop log likelihood calculation anytime the loglikelihood goes to -Inf
-        if ll <= early_decision_value
-          if ll == -Inf
-            @debug "Event $i resulted in a -Inf loglikelihood (transition of individual $id at t = $(round(time, 3)) to state $new_state)"
-          end
-          ll = -Inf
-          break
-        end
-        # Get the individual rate associated with the event that occurred
-        event_rate = s.event_rates[event.new_state][event.individual]
-        # Add the specific event contribution to loglikelihood
-        ll += log(event_rate/rate_total)
       end
+      # Add event occurence contribution to loglikelihood
+      ll += log(rate_total) - rate_total * ΔT
+      # Stop log likelihood calculation anytime the loglikelihood goes to -Inf
+      if ll <= early_decision_value
+        if ll == -Inf
+          @debug "Event $i resulted in a -Inf loglikelihood (transition of individual $id at t = $(round(time, 3)) to state $new_state)"
+        end
+        ll = -Inf
+        break
+      end
+      # Get the individual rate associated with the event that occurred
+      event_rate = s.event_rates[event.new_state][event.individual]
+      # Add the specific event contribution to loglikelihood
+      ll += log(event_rate/rate_total)
     end
     # Updates
     last_event = event
@@ -70,4 +76,20 @@ function loglikelihood(rp::RiskParameters{T},
   else
     @error "You must return either a transmission_network proposal or loglikelihood"
   end
+end
+
+function loglikelihood(rp::RiskParameters{T},
+                       rf::RiskFunctions{T},
+                       events::Events{T},
+                       pop::Population;
+                       starting_time::Float64=0.0,
+                       loglikelihood_output::Bool=true,
+                       transmission_network_output::Bool=true,
+                       early_decision_value::Float64=-Inf) where T <: EpidemicModel
+  return loglikelihood(rp, rf, events, pop,
+                       fill(State_S, pop.individuals),
+                       starting_time = starting_time,
+                       loglikelihood_output = loglikelihood_output,
+                       transmission_network_output = transmission_network_output,
+                       early_decision_value = early_decision_value)
 end

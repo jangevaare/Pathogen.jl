@@ -103,13 +103,17 @@ function Base.getindex(x::Events{T}, new_states::Vector{DiseaseState}) where T <
   return y
 end
 
+function Base.convert(::Type{Array{Float64, 2}}, x::Events{T}) where T <: EpidemicModel
+  return x[_state_progressions[T][2:end]]
+end
+
 function Base.minimum(x::Events{T}) where T <: EpidemicModel
-  y = x[_state_progressions[T][2:end]]
+  y = convert(Array{Float64, 2}, x)
   return minimum(y[.!isnan.(y)])
 end
 
 function Base.maximum(x::Events{T}) where T <: EpidemicModel
-  y = x[_state_progressions[T][2:end]]
+  y = convert(Array{Float64, 2}, x)
   return maximum(y[.!isnan.(y)])
 end
 
