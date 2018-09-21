@@ -19,7 +19,7 @@ function iterate!(mc::MarkovChain{T},
   end
   for i = 1:n
     if use_adapted_cov
-      next!(mc, mcmc, Σ, adapted_cov, condition_on_network = condition_on_network, event_batches = event_batches)
+      next!(mc, mcmc, adapted_cov, σ, condition_on_network = condition_on_network, event_batches = event_batches)
     else
       next!(mc, mcmc, Σ, σ, condition_on_network = condition_on_network, event_batches = event_batches)
     end

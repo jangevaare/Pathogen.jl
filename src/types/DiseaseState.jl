@@ -43,6 +43,10 @@ function Base.show(io::IO, x::DiseaseState)
   return print(io, convert(Char, x))
 end
 
+function Base.length(x::DiseaseState)
+  return 1
+end
+
 const _state_progressions = Dict{DataType, Vector{DiseaseState}}()
 _state_progressions[SEIR] = [State_S; State_E; State_I; State_R]
 _state_progressions[SEI] = [State_S; State_E; State_I]
