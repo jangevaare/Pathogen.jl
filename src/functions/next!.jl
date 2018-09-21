@@ -38,7 +38,7 @@ function next!(mc::MarkovChain{T},
   new_network = mc.transmission_network[end]
   new_lposterior = mc.log_posterior[end]
   # Randomize event time augmentation
-  event_indices = findall(.!isnan.(new_events_array[:]))
+  event_indices = findall(new_events_array[:] .> -Inf)
   aug_order = sample(event_indices, length(event_indices), replace=false)
   if event_batches < 0
     @error "Cannot have negative amount of event batches"
@@ -55,7 +55,7 @@ function next!(mc::MarkovChain{T},
                                             length(_state_progressions[T][2:end])))[aug_order[j]])
         new_state = _state_progressions[T][state_index+1]
         time = new_events[new_state][id]
-        # Conditioning on network means that only event times valid under current network will be proposed. This is useful for models which may have additional contributions to the logposterior based on network, and require more modest network proposals (e.g. phylodynamic models).
+        # Conditioning on network means that only event times valid under current network will be proposed. This is useful for models which may have additional contributions to the posterior based on network, and require more modest proposals (e.g. phylodynamic models).
         if condition_on_network
           proposed_event = generate(Event,
                                     Event{T}(time, id, new_state),
@@ -102,18 +102,19 @@ function next!(mc::MarkovChain{T},
     # Calculating this in advance allows us to cut loglikelihood calculation short if it goes below threshold
     ll_acceptance_threshold = log(rand()) + new_lposterior - proposed_lprior
     if ll_acceptance_threshold < Inf
-      proposed_lliklihood = loglikelihood(proposed_params,
+      proposed_llikelihood = loglikelihood(proposed_params,
                                           mcmc.risk_functions,
                                           proposed_events,
                                           mcmc.population,
+                                          mcmc.starting_states,
                                           transmission_network_output = false,
                                           early_decision_value = ll_acceptance_threshold)
-      proposed_lposterior = proposed_lprior + proposed_lliklihood
+      proposed_lposterior = proposed_lprior + proposed_llikelihood
     else
-      proposed_lliklihood = -Inf
+      proposed_llikelihood = -Inf
       proposed_lposterior = -Inf
     end
-    if proposed_lliklihood >= ll_acceptance_threshold
+    if proposed_llikelihood >= ll_acceptance_threshold
       @debug "MCMC proposal accepted (acceptance probability = $(round(min(1.0, exp(proposed_lposterior - new_lposterior)), digits=3)))"
       new_params = proposed_params
       new_events = proposed_events
@@ -128,6 +129,7 @@ function next!(mc::MarkovChain{T},
                               mcmc.risk_functions,
                               new_events,
                               mcmc.population,
+                              mcmc.starting_states,
                               loglikelihood_output = false,
                               transmission_network_output = true)
   push!(mc.events, new_events)

@@ -3,7 +3,6 @@ mutable struct EventRates{T <: EpidemicModel}
   infection::Vector{Float64}
   removal::Vector{Float64}
   individuals::Int64
-  # TODO: add reference to `TransmissionRates`?
 
   function EventRates{T}(n::Int64) where T <: SEIR
     x = new{T}(fill(0.0, n), fill(0.0, n), fill(0.0, n), n)

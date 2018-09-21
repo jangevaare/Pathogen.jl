@@ -24,8 +24,9 @@ function generate(::Type{Transmission},
   if _new_transmission(event)
     external_or_internal = Weights([tr.external[id]; sum(tr.internal[:,id])])
     if sum(external_or_internal) == 0.0
-      @debug "All transmission rates = 0.0, exogenous transmission generated"
-      return ExogenousTransmission(id)
+      @error "All transmission rates = 0.0, No transmission can be generated"
+      return NoTransmission()
+      # return ExogenousTransmission(id)
     elseif sample([true; false], external_or_internal)
       @debug "Exogenous tranmission generated"
       return ExogenousTransmission(id)
@@ -35,7 +36,7 @@ function generate(::Type{Transmission},
       return EndogenousTransmission(id, source)
     end
   else
-    @logmsg LogLevel(-3000) "No transmission generated"
+    @debug "No transmission generated"
     return NoTransmission()
   end
 end
@@ -47,7 +48,15 @@ function generate(::Type{Events},
   exposed_state = T in [SEIR; SEI]
   removed_state = T in [SEIR; SIR]
   for i = 1:obs.individuals
-    if obs.infection[i] > -Inf
+    if obs.infection[i] == -Inf
+      update!(events, Event{T}(-Inf, i, State_I))
+      if exposed_state
+        update!(events, Event{T}(-Inf, i, State_E))
+      end
+      if removed_state && obs.removal[i] == -Inf
+        update!(events, Event{T}(-Inf, i, State_R))
+      end
+    elseif !isnan(obs.infection[i])
       i_lb = obs.infection[i] - extents.infection
       i_ub = obs.infection[i]
       i_time = rand(Uniform(i_lb, i_ub))
@@ -58,7 +67,7 @@ function generate(::Type{Events},
         e_time = rand(Uniform(e_lb, e_ub))
         update!(events, Event{T}(e_time, i, State_E))
       end
-      if removed_state && obs.removal[i] > -Inf
+      if removed_state && !isnan(obs.removal[i])
         r_lb = maximum([obs.infection[i]; obs.removal[i] - extents.removal])
         r_ub = obs.removal[i]
         r_time = rand(Uniform(r_lb, r_ub))

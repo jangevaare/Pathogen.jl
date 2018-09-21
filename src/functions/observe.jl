@@ -5,7 +5,7 @@ function observe(events::Events{T},
   infection = fill(NaN, events.individuals)
   removal = fill(NaN, events.individuals)
   if force
-    @simd for i in findall(.!isnan.(events.infection))
+    for i in findall(.!isnan.(events.infection))
       if events.infection[i] == -Inf
         infection[i] = -Inf
         if events.removal[i] == -Inf
@@ -19,11 +19,11 @@ function observe(events::Events{T},
                        rand(Truncated(delay_infection, 0.0, infection_delay_ub))
         removal[i] = events.removal[i] + rand(delay_removal)
       end
-      @debug "Removal observation of i = $i at t = $(round(removal[i], digits=3)) (actual removal at t = $(round(events.removal[i], digits=3)))"
       @debug "Infection observation of i = $i at t = $(round(infection[i], digits=3)) (actual infection onset at t = $(round(events.infection[i], digits=3)))"
+      @debug "Removal observation of i = $i at t = $(round(removal[i], digits=3)) (actual removal at t = $(round(events.removal[i], digits=3)))"
     end
   else
-    @simd for i in findall(.!isnan.(events.infection))
+    for i in findall(.!isnan.(events.infection))
       if events.infection[i] == -Inf
         infection[i] = -Inf
         if events.removal == -Inf

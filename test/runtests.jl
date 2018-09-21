@@ -8,7 +8,8 @@ addprocs(3)
 # Set RNG seed
 Random.seed!(5432)
 
-# global_logger(ConsoleLogger(stderr, LogLevel(-1000)))
+# using Logging
+# global_logger(ConsoleLogger(stderr, LogLevel(-10000)))
 
 # Define population
 n = 25
@@ -62,24 +63,23 @@ pop.distances = [euclidean([risks[:x][i]; risks[:y][i]], [risks[:x][j]; risks[:y
                              UnivariateDistribution[],
                              [Uniform(0.0, 1.0)],
                              [Uniform(0.0, 1.0)])
-
   ee = EventExtents{SEIR}(20.0, 2.0, 2.0)
-  mcmc = MCMC(obs, ee, pop, rf, rpriors)
+  mcmc = MCMC(obs, ee, pop, [State_I; fill(State_S, n-1)], rf, rpriors)
   start!(mcmc, 3, attempts=100)
   @test length(mcmc.markov_chains) == 3
   @test all([length(mcmc.markov_chains[i].risk_parameters[1]) for i=1:3] .== length(rparams))
 
   # Check bounds of Events initialization
   for j = 1:3, i = 1:n
-    if !isnan(mcmc.markov_chains[j].events[1].exposure[i])
+    if mcmc.markov_chains[j].events[1].exposure[i] > -Inf
       l, u = Pathogen._bounds(i, State_E, ee, obs, mcmc.markov_chains[j].events[1], mcmc.markov_chains[j].transmission_network[1])
       @test l < u
     end
-    if !isnan(mcmc.markov_chains[j].events[1].infection[i])
+    if mcmc.markov_chains[j].events[1].infection[i] > -Inf
       l, u = Pathogen._bounds(i, State_I, ee, obs, mcmc.markov_chains[j].events[1], mcmc.markov_chains[j].transmission_network[1])
       @test l < u
     end
-    if !isnan(mcmc.markov_chains[j].events[1].removal[i])
+    if mcmc.markov_chains[j].events[1].removal[i] > -Inf
       l, u = Pathogen._bounds(i, State_R, ee, obs, mcmc.markov_chains[j].events[1], mcmc.markov_chains[j].transmission_network[1])
       @test l < u
     end
@@ -135,11 +135,11 @@ end
 
   # Check bounds of Events initialization
   for j = 1:3, i = 1:n
-    if !isnan(mcmc.markov_chains[j].events[1].exposure[i])
+    if mcmc.markov_chains[j].events[1].exposure[i] > -Inf
       l, u = Pathogen._bounds(i, State_E, ee, obs, mcmc.markov_chains[j].events[1], mcmc.markov_chains[j].transmission_network[1])
       @test l < u
     end
-    if !isnan(mcmc.markov_chains[j].events[1].infection[i])
+    if mcmc.markov_chains[j].events[1].infection[i] > -Inf
       l, u = Pathogen._bounds(i, State_I, ee, obs, mcmc.markov_chains[j].events[1], mcmc.markov_chains[j].transmission_network[1])
       @test l < u
     end
@@ -195,11 +195,11 @@ end
 
   # Check bounds of Events initialization
   for j = 1:3, i = 1:n
-    if !isnan(mcmc.markov_chains[j].events[1].infection[i])
+    if mcmc.markov_chains[j].events[1].infection[i] > -Inf
       l, u = Pathogen._bounds(i, State_I, ee, obs, mcmc.markov_chains[j].events[1], mcmc.markov_chains[j].transmission_network[1])
       @test l < u
     end
-    if !isnan(mcmc.markov_chains[j].events[1].removal[i])
+    if mcmc.markov_chains[j].events[1].removal[i] > -Inf
       l, u = Pathogen._bounds(i, State_R, ee, obs, mcmc.markov_chains[j].events[1], mcmc.markov_chains[j].transmission_network[1])
       @test l < u
     end
@@ -250,7 +250,7 @@ end
   @test all([length(mcmc.markov_chains[i].risk_parameters[1]) for i=1:3] .== length(rparams))
   # Check bounds of Events initialization
   for j = 1:3, i = 1:n
-    if !isnan(mcmc.markov_chains[j].events[1].infection[i])
+    if mcmc.markov_chains[j].events[1].infection[i] > -Inf
       l, u = Pathogen._bounds(i, State_I, ee, obs, mcmc.markov_chains[j].events[1], mcmc.markov_chains[j].transmission_network[1])
       @test l < u
     end

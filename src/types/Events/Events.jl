@@ -95,10 +95,10 @@ function Base.getindex(x::Events{T}, new_state::DiseaseState) where T <: Epidemi
   end
 end
 
-function Base.getindex(x::Events{T}, new_states::Vector{DiseaseState}) where T <: EpidemicModel
-  y = x[new_states[1]]
-  for i=2:length(new_states)
-    y = hcat(y, x[new_states[i]])
+function Base.getindex(x::Events{T}, states::Vector{DiseaseState}) where T <: EpidemicModel
+  y = x[states[1]]
+  for i = 2:length(states)
+    y = hcat(y, x[states[i]])
   end
   return y
 end

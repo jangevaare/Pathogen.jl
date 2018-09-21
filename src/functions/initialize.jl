@@ -9,18 +9,18 @@ function initialize(::Type{TransmissionRates},
     # External exposure
     #tr.external[i] = rf.susceptibility(rp.susceptibility, pop, i) * rf.sparks(rp.sparks, pop, i)
     tr.external[i] = rf.sparks(rp.sparks, pop, i)
-
     # Internal exposure
-    @simd for k in findall(states .== Ref(State_I))
+    for k in findall(states .== Ref(State_I))
       tr.internal[k, i] = rf.susceptibility(rp.susceptibility, pop, i) *
                           rf.transmissibility(rp.transmissibility, pop, i, k) *
                           rf.infectivity(rp.infectivity, pop, k)
     end
   end
+  @debug "Initialization of $T TransmissionRates complete" external = tr.external ∑external = sum(tr.external) internal = tr.internal ∑internal = sum(tr.internal)
   return tr
 end
 
-function initialize(::Type{EventRates{T}},
+function initialize(::Type{EventRates},
                     tr::TransmissionRates,
                     states::Vector{DiseaseState},
                     pop::Population,
@@ -43,6 +43,7 @@ function initialize(::Type{EventRates{T}},
       end
     end
   end
+  @debug "Initialization of $T EventRates complete" rates = rates[_state_progressions[T][2:end]]
   return rates
 end
 
@@ -59,18 +60,55 @@ function initialize(::Type{MarkovChain},
     events = generate(Events, mcmc)
     rparams = generate(RiskParameters, mcmc)
     lprior = logpriors(rparams, mcmc.risk_priors)
-    llikelihood, network = loglikelihood(rparams, mcmc.risk_functions, events, mcmc.population, early_decision_value = max_lposterior - lprior)
+    llikelihood, network = loglikelihood(rparams,
+                                         mcmc.risk_functions,
+                                         events,
+                                         mcmc.population,
+                                         mcmc.starting_states,
+                                         early_decision_value = max_lposterior - lprior)
     lposterior = llikelihood + lprior
     if lposterior > max_lposterior
       markov_chain = MarkovChain(events, network, rparams, lposterior)
       max_lposterior = lposterior
     end
     put!(progress_channel, true)
-    @logmsg LogLevel(-5000) "Initialization progress" progress = i/attempts
   end
-  if max_lposterior > -Inf
-    return markov_chain
-  else
+  if max_lposterior == -Inf
     @error "Failed to initialize Markov Chain"
   end
+  return markov_chain
+end
+
+function initialize(::Type{MarkovChain},
+                    mcmc::MCMC{T};
+                    attempts::Int64=1000) where T <: EpidemicModel
+  if attempts <= 0
+    @error "Must have at least 1 initialization attempt"
+  end
+  max_lposterior = -Inf
+  local markov_chain
+  pmeter = Progress(attempts, "Initialization progress")
+  for i in 1:attempts
+    @debug "Beginning MarkovChain initialization attempt $i"
+    next!(pmeter)
+    events = generate(Events, mcmc)
+    rparams = generate(RiskParameters, mcmc)
+    lprior = logpriors(rparams, mcmc.risk_priors)
+    llikelihood, network = loglikelihood(rparams,
+                                         mcmc.risk_functions,
+                                         events,
+                                         mcmc.population,
+                                         mcmc.starting_states,
+                                         early_decision_value = max_lposterior - lprior)
+    lposterior = llikelihood + lprior
+    if lposterior > max_lposterior
+      markov_chain = MarkovChain(events, network, rparams, lposterior)
+      max_lposterior = lposterior
+    end
+  end
+  finish!(pmeter)
+  if max_lposterior == -Inf
+    @error "Failed to initialize Markov Chain"
+  end
+  return markov_chain
 end
