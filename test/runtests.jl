@@ -6,7 +6,7 @@ addprocs(3)
 @everywhere include(joinpath(@__DIR__, "../examples/risk_functions.jl"))
 
 # Set RNG seed
-Random.seed!(5432)
+Random.seed!(4321)
 
 # using Logging
 # global_logger(ConsoleLogger(stderr, LogLevel(-10000)))

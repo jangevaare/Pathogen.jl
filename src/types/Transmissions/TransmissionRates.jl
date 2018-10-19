@@ -4,8 +4,8 @@ mutable struct TransmissionRates
   individuals::Int64
 
   function TransmissionRates(individuals::Int64)
-    return new(fill(0., individuals),
-               fill(0., (individuals, individuals)),
+    return new(fill(0.0, individuals),
+               fill(0.0, (individuals, individuals)),
                individuals)
   end
 
