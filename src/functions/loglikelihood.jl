@@ -34,7 +34,7 @@ function loglikelihood(rp::RiskParameters{T},
     event = Event{T}(time, id, new_state)
     @debug "Calculating the loglikehood contribution of event $i" event
     # Get event rate totals
-    rate_total = sum(sum(s.event_rates[new_state]) for state in _state_progressions[T][2:end])
+    rate_total = sum(s.event_rates)
     if rate_total <= 0.0
       @error "Event rate total $i = $(round(rate_total, digits=3)) (it should be > 0.0)"
       ll = -Inf

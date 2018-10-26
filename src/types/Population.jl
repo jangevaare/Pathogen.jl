@@ -1,5 +1,5 @@
 mutable struct Population
-  risks::DataFrames.DataFrame
+  risks::DataFrame
   distances::AbstractArray
   individuals::Int64
 
@@ -9,7 +9,7 @@ mutable struct Population
     return x
   end
 
-  function Population(risks::DataFrames.DataFrame)
+  function Population(risks::DataFrame)
     x = new()
     x.risks = risks
     x.individuals = size(risks, 1)
@@ -26,7 +26,7 @@ mutable struct Population
     return x
   end
 
-  function Population(risks::DataFrames.DataFrame, d::Array{T, 2}) where T <: Any
+  function Population(risks::DataFrame, d::Array{T, 2}) where T <: Any
     if length(unique([size(d, 1); size(d, 2); size(risks, 1)])) !== 1
       @error "Mismatch between sizes of distance matrix and risk dataframe"
     end

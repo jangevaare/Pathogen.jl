@@ -2,8 +2,7 @@ module Pathogen
 
   # Dependencies
   using Distributed, DataFrames, Distributions, RecipesBase, Logging, StatsBase, ProgressMeter, LinearAlgebra, OnlineStats
-
-  import Base.length, Base.convert, Base.show, Base.copy
+  import Base.length, Base.convert, Base.show, Base.copy, Base.sum
   import RecipesBase.plot
   import ProgressMeter.next!
 
@@ -27,6 +26,8 @@ module Pathogen
   include("types/MCMC.jl")
 
   # Functions
+  include("functions/mean.jl")
+  include("functions/sum.jl")
   include("functions/_pathway_from.jl")
   include("functions/_pathway_to.jl")
   include("functions/_accept.jl")
