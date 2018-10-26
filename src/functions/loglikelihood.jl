@@ -91,17 +91,3 @@ function loglikelihood(rp::RiskParameters{T},
     @error "You must return either a transmission_network proposal or loglikelihood"
   end
 end
-
-function loglikelihood(rp::RiskParameters{T},
-                       rf::RiskFunctions{T},
-                       events::Events{T},
-                       pop::Population;
-                       loglikelihood_output::Bool=true,
-                       transmission_network_output::Bool=true,
-                       early_decision_value::Float64=-Inf) where T <: EpidemicModel
-  return loglikelihood(rp, rf, events, pop,
-                       fill(State_S, pop.individuals),
-                       loglikelihood_output = loglikelihood_output,
-                       transmission_network_output = transmission_network_output,
-                       early_decision_value = early_decision_value)
-end
