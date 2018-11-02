@@ -18,7 +18,18 @@ mutable struct TransmissionRates
   end
 end
 
-function copy(x::TransmissionRates)
+function Base.copy(x::TransmissionRates)
   return TransmissionRates(copy(x.external),
                            copy(x.internal))
+end
+
+function Base.sum(x::TransmissionRates)
+  return sum(x.external) + sum(x.internal)
+end
+
+function Base.sum(x::TransmissionRates, i::Int64)
+  if i < 1 | i > x.individuals
+    @error "Invalid individual identifier" i
+  end
+  return x.external[i] + sum(x.internal[:, i])
 end

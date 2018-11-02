@@ -90,7 +90,7 @@ function _indices(x::RiskPriors{T}; zeros::Bool=true) where T <: EpidemicModel
   return cumsum(indices)
 end
 
-function length(x::RiskPriors{T}) where T <: EpidemicModel
+function Base.length(x::RiskPriors{T}) where T <: EpidemicModel
   return _indices(x)[end]
 end
 

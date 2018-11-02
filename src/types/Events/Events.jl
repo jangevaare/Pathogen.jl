@@ -83,6 +83,10 @@ mutable struct Events{T <: EpidemicModel}
   end
 end
 
+function Base.show(io::IO, x::Events{T}) where T <: EpidemicModel
+  return print(io, "$T model event times (n=$(x.individuals))")
+end
+
 function Base.getindex(x::Events{T}, new_state::DiseaseState) where T <: EpidemicModel
   if new_state == State_E
     return x.exposure
@@ -107,6 +111,10 @@ function Base.convert(::Type{Array{Float64, 2}}, x::Events{T}) where T <: Epidem
   return x[_state_progressions[T][2:end]]
 end
 
+function Base.convert(::Type{Array{Float64, 1}}, x::Events{T}) where T <: EpidemicModel
+  return x[_state_progressions[T][2:end]][:]
+end
+
 function Base.minimum(x::Events{T}) where T <: EpidemicModel
   y = convert(Array{Float64, 2}, x)
   return minimum(y[.!isnan.(y)])
@@ -117,6 +125,6 @@ function Base.maximum(x::Events{T}) where T <: EpidemicModel
   return maximum(y[.!isnan.(y)])
 end
 
-function Base.show(io::IO, x::Events{T}) where T <: EpidemicModel
-  return print(io, "$T model event times (n=$(x.individuals))")
+function Statistics.mean(x::Vector{Events{T}}) where T <: EpidemicModel
+  return Events{T}(mean([convert(Array{Float64, 2}, i) for i in x]))
 end

@@ -37,7 +37,41 @@
 end
 
 @recipe function plot(events::Events{T}) where T <: EpidemicModel
-  return plot(events, minimum(events), maximum(events))
+  xguide --> "Time"
+  yguide --> "N"
+  xlims --> (minimum(events) - 1.0, maximum(events) + 1.0)
+  @series begin
+    seriestype := :steppost
+    seriescolor --> :purple
+    time, count = _epidemic_curve(events, State_S, min, max)
+    label := "S"
+    time, count
+  end
+  if T in [SEIR; SEI]
+    @series begin
+      seriestype := :steppost
+      seriescolor --> :lightblue4
+      time, count = _epidemic_curve(events, State_E, min, max)
+      label := "E"
+      time, count
+    end
+  end
+  @series begin
+    seriestype := :steppost
+    seriescolor --> :lightgreen
+    time, count = _epidemic_curve(events, State_I, min, max)
+    label := "I"
+    time, count
+  end
+  if T in [SEIR; SIR]
+    @series begin
+      seriestype := :steppost
+      seriescolor --> :yellow
+      time, count = _epidemic_curve(events, State_R, min, max)
+      label := "R"
+      time, count
+    end
+  end
 end
 
 @recipe function plot(mcmc::MCMC{T}, mc::Int64, iter::Int64) where T <: EpidemicModel
@@ -123,18 +157,6 @@ end
       x, y
     end
   end
-end
-
-@recipe function plot(mcmc::MCMC{T}, mc::Int64, iter::Int64, time::Float64) where T <: EpidemicModel
-  if !(1 <= mc <= length(mcmc.markov_chains))
-    @error "Invalid Markov Chain specification"
-  elseif !(1 <= iter <= mcmc.markov_chains[mc].iterations)
-    @error "Invalid iteration specification"
-  end
-  return plot(mcmc.markov_chains[mc].transmission_network[iter],
-              mcmc.population,
-              mcmc.markov_chains[mc].events[iter],
-              time)
 end
 
 @recipe function plot(x::Vector{RiskParameters{T}}) where T <: EpidemicModel

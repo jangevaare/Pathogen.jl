@@ -1,8 +1,7 @@
 module Pathogen
 
   # Dependencies
-  using Distributed, DataFrames, Distributions, RecipesBase, Logging, StatsBase, ProgressMeter, LinearAlgebra, OnlineStats
-  import Base.length, Base.convert, Base.show, Base.copy, Base.sum
+  using Distributed, DataFrames, Distributions, RecipesBase, Logging, StatsBase, Statistics, ProgressMeter, LinearAlgebra, OnlineStats
   import RecipesBase.plot
   import ProgressMeter.next!
 
@@ -26,8 +25,6 @@ module Pathogen
   include("types/MCMC.jl")
 
   # Functions
-  include("functions/mean.jl")
-  include("functions/sum.jl")
   include("functions/_pathway_from.jl")
   include("functions/_pathway_to.jl")
   include("functions/_accept.jl")
@@ -55,6 +52,7 @@ module Pathogen
     State_S, State_E, State_I, State_R,
     RiskFunctions, RiskParameters, RiskPriors,
     Population,
+    TransmissionNetwork,
     Simulation,
     next!, simulate!,
     EventObservations, EventExtents,

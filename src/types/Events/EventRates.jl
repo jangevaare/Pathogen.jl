@@ -52,3 +52,7 @@ function Base.getindex(x::EventRates{T}, new_states::Vector{DiseaseState}) where
   end
   return y
 end
+
+function Base.sum(x::EventRates{T}) where T <: EpidemicModel
+  return sum([sum(x[i]) for i in _state_progressions[T][2:end]])
+end

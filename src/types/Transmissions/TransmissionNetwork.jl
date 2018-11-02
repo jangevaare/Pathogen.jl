@@ -20,11 +20,11 @@ mutable struct TransmissionNetwork
   end
 end
 
-function copy(x::TransmissionNetwork)
+function Base.copy(x::TransmissionNetwork)
   return TransmissionNetwork(copy(x.external),
                              copy(x.internal))
 end
 
-function show(io::IO, object::TransmissionNetwork)
+function Base.show(io::IO, object::TransmissionNetwork)
   return print(io, "Transmission network with $(sum(object.external)) external, and $(sum(object.internal)) internal transmission(s)")
 end
