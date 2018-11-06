@@ -1,5 +1,5 @@
 mutable struct TransmissionRates
-  external::Array{Float64, 1}
+  external::Vector{Float64}
   internal::Array{Float64, 2}
   individuals::Int64
 
@@ -9,7 +9,7 @@ mutable struct TransmissionRates
                individuals)
   end
 
-  function TransmissionRates(e::Array{Float64, 1},
+  function TransmissionRates(e::Vector{Float64},
                              i::Array{Float64, 2})
     @boundscheck if !(length(e) == size(i, 1) == size(i, 2))
       @error "Argument dimensions mismatched"

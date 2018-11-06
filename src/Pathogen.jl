@@ -55,7 +55,7 @@ module Pathogen
     TransmissionNetwork,
     Simulation,
     next!, simulate!,
-    EventObservations, EventExtents,
+    Events, EventObservations, EventExtents,
     observe,
     MCMC, start!, iterate!,
     plot

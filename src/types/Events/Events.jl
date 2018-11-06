@@ -111,8 +111,16 @@ function Base.convert(::Type{Array{Float64, 2}}, x::Events{T}) where T <: Epidem
   return x[_state_progressions[T][2:end]]
 end
 
-function Base.convert(::Type{Array{Float64, 1}}, x::Events{T}) where T <: EpidemicModel
+function Base.convert(::Type{Vector{Float64}}, x::Events{T}) where T <: EpidemicModel
   return x[_state_progressions[T][2:end]][:]
+end
+
+function Base.convert(::Type{Array{Float64, 2}}, x::Array{Events{T}, 1}) where T <: EpidemicModel
+  y = convert(Vector{Float64}, x[1])'
+  for i = 2:length(x)
+    y = vcat(y, convert(Vector{Float64}, x[i])')
+  end
+  return y
 end
 
 function Base.minimum(x::Events{T}) where T <: EpidemicModel
