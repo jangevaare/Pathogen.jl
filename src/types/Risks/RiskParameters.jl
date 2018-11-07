@@ -114,7 +114,7 @@ function Base.setindex!(x::RiskParameters{T},
   return x
 end
 
-function Base.convert(::Type{Vector},
+function Base.convert(::Type{Vector{Float64}},
                       x::RiskParameters{T}) where T <: EpidemicModel
   return [x[i] for i = 1:length(x)]
 end

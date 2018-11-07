@@ -156,7 +156,7 @@ end
 function generate(::Type{RiskParameters{T}},
                   last_rparams::RiskParameters{T},
                   Σ::Array{Float64, 2}) where T <: EpidemicModel
-  rparams_vector = rand(MvNormal(convert(Vector, last_rparams), Σ))
+  rparams_vector = rand(MvNormal(convert(Vector{Float64}, last_rparams), Σ))
   return _like(last_rparams, rparams_vector)
 end
 
