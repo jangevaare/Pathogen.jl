@@ -1,41 +1,41 @@
 mutable struct RiskPriors{T <: EpidemicModel}
   sparks::Vector{UnivariateDistribution}
   susceptibility::Vector{UnivariateDistribution}
-  transmissibility::Vector{UnivariateDistribution}
   infectivity::Vector{UnivariateDistribution}
+  transmissibility::Vector{UnivariateDistribution}
   latency::Vector{UnivariateDistribution}
   removal::Vector{UnivariateDistribution}
 
-  function RiskPriors{T}(sp, su, tr, in, la, re) where {T <: SEIR}
-    return new{T}(sp, su, tr, in, la, re)
+  function RiskPriors{T}(sp, su, in, tr, la, re) where {T <: SEIR}
+    return new{T}(sp, su, in, tr, la, re)
   end
 
-  function RiskPriors{T}(sp, su, tr, in, la) where {T <: SEI}
+  function RiskPriors{T}(sp, su, in, tr, la) where {T <: SEI}
     x = new{T}()
     x.sparks = sp
     x.susceptibility = su
-    x.transmissibility = tr
     x.infectivity = in
+    x.transmissibility = tr
     x.latency = la
     return x
   end
 
-  function RiskPriors{T}(sp, su, tr, in, re) where {T <: SIR}
+  function RiskPriors{T}(sp, su, in, tr, re) where {T <: SIR}
     x = new{T}()
     x.sparks = sp
     x.susceptibility = su
-    x.transmissibility = tr
     x.infectivity = in
+    x.transmissibility = tr
     x.removal = re
     return x
   end
 
-  function RiskPriors{T}(sp, su, tr, in) where {T <: SI}
+  function RiskPriors{T}(sp, su, in, tr) where {T <: SI}
     x = new{T}()
     x.sparks = sp
     x.susceptibility = su
-    x.transmissibility = tr
     x.infectivity = in
+    x.transmissibility = tr
     return x
   end
 end
@@ -43,8 +43,8 @@ end
 function Base.copy(x::RiskPriors{SEIR})
   return RiskPriors{SEIR}(copy(x.sparks),
                           copy(x.susceptibility),
-                          copy(x.transmissibility),
                           copy(x.infectivity),
+                          copy(x.transmissibility),
                           copy(x.latency),
                           copy(x.removal))
 end
@@ -52,31 +52,31 @@ end
 function Base.copy(x::RiskPriors{SEI})
   return RiskPriors{SEI}(copy(x.sparks),
                          copy(x.susceptibility),
-                         copy(x.transmissibility),
                          copy(x.infectivity),
+                         copy(x.transmissibility),
                          copy(x.latency))
 end
 
 function Base.copy(x::RiskPriors{SIR})
   return RiskPriors{SIR}(copy(x.sparks),
                          copy(x.susceptibility),
-                         copy(x.transmissibility),
                          copy(x.infectivity),
+                         copy(x.transmissibility),
                          copy(x.removal))
 end
 
 function Base.copy(x::RiskPriors{SI})
   return RiskPriors{SI}(copy(x.sparks),
                         copy(x.susceptibility),
-                        copy(x.transmissibility),
-                        copy(x.infectivity))
+                        copy(x.infectivity),
+                        copy(x.transmissibility))
 end
 
 function _indices(x::RiskPriors{T}; zeros::Bool=true) where T <: EpidemicModel
   indices = [length(x.sparks)
              length(x.susceptibility)
-             length(x.transmissibility)
-             length(x.infectivity)]
+             length(x.infectivity)
+             length(x.transmissibility)]
   if T in [SEIR; SEI]
     push!(indices, length(x.latency))
   elseif zeros

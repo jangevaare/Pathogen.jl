@@ -12,8 +12,8 @@ function initialize(::Type{TransmissionRates},
     # Internal exposure
     for k in findall(states .== Ref(State_I))
       tr.internal[k, i] = rf.susceptibility(rp.susceptibility, pop, i) *
-                          rf.transmissibility(rp.transmissibility, pop, i, k) *
-                          rf.infectivity(rp.infectivity, pop, k)
+                          rf.infectivity(rp.infectivity, pop, i, k) *
+                          rf.transmissibility(rp.transmissibility, pop, k)
     end
   end
   @debug "Initialization of $T TransmissionRates complete" external = tr.external ∑external = sum(tr.external) internal = tr.internal ∑internal = sum(tr.internal)

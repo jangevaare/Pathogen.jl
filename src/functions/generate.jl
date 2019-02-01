@@ -114,8 +114,8 @@ end
 function generate(::Type{RiskParameters{T}}, rpriors::RiskPriors{T}) where T <: EpidemicModel
   sparks = Float64[rand(x) for x in rpriors.sparks]
   susceptibility = Float64[rand(x) for x in rpriors.susceptibility]
-  transmissibility = Float64[rand(x) for x in rpriors.transmissibility]
   infectivity = Float64[rand(x) for x in rpriors.infectivity]
+  transmissibility = Float64[rand(x) for x in rpriors.transmissibility]
   if T in [SEIR; SEI]
     latency = Float64[rand(x) for x in rpriors.latency]
   end
@@ -125,27 +125,27 @@ function generate(::Type{RiskParameters{T}}, rpriors::RiskPriors{T}) where T <: 
   if T == SEIR
     return RiskParameters{T}(sparks,
                              susceptibility,
-                             transmissibility,
                              infectivity,
+                             transmissibility,
                              latency,
                              removal)
   elseif T == SEI
     return RiskParameters{T}(sparks,
                              susceptibility,
-                             transmissibility,
                              infectivity,
+                             transmissibility,
                              latency)
   elseif T == SIR
     return RiskParameters{T}(sparks,
                              susceptibility,
-                             transmissibility,
                              infectivity,
+                             transmissibility,
                              removal)
   elseif T == SI
     return RiskParameters{T}(sparks,
                              susceptibility,
-                             transmissibility,
-                             infectivity)
+                             infectivity,
+                             transmissibility)
   end
 end
 

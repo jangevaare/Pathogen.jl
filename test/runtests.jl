@@ -21,7 +21,7 @@ pop.distances = [euclidean([risks[:x][i]; risks[:y][i]], [risks[:x][j]; risks[:y
 
 @testset "SEIR Model" begin
   # Some commonly used functions/examples provided in helpers/RiskFunctions.jl
-  # For SEIR, risk functions and parameters in order of: sparks, susceptibility, transmissibility, infectivity, latency, and removal
+  # For SEIR, risk functions and parameters in order of: sparks, susceptibility, infectivity, transmissibility, latency, and removal
   rf = RiskFunctions{SEIR}(_constant,
                            _coefficient,
                            _powerlaw,

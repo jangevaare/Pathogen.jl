@@ -8,13 +8,13 @@ function logpriors(rparams::RiskParameters{T}, rpriors::RiskPriors{T}) where T <
     lprior == -Inf && break
     lprior += logpdf(rpriors.susceptibility[i], rparams.susceptibility[i])
   end
-  for i in 1:length(rpriors.transmissibility)
-    lprior == -Inf && break
-    lprior += logpdf(rpriors.transmissibility[i], rparams.transmissibility[i])
-  end
   for i in 1:length(rpriors.infectivity)
     lprior == -Inf && break
     lprior += logpdf(rpriors.infectivity[i], rparams.infectivity[i])
+  end
+  for i in 1:length(rpriors.transmissibility)
+    lprior == -Inf && break
+    lprior += logpdf(rpriors.transmissibility[i], rparams.transmissibility[i])
   end
   if T in [SEIR; SEI]
     for i in 1:length(rpriors.latency)
