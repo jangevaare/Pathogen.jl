@@ -1,6 +1,6 @@
 mutable struct Population
   risks::DataFrame
-  distances::AbstractArray
+  distances::AbstractArray{T,2} where T <: Any
   individuals::Int64
 
   function Population(n::Int64)
@@ -16,9 +16,9 @@ mutable struct Population
     return x
   end
 
-  function Population(d::Array{T, 2}) where T <: Any
-    if length(unique(size(d))) != 1
-      @error "Distance matrices must be square"
+  function Population(d::AbstractArray{T,2}) where T <: Any
+    if size(d, 1) !== size(d, 2)
+      @error "Distance matrix must be square"
     end
     x = new()
     x.distances = d
@@ -26,9 +26,11 @@ mutable struct Population
     return x
   end
 
-  function Population(risks::DataFrame, d::Array{T, 2}) where T <: Any
-    if length(unique([size(d, 1); size(d, 2); size(risks, 1)])) !== 1
-      @error "Mismatch between sizes of distance matrix and risk dataframe"
+  function Population(risks::DataFrame, d::AbstractArray{T,2}) where T <: Any
+    if size(d, 1) !== size(d, 2)
+      @error "Distance matrix must be square"
+    elseif size(d, 1) !== size(risks, 1)
+      @error "Mismatch between size of distance matrix and risk dataframe"
     end
     x = new()
     x.risks = risks
