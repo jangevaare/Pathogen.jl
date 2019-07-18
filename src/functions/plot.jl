@@ -87,8 +87,8 @@ end
   xguide --> ""
   yguide --> ""
   legend --> :topright
-  xlims --> extrema(pop.risks[:x]) .+ (sum(extrema(pop.risks[:x]).*(-1,1)) .* (-0.05, 0.05))
-  ylims --> extrema(pop.risks[:y]) .+ (sum(extrema(pop.risks[:y]).*(-1,1)) .* (-0.05, 0.05))
+  xlims --> extrema(pop.risks[!, :x]) .+ (sum(extrema(pop.risks[!, :x]).*(-1,1)) .* (-0.05, 0.05))
+  ylims --> extrema(pop.risks[!, :y]) .+ (sum(extrema(pop.risks[!, :y]).*(-1,1)) .* (-0.05, 0.05))
   aspect_ratio --> :equal
   ids_susceptible = _ids_by_state(events, State_S, time)
   if T in [SEIR; SEI]

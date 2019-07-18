@@ -1,79 +1,27 @@
-mutable struct RiskParameters{T <: EpidemicModel}
+struct RiskParameters{T<: EpidemicModel}
   sparks::Vector{Float64}
   susceptibility::Vector{Float64}
   infectivity::Vector{Float64}
   transmissibility::Vector{Float64}
   latency::Vector{Float64}
   removal::Vector{Float64}
-
-  function RiskParameters{T}(sp::V, su::V, in::V, tr::V, la::V, re::V) where
-    {T <: SEIR, V <: Vector{Float64}}
-    return new{T}(sp, su, in, tr, la, re)
-  end
-
-  function RiskParameters{T}(sp::V, su::V, in::V, tr::V, la::V) where
-    {T <: SEI, V <: Vector{Float64}}
-    x = new{T}()
-    x.sparks = sp
-    x.susceptibility = su
-    x.infectivity = in
-    x.transmissibility = tr
-    x.latency = la
-    return x
-  end
-
-  function RiskParameters{T}(sp::V, su::V, in::V, tr::V, re::V) where
-    {T <: SIR, V <: Vector{Float64}}
-    x = new{T}()
-    x.sparks = sp
-    x.susceptibility = su
-    x.infectivity = in
-    x.transmissibility = tr
-    x.removal = re
-    return x
-  end
-
-  function RiskParameters{T}(sp::V, su::V, in::V, tr::V) where
-    {T <: SI, V <: Vector{Float64}}
-    x = new{T}()
-    x.sparks = sp
-    x.susceptibility = su
-    x.infectivity = in
-    x.transmissibility = tr
-    return x
-  end
 end
 
-function Base.copy(x::RiskParameters{SEIR})
-  return RiskParameters{SEIR}(copy(x.sparks),
-                              copy(x.susceptibility),
-                              copy(x.infectivity),
-                              copy(x.transmissibility),
-                              copy(x.latency),
-                              copy(x.removal))
-end
+# Placeholder risk parameters
+θx = Float64[]
 
-function Base.copy(x::RiskParameters{SEI})
-  return RiskParameters{SEI}(copy(x.sparks),
-                             copy(x.susceptibility),
-                             copy(x.infectivity),
-                             copy(x.transmissibility),
-                             copy(x.latency))
-end
+# Outer constructors
+RiskParameters{SEI}(ϵ, Ωs, Ωi, κ, Ωl) = RiskParameters{SEI}(ϵ, Ωs, Ωi, κ, Ωl, θx)
+RiskParameters{SIR}(ϵ, Ωs, Ωi, κ, Ωr) = RiskParameters{SIR}(ϵ, Ωs, Ωi, κ, θx, Ωr)
+RiskParameters{SI}(ϵ, Ωs, Ωi, κ) = RiskParameters{SI}(ϵ, Ωs, Ωi, κ, θx, θx)
 
-function Base.copy(x::RiskParameters{SIR})
-  return RiskParameters{SIR}(copy(x.sparks),
-                             copy(x.susceptibility),
-                             copy(x.infectivity),
-                             copy(x.transmissibility),
-                             copy(x.removal))
-end
-
-function Base.copy(x::RiskParameters{SI})
-  return RiskParameters{SI}(copy(x.sparks),
-                            copy(x.susceptibility),
-                            copy(x.infectivity),
-                            copy(x.transmissibility))
+function Base.copy(x::RiskParameters{T}) where T <: EpidemicModel
+  return RiskParameters{T}(copy(x.sparks),
+                           copy(x.susceptibility),
+                           copy(x.infectivity),
+                           copy(x.transmissibility),
+                           copy(x.latency),
+                           copy(x.removal))
 end
 
 function _indices(x::RiskParameters{T}; zeros::Bool=true) where T <: EpidemicModel

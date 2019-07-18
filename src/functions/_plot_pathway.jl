@@ -3,8 +3,8 @@ function _plot_pathway(pop::Population,
                        i::Int64)
   if !network.external[i] && any(network.internal[:, i])
     source = findfirst(network.internal[:, i])
-    x = pop.risks[:x][[i; source]]
-    y = pop.risks[:y][[i; source]]
+    x = pop.risks[[i; source], :x]
+    y = pop.risks[[i; source], :y]
     return x, y
   else
     return Float64[], Float64[]

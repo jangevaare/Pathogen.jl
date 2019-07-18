@@ -11,11 +11,11 @@ function _constant(params::Vector{Float64}, pop::Pathogen.Population, i::Int64)
 end
 
 function _coefficient(params::Vector{Float64}, pop::Pathogen.Population, i::Int64)
-  return params[1] * pop.risks[:riskfactor1][i]
+  return params[1] * pop.risks[i, :riskfactor1]
 end
 
 function _linear(params::Vector{Float64}, pop::Pathogen.Population, i::Int64)
-  return params[1] + params[2] * pop.risks[:riskfactor1][i]
+  return params[1] + params[2] * pop.risks[i, :riskfactor1]
 end
 
 function _powerlaw(params::Vector{Float64}, pop::Pathogen.Population, i::Int64, k::Int64)

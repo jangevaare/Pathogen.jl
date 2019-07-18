@@ -41,5 +41,5 @@ mutable struct Population
 end
 
 function Base.show(io::IO, x::Population)
-  return print(io, "Population object (n=$(x.individuals)")
+  return print(io, "Population object (n=$(x.individuals))")
 end

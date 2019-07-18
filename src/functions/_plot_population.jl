@@ -3,8 +3,8 @@ function _plot_population(pop::Population,
   x = Float64[]
   y = Float64[]
   for i in ids
-    push!(x, pop.risks[:x][i])
-    push!(y, pop.risks[:y][i])
+    push!(x, pop.risks[i, :x])
+    push!(y, pop.risks[i, :y])
   end
   return x, y
 end
