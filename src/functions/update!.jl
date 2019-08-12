@@ -40,7 +40,7 @@ function update!(tr::TransmissionRates,
   end
   if event.new_state == State_I
     transmissibility = rf.transmissibility(rp.transmissibility, pop, id)
-    for i in findall(states .== Ref(State_S))
+    @simd for i in findall(states .== Ref(State_S))
       tr.internal[id, i] = rf.susceptibility(rp.susceptibility, pop, i) *
                            rf.infectivity(rp.infectivity, pop, i, id) *
                            transmissibility

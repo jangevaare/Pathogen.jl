@@ -13,7 +13,6 @@ function loglikelihood(rp::RiskParameters{T},
   s.events = events
   # Event order
   event_array = convert(Array{Float64, 2}, events)[:]
-  # To cause event ordering to ignore event times prior to starting_time (including -Inf events that led to starting states) set to NaN
   event_order = sortperm(event_array)
 
   # Indicates that the first non -Inf event has been processed, and Δt can be calculated thereafter
