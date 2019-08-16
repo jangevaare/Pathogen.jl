@@ -34,8 +34,11 @@ function loglikelihood(rp::RiskParameters{T},
     @debug "Calculating the loglikehood contribution of event $i" event
     # Get event rate totals
     rate_total = sum(s.event_rates)
-    if rate_total <= 0.0
-      @error "Event rate total $i = $(round(rate_total, digits=3)) (it should be > 0.0)"
+    if rate_total < 0.0
+      @error "Event rate total $i = $(round(rate_total, digits=3)), setting loglikelihood to -Inf"
+      ll = -Inf
+    elseif rate_total == 0.0
+      @warn "Event rate total $i = $(round(rate_total, digits=3)), setting loglikelihood to -Inf"
       ll = -Inf
     else
       @debug "Event rate total $i = $(round(rate_total, digits=3))"
