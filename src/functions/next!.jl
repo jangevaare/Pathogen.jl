@@ -40,7 +40,7 @@ function next!(mc::MarkovChain{T},
   # Randomize event time augmentation
   event_indices = findall(new_events_array[:] .> -Inf)
   aug_order = sample(event_indices, length(event_indices), replace=false)
-  @debug "$(length(aug_order))$ events to augment"
+  @debug "$(length(aug_order)) events to augment"
   if event_batches < 0
     @error "Cannot have negative amount of event batches"
   end
