@@ -24,6 +24,7 @@ module Pathogen
   include("types/Events/EventExtents.jl")
   include("types/Events/EventObservations.jl")
   include("types/Events/EventRates.jl")
+  include("types/Risks/AbstractRisk.jl")
   include("types/Risks/RiskFunctions.jl")
   include("types/Risks/RiskParameters.jl")
   include("types/Risks/RiskPriors.jl")
