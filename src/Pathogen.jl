@@ -58,6 +58,7 @@ module Pathogen
   include("functions/plot.jl")
 
   export
+    EpidemicModel,
     SEIR, SEI, SIR, SI,
     DiseaseState,
     State_S, State_E, State_I, State_R,
