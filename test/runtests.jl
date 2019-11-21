@@ -16,8 +16,9 @@ n = 25
 risks = DataFrame(x = rand(Uniform(0, 5), n),
                   y = rand(Uniform(0, 5), n),
                   riskfactor1 = rand(Gamma(), n))
-pop = Population(risks)
-pop.distances = [euclidean([risks[i, :x]; risks[i, :y]], [risks[j, :x]; risks[j, :y]]) for i = 1:n, j = 1:n]
+
+pop = Population(risks,
+                 [euclidean([risks[i, :x]; risks[i, :y]], [risks[j, :x]; risks[j, :y]]) for i = 1:n, j = 1:n])
 
 @testset "SEIR Model" begin
   # Some commonly used functions/examples provided in helpers/RiskFunctions.jl

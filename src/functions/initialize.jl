@@ -109,6 +109,7 @@ function initialize(::Type{MarkovChain},
   finish!(pmeter)
   if max_lposterior == -Inf
     @error "Failed to initialize Markov Chain"
+    markov_chain = nothing
   end
   return markov_chain
 end

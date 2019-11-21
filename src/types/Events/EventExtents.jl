@@ -1,31 +1,12 @@
-mutable struct EventExtents{T <: EpidemicModel}
-  exposure::Float64
-  infection::Float64
-  removal::Float64
+struct EventExtents{T <: EpidemicModel}
+  exposure::Union{Nothing, Real}
+  infection::Union{Nothing, Real}
+  removal::Union{Nothing, Real}
 
-  function EventExtents{T}(e, i, r) where T <: SEIR
-    return new{T}(e, i, r)
-  end
-
-  function EventExtents{T}(e, i) where T <: SEI
-    x = new{T}()
-    x.exposure = e
-    x.infection = i
-    return x
-  end
-
-  function EventExtents{T}(i, r) where T <: SIR
-    x = new{T}()
-    x.infection = i
-    x.removal = r
-    return x
-  end
-
-  function EventExtents{T}(i) where T <: SI
-    x = new{T}()
-    x.infection = i
-    return x
-  end
+  EventExtents{SEIR}(e, i, r) = new{SEIR}(e, i, r)
+  EventExtents{SEI}(e, i)     = new{SEI}(e, i, nothing)
+  EventExtents{SIR}(i, r)     = new{SIR}(nothing, i, r)
+  EventExtents{SI}(i)         = new{SI}(nothing, i, nothing)
 end
 
 function Base.show(io::IO, x::EventExtents{T}) where T <: EpidemicModel

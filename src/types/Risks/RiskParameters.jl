@@ -1,76 +1,34 @@
-struct RiskParameters{T<: EpidemicModel}
-  sparks::Vector{Float64}
-  susceptibility::Vector{Float64}
-  infectivity::Vector{Float64}
-  transmissibility::Vector{Float64}
-  latency::Vector{Float64}
-  removal::Vector{Float64}
+struct RiskParameters{T} <: AbstractRisk{T}
+  sparks::Union{Nothing, AbstractVector}
+  susceptibility::Union{Nothing, AbstractVector}
+  infectivity::Union{Nothing, AbstractVector}
+  transmissibility::Union{Nothing, AbstractVector}
+  latency::Union{Nothing, AbstractVector}
+  removal::Union{Nothing, AbstractVector}
+
+  RiskParameters{SEIR}(ϵ, θs, θi, κ, θl, θr) = new{SEIR}(ϵ, θs, θi, κ, θl, θr)
+  RiskParameters{SEI}(ϵ, θs, θi, κ, θl) = new{SEI}(ϵ, θs, θi, κ, θl, nothing)
+  RiskParameters{SIR}(ϵ, θs, θi, κ, θr) = new{SIR}(ϵ, θs, θi, κ, nothing, θr)
+  RiskParameters{SI}(ϵ, θs, θi, κ) = new{SI}(ϵ, θs, θi, κ, nothing, nothing)
 end
 
-# Placeholder risk parameters
-θx = Float64[]
 
-# Outer constructors
-RiskParameters{SEI}(ϵ, Ωs, Ωi, κ, Ωl) = RiskParameters{SEI}(ϵ, Ωs, Ωi, κ, Ωl, θx)
-RiskParameters{SIR}(ϵ, Ωs, Ωi, κ, Ωr) = RiskParameters{SIR}(ϵ, Ωs, Ωi, κ, θx, Ωr)
-RiskParameters{SI}(ϵ, Ωs, Ωi, κ) = RiskParameters{SI}(ϵ, Ωs, Ωi, κ, θx, θx)
-
-function Base.copy(x::RiskParameters{T}) where T <: EpidemicModel
-  return RiskParameters{T}(copy(x.sparks),
-                           copy(x.susceptibility),
-                           copy(x.infectivity),
-                           copy(x.transmissibility),
-                           copy(x.latency),
-                           copy(x.removal))
+function Base.show(io::IO, x::RiskParameters{T}) where T <: EpidemicModel
+  return print(io, "$T model risk function parameters")
 end
 
-function _indices(x::RiskParameters{T}; zeros::Bool=true) where T <: EpidemicModel
-  indices = [length(x.sparks)
-             length(x.susceptibility)
-             length(x.infectivity)
-             length(x.transmissibility)]
-  if T in [SEIR; SEI]
-    push!(indices, length(x.latency))
-  elseif zeros
-    push!(indices, 0)
-  end
-  if T in [SEIR; SIR]
-    push!(indices, length(x.removal))
-  elseif zeros
-    push!(indices, 0)
-  end
-  return cumsum(indices)
-end
-
-function Base.length(x::RiskParameters{T}) where T <: EpidemicModel
-  return _indices(x)[end]
-end
-
-function Base.getindex(x::RiskParameters{T},
-                       i::Int64) where T <: EpidemicModel
-  indices = _indices(x, zeros = true)
-  riskfunc = findfirst(i .<= indices)
-  return getfield(x, riskfunc)[end - (indices[riskfunc] - i)]
-end
-
-function Base.setindex!(x::RiskParameters{T},
-                        z::Float64,
-                        i::Int64) where T <: EpidemicModel
-  indices = _indices(x, zeros = true)
-  riskfunc = findfirst(i .<= indices)
-  getfield(x, riskfunc)[end - (indices[riskfunc] - i)] = z
-  return x
-end
 
 function Base.convert(::Type{Vector{Float64}},
                       x::RiskParameters{T}) where T <: EpidemicModel
   return [x[i] for i = 1:length(x)]
 end
 
+
 function Base.convert(::Type{Array{Float64, 2}},
                       x::Vector{RiskParameters{T}}) where T <: EpidemicModel
   return [x[i][j] for i = 1:length(x), j = 1:length(x[1])]
 end
+
 
 function _like(x::RiskParameters{T}, v::Vector{Float64}) where T <: EpidemicModel
   indices = _indices(x, zeros=false)
@@ -96,8 +54,4 @@ function _like(x::RiskParameters{T}, v::Vector{Float64}) where T <: EpidemicMode
                              v[(indices[2]+1):(indices[3])],
                              v[(indices[3]+1):(indices[4])])
   end
-end
-
-function Base.show(io::IO, x::RiskParameters{T}) where T <: EpidemicModel
-  return print(io, "$T model risk function parameters")
 end
