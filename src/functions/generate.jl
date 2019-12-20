@@ -89,10 +89,9 @@ function generate(::Type{Event},
                   obs::EventObservations,
                   events::Events{T}) where T <: EpidemicModel
   lowerbound, upperbound = _bounds(last_event, extents, obs, events)
-  time = rand(TruncatedNormal(last_event.time,
-                              σ,
-                              lowerbound,
-                              upperbound))
+  time = rand(truncated(Normal(last_event.time, σ),
+                        lowerbound,
+                        upperbound))
   return Event(time, last_event)
 end
 
@@ -104,10 +103,9 @@ function generate(::Type{Event},
                   events::Events{T},
                   network::TransmissionNetwork) where T <: EpidemicModel
   lowerbound, upperbound = _bounds(last_event, extents, obs, events, network)
-  time = rand(TruncatedNormal(last_event.time,
-                              σ,
-                              lowerbound,
-                              upperbound))
+  time = rand(truncated(Normal(last_event.time, σ),
+                        lowerbound,
+                        upperbound))
   return Event(time, last_event)
 end
 

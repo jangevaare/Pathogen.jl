@@ -58,5 +58,9 @@ mutable struct Simulation{T <: EpidemicModel}
 end
 
 function Base.show(io::IO, x::Simulation{T}) where T <: EpidemicModel
-  return print(io, "$T epidemic simulation")
+  y = "$T epidemic simulation @ time = $(round(x.time, digits=2))\n"
+  for s in _state_progressions[T]
+    y *= "\n$s = $(sum(x.disease_states .== Ref(s)))"
+  end
+  return print(io, y)
 end
