@@ -23,15 +23,15 @@ version = "0.5.8"
 
 [[CategoricalArrays]]
 deps = ["Compat", "DataAPI", "Future", "JSON", "Missings", "Printf", "Reexport", "Statistics", "Unicode"]
-git-tree-sha1 = "9127b0c2ee1bfd810921dd688dd8d73be1d9fb57"
+git-tree-sha1 = "7c4419347d724a057b5a550078f8ff4cdfdeedf6"
 uuid = "324d7699-5711-5eae-9e2f-1d82baa6b597"
-version = "0.7.5"
+version = "0.7.6"
 
 [[Compat]]
 deps = ["Base64", "Dates", "DelimitedFiles", "Distributed", "InteractiveUtils", "LibGit2", "Libdl", "LinearAlgebra", "Markdown", "Mmap", "Pkg", "Printf", "REPL", "Random", "Serialization", "SharedArrays", "Sockets", "SparseArrays", "Statistics", "Test", "UUIDs", "Unicode"]
-git-tree-sha1 = "0caaa696071d6e7872ddf30e58ed6ec0b49954c4"
+git-tree-sha1 = "3819f476b6b37ef8ea837070ed831b4ebadfa1e9"
 uuid = "34da2185-b29b-5c13-b0c7-acf172513d20"
-version = "3.0.0"
+version = "3.2.0"
 
 [[DataAPI]]
 git-tree-sha1 = "674b67f344687a88310213ddfa8a2b3c76cc4252"
@@ -46,9 +46,9 @@ version = "0.20.0"
 
 [[DataStructures]]
 deps = ["InteractiveUtils", "OrderedCollections"]
-git-tree-sha1 = "a1b652fb77ae8ca7ea328fa7ba5aa151036e5c10"
+git-tree-sha1 = "f784254f428fb8fd7ac15982e5862a38a44523d3"
 uuid = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
-version = "0.17.6"
+version = "0.17.7"
 
 [[DataValueInterfaces]]
 git-tree-sha1 = "bfc1187b79289637fa0ef6d4436ebdfe6905cbd6"
@@ -75,9 +75,9 @@ uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
 [[Distributions]]
 deps = ["FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SpecialFunctions", "Statistics", "StatsBase", "StatsFuns"]
-git-tree-sha1 = "860962bb355c97afdd7f9529cee7f26333401231"
+git-tree-sha1 = "743809ded6db3a3145565a71ee9c8b23f3a4c463"
 uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
-version = "0.21.11"
+version = "0.22.0"
 
 [[FillArrays]]
 deps = ["LinearAlgebra", "Random", "SparseArrays"]
