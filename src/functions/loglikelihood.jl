@@ -38,7 +38,7 @@ function loglikelihood(rp::RiskParameters{T},
       @error "Event rate total $i = $(round(rate_total, digits=3)), setting loglikelihood to -Inf"
       ll = -Inf
     elseif rate_total == 0.0
-      @warn "Event rate total $i = $(round(rate_total, digits=3)), setting loglikelihood to -Inf"
+      @debug "Event rate total $i = $(round(rate_total, digits=3)), setting loglikelihood to -Inf"
       ll = -Inf
     else
       @debug "Event rate total $i = $(round(rate_total, digits=3))"
