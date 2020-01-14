@@ -1,18 +1,18 @@
 mutable struct TransmissionNetwork
-  external::Vector{Bool}
-  internal::Array{Bool, 2}
+  external::BitArray{1}
+  internal::BitArray{2}
 
   function TransmissionNetwork(individuals::Int64)
-    return new(fill(false, individuals),
-               fill(false, (individuals, individuals)))
+    return new(fill(0, individuals),
+               fill(0, (individuals, individuals)))
   end
 
-  function TransmissionNetwork(external::Vector{Bool},
-                               internal::Array{Bool, 2})
+  function TransmissionNetwork(external::BitArray{1},
+                               internal::BitArray{2})
     if !(length(external) == size(internal, 1) == size(internal, 2))
-      throw(BoundsError)
+      @error "Mismatched BitArray sizes"
     end
-    multiple_exposures = findall((sum(internal, 1)[:] .+ external) .> 1)
+    multiple_exposures = findall((sum(internal, dims=1)[:] .+ external) .> 1)
     if length(multiple_exposures) > 0
       @error "Multiple exposures detected for individual(s): $multiple_exposures"
     end
