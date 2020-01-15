@@ -1,4 +1,4 @@
-mutable struct TransmissionNetwork
+struct TransmissionNetwork
   external::BitArray{1}
   internal::BitArray{2}
 

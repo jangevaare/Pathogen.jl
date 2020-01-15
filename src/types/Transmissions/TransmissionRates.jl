@@ -1,4 +1,4 @@
-mutable struct TransmissionRates
+struct TransmissionRates
   external::Vector{Float64}
   internal::Array{Float64, 2}
   individuals::Int64
