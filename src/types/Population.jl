@@ -1,5 +1,5 @@
 struct Population
-  risks::DataFrame
+  risks::AbstractDataFrame
   distances::Union{Nothing, AbstractArray}
   individuals::Int64
 
