@@ -8,5 +8,4 @@ Pathogen.jl is a Julia software package for individual level models of infectiou
 Pathogen.jl infers transmission pathways (i.e. who-infected-who). This inference is completed using a Gibbs step in our specialized MCMC algorithm. This specialized MCMC algorithm also performs event time data augmentation.
 
 Examples of Pathogen.jl workflow are included in the examples directory.
-1. [SEIR simulation, inference, and visualization](examples/01_SEIR_Simulation_and_Visualization.ipynb)
-2. [SI model inference for a Tomato Spotted Wilt Virus Experiment](examples/02_TSWV_Inference.ipynb)
+1. [SIR simulation, inference, and visualization](examples/SIR.jl)
