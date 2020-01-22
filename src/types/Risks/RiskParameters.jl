@@ -6,10 +6,10 @@ struct RiskParameters{T} <: AbstractRisk{T}
   latency::Union{Nothing, AbstractVector}
   removal::Union{Nothing, AbstractVector}
 
-  RiskParameters{SEIR}(ϵ, θs, θi, κ, θl, θr) = new{SEIR}(ϵ, θs, θi, κ, θl, θr)
-  RiskParameters{SEI}(ϵ, θs, θi, κ, θl) = new{SEI}(ϵ, θs, θi, κ, θl, nothing)
-  RiskParameters{SIR}(ϵ, θs, θi, κ, θr) = new{SIR}(ϵ, θs, θi, κ, nothing, θr)
-  RiskParameters{SI}(ϵ, θs, θi, κ) = new{SI}(ϵ, θs, θi, κ, nothing, nothing)
+  RiskParameters{SEIR}(ϵ, θs, κ, θt, θl, θr) = new{SEIR}(ϵ, θs, κ, θt, θl, θr)
+  RiskParameters{SEI}(ϵ, θs, κ, θt, θl) = new{SEI}(ϵ, θs, κ, θt, θl, nothing)
+  RiskParameters{SIR}(ϵ, θs, κ, θt, θr) = new{SIR}(ϵ, θs, κ, θt, nothing, θr)
+  RiskParameters{SI}(ϵ, θs, κ, θt) = new{SI}(ϵ, θs, κ, θt, nothing, nothing)
 end
 
 

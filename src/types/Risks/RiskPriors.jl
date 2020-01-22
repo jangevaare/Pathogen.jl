@@ -6,10 +6,10 @@ struct RiskPriors{T} <: AbstractRisk{T}
   latency::Union{Nothing, Vector{UnivariateDistribution}}
   removal::Union{Nothing, Vector{UnivariateDistribution}}
 
-  RiskPriors{SEIR}(pϵ, ps, pi, pκ, pl, pr) = new{SEIR}(pϵ, ps, pi, pκ, pl, pr)
-  RiskPriors{SEI}(pϵ, ps, pi, pκ, pl) = new{SEI}(pϵ, ps, pi, pκ, pl, nothing)
-  RiskPriors{SIR}(pϵ, ps, pi, pκ, pr) = new{SIR}(pϵ, ps, pi, pκ, nothing, pr)
-  RiskPriors{SI}(pϵ, ps, pi, pκ) = new{SI}(pϵ, ps, pi, pκ, nothing, nothing)
+  RiskPriors{SEIR}(pϵ, ps, pκ, pt, pl, pr) = new{SEIR}(pϵ, ps, pκ, pt, pl, pr)
+  RiskPriors{SEI}(pϵ, ps, pκ, pt, pl) = new{SEI}(pϵ, ps, pκ, pt, pl, nothing)
+  RiskPriors{SIR}(pϵ, ps, pκ, pt, pr) = new{SIR}(pϵ, ps, pκ, pt, nothing, pr)
+  RiskPriors{SI}(pϵ, ps, pκ, pt) = new{SI}(pϵ, ps, pκ, pt, nothing, nothing)
 end
 
 
