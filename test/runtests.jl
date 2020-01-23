@@ -87,6 +87,7 @@ pop = Population(risks,
   end
   iterate!(mcmc, 100, 0.5)
   @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
+  @test sum(TNPosterior(mcmc)) ≈ sum(obs.infection .< Inf)-1
 end
 
 @testset "SEI Model" begin
@@ -147,6 +148,7 @@ end
   end
   iterate!(mcmc, 100, 0.5)
   @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
+  @test sum(TNPosterior(mcmc)) ≈ sum(obs.infection .< Inf)-1
 end
 
 @testset "SIR Model" begin
@@ -207,6 +209,7 @@ end
   end
   iterate!(mcmc, 100, 0.5)
   @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
+  @test sum(TNPosterior(mcmc)) ≈ sum(obs.infection .< Inf)-1
 end
 
 @testset "SI Model" begin
@@ -258,4 +261,5 @@ end
   end
   iterate!(mcmc, 100, 0.5)
   @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
+  @test sum(TNPosterior(mcmc)) ≈ sum(obs.infection .< Inf)-1
 end

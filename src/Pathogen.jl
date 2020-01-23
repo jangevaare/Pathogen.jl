@@ -12,8 +12,9 @@ module Pathogen
       LinearAlgebra,
       OnlineStats
 
-  import RecipesBase.plot
-  import ProgressMeter.next!
+  import StatsBase.mean,
+         RecipesBase.plot,
+         ProgressMeter.next!
 
   # Types
   include("types/EpidemicModel.jl")
@@ -34,6 +35,7 @@ module Pathogen
   include("types/Simulation.jl")
   include("types/MarkovChain.jl")
   include("types/MCMC.jl")
+  include("types/Transmissions/TransmissionNetworkPosterior.jl")
 
   # Functions
   include("functions/_pathway_from.jl")
@@ -64,7 +66,7 @@ module Pathogen
     State_S, State_E, State_I, State_R,
     RiskFunctions, RiskParameters, RiskPriors,
     Population,
-    TransmissionNetwork,
+    TransmissionNetwork, TransmissionNetworkPosterior, TNPosterior,
     Simulation,
     next!, simulate!,
     Events, EventObservations, EventExtents,
