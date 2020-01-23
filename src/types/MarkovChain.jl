@@ -6,8 +6,11 @@ mutable struct MarkovChain{T <: EpidemicModel}
   log_posterior::Vector{Float64}
   cov::OnlineStats.CovMatrix
 
-  function MarkovChain(events::Events{T}, network::TransmissionNetwork, risk_parameters::RiskParameters{T}, lp::Float64) where  T <: EpidemicModel
-    return new{T}(0, [events], [network], [risk_parameters], [lp], OnlineStats.CovMatrix())
+  function MarkovChain(events::Events{T},
+                       tn::TransmissionNetwork,
+                       rp::RiskParameters{T},
+                       lp::Float64) where  T <: EpidemicModel
+    return new{T}(0, [events], [tn], [rp], [lp], OnlineStats.CovMatrix())
   end
 
   function MarkovChain{T}() where  T <: EpidemicModel

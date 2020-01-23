@@ -25,8 +25,8 @@ function iterate!(mc::MarkovChain{T},
     end
     next!(pmeter)
     @logmsg LogLevel(-5000) "MCMC progress" progress = i/n
-    if adapt_cov != 0 && mod(i, adapt_cov) == 0
-      OnlineStats.fit!(mc.cov, convert(Array{Float64, 2}, mc.risk_parameters[end-adapt_cov:end]))
+    if adapt_cov > 0 && mod(i, adapt_cov) == 0
+      OnlineStats.fit!(mc.cov, eachrow(convert(Array{Float64, 2}, mc.risk_parameters[end-adapt_cov:end])))
       if LinearAlgebra.isposdef(value(mc.cov))
         if !use_adapted_cov
           use_adapted_cov = true
