@@ -50,51 +50,6 @@ function _epidemic_curve(events::Events{T},
 end
 
 @recipe function f(events::Events{T},
-                   min::Float64,
-                   max::Float64) where T<: EpidemicModel
-  xguide --> "Time"
-  yguide --> "N"
-  xlims --> (min - 1.0, max + 1.0)
-  linewidth --> 2.0
-  @series begin
-    seriestype := :steppost
-    seriescolor --> :purple
-    time, count = _epidemic_curve(events, State_S, min, max)
-    label --> "S"
-    time, count
-  end
-  if T in [SEIR; SEI]
-    @series begin
-      seriestype := :steppost
-      seriescolor --> :lightblue4
-      time, count = _epidemic_curve(events, State_E, min, max)
-      label --> "E"
-      time, count
-    end
-  end
-  @series begin
-    seriestype := :steppost
-    seriescolor --> :lightgreen
-    time, count = _epidemic_curve(events, State_I, min, max)
-    label --> "I"
-    time, count
-  end
-  if T in [SEIR; SIR]
-    @series begin
-      seriestype := :steppost
-      seriescolor --> :yellow
-      time, count = _epidemic_curve(events, State_R, min, max)
-      label --> "R"
-      time, count
-    end
-  end
-end
-
-@recipe function f(events::Events{T}) where T <: EpidemicModel
-  events, 0.0, maximum(events)
-end
-
-@recipe function f(events::Events{T},
                    state::DiseaseState,
                    min::Float64,
                    max::Float64) where T<: EpidemicModel
@@ -102,10 +57,46 @@ end
   yguide --> "N"
   xlims --> (min - 1.0, max + 1.0)
   linewidth --> 2.0
+  linecolor --> :cornflowerblue
+  label --> ""
+  seriestype --> :steppost
   _epidemic_curve(events, state, min, max)
 end
 
 @recipe function f(events::Events{T},
                    state::DiseaseState) where T <: EpidemicModel
   events, state, 0.0, maximum(events)
+end
+
+@recipe function f(events::Events{T},
+                   min::Float64,
+                   max::Float64) where T<: EpidemicModel
+  @series begin
+    linecolor --> :purple
+    label --> "S"
+    events, State_S, min, max
+  end
+  if T in [SEIR; SEI]
+    @series begin
+      linecolor --> :lightblue4
+      label --> "E"
+      events, State_E, min, max
+    end
+  end
+  @series begin
+    linecolor --> :lightgreen
+    label --> "I"
+    events, State_I, min, max
+  end
+  if T in [SEIR; SIR]
+    @series begin
+      linecolor --> :yellow
+      label --> "R"
+      events, State_R, min, max
+    end
+  end
+end
+
+@recipe function f(events::Events{T}) where T <: EpidemicModel
+  events, 0.0, maximum(events)
 end

@@ -1,5 +1,4 @@
-function _population(pop::Population,
-                     ids::Vector{Int64})
+function _population(pop::Population, ids)
   x = Float64[]
   y = Float64[]
   for i in ids
@@ -33,6 +32,24 @@ function _ids_by_state(events::Events{T},
   return ids
 end
 
+@recipe function f(pop::Population) where T <: EpidemicModel
+  xguide --> ""
+  yguide --> ""
+  legend --> :none
+  xlims --> extrema(pop.risks[!, :x]) .+ (sum(extrema(pop.risks[!, :x]).*(-1,1)) .* (-0.05, 0.05))
+  ylims --> extrema(pop.risks[!, :y]) .+ (sum(extrema(pop.risks[!, :y]).*(-1,1)) .* (-0.05, 0.05))
+  aspect_ratio := :equal
+  seriestype := :scatter
+  markerstrokecolor --> :black
+  markercolor --> :black
+  markersize --> 2.75
+  axis --> nothing
+  titlefontcolor --> :black
+  foreground_color_border --> :white
+  _population(pop, 1:pop.individuals)
+end
+
+
 @recipe function f(pop::Population,
                    events::Events{T},
                    time::Float64) where T <: EpidemicModel
@@ -42,10 +59,11 @@ end
   xlims --> extrema(pop.risks[!, :x]) .+ (sum(extrema(pop.risks[!, :x]).*(-1,1)) .* (-0.05, 0.05))
   ylims --> extrema(pop.risks[!, :y]) .+ (sum(extrema(pop.risks[!, :y]).*(-1,1)) .* (-0.05, 0.05))
   aspect_ratio := :equal
-  markerstrokecolour --> :black
+  markerstrokecolor --> :black
+  markersize --> 2.75
   axis --> nothing
   titlefontcolor --> :black
-  foreground_color_subplot --> :white
+  foreground_color_border --> :white
   @series begin
     ids_susceptible = _ids_by_state(events, State_S, time)
     x, y = _population(pop, ids_susceptible)
