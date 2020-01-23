@@ -2,18 +2,17 @@ module Pathogen
 
   # Dependencies
   using Distributed,
-      DataFrames,
-      Distributions,
-      RecipesBase,
-      Logging,
-      StatsBase,
-      Statistics,
-      ProgressMeter,
-      LinearAlgebra,
-      OnlineStats
+        DataFrames,
+        Distributions,
+        RecipesBase,
+        Logging,
+        StatsBase,
+        Statistics,
+        ProgressMeter,
+        LinearAlgebra,
+        OnlineStats
 
   import StatsBase.mean,
-         RecipesBase.plot,
          ProgressMeter.next!
 
   # Types
@@ -52,12 +51,14 @@ module Pathogen
   include("functions/logpriors.jl")
   include("functions/start!.jl")
   include("functions/iterate!.jl")
-  include("functions/_count_by_state.jl")
-  include("functions/_ids_by_state.jl")
-  include("functions/_epidemic_curve.jl")
-  include("functions/_plot_population.jl")
-  include("functions/_plot_pathway.jl")
-  include("functions/plot.jl")
+
+  # Visualization
+  include("visualization/epidemic_curve.jl")
+  include("visualization/population.jl")
+  include("visualization/epidemic_curve.jl")
+  include("visualization/transmission_network.jl")
+  include("visualization/posterior_transmission_network.jl")
+  include("visualization/trace.jl")
 
   export
     EpidemicModel,
