@@ -1,6 +1,7 @@
 *.jl.cov
 *.jl.*.cov
 *.jl.mem
+*.ipynb
 .ipynb_checkpoints
 testing/
 .DS_Store
