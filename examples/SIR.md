@@ -159,7 +159,6 @@ start!(mcmc, attempts=25000) # 1 chain, with 25k initialization attempts
 
     Initialization progress 100%|████████████████████████████| Time: 0:00:39
 
-
     SIR model MCMC with 1 chains
 
 <br><br>
@@ -170,7 +169,6 @@ iterate!(mcmc, 25000, 1.0, condition_on_network=true, event_batches=10)
 ```
 
     MCMC progress 100%|██████████████████████████████████████| Time: 0:19:26
-
 
     SIR model Markov chain (iterations = 25000)
 

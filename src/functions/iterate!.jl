@@ -85,10 +85,11 @@ function iterate!(mcmc::MCMC{T},
                   event_batches::Int64=1,
                   adapt_cov::Int64=100) where T <: EpidemicModel
   if length(mcmc.markov_chains) == 1
-    return iterate!(mcmc.markov_chains[1], mcmc, n, Σ, σ,
+    iterate!(mcmc.markov_chains[1], mcmc, n, Σ, σ,
                     condition_on_network = condition_on_network,
                     event_batches = event_batches,
                     adapt_cov = adapt_cov)
+    return mcmc
   else
     if adapt_cov < 0
       @warn "`adapt_cov` argument indicates the increment in iterations in which the covariance matrix is updated and must be ≧ 0. Setting to 0 for non-adaptive Metropolis-Hastings."
