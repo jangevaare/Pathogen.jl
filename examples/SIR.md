@@ -1,4 +1,4 @@
-
+## SIR Transmission Network Individual Level Model (TN-ILM)
 
 ```julia
 using Distances,
@@ -20,13 +20,9 @@ dists = [euclidean([risks[i, :x];
 pop = Population(risks, dists)
 ```
 
-
-
-
     Population object (n=100)
 
-
-
+<br><br>
 
 ```julia
 function _constant(params::Vector{Float64}, pop::Population, i::Int64)
@@ -55,13 +51,9 @@ rf = RiskFunctions{SIR}(_constant, # sparks function
                         _linear) # removal function
 ```
 
-
-
-
     SIR model risk functions
 
-
-
+<br><br>
 
 ```julia
 rparams = RiskParameters{SIR}([0.0001], # sparks function parameter(s)
@@ -72,12 +64,9 @@ rparams = RiskParameters{SIR}([0.0001], # sparks function parameter(s)
 ```
 
 
-
-
     SIR model risk function parameters
 
-
-
+<br><br>
 
 ```julia
 starting_states = append!([State_I], fill(State_S, n-1)) # Set first individual as infectious, others as susceptible to start
@@ -87,17 +76,13 @@ sim = Simulation(pop, starting_states, rf, rparams)
 simulate!(sim, tmax=100.0)
 ```
 
-
-
-
     SIR epidemic simulation @ time = 100.7
 
     S = 1
     I = 23
     R = 76
 
-
-
+<br><br>
 
 ```julia
 using Plots, Plots.PlotMeasures
@@ -109,8 +94,7 @@ gr()
 
     Plots.GRBackend()
 
-
-
+<br><br>
 
 ```julia
 # Epidemic Curve
@@ -130,6 +114,7 @@ png(combinedplots1, joinpath(@__DIR__, "epiplot.png"))
 
 ![Epidemic curve](epiplot.png)
 
+<br><br>
 
 ```julia
 anim = @animate for time = range(0.0,100.0,step=1)
@@ -138,9 +123,9 @@ end
 gif(anim, joinpath(@__DIR__, "epianimation.gif"), fps = 15)
 ```
 
-
 ![Epidemic simulation](epianimation.gif?raw=true)
 
+<br><br>
 
 ```julia
 # Generate observations with Uniform(0, 2) observation delay for infection and removal
@@ -152,8 +137,7 @@ obs = observe(sim, Uniform(0.0, 2.0), Uniform(0.0, 2.0), force=true)
 
     SIR model observations (n=100)
 
-
-
+<br><br>
 
 ```julia
 # Optimistically assume we know the functional form of epidemic (i.e. use same risk functions used for simulation purposes)
@@ -173,26 +157,24 @@ mcmc = MCMC(obs, ee, pop, rf, rpriors)
 start!(mcmc, attempts=25000) # 1 chain, with 25k initialization attempts
 ```
 
-    Initialization progress 100%|████████████████████████████| Time: 0:00:39
+    Initialization progress 100%|████████████████████████████| Time: 0:00:39
 
 
     SIR model MCMC with 1 chains
 
-
-
+<br><br>
 
 ```julia
 # Run MCMC
 iterate!(mcmc, 25000, 1.0, condition_on_network=true, event_batches=10)
 ```
 
-    MCMC progress 100%|██████████████████████████████████████| Time: 0:19:26
+    MCMC progress 100%|██████████████████████████████████████| Time: 0:19:26
 
 
     SIR model Markov chain (iterations = 25000)
 
-
-
+<br><br>
 
 ```julia
 p1 = plot(1:20:25001,
@@ -227,6 +209,8 @@ png(combinedplots2, joinpath(@__DIR__, "posterior.png"))
 
 ![MCMC](posterior.png)
 
+<br><br>
+
 ```julia
 p1 = plot(sim.transmission_network, sim.population, title="True Transmission\nNetwork", titlefontsize=11, framestyle=:box)
 
@@ -239,6 +223,8 @@ png(combinedplots3, joinpath(@__DIR__, "posterior_tn_sbs.png"))
 
 ![Posterior Transmission Network](posterior_tn_sbs.png)
 
+<br><br>
+
 ```julia
 # Convert Risk Parameter MC into an array to summarize
 tracedata = convert(Array{Float64, 2}, mcmc.markov_chains[1].risk_parameters)
@@ -247,14 +233,10 @@ tracedata = convert(Array{Float64, 2}, mcmc.markov_chains[1].risk_parameters)
 mean(tracedata[5000:50:25000, :], dims=1)
 ```
 
-
-
-
     1×4 Array{Float64,2}:
      9.18159e-5  1.00385  2.83247  0.0467462
 
-
-
+<br><br>
 
 ```julia
 # 95% credible intervals
