@@ -45,7 +45,7 @@ end
   markersize --> 2.75
   axis --> nothing
   titlefontcolor --> :black
-  foreground_color_border --> :white
+  framestyle --> :none
   _population(pop, 1:pop.individuals)
 end
 
@@ -63,7 +63,7 @@ end
   markersize --> 2.75
   axis --> nothing
   titlefontcolor --> :black
-  foreground_color_border --> :white
+  framestyle --> :none
   @series begin
     ids_susceptible = _ids_by_state(events, State_S, time)
     x, y = _population(pop, ids_susceptible)
