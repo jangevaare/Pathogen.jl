@@ -4,11 +4,15 @@
 using Distances,
       DataFrames,
       Distributions,
-      Pathogen
+      Pathogen,
+      Random
+
+# Set seed
+Random.seed!(54321)
 
 n = 100
-risks = DataFrame(x = rand(Uniform(0, 20), n),
-                  y = rand(Uniform(0, 40), n),
+risks = DataFrame(x = rand(Uniform(0, 15), n),
+                  y = rand(Uniform(0, 30), n),
                   riskfactor1 = rand(Gamma(), n))
 
 # Precalculate distances
@@ -38,10 +42,9 @@ function _linear(params::Vector{Float64}, pop::Population, i::Int64)
 end
 
 function _powerlaw(params::Vector{Float64}, pop::Population, i::Int64, k::Int64)
-  α = params[1]
-  β = params[2]
+  β = params[1]
   d = pop.distances[k, i]
-  return α * (d^(-β))
+  return d^(-β)
 end
 
 rf = RiskFunctions{SIR}(_constant, # sparks function
@@ -58,9 +61,9 @@ rf = RiskFunctions{SIR}(_constant, # sparks function
 ```julia
 rparams = RiskParameters{SIR}([0.0001], # sparks function parameter(s)
                               Float64[], # susceptibility function parameter(s)
-                              [3.0, 4.0], # infectivity function parameter(s)
+                              [4.0], # infectivity function parameter(s)
                               Float64[], # transmissibility function parameter(s)
-                              [0.05]) # removal function parameter(s)
+                              [0.1]) # removal function parameter(s)
 ```
 
 
@@ -73,20 +76,20 @@ starting_states = append!([State_I], fill(State_S, n-1)) # Set first individual 
 
 sim = Simulation(pop, starting_states, rf, rparams)
 
-simulate!(sim, tmax=100.0)
+simulate!(sim, tmax=200.0)
 ```
 
-    SIR epidemic simulation @ time = 100.7
+    SIR epidemic simulation @ time = 204.88
 
-    S = 1
-    I = 23
-    R = 76
+    S = 18
+    I = 7
+    R = 75
 
 <br><br>
 
 ```julia
 using Plots, Plots.PlotMeasures
-gr()
+gr(dpi=200)
 ```
 
 
@@ -98,14 +101,14 @@ gr()
 
 ```julia
 # Epidemic Curve
-p1 = plot(sim.events, 0.0, 100.0, legendfont=font(6), xaxis=font(10), bottom_margin=30px)
+p1 = plot(sim.events, 0.0, 200.0, legendfont=font(6), xaxis=font(10), bottom_margin=30px)
 
 # Population/TransmissionNetwork plots
 p2=plot(sim.transmission_network, sim.population, sim.events, 0.0, title="Time = 0", titlefontsize = 8)
-p3=plot(sim.transmission_network, sim.population, sim.events, 10.0, title="Time = 10", titlefontsize = 8)
-p4=plot(sim.transmission_network, sim.population, sim.events, 30.0, title="Time = 30", titlefontsize = 8)
-p5=plot(sim.transmission_network, sim.population, sim.events, 60.0, title="Time = 60", titlefontsize = 8)
-p6=plot(sim.transmission_network, sim.population, sim.events, 100.0, title="Time = 100", titlefontsize = 8)
+p3=plot(sim.transmission_network, sim.population, sim.events, 50.0, title="Time = 50", titlefontsize = 8)
+p4=plot(sim.transmission_network, sim.population, sim.events, 100.0, title="Time = 100", titlefontsize = 8)
+p5=plot(sim.transmission_network, sim.population, sim.events, 150.0, title="Time = 150", titlefontsize = 8)
+p6=plot(sim.transmission_network, sim.population, sim.events, 200.0, title="Time = 200", titlefontsize = 8)
 l = @layout [a;
              b c d e f]
 combinedplots1 = plot(p1, p2, p3, p4, p5, p6, layout=l)
@@ -117,19 +120,23 @@ png(combinedplots1, joinpath(@__DIR__, "epiplot.png"))
 <br><br>
 
 ```julia
-anim = @animate for time = range(0.0,100.0,step=1)
-    plot(sim.transmission_network, sim.population, sim.events, time, markersize=5, legend=:right, xlim=(-5,30), dpi=120)
+anim = @animate for simtime = range(0.0, 200.0, step=1.0)
+    p1 = plot(sim.transmission_network, sim.population, sim.events, simtime, markersize=4, legend=:none, xlim=(-2,17))
+    p2=plot([simtime], [1.0], seriestype=:scatter, markercolor=:black, markersize=4, marker=:dtriangle, legend=:none, xlabel="Time", framestyle=:origin, grid=:none, tick_direction=:out, yaxis=false, xticks=0:25:200, aspect_ratio=4, ylim=(-1,1), xlim=(-10,210), xaxis=font(8))
+    l = @layout [a{0.975h}; b]   
+    plot(p1, p2, layout=l)
 end
-gif(anim, joinpath(@__DIR__, "epianimation.gif"), fps = 15)
+gif(anim, joinpath(@__DIR__, "epianimation.gif"), fps = 20)
 ```
+
 
 ![Epidemic simulation](epianimation.gif?raw=true)
 
 <br><br>
 
 ```julia
-# Generate observations with Uniform(0, 2) observation delay for infection and removal
-obs = observe(sim, Uniform(0.0, 2.0), Uniform(0.0, 2.0), force=true)
+# Generate observations with Uniform(0.5, 2.5) observation delay for infection and removal
+obs = observe(sim, Uniform(0.5, 2.5), Uniform(0.5, 2.5), force=true)
 ```
 
 
@@ -146,7 +153,7 @@ obs = observe(sim, Uniform(0.0, 2.0), Uniform(0.0, 2.0), force=true)
 
 rpriors = RiskPriors{SIR}([Exponential(0.0001)],
                           UnivariateDistribution[],
-                          [Uniform(1.0, 5.0); Uniform(1.0, 9.0)],
+                          [Uniform(1.0, 7.0)],
                           UnivariateDistribution[],
                           [Uniform(0.0, 1.0)])
 
@@ -154,10 +161,10 @@ ee = EventExtents{SIR}(5.0, 5.0)
 
 # Initialize MCMC
 mcmc = MCMC(obs, ee, pop, rf, rpriors)
-start!(mcmc, attempts=25000) # 1 chain, with 25k initialization attempts
+start!(mcmc, attempts=50000) # 1 chain, with 50k initialization attempts
 ```
 
-    Initialization progress 100%|████████████████████████████| Time: 0:00:39
+    Initialization progress 100%|████████████████████████████| Time: 0:02:13
 
     SIR model MCMC with 1 chains
 
@@ -165,40 +172,40 @@ start!(mcmc, attempts=25000) # 1 chain, with 25k initialization attempts
 
 ```julia
 # Run MCMC
-iterate!(mcmc, 25000, 1.0, condition_on_network=true, event_batches=10)
+iterate!(mcmc, 50000, 1.0, condition_on_network=true, event_batches=5)
 ```
 
-    MCMC progress 100%|██████████████████████████████████████| Time: 0:19:26
+    MCMC progress 100%|██████████████████████████████████████| Time: 0:29:20
 
-    SIR model Markov chain (iterations = 25000)
+    SIR model MCMC with 1 chains
 
 <br><br>
 
 ```julia
-p1 = plot(1:20:25001,
+p1 = plot(1:20:50001,
   mcmc.markov_chains[1].risk_parameters, yscale=:log10, title="TN-ILM parameters", xguidefontsize=8, yguidefontsize=8, xtickfontsize=7, ytickfontsize=7, titlefontsize=11, bottom_margin=30px)
 
-p2 = plot(mcmc.markov_chains[1].events[5000], State_S,
+p2 = plot(mcmc.markov_chains[1].events[10000], State_S,
           linealpha=0.01, title="S", xguidefontsize=8, yguidefontsize=8,
           xtickfontsize=7, ytickfontsize=7, titlefontsize=11)
-for i=5020:20:25000
+for i=10020:20:50000
   plot!(p2, mcmc.markov_chains[1].events[i], State_S, linealpha=0.01)
 end
-plot!(p2, sim.events, State_S, linecolor=:black)
+plot!(p2, sim.events, State_S, linecolor=:black, linewidth=1.5)
 
-p3 = plot(mcmc.markov_chains[1].events[5000], State_I,
+p3 = plot(mcmc.markov_chains[1].events[10000], State_I,
           linealpha=0.01, title="I", xguidefontsize=8, yguidefontsize=8, xtickfontsize=7, ytickfontsize=7, titlefontsize=11)
-for i=5020:20:25000
+for i=10020:20:50000
   plot!(p3, mcmc.markov_chains[1].events[i], State_I, linealpha=0.01)
 end
-plot!(p3, sim.events, State_I, linecolor=:black)
+plot!(p3, sim.events, State_I, linecolor=:black, linewidth=1.5)
 
-p4 = plot(mcmc.markov_chains[1].events[5000], State_R,
+p4 = plot(mcmc.markov_chains[1].events[10000], State_R,
           linealpha=0.01, title="R", xguidefontsize=8, yguidefontsize=8, xtickfontsize=7, ytickfontsize=7, titlefontsize=11)
-for i=5020:20:25000
+for i=10020:20:50000
   plot!(p4, mcmc.markov_chains[1].events[i], State_R, linealpha=0.01)
 end
-plot!(p4, sim.events, State_R, linecolor=:black)
+plot!(p4, sim.events, State_R, linecolor=:black, linewidth=1.5)
 
 l = @layout [a; [b c d]]
 combinedplots2 = plot(p1, p2, p3, p4, layout=l)
@@ -212,14 +219,14 @@ png(combinedplots2, joinpath(@__DIR__, "posterior.png"))
 ```julia
 p1 = plot(sim.transmission_network, sim.population, title="True Transmission\nNetwork", titlefontsize=11, framestyle=:box)
 
-tnp = TransmissionNetworkPosterior(mcmc.markov_chains[1].transmission_network[5000:50:25000])
+tnp = TransmissionNetworkPosterior(mcmc.markov_chains[1].transmission_network[10000:20:50000])
 p2 = plot(tnp, sim.population, title="Transmission Network\nPosterior Distribution", titlefontsize=11, framestyle=:box)
 
 combinedplots3 = plot(p1, p2, layout=(1, 2))
-png(combinedplots3, joinpath(@__DIR__, "posterior_tn_sbs.png"))
+png(combinedplots3, joinpath(@__DIR__, "posterior_tn.png"))
 ```
 
-![Posterior Transmission Network](posterior_tn_sbs.png)
+![Posterior Transmission Network](posterior_tn.png)
 
 <br><br>
 
@@ -228,22 +235,22 @@ png(combinedplots3, joinpath(@__DIR__, "posterior_tn_sbs.png"))
 tracedata = convert(Array{Float64, 2}, mcmc.markov_chains[1].risk_parameters)
 
 # Posterior mean estimates
-mean(tracedata[5000:50:25000, :], dims=1)
+mean(tracedata[10000:20:50000, :], dims=1)
 ```
 
-    1×4 Array{Float64,2}:
-     9.18159e-5  1.00385  2.83247  0.0467462
+    1×3 Array{Float64,2}:
+     9.61085e-5  4.26675  0.0928756
 
 <br><br>
 
 ```julia
 # 95% credible intervals
-[quantile(tracedata[5000:50:25000, i], j) for j = [0.025, 0.975], i = 1:4]
+[quantile(tracedata[10000:20:50000, i], j) for j = [0.025, 0.975], i = 1:3]
 ```
 
 
 
 
-    2×4 Array{Float64,2}:
-     1.14966e-6   1.0001   2.7293   0.0368508
-     0.000319059  1.01599  2.93087  0.0565685
+    2×3 Array{Float64,2}:
+     2.86372e-6   3.9581   0.0720961
+     0.000375989  4.61725  0.116018 

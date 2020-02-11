@@ -72,6 +72,5 @@ module Pathogen
     next!, simulate!,
     Events, EventObservations, EventExtents,
     observe,
-    MCMC, start!, iterate!,
-    plot
+    MCMC, start!, iterate!
 end

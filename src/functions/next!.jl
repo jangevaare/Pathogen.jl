@@ -105,12 +105,12 @@ function next!(mc::MarkovChain{T},
     ll_acceptance_threshold = log(rand()) + new_lposterior - proposed_lprior
     if ll_acceptance_threshold < Inf
       proposed_llikelihood = loglikelihood(proposed_params,
-                                          mcmc.risk_functions,
-                                          proposed_events,
-                                          mcmc.population,
-                                          mcmc.starting_states,
-                                          transmission_network_output = false,
-                                          early_decision_value = ll_acceptance_threshold)
+                                           mcmc.risk_functions,
+                                           proposed_events,
+                                           mcmc.population,
+                                           mcmc.starting_states,
+                                           transmission_network_output = false,
+                                           early_decision_value = ll_acceptance_threshold)
       proposed_lposterior = proposed_lprior + proposed_llikelihood
     else
       proposed_llikelihood = -Inf
