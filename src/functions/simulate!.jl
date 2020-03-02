@@ -10,11 +10,15 @@ function simulate!(sim::Simulation{T}; tmax::Float64=Inf, nmax::Int64=1000, pmax
   end
   stoptime = time() + pmax
   while true
-    next!(sim)
-    if sim.time >= tmax
+    event = generate(Event, sim.event_rates, sim.time)
+    if event.time > tmax
+      sim.time = tmax
       @debug "Simulation stopped: simulation time maximum reached"
       break
-    elseif sim.iterations >= nmax
+    else
+      update!(sim, event)
+    end
+    if sim.iterations >= nmax
       @debug "Simulation stopped: iteration maximum reached"
       break
     elseif pmax < Inf && time() >= stoptime

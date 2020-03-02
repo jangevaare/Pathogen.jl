@@ -45,7 +45,6 @@ module Pathogen
   include("functions/initialize.jl")
   include("functions/observe.jl")
   include("functions/update!.jl")
-  include("functions/next!.jl")
   include("functions/simulate!.jl")
   include("functions/loglikelihood.jl")
   include("functions/logpriors.jl")

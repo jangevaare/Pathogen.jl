@@ -19,9 +19,9 @@ function iterate!(mc::MarkovChain{T},
   end
   for i = 1:n
     if use_adapted_cov
-      next!(mc, mcmc, adapted_cov, σ, condition_on_network = condition_on_network, event_batches = event_batches)
+      update!(mc, mcmc, adapted_cov, σ, condition_on_network = condition_on_network, event_batches = event_batches)
     else
-      next!(mc, mcmc, Σ, σ, condition_on_network = condition_on_network, event_batches = event_batches)
+      update!(mc, mcmc, Σ, σ, condition_on_network = condition_on_network, event_batches = event_batches)
     end
     next!(pmeter)
     @logmsg LogLevel(-5000) "MCMC progress" progress = i/n
@@ -57,9 +57,9 @@ function iterate!(mc::MarkovChain{T},
   end
   for i = 1:n
     if use_adapted_cov
-      next!(mc, mcmc, adapted_cov, σ, condition_on_network = condition_on_network, event_batches = event_batches)
+      update!(mc, mcmc, adapted_cov, σ, condition_on_network = condition_on_network, event_batches = event_batches)
     else
-      next!(mc, mcmc, Σ, σ, condition_on_network = condition_on_network, event_batches = event_batches)
+      update!(mc, mcmc, Σ, σ, condition_on_network = condition_on_network, event_batches = event_batches)
     end
     put!(progress_channel, true)
     if adapt_cov != 0 && mod(i, adapt_cov) == 0

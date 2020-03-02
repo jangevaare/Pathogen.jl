@@ -79,11 +79,11 @@ sim = Simulation(pop, starting_states, rf, rparams)
 simulate!(sim, tmax=200.0)
 ```
 
-    SIR epidemic simulation @ time = 204.88
+    SIR epidemic simulation @ time = 200.0
 
     S = 18
-    I = 7
-    R = 75
+    I = 8
+    R = 74
 
 <br><br>
 
