@@ -5,6 +5,10 @@ struct TransmissionNetworkDistribution
   function TransmissionNetworkDistribution(x::Vector{TransmissionNetwork})
     return new(mean([y.external for y in x]), mean([y.internal for y in x]))
   end
+
+  function TransmissionNetworkDistribution(x::Vector{TransmissionNetworkDistribution})
+    return new(mean([y.external for y in x]), mean([y.internal for y in x]))
+  end
 end
 
 const TNDistribution = TransmissionNetworkDistribution
