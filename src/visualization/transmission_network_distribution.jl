@@ -1,5 +1,5 @@
 function _transmission_pathway_density(pop::Population,
-                                       tn::TNPosterior,
+                                       tn::TNDistribution,
                                        i::Int64, j::Int64)
   x = pop.risks[[i; j], :x]
   y = pop.risks[[i; j], :y]
@@ -7,7 +7,7 @@ function _transmission_pathway_density(pop::Population,
   return x, y, dens
 end
 
-@recipe function f(tn::TNPosterior,
+@recipe function f(tn::TNDistribution,
                    pop::Population;
                    show_individuals=true::Bool) where T <: EpidemicModel
   xguide --> ""

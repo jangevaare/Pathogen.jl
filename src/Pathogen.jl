@@ -34,7 +34,7 @@ module Pathogen
   include("types/Simulation.jl")
   include("types/MarkovChain.jl")
   include("types/MCMC.jl")
-  include("types/Transmissions/TransmissionNetworkPosterior.jl")
+  include("types/Transmissions/TransmissionNetworkDistribution.jl")
 
   # Functions
   include("functions/_pathway_from.jl")
@@ -56,7 +56,7 @@ module Pathogen
   include("visualization/population.jl")
   include("visualization/epidemic_curve.jl")
   include("visualization/transmission_network.jl")
-  include("visualization/posterior_transmission_network.jl")
+  include("visualization/transmission_network_distribution.jl")
   include("visualization/trace.jl")
 
   export
@@ -66,7 +66,10 @@ module Pathogen
     State_S, State_E, State_I, State_R,
     RiskFunctions, RiskParameters, RiskPriors,
     Population,
-    TransmissionNetwork, TransmissionNetworkPosterior, TNPosterior,
+    TransmissionNetwork, 
+    TransmissionNetworkDistribution, TNDistribution,
+    TransmissionNetworkPrior, TNPrior,
+    TransmissionNetworkPosterior, TNPosterior,
     Simulation,
     next!, simulate!,
     Events, EventObservations, EventExtents,

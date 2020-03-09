@@ -5,6 +5,7 @@ mutable struct MCMC{T <: EpidemicModel}
   starting_states::Vector{DiseaseState}
   risk_functions::RiskFunctions{T}
   risk_priors::RiskPriors{T}
+  #transmission_network_prior::TNPrior
   markov_chains::Vector{MarkovChain{T}}
 
   function MCMC(obs::EventObservations{T},
