@@ -1,4 +1,5 @@
 # Pathogen.jl
+[![DOI](https://zenodo.org/badge/35234698.svg)](https://zenodo.org/badge/latestdoi/35234698)
 [![Latest Release](https://img.shields.io/github/release/jangevaare/Pathogen.jl.svg)](https://github.com/jangevaare/Pathogen.jl/releases/latest)
 [![Build Status](https://travis-ci.org/jangevaare/Pathogen.jl.svg?branch=master)](https://travis-ci.org/jangevaare/Pathogen.jl)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/jangevaare/Pathogen.jl/blob/master/LICENSE)
@@ -19,8 +20,8 @@ Examples of Pathogen.jl workflow are included in the examples directory as a Jup
 1. [SIR simulation, inference, and visualization](examples/SIR.md)
 ![Epidemic simulation](examples/epianimation.gif?raw=true)
 
-## Referencing
-To cite this package you may refer to the following [preprint article](https://arxiv.org/abs/2002.05850):
+## More information
+This package is detailed in this [preprint article](https://arxiv.org/abs/2002.05850).
 
     @article{pathogenjl,
       title={Infectious Disease Transmission Network Modelling with {Julia}},
