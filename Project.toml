@@ -1,7 +1,7 @@
 name = "Pathogen"
 uuid = "c8189ad9-0349-5cbb-98f2-579781f27e5c"
 authors = ["Justin Angevaare <justinangevaare@gmail.com>"]
-version = "0.4.5"
+version = "0.4.6"
 
 [deps]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
@@ -16,13 +16,13 @@ Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
-DataFrames = "0.19, 0.20"
-Distributions = "0.20, 0.21, 0.22"
-OnlineStats = "1.0, 1.1"
-ProgressMeter = "1.2"
-RecipesBase = "0.7, 0.8"
-StatsBase = "0.32"
-julia = "1.1, 2"
+DataFrames = "^0.19, ^0.20"
+Distributions = "^0.20, ^0.21, ^0.22"
+OnlineStats = "^1.1"
+ProgressMeter = "^1.2"
+RecipesBase = "^0.7, ^0.8"
+StatsBase = "^0.32"
+julia = "^1.1"
 
 [extras]
 Distances = "b4f34e82-e78d-54a5-968a-f98e89d6e8f7"
