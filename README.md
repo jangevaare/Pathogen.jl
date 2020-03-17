@@ -17,7 +17,7 @@ Pathogen.jl infers transmission pathways (i.e. who-infected-who). This inference
 ![Posterior Transmission Network](examples/posterior_tn.png)
 
 Examples of Pathogen.jl workflow are included in the examples directory as a Jupyter notebooks.
-1. [SIR simulation, inference, and visualization](examples/SIR TN-ILM Simulation and Inference.ipynb)
+1. [SIR simulation, inference, and visualization](https://github.com/jangevaare/Pathogen.jl/blob/master/examples/SIR%20TN-ILM%20Simulation%20and%20Inference.ipynb)
 ![Epidemic simulation](examples/epianimation.gif?raw=true)
 
 ## More information
