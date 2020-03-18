@@ -1,8 +1,9 @@
 # Pathogen.jl
 [![DOI](https://zenodo.org/badge/35234698.svg)](https://zenodo.org/badge/latestdoi/35234698)
 [![Latest Release](https://img.shields.io/github/release/jangevaare/Pathogen.jl.svg)](https://github.com/jangevaare/Pathogen.jl/releases/latest)
-[![Build Status](https://travis-ci.org/jangevaare/Pathogen.jl.svg?branch=master)](https://travis-ci.org/jangevaare/Pathogen.jl)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/jangevaare/Pathogen.jl/blob/master/LICENSE)
+[![Build Status](https://travis-ci.org/jangevaare/Pathogen.jl.svg?branch=master)](https://travis-ci.org/jangevaare/Pathogen.jl)
+[![codecov.io](http://codecov.io/github/jangevaare/Pathogen.jl/coverage.svg?branch=master)](http://codecov.io/github/jangevaare/Pathogen.jl?branch=master)
 
 Authors: Justin Angevaare, Zeny Feng, Rob Deardon
 
