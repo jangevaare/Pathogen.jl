@@ -15,6 +15,19 @@ Pathogen.jl is a Julia software package for individual level models of infectiou
 
 Pathogen.jl infers transmission pathways (i.e. who-infected-who). This inference is completed using a Gibbs step in our specialized MCMC algorithm. This specialized MCMC algorithm also performs event time data augmentation. A detailed overview of this algorithm can be found [here](https://arxiv.org/abs/2002.05850).
 
+## Installation
+The current release can be installed from the Julia REPL with:
+
+```julia
+pkg> add Pathogen
+```
+
+The development version (master branch) can be installed with:
+
+```julia
+pkg> add Pathogen#master
+```
+
 ![Posterior Transmission Network](examples/posterior_tn.png)
 
 Examples of Pathogen.jl workflow are included in the examples directory as a Jupyter notebooks.
