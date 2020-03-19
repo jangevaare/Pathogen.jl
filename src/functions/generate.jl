@@ -7,7 +7,7 @@ function generate(::Type{Event},
     id = sample(1:rates.individuals, Weights(rates[new_state]))
     return Event{T}(time, id, new_state)
   elseif sum(totals) == 0.0
-    return Event{T}(Inf)
+    return NoEvent()
   else
     # Generate new state
     new_state = sample(_state_progressions[T][2:end], totals)

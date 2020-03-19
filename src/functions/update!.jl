@@ -116,7 +116,7 @@ function update!(tr::TransmissionRates,
   return tr, rates
 end
 
-function update!(s::Simulation{T}, event::Event) where T <: EpidemicModel
+function update!(s::Simulation{T}, event::AbstractEvent) where T <: EpidemicModel
   if event.time < s.time
     @error "Time of a new event must be >= that of the previous event"
   elseif event.time < Inf

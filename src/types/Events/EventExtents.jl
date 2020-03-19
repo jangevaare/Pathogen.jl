@@ -1,7 +1,7 @@
 struct EventExtents{T <: EpidemicModel}
-  exposure::Union{Nothing, Real}
-  infection::Union{Nothing, Real}
-  removal::Union{Nothing, Real}
+  exposure::Union{Nothing, Float64}
+  infection::Union{Nothing, Float64}
+  removal::Union{Nothing, Float64}
 
   EventExtents{SEIR}(e, i, r) = new{SEIR}(e, i, r)
   EventExtents{SEI}(e, i)     = new{SEI}(e, i, nothing)
