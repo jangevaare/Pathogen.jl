@@ -18,10 +18,10 @@ struct TransmissionRates
   end
 end
 
-function Base.copy(x::TransmissionRates)
-  return TransmissionRates(copy(x.external),
-                           copy(x.internal))
-end
+# function Base.copy(x::TransmissionRates)
+#   return TransmissionRates(copy(x.external),
+#                            copy(x.internal))
+# end
 
 function Base.sum(x::TransmissionRates)
   return sum(x.external) + sum(x.internal)
