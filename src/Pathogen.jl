@@ -54,7 +54,6 @@ module Pathogen
   # Visualization
   include("visualization/epidemic_curve.jl")
   include("visualization/population.jl")
-  include("visualization/epidemic_curve.jl")
   include("visualization/transmission_network.jl")
   include("visualization/transmission_network_distribution.jl")
   include("visualization/trace.jl")
