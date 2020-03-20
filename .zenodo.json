@@ -1,0 +1,20 @@
+{ "description": "<p>Simulation, visualization, and inference tools for modelling the spread of infectious diseases with Julia</p>",
+  "language": "eng", 
+  "license": "MIT", 
+  "upload_type": "software", 
+  "creators": [
+    {
+        "orcid": "0000-0002-3373-5009", 
+        "affiliation": "University of Guelph", 
+        "name": "Angevaare, Justin"
+    }, 
+    {
+        "affiliation": "University of Guelph", 
+        "name": "Feng, Zeny"
+    }, 
+    {
+        "affiliation": "University of Calgary", 
+        "name": "Deardon, Rob"
+    }
+  ] 
+} 
