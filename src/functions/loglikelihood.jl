@@ -4,10 +4,12 @@ function loglikelihood(rp::RiskParameters{T},
                        pop::Population,
                        starting_states::Vector{DiseaseState};
                        loglikelihood_output::Bool=true,
-                       transmission_network_output::Bool=true,
+                       transmission_rates_output::Bool=true,
+                       transmissions_output::Bool=true,
                        early_decision_value::Float64=-Inf) where T <: EpidemicModel
   # Initialize
   ll = 0.0
+  transmissions = Int64[]
   # We can use the Simulation struct to recreate epidemic
   s = Simulation(pop, starting_states, rf, rp)
   s.events = events
@@ -31,6 +33,9 @@ function loglikelihood(rp::RiskParameters{T},
       break
     end
     event = Event{T}(time, id, new_state)
+    if _new_transmission(event)
+      push!(transmissions, id)
+    end
     @debug "Calculating the loglikehood contribution of event $i" event
     # Get event rate totals
     rate_total = sum(s.event_rates)
@@ -61,7 +66,7 @@ function loglikelihood(rp::RiskParameters{T},
       # Get the individual rate associated with the event that occurred
       event_rate = s.event_rates[event.new_state][event.individual]
       # Add the specific event contribution to loglikelihood
-      ll += log(event_rate/rate_total)
+      ll += log(event_rate / rate_total)
     end
     # Updates
     last_event = event
@@ -69,12 +74,6 @@ function loglikelihood(rp::RiskParameters{T},
       last_event_switch = true
     end
     update!(s.disease_states, event)
-    if transmission_network_output
-      update!(s.transmission_network,
-              generate(Transmission,
-                       s.transmission_rates,
-                       event))
-    end
     update!(s.transmission_rates,
             s.event_rates,
             event,
@@ -83,13 +82,7 @@ function loglikelihood(rp::RiskParameters{T},
             s.risk_functions,
             s.risk_parameters)
   end
-  if transmission_network_output && loglikelihood_output
-    return ll, s.transmission_network
-  elseif transmission_network_output & !loglikelihood_output
-    return s.transmission_network
-  elseif !transmission_network_output & loglikelihood_output
-    return ll
-  else
-    @error "You must return either a transmission_network proposal or loglikelihood"
-  end
+  return loglikelihood_output ? ll : nothing, 
+         transmission_rates_output ? s.transmission_rates : nothing,
+         transmissions_output ? transmissions : nothing
 end

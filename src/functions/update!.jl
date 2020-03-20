@@ -32,9 +32,10 @@ function update!(tr::TransmissionRates,
                  states::Vector{DiseaseState},
                  pop::Population,
                  rf::RiskFunctions{T},
-                 rp::RiskParameters{T}) where T <: EpidemicModel
+                 rp::RiskParameters{T};
+                 xzero::Bool=false) where T <: EpidemicModel
   id = event.individual
-  if _new_transmission(event)
+  if _new_transmission(event) && xzero
     tr.external[id] = 0.0
     tr.internal[:, id] .= 0.0
   end
@@ -46,7 +47,9 @@ function update!(tr::TransmissionRates,
                            transmissibility
     end
   elseif event.new_state == State_R
-    tr.internal[id, :] .= 0.0
+    @simd for i in findall(states .== Ref(State_S))
+      tr.internal[id, i] = 0.0
+    end
   end
   return tr
 end
