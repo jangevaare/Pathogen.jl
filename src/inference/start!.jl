@@ -15,8 +15,8 @@ function start!(mcmc::MCMC{T},
   close(pchannel)
   finish!(pmeter)
   markov_chains = [fetch(i) for i in mc_Futures]
-  append!(mcmc.markov_chains, markov_chains[.!isnothing.(markov_chains)])
-  @logmsg LogLevel(-3000) "$(sum(.!isnothing.(markov_chains))) Markov chains successfully initialized"
+  append!(mcmc.markov_chains, markov_chains[nothing.!==markov_chains])
+  @logmsg LogLevel(-3000) "$(sum(nothing.!==markov_chains)) Markov chains successfully initialized"
   return mcmc
 end
 
@@ -24,7 +24,7 @@ function start!(mcmc::MCMC{T};
                 attempts::Int64=1000) where T <: EpidemicModel
   # return start!(mcmc, 1, attempts)
   mc = initialize(MarkovChain, mcmc, attempts=attempts)
-  if !isnothing(mc)
+  if !mc !== nothing
     push!(mcmc.markov_chains, mc)
   else
     @error "Failed to initialize a Markov chain"

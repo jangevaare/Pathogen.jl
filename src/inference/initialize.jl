@@ -11,14 +11,15 @@ function initialize(::Type{MarkovChain},
     events = generate(Events, mcmc)
     rparams = generate(RiskParameters, mcmc)
     lprior = logpriors(rparams, mcmc.risk_priors)
-    llikelihood, network = loglikelihood(rparams,
-                                         mcmc.risk_functions,
-                                         events,
-                                         mcmc.population,
-                                         mcmc.starting_states,
-                                         early_decision_value = max_lposterior - lprior)
+    llikelihood, tr, tx = loglikelihood(rparams,
+                                            mcmc.risk_functions,
+                                            events,
+                                            mcmc.population,
+                                            mcmc.starting_states,
+                                            early_decision_value = max_lposterior - lprior)
     lposterior = llikelihood + lprior
     if lposterior > max_lposterior
+      network = generate(TransmissionNetwork, tr, mcmc, tx)
       markov_chain = MarkovChain(events, network, rparams, lposterior)
       max_lposterior = lposterior
     end
@@ -45,14 +46,15 @@ function initialize(::Type{MarkovChain},
     events = generate(Events, mcmc)
     rparams = generate(RiskParameters, mcmc)
     lprior = logpriors(rparams, mcmc.risk_priors)
-    llikelihood, network = loglikelihood(rparams,
-                                         mcmc.risk_functions,
-                                         events,
-                                         mcmc.population,
-                                         mcmc.starting_states,
-                                         early_decision_value = max_lposterior - lprior)
+    llikelihood, tr, tx = loglikelihood(rparams,
+                                            mcmc.risk_functions,
+                                            events,
+                                            mcmc.population,
+                                            mcmc.starting_states,
+                                            early_decision_value = max_lposterior - lprior)
     lposterior = llikelihood + lprior
     if lposterior > max_lposterior
+      network = generate(TransmissionNetwork, tr, mcmc, tx)
       markov_chain = MarkovChain(events, network, rparams, lposterior)
       max_lposterior = lposterior
     end

@@ -51,12 +51,12 @@ function update!(mc::MarkovChain{T},
         # For other events in batch, we'll update proposal itself
         if j == (batch_size*(i-1) + 1)
           proposed_events_array = reshape([new_events_array[1:(aug_order[j]-1)]
-                                           proposed_event.time
+                                           _time(proposed_event)
                                            new_events_array[(aug_order[j]+1):end]],
                                           size(new_events_array))
         else
           proposed_events_array = reshape([proposed_events_array[1:(aug_order[j]-1)]
-                                           proposed_event.time
+                                           _time(proposed_event)
                                            proposed_events_array[(aug_order[j]+1):end]],
                                           size(new_events_array))
         end
@@ -82,8 +82,9 @@ function update!(mc::MarkovChain{T},
                                            proposed_events,
                                            mcmc.population,
                                            mcmc.starting_states,
-                                           transmission_network_output = false,
-                                           early_decision_value = ll_acceptance_threshold)
+                                           transmission_rates_output = false,
+                                           transmissions_output = false,
+                                           early_decision_value = ll_acceptance_threshold)[1]
       proposed_lposterior = proposed_lprior + proposed_llikelihood
     else
       proposed_llikelihood = -Inf
@@ -100,13 +101,13 @@ function update!(mc::MarkovChain{T},
     end
   end
   mc.iterations += 1
-  new_network = loglikelihood(new_params,
-                              mcmc.risk_functions,
-                              new_events,
-                              mcmc.population,
-                              mcmc.starting_states,
-                              loglikelihood_output = false,
-                              transmission_network_output = true)
+  tnr, tx = loglikelihood(new_params,
+                          mcmc.risk_functions,
+                          new_events,
+                          mcmc.population,
+                          mcmc.starting_states,
+                          loglikelihood_output = false)[[2; 3]]
+  new_network = generate(TransmissionNetwork, tnr, mcmc, tx)
   push!(mc.events, new_events)
   push!(mc.transmission_network, new_network)
   push!(mc.risk_parameters, new_params)

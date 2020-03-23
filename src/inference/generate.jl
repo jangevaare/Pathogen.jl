@@ -1,5 +1,24 @@
 function generate(::Type{Transmission},
                   tr::TransmissionRates,
+                  tnd::Nothing,
+                  id::Int64) where T <: EpidemicModel
+  external_or_internal = Weights([tr.external[id]; 
+                                  sum(tr.internal[:,id])])
+  if sum(external_or_internal) == 0.0
+    @error "All transmission rates = 0.0, No transmission can be generated"
+    return NoTransmission()
+  elseif sample([true; false], external_or_internal)
+    @debug "Exogenous tranmission generated"
+    return ExogenousTransmission(id)
+  else
+    source = sample(1:tr.individuals, Weights(tr.internal[:, id]))
+    @debug "Endogenous transmission generated (source id = $source)"
+    return EndogenousTransmission(id, source)
+  end
+end
+
+function generate(::Type{Transmission},
+                  tr::TransmissionRates,
                   tnd::TNDistribution,
                   id::Int64) where T <: EpidemicModel
   external_or_internal = Weights([tr.external[id] * tnd.external[id]; 
@@ -19,14 +38,21 @@ end
 
 function generate(::Type{TransmissionNetwork},
                   tr::TransmissionRates,
-                  tnd::TNDistribution,
+                  tnd::Union{Nothing, TNDistribution},
                   ids::Vector{Int64}) where T <: EpidemicModel
   tn = TransmissionNetwork(tr.individuals)                
   for i in ids
-    tx = generate(Tranmission, tr, tnd, i)
+    tx = generate(Transmission, tr, tnd, i)
     update!(tn, tx)
   end
   return tn
+end
+
+function generate(::Type{TransmissionNetwork},
+                  tr::TransmissionRates,
+                  mcmc::MCMC,
+                  ids::Vector{Int64}) where T <: EpidemicModel
+  return generate(TransmissionNetwork, tr, mcmc.transmission_network_prior, ids)
 end
 
 function generate(::Type{Events},
@@ -77,7 +103,7 @@ function generate(::Type{Event},
                   obs::EventObservations,
                   events::Events{T}) where T <: EpidemicModel
   lowerbound, upperbound = _bounds(last_event, extents, obs, events)
-  time = rand(truncated(Normal(last_event.time, σ),
+  time = rand(truncated(Normal(_time(last_event), σ),
                         lowerbound,
                         upperbound))
   return Event(time, last_event)
@@ -91,7 +117,7 @@ function generate(::Type{Event},
                   events::Events{T},
                   network::TransmissionNetwork) where T <: EpidemicModel
   lowerbound, upperbound = _bounds(last_event, extents, obs, events, network)
-  time = rand(truncated(Normal(last_event.time, σ),
+  time = rand(truncated(Normal(_time(last_event), σ),
                         lowerbound,
                         upperbound))
   return Event(time, last_event)

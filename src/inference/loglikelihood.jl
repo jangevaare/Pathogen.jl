@@ -50,7 +50,7 @@ function loglikelihood(rp::RiskParameters{T},
     end
     if loglikelihood_output
       if last_event_switch
-        ΔT = event.time - last_event.time
+        ΔT = _time(event) - _time(last_event)
         # Add event occurence contribution to loglikelihood
         ll += log(rate_total) - rate_total * ΔT
       end

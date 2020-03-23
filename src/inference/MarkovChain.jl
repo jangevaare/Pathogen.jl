@@ -25,3 +25,11 @@ end
 function Base.show(io::IO, x::MarkovChain{T}) where T <: EpidemicModel
   return print(io, "$T model Markov chain (iterations = $(length(x)))")
 end
+
+function TransmissionNetworkDistribution(x::MarkovChain)
+  return TNDistribution(x.transmission_network)
+end
+
+function TransmissionNetworkDistribution(iter, x::MarkovChain)
+  return TNDistribution(x.transmission_network[iter])
+end
