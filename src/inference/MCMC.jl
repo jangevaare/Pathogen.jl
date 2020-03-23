@@ -35,3 +35,7 @@ end
 function TransmissionNetworkDistribution(x::MCMC)
   return TNDistribution([TNDistribution(y) for y in x.markov_chains])
 end
+
+function TransmissionNetworkDistribution(iter, x::MCMC)
+  return TNDistribution([TNDistribution(iter, y) for y in x.markov_chains])
+end

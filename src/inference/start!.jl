@@ -24,7 +24,7 @@ function start!(mcmc::MCMC{T};
                 attempts::Int64=1000) where T <: EpidemicModel
   # return start!(mcmc, 1, attempts)
   mc = initialize(MarkovChain, mcmc, attempts=attempts)
-  if !mc !== nothing
+  if mc !== nothing
     push!(mcmc.markov_chains, mc)
   else
     @error "Failed to initialize a Markov chain"

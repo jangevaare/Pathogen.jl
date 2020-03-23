@@ -88,6 +88,11 @@ pop = Population(risks,
   iterate!(mcmc, 100, 0.5)
   @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
   @test sum(TNPosterior(mcmc)) ≈ sum(obs.infection .< Inf)-1
+  tnd = TNDistribution(50:100, mcmc)
+  mcmc = MCMC(obs, ee, pop, [State_I; fill(State_S, n-1)], rf, rpriors, tnprior=tnd)
+  start!(mcmc, attempts=100)
+  iterate!(mcmc, 100, 0.5)
+  @test length(mcmc.markov_chains) == 1
 end
 
 @testset "SEI Model" begin
@@ -149,7 +154,13 @@ end
   iterate!(mcmc, 100, 0.5)
   @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
   @test sum(TNPosterior(mcmc)) ≈ sum(obs.infection .< Inf)-1
+  tnd = TNDistribution(50:100, mcmc)
+  mcmc = MCMC(obs, ee, pop, [State_I; fill(State_S, n-1)], rf, rpriors, tnprior=tnd)
+  start!(mcmc, attempts=50)
+  iterate!(mcmc, 50, 0.5)
+  @test length(mcmc.markov_chains) == 1
 end
+
 
 @testset "SIR Model" begin
   rf = RiskFunctions{SIR}(_constant,
@@ -210,6 +221,11 @@ end
   iterate!(mcmc, 100, 0.5)
   @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
   @test sum(TNPosterior(mcmc)) ≈ sum(obs.infection .< Inf)-1
+  tnd = TNDistribution(50:100, mcmc)
+  mcmc = MCMC(obs, ee, pop, [State_I; fill(State_S, n-1)], rf, rpriors, tnprior=tnd)
+  start!(mcmc, attempts=50)
+  iterate!(mcmc, 50, 0.5)
+  @test length(mcmc.markov_chains) == 1
 end
 
 @testset "SI Model" begin
@@ -262,4 +278,9 @@ end
   iterate!(mcmc, 100, 0.5)
   @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
   @test sum(TNPosterior(mcmc)) ≈ sum(obs.infection .< Inf)-1
+  tnd = TNDistribution(50:100, mcmc)
+  mcmc = MCMC(obs, ee, pop, [State_I; fill(State_S, n-1)], rf, rpriors, tnprior=tnd)
+  start!(mcmc, attempts=50)
+  iterate!(mcmc, 50, 0.5)
+  @test length(mcmc.markov_chains) == 1
 end
