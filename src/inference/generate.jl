@@ -1,44 +1,58 @@
-function generate(::Type{Event},
-                  rates::EventRates{T},
-                  time::Float64) where T <: EpidemicModel
-  totals = Weights([sum(rates[state]) for state in _state_progressions[T][2:end]])
-  if sum(totals) == Inf
-    new_state = sample(_state_progressions[T][2:end], totals)
-    id = sample(1:rates.individuals, Weights(rates[new_state]))
-    return Event{T}(time, id, new_state)
-  elseif sum(totals) == 0.0
-    return NoEvent()
+function generate(::Type{Transmission},
+                  tr::TransmissionRates,
+                  tnd::Nothing,
+                  id::Int64) where T <: EpidemicModel
+  external_or_internal = Weights([tr.external[id]; 
+                                  sum(tr.internal[:,id])])
+  if sum(external_or_internal) == 0.0
+    @error "All transmission rates = 0.0, No transmission can be generated"
+    return NoTransmission()
+  elseif sample([true; false], external_or_internal)
+    @debug "Exogenous tranmission generated"
+    return ExogenousTransmission(id)
   else
-    # Generate new state
-    new_state = sample(_state_progressions[T][2:end], totals)
-    # Generate event individual
-    id = sample(1:rates.individuals, Weights(rates[new_state]))
-    return Event{T}(time + rand(Exponential(1.0 / sum(totals))), id, new_state)
+    source = sample(1:tr.individuals, Weights(tr.internal[:, id]))
+    @debug "Endogenous transmission generated (source id = $source)"
+    return EndogenousTransmission(id, source)
   end
 end
 
 function generate(::Type{Transmission},
                   tr::TransmissionRates,
-                  event::Event{T}) where T <: EpidemicModel
-  id = event.individual
-  if _new_transmission(event)
-    external_or_internal = Weights([tr.external[id]; sum(tr.internal[:,id])])
-    if sum(external_or_internal) == 0.0
-      @error "All transmission rates = 0.0, No transmission can be generated"
-      return NoTransmission()
-      # return ExogenousTransmission(id)
-    elseif sample([true; false], external_or_internal)
-      @debug "Exogenous tranmission generated"
-      return ExogenousTransmission(id)
-    else
-      source = sample(1:tr.individuals, Weights(tr.internal[:, id]))
-      @debug "Endogenous transmission generated (source id = $source)"
-      return EndogenousTransmission(id, source)
-    end
-  else
-    @debug "No transmission generated"
+                  tnd::TNDistribution,
+                  id::Int64) where T <: EpidemicModel
+  external_or_internal = Weights([tr.external[id] * tnd.external[id]; 
+                                 sum(tr.internal[:,id]) * sum(tnd.internal[:,id])])
+  if sum(external_or_internal) == 0.0
+    @error "All transmission rates = 0.0, No transmission can be generated"
     return NoTransmission()
+  elseif sample([true; false], external_or_internal)
+    @debug "Exogenous tranmission generated"
+    return ExogenousTransmission(id)
+  else
+    source = sample(1:tr.individuals, Weights(tr.internal[:, id] .* tnd.internal[:, id]))
+    @debug "Endogenous transmission generated (source id = $source)"
+    return EndogenousTransmission(id, source)
   end
+end
+
+function generate(::Type{TransmissionNetwork},
+                  tr::TransmissionRates,
+                  tnd::Union{Nothing, TNDistribution},
+                  ids::Vector{Int64}) where T <: EpidemicModel
+  tn = TransmissionNetwork(tr.individuals)                
+  for i in ids
+    tx = generate(Transmission, tr, tnd, i)
+    update!(tn, tx)
+  end
+  return tn
+end
+
+function generate(::Type{TransmissionNetwork},
+                  tr::TransmissionRates,
+                  mcmc::MCMC,
+                  ids::Vector{Int64}) where T <: EpidemicModel
+  return generate(TransmissionNetwork, tr, mcmc.transmission_network_prior, ids)
 end
 
 function generate(::Type{Events},
@@ -89,7 +103,7 @@ function generate(::Type{Event},
                   obs::EventObservations,
                   events::Events{T}) where T <: EpidemicModel
   lowerbound, upperbound = _bounds(last_event, extents, obs, events)
-  time = rand(truncated(Normal(last_event.time, σ),
+  time = rand(truncated(Normal(_time(last_event), σ),
                         lowerbound,
                         upperbound))
   return Event(time, last_event)
@@ -103,7 +117,7 @@ function generate(::Type{Event},
                   events::Events{T},
                   network::TransmissionNetwork) where T <: EpidemicModel
   lowerbound, upperbound = _bounds(last_event, extents, obs, events, network)
-  time = rand(truncated(Normal(last_event.time, σ),
+  time = rand(truncated(Normal(_time(last_event), σ),
                         lowerbound,
                         upperbound))
   return Event(time, last_event)

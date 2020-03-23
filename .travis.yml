@@ -1,12 +1,12 @@
-# Documentation: http://docs.travis-ci.com/user/languages/julia/
+## Documentation: http://docs.travis-ci.com/user/languages/julia/
+codecov: true
 language: julia
 os:
   - linux
   - osx
 julia:
   - 1.1
-  - 1.2
-  - 1.3
+  - 1.4
   - nightly
 notifications:
   email: false
@@ -14,5 +14,3 @@ matrix:
   allow_failures:
     - julia: nightly
   fast_finish: true
-after_success:
-  - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'

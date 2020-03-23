@@ -1,11 +1,6 @@
 abstract type AbstractEvent end
 
 struct NoEvent <: AbstractEvent
-  time::Float64
-
-  function NoEvent()
-    return new(Inf)
-  end
 end
 
 struct Event{T <: EpidemicModel} <: AbstractEvent
@@ -26,8 +21,12 @@ struct Event{T <: EpidemicModel} <: AbstractEvent
   end
 end
 
-function _time(x::AbstractEvent) where T <: EpidemicModel
+function _time(x::Event{T}) where T <: EpidemicModel
   return x.time
+end
+
+function _time(x::NoEvent)
+  return Inf
 end
 
 # function Base.copy(x::Event{T}) where T <: EpidemicModel
