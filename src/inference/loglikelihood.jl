@@ -33,7 +33,7 @@ function loglikelihood(rp::RiskParameters{T},
       break
     end
     event = Event{T}(time, id, new_state)
-    if _new_transmission(event)
+    if _new_transmission(event) & transmissions_output
       push!(transmissions, id)
     end
     @debug "Calculating the loglikehood contribution of event $i" event
