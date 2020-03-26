@@ -1,10 +1,10 @@
-struct RiskParameters{T} <: AbstractRisk{T}
-  sparks::Union{Nothing, AbstractVector}
-  susceptibility::Union{Nothing, AbstractVector}
-  infectivity::Union{Nothing, AbstractVector}
-  transmissibility::Union{Nothing, AbstractVector}
-  latency::Union{Nothing, AbstractVector}
-  removal::Union{Nothing, AbstractVector}
+struct RiskParameters{S} <: AbstractRisk{S}
+  sparks::Union{Nothing, Vector{Float64}}
+  susceptibility::Union{Nothing, Vector{Float64}}
+  infectivity::Union{Nothing, Vector{Float64}}
+  transmissibility::Union{Nothing, Vector{Float64}}
+  latency::Union{Nothing, Vector{Float64}}
+  removal::Union{Nothing, Vector{Float64}}
 
   RiskParameters{SEIR}(ϵ, θs, κ, θt, θl, θr) = new{SEIR}(ϵ, θs, κ, θt, θl, θr)
   RiskParameters{SEI}(ϵ, θs, κ, θt, θl) = new{SEI}(ϵ, θs, κ, θt, θl, nothing)
@@ -13,43 +13,43 @@ struct RiskParameters{T} <: AbstractRisk{T}
 end
 
 
-function Base.show(io::IO, x::RiskParameters{T}) where T <: EpidemicModel
+function Base.show(io::IO, x::RiskParameters{S}) where {S <: DiseaseStateSequence}
   return print(io, "$T model risk function parameters")
 end
 
 
 function Base.convert(::Type{Vector{Float64}},
-                      x::RiskParameters{T}) where T <: EpidemicModel
+                      x::RiskParameters)
   return [x[i] for i = 1:length(x)]
 end
 
 
 function Base.convert(::Type{Array{Float64, 2}},
-                      x::Vector{RiskParameters{T}}) where T <: EpidemicModel
+                      x::Vector{RiskParameters})
   return [x[i][j] for i = 1:length(x), j = 1:length(x[1])]
 end
 
 
-function _like(x::RiskParameters{T}, v::Vector{Float64}) where T <: EpidemicModel
+function Base.similar(x::RiskParameters{S}, v::Vector{Float64}) where S <: DiseaseStateSequence
   indices = _indices(x, zeros=false)
   if indices[end] != length(v)
     @error "Incompatiable parameter vector"
   end
-  if T == SEIR
-    return RiskParameters{T}(v[1:(indices[1])],
+  if S == SEIR
+    return RiskParameters{M}(v[1:(indices[1])],
                              v[(indices[1]+1):(indices[2])],
                              v[(indices[2]+1):(indices[3])],
                              v[(indices[3]+1):(indices[4])],
                              v[(indices[4]+1):(indices[5])],
                              v[(indices[5]+1):(indices[6])])
-  elseif T in [SEI; SIR]
-    return RiskParameters{T}(v[1:(indices[1])],
+  elseif S in [SEI; SIR]
+    return RiskParameters{M}(v[1:(indices[1])],
                              v[(indices[1]+1):(indices[2])],
                              v[(indices[2]+1):(indices[3])],
                              v[(indices[3]+1):(indices[4])],
                              v[(indices[4]+1):(indices[5])])
-  elseif T == SI
-    return RiskParameters{T}(v[1:(indices[1])],
+  elseif S == SI
+    return RiskParameters{M}(v[1:(indices[1])],
                              v[(indices[1]+1):(indices[2])],
                              v[(indices[2]+1):(indices[3])],
                              v[(indices[3]+1):(indices[4])])

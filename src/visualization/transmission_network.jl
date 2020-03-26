@@ -5,10 +5,10 @@ end
 
 @recipe function f(tn::TransmissionNetwork,
                    pop::Population,
-                   events::Events{T},
+                   events::Events{M},
                    time::Float64;
                    show_individuals=true::Bool,
-                   show_states=true::Bool) where T <: EpidemicModel
+                   show_states=true::Bool) where M <: ILM
   if show_states & !show_individuals
     @warn "Will not show disease states without also showing individuals"
   end
@@ -52,7 +52,7 @@ end
 
 @recipe function f(tn::TransmissionNetwork,
                    pop::Population;
-                   show_individuals=true::Bool) where T <: EpidemicModel
+                   show_individuals=true::Bool) where M <: ILM
   xguide --> ""
   yguide --> ""
   legend --> :none

@@ -1,4 +1,4 @@
-struct EventExtents{T <: EpidemicModel}
+struct EventExtents{M <: ILM}
   exposure::Union{Nothing, Float64}
   infection::Union{Nothing, Float64}
   removal::Union{Nothing, Float64}
@@ -9,6 +9,6 @@ struct EventExtents{T <: EpidemicModel}
   EventExtents{SI}(i)         = new{SI}(nothing, i, nothing)
 end
 
-function Base.show(io::IO, x::EventExtents{T}) where T <: EpidemicModel
+function Base.show(io::IO, x::EventExtents{M}) where M <: ILM
   print(io, "$T model event extents")
 end

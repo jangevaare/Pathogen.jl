@@ -8,31 +8,31 @@ function _population(pop::Population, ids)
   return x, y
 end
 
-function _ids_by_state(events::Events{T},
+function _ids_by_state(events::Events{M},
                        state::DiseaseState,
-                       time::Float64) where T <: EpidemicModel
+                       time::Float64) where M <: ILM
   if time < 0.0
     @error "Time must be ≥ 0.0"
-  elseif state ∉ _state_progressions[T]
+  elseif state ∉ convert(DiseaseStates, S)
     @error "Invalid state specified"
   end
   ids = Int64[]
-  if state == _state_progressions[T][1] # S
+  if state == convert(DiseaseStates, S)[1] # S
     nextstate = advance(state, T) # Either E or I
     append!(ids, findall(events[nextstate] .> Ref(time))) # E/I after `time`
     append!(ids, findall(isnan.(events[nextstate]))) # Never E/I
-  elseif state in _state_progressions[T][2:end-1]
+  elseif state in convert(DiseaseStates, S)[2:end-1]
     nextstate = advance(state, T) # Either I or R
     append!(ids, findall((events[state] .<= Ref(time)) .& (events[nextstate] .> Ref(time)))) # E/I at or before time and I/R after time
     append!(ids, findall((events[state] .<= Ref(time)) .& isnan.(events[nextstate]))) # E/I at or before time and never I/R
-  elseif state == _state_progressions[T][end] # I or R
+  elseif state == convert(DiseaseStates, S)[end] # I or R
     append!(ids, findall(events[state] .<= Ref(time))) # I/R at or before time
   end
   @debug "Individual(s) in state $state at t = $time" Individuals = ids
   return ids
 end
 
-@recipe function f(pop::Population) where T <: EpidemicModel
+@recipe function f(pop::Population) where M <: ILM
   xguide --> ""
   yguide --> ""
   legend --> :none
@@ -51,8 +51,8 @@ end
 
 
 @recipe function f(pop::Population,
-                   events::Events{T},
-                   time::Float64) where T <: EpidemicModel
+                   events::Events{M},
+                   time::Float64) where M <: ILM
   xguide --> ""
   yguide --> ""
   legend --> :topright
@@ -72,7 +72,7 @@ end
     label --> "S"
     x, y
   end
-  if T in [SEIR; SEI]
+  if S in [SEIR; SEI]
     @series begin
       ids_exposed = _ids_by_state(events, State_E, time)
       x, y = _population(pop, ids_exposed)
@@ -90,7 +90,7 @@ end
     label --> "I"
     x, y
   end
-  if T in [SEIR; SIR]
+  if S in [SEIR; SIR]
     @series begin
       ids_removed = _ids_by_state(events, State_R, time)
       x, y = _population(pop, ids_removed)

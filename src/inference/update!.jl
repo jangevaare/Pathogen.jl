@@ -1,12 +1,12 @@
-function update!(mc::MarkovChain{T},
-                 mcmc::MCMC{T},
+function update!(mc::MarkovChain{M},
+                 mcmc::MCMC{M},
                  Σ::Array{Float64, 2},
                  σ::Float64;
                  condition_on_network::Bool=false,
-                 event_batches::Int64=1) where T <: EpidemicModel
+                 event_batches::Int64=1) where M <: ILM
   # Initialize
   new_events = mc.events[end]
-  new_events_array = new_events[_state_progressions[T][2:end]]
+  new_events_array = new_events[convert(DiseaseStates, S)[2:end]]
   new_params = mc.risk_parameters[end]
   new_network = mc.transmission_network[end]
   new_lposterior = mc.log_posterior[end]
@@ -27,13 +27,13 @@ function update!(mc::MarkovChain{T},
     if i <= event_batches
       for j = (batch_size*(i-1) + 1):minimum([(batch_size*i + 1); length(aug_order)])
         id, state_index = Tuple(CartesianIndices((new_events.individuals,
-                                            length(_state_progressions[T][2:end])))[aug_order[j]])
-        new_state = _state_progressions[T][state_index+1]
+                                            length(convert(DiseaseStates, S)[2:end])))[aug_order[j]])
+        new_state = convert(DiseaseStates, S)[state_index+1]
         time = new_events[new_state][id]
         # Conditioning on network means that only event times valid under current network will be proposed. This is useful for models which may have additional contributions to the posterior based on network, and require more modest proposals (e.g. phylodynamic models).
         if condition_on_network
           proposed_event = generate(Event,
-                                    Event{T}(time, id, new_state),
+                                    Event{M}(time, id, new_state),
                                     σ,
                                     mcmc.event_extents,
                                     mcmc.event_observations,
@@ -41,7 +41,7 @@ function update!(mc::MarkovChain{T},
                                     new_network)
         else
           proposed_event = generate(Event,
-                                    Event{T}(time, id, new_state),
+                                    Event{M}(time, id, new_state),
                                     σ,
                                     mcmc.event_extents,
                                     mcmc.event_observations,
@@ -62,7 +62,7 @@ function update!(mc::MarkovChain{T},
         end
         # Only need to generate new `Events` on last event of batch
         if j == minimum([(batch_size*i + 1); length(aug_order)])
-          proposed_events = Events{T}(proposed_events_array)
+          proposed_events = Events{M}(proposed_events_array)
         end
       end
       proposed_params = new_params
@@ -70,7 +70,7 @@ function update!(mc::MarkovChain{T},
       # Propose new risk parameters
       proposed_events = new_events
       proposed_events_array = new_events_array
-      proposed_params = generate(RiskParameters{T}, new_params, Σ)
+      proposed_params = generate(RiskParameters{M}, new_params, Σ)
     end
     proposed_lprior = logpriors(proposed_params, mcmc.risk_priors)
     # Based on the logprior and competiting MCMC iteration, this loglikelihood is required for acceptance
@@ -115,9 +115,9 @@ function update!(mc::MarkovChain{T},
   return mc
 end
 
-function update!(mcmc::MCMC{T},
+function update!(mcmc::MCMC{M},
                  Σ::Array{Float64, 2},
-                 σ::Float64) where T <: EpidemicModel
+                 σ::Float64) where M <: ILM
   @simd for mc in mcmc.markov_chains
     next!(mc, mcmc, Σ, σ)
   end

@@ -1,35 +1,72 @@
-mutable struct MCMC{T <: EpidemicModel}
-  event_observations::EventObservations{T}
-  event_extents::EventExtents{T}
+mutable struct MCMC{S <: DiseaseStateSequence, M <: ILM}
+  event_observations::EventObservations{S, M}
+  event_extents::EventExtents{S}
   population::Population
-  starting_states::Vector{DiseaseState}
-  risk_functions::RiskFunctions{T}
-  risk_priors::RiskPriors{T}
+  starting_states::DiseaseStates
+  risk_functions::RiskFunctions{S}
+  risk_priors::RiskPriors{S}
+  substitution_model::Union{Nothing, Type{<:NucleicAcidSubstitutionModel}}
+  substitution_model_priors::Union{Nothing, Vector{UnivariateDistribution}}
   transmission_network_prior::Union{Nothing, TNPrior}
-  markov_chains::Vector{MarkovChain{T}}
+  markov_chains::Vector{MarkovChain{S}}
 
-  function MCMC(obs::EventObservations{T},
-                ee::EventExtents{T},
-                pop::Population,
-                states::Vector{DiseaseState},
-                rf::RiskFunctions{T},
-                rp::RiskPriors{T};
-                tnprior::Union{Nothing, TNPrior}=nothing) where T <: EpidemicModel
-    return new{T}(obs, ee, pop, states, rf, rp, tnprior, MarkovChain{T}[])
+  function MCMC{M}(obs::EventObservations{S},
+                   ee::EventExtents{S},
+                   pop::Population,
+                   states::DiseaseStates,
+                   rf::RiskFunctions{S},
+                   rp::RiskPriors{S};
+                   tnprior::Union{Nothing, TNPrior}=nothing) where {
+                   S <: DiseaseStateSequence,
+                   M <: TNILM}
+    return new{S, M}(obs, ee, pop, states, rf, rp, nothing, nothing, tnprior, MarkovChain{S, M}[])
+  end
+
+  function MCMC{M}(obs::EventObservations{S},
+                   ee::EventExtents{S},
+                   pop::Population,
+                   states::DiseaseStates,
+                   rf::RiskFunctions{S},
+                   rp::RiskPriors{S},
+                   sm::Type{N},
+                   smp::Vector{UnivariateDistribution};
+                   tnprior::Union{Nothing, TNPrior}=nothing) where {
+                   S <: DiseaseStateSequence,
+                   M <: PhyloILM,
+                   N <: NucleicAcidSubstitutionModel}
+    return new{S, M}(obs, ee, pop, states, rf, rp, sm, smp, tnprior, MarkovChain{S, M}[])
   end
 end
 
-function MCMC(obs::EventObservations{T},
-              ee::EventExtents{T},
+function MCMC(obs::EventObservations{S},
+              ee::EventExtents{S},
               pop::Population,
-              rf::RiskFunctions{T},
-              rp::RiskPriors{T};
-              tnprior::Union{Nothing, TNPrior}=nothing) where T <: EpidemicModel
-  return MCMC(obs, ee, pop, fill(State_S, pop.individuals), rf, rp, tnprior=tnprior)
+              rf::RiskFunctions{S},
+              rp::RiskPriors{S};
+              tnprior::Union{Nothing, TNPrior}=nothing) where {
+              S <: DiseaseStateSequence,
+              M <: TNILM}
+  return MCMC{M}(obs, ee, pop, fill(State_S, pop.individuals), rf, rp, nothing, nothing, tnprior=tnprior)
 end
 
-function Base.show(io::IO, x::MCMC{T}) where T <: EpidemicModel
-  return print(io, "$T model MCMC with $(length(x.markov_chains)) chains")
+function MCMC{M}(obs::EventObservations{S},
+                 ee::EventExtents{S},
+                 pop::Population,
+                 rf::RiskFunctions{S},
+                 rp::RiskPriors{S},
+                 sm::Type{N},
+                 smp::Vector{UnivariateDistribution};
+                 tnprior::Union{Nothing, TNPrior}=nothing) where {
+                 S <: DiseaseStateSequence,
+                 M <: PhyloILM,
+                 N <: NucleicAcidSubstitutionModel}
+  return MCMC{M}(obs, ee, pop, fill(State_S, pop.individuals), rf, rp, sm, smp, tnprior, MarkovChain{S}[])
+end
+
+function Base.show(io::IO, x::MCMC{S, M}) where {
+                   S <: DiseaseStateSequence,
+                   M <: ILM}
+  return print(io, "$S $M MCMC with $(length(x.markov_chains)) Markov chains")
 end
 
 function TransmissionNetworkDistribution(x::MCMC)

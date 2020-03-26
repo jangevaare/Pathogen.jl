@@ -10,13 +10,15 @@ module Pathogen
         Statistics,
         ProgressMeter,
         LinearAlgebra,
-        OnlineStats
+        OnlineStats,
+        PhyloModels
 
   import StatsBase.mean,
          ProgressMeter.next!
 
   # Core
-  include("core/EpidemicModel.jl")
+  include("core/IndividualLevelModel.jl")
+  include("core/DiseaseStateSequence.jl")
   include("core/DiseaseState.jl")
   include("core/Population.jl")
   include("core/Events/Event.jl")
@@ -29,15 +31,20 @@ module Pathogen
   include("core/Transmissions/TransmissionNetwork.jl")
   include("core/Transmissions/TransmissionRates.jl")
   include("core/initialize.jl")
-  include("core/update!.jl")
+  include("core/update!/DiseaseStates.jl")
+  include("core/update!/Events.jl")
+  include("core/update!/TransmissionNetwork.jl")
+  include("core/update!/EventRates.jl")
+  include("core/update!/TransmissionRates.jl")
 
   # Simulation
   include("simulation/Simulation.jl")
-  include("simulation/generate.jl")
+  include("simulation/generate/Event.jl")
+  include("simulation/generate/Transmission.jl")
   include("simulation/simulate!.jl")
   include("simulation/update!.jl")
   include("simulation/EventObservations.jl")
-  include("simulation/observe.jl")
+  include("simulation/generate/EventObservations.jl")
 
   # Inference
   include("inference/TransmissionNetworkDistribution.jl")
@@ -171,9 +178,12 @@ module Pathogen
     ZeroMeanFullNormal,
     ZeroMeanFullNormalCanon,
     # Pathogen.jl types
-    EpidemicModel,
+    IndividualLevelModel, ILM,
+    PhylodynamicILM, PhyloILM,
+    TransmissionNetworkILM, TNILM,
+    DiseaseStateSequence,
     SEIR, SEI, SIR, SI,
-    DiseaseState,
+    DiseaseState, DiseaseStates,
     State_S, State_E, State_I, State_R,
     RiskFunctions, RiskParameters, RiskPriors,
     Population,

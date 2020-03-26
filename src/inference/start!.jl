@@ -1,6 +1,6 @@
-function start!(mcmc::MCMC{T},
+function start!(mcmc::MCMC{M},
                 n_chains::Int64;
-                attempts::Int64=1000) where T <: EpidemicModel
+                attempts::Int64=1000) where M <: ILM
   pmeter = Progress(n_chains * attempts, "Initialization progress")
   pchannel = RemoteChannel(()->Channel{Bool}(10), 1)
   mc_Futures = Future[]
@@ -20,8 +20,8 @@ function start!(mcmc::MCMC{T},
   return mcmc
 end
 
-function start!(mcmc::MCMC{T};
-                attempts::Int64=1000) where T <: EpidemicModel
+function start!(mcmc::MCMC{M};
+                attempts::Int64=1000) where M <: ILM
   # return start!(mcmc, 1, attempts)
   mc = initialize(MarkovChain, mcmc, attempts=attempts)
   if mc !== nothing

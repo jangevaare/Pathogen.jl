@@ -1,11 +1,11 @@
-function iterate!(mc::MarkovChain{T},
-                  mcmc::MCMC{T},
+function iterate!(mc::MarkovChain{M},
+                  mcmc::MCMC{M},
                   n::Int64,
                   Σ::Array{Float64, 2},
                   σ::Float64;
                   condition_on_network::Bool=false,
                   event_batches::Int64=1,
-                  adapt_cov::Int64=100) where T <: EpidemicModel
+                  adapt_cov::Int64=100) where M <: ILM
   if adapt_cov < 0
     @warn "`adapt_cov` argument indicates the increment in iterations in which the covariance matrix is updated and must be ≧ 0. Setting to 0 for non-adaptive Metropolis-Hastings."
     adapt_cov = 0
@@ -40,15 +40,15 @@ function iterate!(mc::MarkovChain{T},
   return mc
 end
 
-function iterate!(mc::MarkovChain{T},
-                  mcmc::MCMC{T},
+function iterate!(mc::MarkovChain{M},
+                  mcmc::MCMC{M},
                   n::Int64,
                   Σ::Array{Float64, 2},
                   σ::Float64,
                   progress_channel::RemoteChannel;
                   condition_on_network::Bool=false,
                   event_batches::Int64=1,
-                  adapt_cov::Int64=100) where T <: EpidemicModel
+                  adapt_cov::Int64=100) where M <: ILM
   use_adapted_cov = false
   local adapted_cov
   if (adapt_cov != 0 & mc.cov.n >= adapt_cov) && LinearAlgebra.isposdef(value(mc.cov))
@@ -77,13 +77,13 @@ function iterate!(mc::MarkovChain{T},
   return mc
 end
 
-function iterate!(mcmc::MCMC{T},
+function iterate!(mcmc::MCMC{M},
                   n::Int64,
                   Σ::Array{Float64, 2},
                   σ::Float64;
                   condition_on_network::Bool=false,
                   event_batches::Int64=1,
-                  adapt_cov::Int64=100) where T <: EpidemicModel
+                  adapt_cov::Int64=100) where M <: ILM
   if length(mcmc.markov_chains) == 1
     iterate!(mcmc.markov_chains[1], mcmc, n, Σ, σ,
                     condition_on_network = condition_on_network,
@@ -114,13 +114,13 @@ function iterate!(mcmc::MCMC{T},
   end
 end
 
-function iterate!(mc::MarkovChain{T},
-                  mcmc::MCMC{T},
+function iterate!(mc::MarkovChain{M},
+                  mcmc::MCMC{M},
                   n::Int64,
                   σ::Float64;
                   condition_on_network::Bool=false,
                   event_batches::Int64=1,
-                  adapt_cov::Int64=100) where T <: EpidemicModel
+                  adapt_cov::Int64=100) where M <: ILM
   return iterate!(mc,
                   mcmc,
                   n,
@@ -131,12 +131,12 @@ function iterate!(mc::MarkovChain{T},
                   adapt_cov = adapt_cov)
 end
 
-function iterate!(mcmc::MCMC{T},
+function iterate!(mcmc::MCMC{M},
                   n::Int64,
                   σ::Float64;
                   condition_on_network::Bool=false,
                   event_batches::Int64=1,
-                  adapt_cov::Int64=100) where T <: EpidemicModel
+                  adapt_cov::Int64=100) where M <: ILM
   return iterate!(mcmc,
                   n,
                   Matrix(LinearAlgebra.Diagonal([var(mcmc.risk_priors[i]) for i in 1:length(mcmc.risk_priors)]))/(10*length(mcmc.risk_priors)),

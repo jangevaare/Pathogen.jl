@@ -1,4 +1,4 @@
-struct RiskPriors{T} <: AbstractRisk{T}
+struct RiskPriors{S} <: AbstractRisk{S}
   sparks::Union{Nothing, Vector{UnivariateDistribution}}
   susceptibility::Union{Nothing, Vector{UnivariateDistribution}}
   infectivity::Union{Nothing, Vector{UnivariateDistribution}}
@@ -13,6 +13,6 @@ struct RiskPriors{T} <: AbstractRisk{T}
 end
 
 
-function Base.show(io::IO, x::RiskPriors{T}) where T <: EpidemicModel
-  return print(io, "$T model risk function priors")
+function Base.show(io::IO, x::RiskPriors{S}) where S <: DiseaseStateSequence
+  return print(io, "$S model risk function priors")
 end
