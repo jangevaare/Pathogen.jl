@@ -5,7 +5,9 @@ function iterate!(mc::MarkovChain{M},
                   σ::Float64;
                   condition_on_network::Bool=false,
                   event_batches::Int64=1,
-                  adapt_cov::Int64=100) where M <: ILM
+                  adapt_cov::Int64=100) where {
+                  S <: DiseaseStateSequence,
+                  M <: ILM}
   if adapt_cov < 0
     @warn "`adapt_cov` argument indicates the increment in iterations in which the covariance matrix is updated and must be ≧ 0. Setting to 0 for non-adaptive Metropolis-Hastings."
     adapt_cov = 0
@@ -48,7 +50,9 @@ function iterate!(mc::MarkovChain{M},
                   progress_channel::RemoteChannel;
                   condition_on_network::Bool=false,
                   event_batches::Int64=1,
-                  adapt_cov::Int64=100) where M <: ILM
+                  adapt_cov::Int64=100) where {
+                  S <: DiseaseStateSequence,
+                  M <: ILM}
   use_adapted_cov = false
   local adapted_cov
   if (adapt_cov != 0 & mc.cov.n >= adapt_cov) && LinearAlgebra.isposdef(value(mc.cov))
@@ -83,7 +87,9 @@ function iterate!(mcmc::MCMC{M},
                   σ::Float64;
                   condition_on_network::Bool=false,
                   event_batches::Int64=1,
-                  adapt_cov::Int64=100) where M <: ILM
+                  adapt_cov::Int64=100) where {
+                  S <: DiseaseStateSequence,
+                  M <: ILM}
   if length(mcmc.markov_chains) == 1
     iterate!(mcmc.markov_chains[1], mcmc, n, Σ, σ,
                     condition_on_network = condition_on_network,
@@ -120,7 +126,9 @@ function iterate!(mc::MarkovChain{M},
                   σ::Float64;
                   condition_on_network::Bool=false,
                   event_batches::Int64=1,
-                  adapt_cov::Int64=100) where M <: ILM
+                  adapt_cov::Int64=100) where {
+                  S <: DiseaseStateSequence,
+                  M <: ILM}
   return iterate!(mc,
                   mcmc,
                   n,
@@ -136,7 +144,9 @@ function iterate!(mcmc::MCMC{M},
                   σ::Float64;
                   condition_on_network::Bool=false,
                   event_batches::Int64=1,
-                  adapt_cov::Int64=100) where M <: ILM
+                  adapt_cov::Int64=100) where {
+                  S <: DiseaseStateSequence,
+                  M <: ILM}
   return iterate!(mcmc,
                   n,
                   Matrix(LinearAlgebra.Diagonal([var(mcmc.risk_priors[i]) for i in 1:length(mcmc.risk_priors)]))/(10*length(mcmc.risk_priors)),
