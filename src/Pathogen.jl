@@ -30,7 +30,8 @@ module Pathogen
   include("core/Transmissions/Transmission.jl")
   include("core/Transmissions/TransmissionNetwork.jl")
   include("core/Transmissions/TransmissionRates.jl")
-  include("core/initialize.jl")
+  include("core/initialize/TransmissionRates.jl")
+  include("core/initialize/EventRates.jl")
   include("core/update!/DiseaseStates.jl")
   include("core/update!/Events.jl")
   include("core/update!/TransmissionNetwork.jl")
@@ -193,9 +194,7 @@ module Pathogen
     TransmissionNetworkDistribution, TNDistribution,
     TransmissionNetworkPrior, TNPrior,
     TransmissionNetworkPosterior, TNPosterior,
-    Simulation,
-    next!, simulate!,
+    Simulation, simulate!,
     Events, EventObservations, EventExtents,
-    observe,
     MCMC, start!, iterate!
 end

@@ -23,19 +23,19 @@ function Base.show(io::IO, x::DiseaseState)
   return print(io, convert(Char, x))
 end
 
-Base.convert(::DiseaseStates, x::SEIR)
+function Base.convert(::Type{DiseaseStates}, x::SEIR)
   return [State_S, State_E, State_I, State_R]
 end
 
-Base.convert(::DiseaseStates, x::SEI)
+function Base.convert(::Type{DiseaseStates}, x::SEI)
   return [State_S, State_E, State_I]
 end
 
-Base.convert(::DiseaseStates, x::SIR)
+function Base.convert(::Type{DiseaseStates}, x::SIR)
   return [State_S, State_I, State_R]
 end
 
-Base.convert(::DiseaseStates, x::SI)
+function Base.convert(::Type{DiseaseStates}, x::SI)
   return [State_S, State_I]
 end
 

@@ -7,7 +7,7 @@ end
 
 function generate(::Type{SM},
                   last_sm::SM,
-                  Σ::Array{FLoat64, 2}, where {
+                  Σ::Array{Float64, 2}) where {
                   SM <: NucleicAcidSubstitutionModel}
- return SM(rand(MvNormal([getproperty(last_sm, θ) for θ in [propertynames(x1)...]], Σ)), safe=false)
+ return SM(rand(MvNormal([getproperty(last_sm, θ) for θ in [propertynames(SM)...]], Σ)), safe=false)
 end

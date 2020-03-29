@@ -10,11 +10,11 @@ mutable struct Simulation{S <: DiseaseStateSequence, M <: ILM}
   events::Events{S}
   transmission_network::TransmissionNetwork
 
-  function Simulation{M}(pop::Population,
-                         rf::RiskFunctions{S},
-                         rp::RiskParameters{S}) where {
-                         S <: DiseaseStateSequence, 
-                         M <: ILM}
+  function Simulation{S, M}(pop::Population,
+                            rf::RiskFunctions{S},
+                            rp::RiskParameters{S}) where {
+                            S <: DiseaseStateSequence, 
+                            M <: ILM}
     states = fill(State_S, pop.individuals)
     tr = initialize(TransmissionRates, states, pop, rf, rp)
     rates = initialize(EventRates, tr, states, pop, rf, rp)
@@ -24,13 +24,13 @@ mutable struct Simulation{S <: DiseaseStateSequence, M <: ILM}
   end
 
 
-  function Simulation{M}(pop::Population,
-                        states::DiseaseStates,
-                        time::Float64,
-                        rf::RiskFunctions{S},
-                        rp::RiskParameters{S}) where {
-                        S <: DiseaseStateSequence, 
-                        M <: ILM}
+  function Simulation{S, M}(pop::Population,
+                            states::DiseaseStates,
+                            time::Float64,
+                            rf::RiskFunctions{S},
+                            rp::RiskParameters{S}) where {
+                            S <: DiseaseStateSequence, 
+                            M <: ILM}
     @debug "Initializing $T Simulation with the following starting states:" states
     if length(states) != pop.individuals
       @error "Length of initial disease state vector must match number of individuals"
@@ -44,12 +44,12 @@ mutable struct Simulation{S <: DiseaseStateSequence, M <: ILM}
     return new{S, M}(time, 0, pop, rf, rp, copy(states), tr, rates, events, net)
   end
 
-  function Simulation{M}(pop::Population,
-                         states::DiseaseStates,
-                         rf::RiskFunctions{S},
-                         rp::RiskParameters{S}) where {
-                         S <: DiseaseStateSequence, 
-                         M <: ILM}
+  function Simulation{S, M}(pop::Population,
+                            states::DiseaseStates,
+                            rf::RiskFunctions{S},
+                            rp::RiskParameters{S}) where {
+                            S <: DiseaseStateSequence, 
+                            M <: ILM}
     @debug "Initializing $T Simulation with the following starting states:" states
     if length(states) != pop.individuals
       @error "Length of initial disease state vector must match number of individuals"

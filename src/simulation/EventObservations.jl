@@ -4,10 +4,9 @@ struct EventObservations{S <: DiseaseStateSequence, M <: ILM}
   seq::Union{Nothing, Vector{Union{Nothing, GeneticSeq}}}
   individuals::Int64
 
-  function EventObservations{S, M}(i::V, r::V) where {
-                                   V <: Vector{Float64}, 
-                                   S <: Union{SEIR, SIR}, 
-                                   M <: TNILM}
+  function EventObservations{S, M}(i::V, r::V) where {V <: Vector{Float64}, 
+                                                      S <: Union{SEIR, SIR}, 
+                                                      M <: TNILM}
     if length(i) != length(r)
       @error "Length of infection and removal times must be equal"
     end
@@ -21,12 +20,13 @@ struct EventObservations{S <: DiseaseStateSequence, M <: ILM}
     return new{S, M}(i, nothing, nothing, length(i))
   end
 
+
   function EventObservations{S, M}(i::V, r::V, seq::VG) where {
                                    V <: Vector{Float64},
                                    VG <: Vector{Union{Nothing, GeneticSeq}},
                                    S <: Union{SEIR, SIR}, 
                                    M <: PhyloILM}
-    if length(unique([length(i), length(r), length(seq)])) != 1
+    if length(unique([length(i); length(r); length(seq)])) != 1
       @error "Length of infection times, removal times, and genetic sequence vectors must be equal"
     end
     return new{S, M}(i, r, seq, length(i))
@@ -45,7 +45,6 @@ struct EventObservations{S <: DiseaseStateSequence, M <: ILM}
 end
 
 function EventObservations{S, M}(i::Array{Float64, 2}) where {
-                                 V <: Vector{Float64}, 
                                  S <: Union{SEI, SI}, 
                                  M <: TNILM}
   if size(i, 2) != 1
@@ -55,7 +54,6 @@ function EventObservations{S, M}(i::Array{Float64, 2}) where {
 end
 
 function EventObservations{S, M}(ir::Array{Float64, 2}) where {
-                                 V <: Vector{Float64}, 
                                  S <: Union{SEIR, SIR}, 
                                  M <: TNILM}
   if size(ir, 2) != 2

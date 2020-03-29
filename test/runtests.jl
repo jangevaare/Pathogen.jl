@@ -37,8 +37,8 @@ pop = Population(risks,
                                  [0.1],
                                  [0.05])
 
-  # sim = Simulation(pop, rf, rparams)
-  sim = Simulation(pop,
+  # sim = Simulation{TNILM}(pop, rf, rparams)
+  sim = Simulation{SEIR, TNILM}(pop,
                    [State_I; fill(State_S, n-1)],
                    0.0,
                    rf,
@@ -55,7 +55,7 @@ pop = Population(risks,
   @test length(sim.disease_states) == n
   @test size(sim.transmission_network.internal) == (n, n)
 
-  obs = observe(sim, Uniform(), Uniform())
+  obs = generate(EventObservations, sim, Uniform(), Uniform())
   @test length(obs.infection) == n
 
   rpriors = RiskPriors{SEIR}([Uniform(0.0, 0.01)],
@@ -108,7 +108,7 @@ end
                                 Float64[],
                                 [0.1])
 
-  sim = Simulation(pop,
+  sim = Simulation{SEI, TNILM}(pop,
                    [State_I; fill(State_S, n-1)],
                    0.0,
                    rf,
@@ -175,7 +175,7 @@ end
                                 Float64[],
                                 [0.05])
 
-  sim = Simulation(pop,
+  sim = Simulation{SIR, TNILM}(pop,
                    [State_I; fill(State_S, n-1)],
                    0.0,
                    rf,
@@ -192,7 +192,7 @@ end
   @test length(sim.disease_states) == n
   @test size(sim.transmission_network.internal) == (n, n)
 
-  obs = observe(sim, Uniform(), Uniform())
+  obs = generate(EventObservations, sim, Uniform(), Uniform())
   @test length(obs.infection) == n
 
   rpriors = RiskPriors{SIR}([Uniform(0.0, 0.01)],
@@ -239,7 +239,7 @@ end
                                [2.0, 5.0],
                                Float64[])
 
-  sim = Simulation(pop,
+  sim = Simulation{SI, TNILM}(pop,
                    [State_I; fill(State_S, n-1)],
                    0.0,
                    rf,

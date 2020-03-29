@@ -1,6 +1,6 @@
-function _count_by_state(events::Events{M},
+function _count_by_state(events::Events{S},
                          state::DiseaseState,
-                         time::Float64) where M <: ILM
+                         time::Float64) where {S <: DiseaseStateSequence}
   if time < 0.0
     @error "Time must be ≥ 0.0"
   elseif state ∉ convert(DiseaseStates, S)
@@ -8,11 +8,11 @@ function _count_by_state(events::Events{M},
   end
   n_ids = 0
   if state == convert(DiseaseStates, S)[1] # S
-    nextstate = advance(state, T) # Either E or I
+    nextstate = advance(state, S) # Either E or I
     n_ids += sum(events[nextstate] .> Ref(time)) # E/I after `time`
     n_ids += sum(isnan.(events[nextstate])) # Never E/I
   elseif state in convert(DiseaseStates, S)[2:end-1]
-    nextstate = advance(state, T) # Either I or R
+    nextstate = advance(state, S) # Either I or R
     n_ids += sum((events[state] .<= Ref(time)) .& (events[nextstate] .> Ref(time))) # E/I at or before time and I/R after time
     n_ids += sum((events[state] .<= Ref(time)) .& isnan.(events[nextstate])) # E/I at or before time and never I/R
   elseif state == convert(DiseaseStates, S)[end] # I or R
@@ -22,10 +22,10 @@ function _count_by_state(events::Events{M},
   return n_ids
 end
 
-function _epidemic_curve(events::Events{M},
+function _epidemic_curve(events::Events{S},
                          state::DiseaseState,
                          min::Float64,
-                         max::Float64) where M <: ILM
+                         max::Float64) where {S <: DiseaseStateSequence}
   if min >= max
     @error "Minimum time must be less than maximum time"
   end
@@ -34,7 +34,7 @@ function _epidemic_curve(events::Events{M},
     nextstate = convert(DiseaseStates, S)[2]
     times = events[nextstate]
   elseif state in convert(DiseaseStates, S)[2:end-1]
-    nextstate = advance(state, T)
+    nextstate = advance(state, S)
     times = events[[state; nextstate]][:]
   elseif state == convert(DiseaseStates, S)[end]
     times = events[state]
@@ -49,10 +49,10 @@ function _epidemic_curve(events::Events{M},
   return times, counts
 end
 
-@recipe function f(events::Events{M},
+@recipe function f(events::Events{S},
                    state::DiseaseState,
                    min::Float64,
-                   max::Float64) where T<: EpidemicModel
+                   max::Float64) where {S <: DiseaseStateSequence}
   xguide --> "Time"
   yguide --> "N"
   xlims --> (min - 1.0, max + 1.0)
@@ -63,14 +63,14 @@ end
   _epidemic_curve(events, state, min, max)
 end
 
-@recipe function f(events::Events{M},
-                   state::DiseaseState) where M <: ILM
+@recipe function f(events::Events,
+                   state::DiseaseState)
   events, state, 0.0, maximum(events)
 end
 
-@recipe function f(events::Events{M},
+@recipe function f(events::Events{S},
                    min::Float64,
-                   max::Float64) where T<: EpidemicModel
+                   max::Float64) where {S <: DiseaseStateSequence}
   @series begin
     linecolor --> :purple
     label --> "S"
@@ -97,6 +97,6 @@ end
   end
 end
 
-@recipe function f(events::Events{M}) where M <: ILM
+@recipe function f(events::Events)
   events, 0.0, maximum(events)
 end

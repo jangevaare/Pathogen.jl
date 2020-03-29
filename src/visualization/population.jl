@@ -8,9 +8,9 @@ function _population(pop::Population, ids)
   return x, y
 end
 
-function _ids_by_state(events::Events{M},
+function _ids_by_state(events::Events{S},
                        state::DiseaseState,
-                       time::Float64) where M <: ILM
+                       time::Float64) where {S <: DiseaseStateSequence}
   if time < 0.0
     @error "Time must be ≥ 0.0"
   elseif state ∉ convert(DiseaseStates, S)
@@ -32,7 +32,7 @@ function _ids_by_state(events::Events{M},
   return ids
 end
 
-@recipe function f(pop::Population) where M <: ILM
+@recipe function f(pop::Population)
   xguide --> ""
   yguide --> ""
   legend --> :none
@@ -51,8 +51,8 @@ end
 
 
 @recipe function f(pop::Population,
-                   events::Events{M},
-                   time::Float64) where M <: ILM
+                   events::Events{S},
+                   time::Float64) where {S <: DiseaseStateSequence}
   xguide --> ""
   yguide --> ""
   legend --> :topright

@@ -1,4 +1,4 @@
-function generate(::Type{EventObservations}
+function generate(::Type{EventObservations},
                   events::Events{S},
                   delay_infection::UnivariateDistribution,
                   delay_removal::UnivariateDistribution;
@@ -85,7 +85,8 @@ end
 function generate(::Type{EventObservations}, 
                   sim::Simulation{S, M},
                   delay_infection::UnivariateDistribution,
-                  delay_removal::UnivariateDistribution;
+                  delay_removal::UnivariateDistribution,
+                  seq_len::Int64;
                   force::Bool = false) where {
                   S <: Union{SEIR, SIR}, 
                   M <: PhyloILM}
@@ -131,12 +132,12 @@ function generate(::Type{EventObservations},
       @debug "Removal observation of i = $i at t = $(round(removal[i], digits=3)) (actual removal at t = $(round(sim.events.removal[i], digits=3)))"
     end
   end
-  tree, event_nodes = generate(PhyloTree,
+  tree, event_nodes = generate(Tree,
                                sim.events,
                                infection,
                                sim.transmission_network)
   seq_full = simulate(RNASeq, tree, sim.substitution_model, seq_len)
-  seq_obs = [isnothing(event_nodes[i, 2])? nothing | seq_full[event_nodes[i, 2]] for i = eachindex(infection)]
+  seq_obs = [isnothing(event_nodes[i, 2]) ? nothing : seq_full[event_nodes[i, 2]] for i = eachindex(infection)]
   return EventObservations{S, M}(infection, removal, seq_obs)
 end
 
@@ -156,11 +157,11 @@ function generate(::Type{EventObservations},
     end
     @debug "Infection observation of i = $i at t = $(round(infection[i], digits=3))) (actual infection onset at t = $(round(sim.events.infection[i], digits=3)))"
   end
-  trees, tree_id, obs_leaf_node_id = generate(PhyloTree,
+  trees, tree_id, obs_leaf_node_id = generate(Tree,
                                               sim.events,
                                               infection,
                                               sim.transmission_network)
   seq_full = [simulate(RNASeq, t, sim.substitution_model, seq_len) for t in trees]
-  seq_obs = [isnan(infection[i])? nothing | seq_full[tree_id[i]][observation_leaf_node_id] for i = eachindex(infection)]
+  seq_obs = [isnan(infection[i]) ? nothing : seq_full[tree_id[i]][obs_leaf_node_id] for i = eachindex(infection)]
   return EventObservations{S, M}(infection, seq_obs)
 end
