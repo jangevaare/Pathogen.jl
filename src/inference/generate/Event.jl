@@ -16,10 +16,12 @@ end
 
 function _bounds(id::Int64,
                  new_state::DiseaseState,
-                 extents::EventExtents{M},
-                 obs::EventObservations{M},
-                 events::Events{M},
-                 network::TransmissionNetwork) where M <: ILM
+                 extents::EventExtents{S},
+                 obs::EventObservations{S, M},
+                 events::Events{S},
+                 network::TransmissionNetwork) where {
+                   S <: DiseaseStateSequence,
+                   M <: ILM}
   if new_state == State_E
     lowerbounds = [events.infection[id] - extents.exposure]
     upperbounds = [events.infection[id]]
@@ -81,11 +83,13 @@ function _bounds(id::Int64,
   return lowerbound, upperbound
 end
 
-function _bounds(last_event::Event{M},
-                 extents::EventExtents{M},
-                 obs::EventObservations{M},
-                 events::Events{M},
-                 network::TransmissionNetwork) where M <: ILM
+function _bounds(last_event::Event{S},
+                 extents::EventExtents{S},
+                 obs::EventObservations{S, M},
+                 events::Events{S},
+                 network::TransmissionNetwork) where {
+                 S <: DiseaseStateSequence,
+                 M <: ILM}
   return _bounds(last_event.individual,
                  last_event.new_state,
                  extents, obs, events, network)
@@ -94,9 +98,11 @@ end
 
 function _bounds(id::Int64,
                  new_state::DiseaseState,
-                 extents::EventExtents{M},
-                 obs::EventObservations{M},
-                 events::Events{M}) where M <: ILM
+                 extents::EventExtents{S},
+                 obs::EventObservations{S, M},
+                 events::Events{S}) where {
+                 S <: DiseaseStateSequence,
+                 M <: ILM}
   if new_state == State_E
     lowerbounds = [events.infection[id] - extents.exposure]
     upperbounds = [events.infection[id]]
@@ -124,10 +130,12 @@ function _bounds(id::Int64,
   return lowerbound, upperbound
 end
 
-function _bounds(last_event::Event{M},
-                 extents::EventExtents{M},
-                 obs::EventObservations{M},
-                 events::Events{M}) where M <: ILM
+function _bounds(last_event::Event{S},
+                 extents::EventExtents{S},
+                 obs::EventObservations{S, M},
+                 events::Events{S}) where {
+                 S <: DiseaseStateSequence,
+                 M <: ILM}
   return _bounds(last_event.individual,
                  last_event.new_state,
                  extents, obs, events)
@@ -137,9 +145,10 @@ function generate(::Type{Event},
                   last_event::Event{S},
                   σ::Float64,
                   extents::EventExtents{S},
-                  obs::EventObservations,
+                  obs::EventObservations{S, M},
                   events::Events{S}) where {
-                  S <: DiseaseStateSequence}
+                  S <: DiseaseStateSequence,
+                  M <: ILM}
   lowerbound, upperbound = _bounds(last_event, extents, obs, events)
   time = rand(truncated(Normal(_time(last_event), σ),
                         lowerbound,

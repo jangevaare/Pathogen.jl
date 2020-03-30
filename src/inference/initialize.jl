@@ -4,7 +4,7 @@ function _initialization_attempt(mcmc::MCMC{S, M},
                                  M <: ILM}
   events = generate(Events, mcmc)
   rparams = generate(RiskParameters, mcmc)
-  lprior = logpriors(rparams, mcmc.risk_priors)
+  lprior = logprior(rparams, mcmc.risk_priors)
   if M <: PhyloILM
     sm = generate(mcmc.substitution_model, mcmc.substitution_model_priors)
     lprior += logprior(sm, mcmc.substitution_model_priors)
@@ -26,14 +26,14 @@ function _initialization_attempt(mcmc::MCMC{S, M},
           leaf_data[obs_nodes[k]] = mcmc.event_observations.seq[k]
         end
       end
-      lposterior += loglikelihood(tree, sm, leaf_data)
+      lposterior += PhyloModels.loglikelihood(tree, sm, leaf_data)
     end
   end
   if lposterior > max_lposterior
     if M <: PhyloILM
-      return MarkovChain{M}(events, network, rparams, sm, lposterior)
+      return MarkovChain{S, M}(events, network, rparams, sm, lposterior)
     elseif M <: TNILM
-      return MarkovChain{M}(events, network, rparams, lposterior)
+      return MarkovChain{S, M}(events, network, rparams, lposterior)
     end
   else
     return nothing
@@ -55,7 +55,7 @@ function initialize(::Type{MarkovChain},
     initialization = _initialization_attempt(mcmc, max_lposterior)
     if initialization !== nothing
       markov_chain = initialization
-      max_lposterior = markov_chain.logposterior
+      max_lposterior = markov_chain.log_posterior[1]
     end
     put!(progress_channel, true)
   end
@@ -68,7 +68,7 @@ end
 
 
 function initialize(::Type{MarkovChain},
-                    mcmc::MCMC{S, M},
+                    mcmc::MCMC{S, M};
                     attempts::Int64=1000) where {
                     S <: DiseaseStateSequence,
                     M <: ILM}
@@ -82,7 +82,7 @@ function initialize(::Type{MarkovChain},
     initialization = _initialization_attempt(mcmc, max_lposterior)
     if initialization !== nothing
       markov_chain = initialization
-      max_lposterior = markov_chain.logposterior
+      max_lposterior = markov_chain.log_posterior[1]
     end
     next!(pmeter)
   end

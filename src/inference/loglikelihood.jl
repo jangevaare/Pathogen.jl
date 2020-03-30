@@ -6,12 +6,13 @@ function loglikelihood(rp::RiskParameters{S},
                        loglikelihood_output::Bool=true,
                        transmission_rates_output::Bool=true,
                        transmissions_output::Bool=true,
-                       early_decision_value::Float64=-Inf) where S <: DiseaseStateSequence
+                       early_decision_value::Float64=-Inf) where {
+                       S <: DiseaseStateSequence}
   # Initialize
   ll = 0.0
   transmissions = Int64[]
   # We can use the Simulation struct to recreate epidemic
-  s = Simulation(pop, starting_states, rf, rp)
+  s = Simulation{S, TNILM}(pop, starting_states, rf, rp)
   s.events = events
   # Event order
   event_array = convert(Array{Float64, 2}, events)[:]

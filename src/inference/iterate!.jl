@@ -1,5 +1,5 @@
-function iterate!(mc::MarkovChain{M},
-                  mcmc::MCMC{M},
+function iterate!(mc::MarkovChain{S, M},
+                  mcmc::MCMC{S, M},
                   n::Int64,
                   Σ::Array{Float64, 2},
                   σ::Float64;
@@ -15,9 +15,9 @@ function iterate!(mc::MarkovChain{M},
   pmeter = Progress(n, "MCMC progress")
   use_adapted_cov = false
   local adapted_cov
-  if (adapt_cov != 0 & mc.iterations > adapt_cov) && LinearAlgebra.isposdef(value(mc.cov))
+  if (adapt_cov != 0 & mc.iterations > adapt_cov) && LinearAlgebra.isposdef(value(mc.Σrp))
     use_adapted_cov = true
-    adapted_cov = OnlineStats.value(mc.cov) * 2.38^2 / length(mc.risk_parameters[1])
+    adapted_cov = OnlineStats.value(mc.Σrp) * 2.38^2 / length(mc.risk_parameters[1])
   end
   for i = 1:n
     if use_adapted_cov
@@ -28,13 +28,13 @@ function iterate!(mc::MarkovChain{M},
     next!(pmeter)
     @logmsg LogLevel(-5000) "MCMC progress" progress = i/n
     if adapt_cov > 0 && mod(i, adapt_cov) == 0
-      OnlineStats.fit!(mc.cov, eachrow(convert(Array{Float64, 2}, mc.risk_parameters[end-adapt_cov:end])))
-      if LinearAlgebra.isposdef(value(mc.cov))
+      OnlineStats.fit!(mc.Σrp, eachrow(convert(Array{Float64, 2}, mc.risk_parameters[end-adapt_cov:end])))
+      if LinearAlgebra.isposdef(value(mc.Σrp))
         if !use_adapted_cov
           use_adapted_cov = true
           @debug "Now using adapted covariance matrix for adaptive MCMC on core $(Distributed.myid()) (updated every $adapt_cov iterations)"
         end
-        adapted_cov = OnlineStats.value(mc.cov) * 2.38^2 / length(mc.risk_parameters[1])
+        adapted_cov = OnlineStats.value(mc.Σrp) * 2.38^2 / length(mc.risk_parameters[1])
         @debug "Covariance matrix updated for Adaptive Metropolis-Hastings MCMC" Covariance = adapted_cov
       end
     end
@@ -42,8 +42,8 @@ function iterate!(mc::MarkovChain{M},
   return mc
 end
 
-function iterate!(mc::MarkovChain{M},
-                  mcmc::MCMC{M},
+function iterate!(mc::MarkovChain{S, M},
+                  mcmc::MCMC{S, M},
                   n::Int64,
                   Σ::Array{Float64, 2},
                   σ::Float64,
@@ -55,9 +55,9 @@ function iterate!(mc::MarkovChain{M},
                   M <: ILM}
   use_adapted_cov = false
   local adapted_cov
-  if (adapt_cov != 0 & mc.cov.n >= adapt_cov) && LinearAlgebra.isposdef(value(mc.cov))
+  if (adapt_cov != 0 & mc.Σrp.n >= adapt_cov) && LinearAlgebra.isposdef(value(mc.Σrp))
     use_adapted_cov = true
-    adapted_cov = OnlineStats.value(mc.cov) * 2.38^2 / length(mc.risk_parameters[1])
+    adapted_cov = OnlineStats.value(mc.Σrp) * 2.38^2 / length(mc.risk_parameters[1])
   end
   for i = 1:n
     if use_adapted_cov
@@ -67,13 +67,13 @@ function iterate!(mc::MarkovChain{M},
     end
     put!(progress_channel, true)
     if adapt_cov != 0 && mod(i, adapt_cov) == 0
-      OnlineStats.fit!(mc.cov, eachrow(convert(Array{Float64, 2}, mc.risk_parameters[end-adapt_cov:end])))
-      if LinearAlgebra.isposdef(value(mc.cov))
+      OnlineStats.fit!(mc.Σrp, eachrow(convert(Array{Float64, 2}, mc.risk_parameters[end-adapt_cov:end])))
+      if LinearAlgebra.isposdef(value(mc.Σrp))
         if !use_adapted_cov
           use_adapted_cov = true
           @debug "Now using adapted covariance matrix for adaptive MCMC on core $(Distributed.myid()) (updated every $adapt_cov iterations)"
         end
-        adapted_cov = OnlineStats.value(mc.cov) * 2.38^2 / length(mc.risk_parameters[1])
+        adapted_cov = OnlineStats.value(mc.Σrp) * 2.38^2 / length(mc.risk_parameters[1])
         @debug "Covariance matrix updated for Adaptive Metropolis-Hastings MCMC" Covariance = adapted_cov
       end
     end
@@ -81,7 +81,7 @@ function iterate!(mc::MarkovChain{M},
   return mc
 end
 
-function iterate!(mcmc::MCMC{M},
+function iterate!(mcmc::MCMC{S, M},
                   n::Int64,
                   Σ::Array{Float64, 2},
                   σ::Float64;
@@ -120,8 +120,8 @@ function iterate!(mcmc::MCMC{M},
   end
 end
 
-function iterate!(mc::MarkovChain{M},
-                  mcmc::MCMC{M},
+function iterate!(mc::MarkovChain{S, M},
+                  mcmc::MCMC{S, M},
                   n::Int64,
                   σ::Float64;
                   condition_on_network::Bool=false,
@@ -139,7 +139,7 @@ function iterate!(mc::MarkovChain{M},
                   adapt_cov = adapt_cov)
 end
 
-function iterate!(mcmc::MCMC{M},
+function iterate!(mcmc::MCMC{S, M},
                   n::Int64,
                   σ::Float64;
                   condition_on_network::Bool=false,

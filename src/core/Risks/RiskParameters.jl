@@ -14,7 +14,7 @@ end
 
 
 function Base.show(io::IO, x::RiskParameters{S}) where {S <: DiseaseStateSequence}
-  return print(io, "$T model risk function parameters")
+  return print(io, "$S model risk function parameters")
 end
 
 
@@ -25,31 +25,34 @@ end
 
 
 function Base.convert(::Type{Array{Float64, 2}},
-                      x::Vector{RiskParameters})
+                      x::Vector{RiskParameters{S}}) where {
+                      S <: DiseaseStateSequence}
   return [x[i][j] for i = 1:length(x), j = 1:length(x[1])]
 end
 
 
-function Base.similar(x::RiskParameters{S}, v::Vector{Float64}) where S <: DiseaseStateSequence
+function Base.similar(x::RiskParameters{S}, 
+                      v::Vector{Float64}) where {
+                      S <: DiseaseStateSequence}
   indices = _indices(x, zeros=false)
   if indices[end] != length(v)
     @error "Incompatiable parameter vector"
   end
   if S == SEIR
-    return RiskParameters{M}(v[1:(indices[1])],
+    return RiskParameters{S}(v[1:(indices[1])],
                              v[(indices[1]+1):(indices[2])],
                              v[(indices[2]+1):(indices[3])],
                              v[(indices[3]+1):(indices[4])],
                              v[(indices[4]+1):(indices[5])],
                              v[(indices[5]+1):(indices[6])])
   elseif S in [SEI; SIR]
-    return RiskParameters{M}(v[1:(indices[1])],
+    return RiskParameters{S}(v[1:(indices[1])],
                              v[(indices[1]+1):(indices[2])],
                              v[(indices[2]+1):(indices[3])],
                              v[(indices[3]+1):(indices[4])],
                              v[(indices[4]+1):(indices[5])])
   elseif S == SI
-    return RiskParameters{M}(v[1:(indices[1])],
+    return RiskParameters{S}(v[1:(indices[1])],
                              v[(indices[1]+1):(indices[2])],
                              v[(indices[2]+1):(indices[3])],
                              v[(indices[3]+1):(indices[4])])

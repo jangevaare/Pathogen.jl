@@ -14,5 +14,5 @@ end
 
 
 function Base.show(io::IO, x::RiskFunctions{S}) where {S <: DiseaseStateSequence}
-  return print(io, "$T model risk functions")
+  return print(io, "$S model risk functions")
 end

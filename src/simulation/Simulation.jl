@@ -31,7 +31,7 @@ mutable struct Simulation{S <: DiseaseStateSequence, M <: ILM}
                             rp::RiskParameters{S}) where {
                             S <: DiseaseStateSequence, 
                             M <: ILM}
-    @debug "Initializing $T Simulation with the following starting states:" states
+    @debug "Initializing $S $M Simulation with the following starting states:" states
     if length(states) != pop.individuals
       @error "Length of initial disease state vector must match number of individuals"
     elseif !all(in.(states, Ref(convert(DiseaseStates, S))))
@@ -50,7 +50,7 @@ mutable struct Simulation{S <: DiseaseStateSequence, M <: ILM}
                             rp::RiskParameters{S}) where {
                             S <: DiseaseStateSequence, 
                             M <: ILM}
-    @debug "Initializing $T Simulation with the following starting states:" states
+    @debug "Initializing $S $M Simulation with the following starting states:" states
     if length(states) != pop.individuals
       @error "Length of initial disease state vector must match number of individuals"
     elseif !all(in.(states, Ref(convert(DiseaseStates, S))))

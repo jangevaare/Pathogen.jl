@@ -63,7 +63,7 @@ module Pathogen
   include("inference/loglikelihood.jl")
   include("inference/initialize.jl")
   include("inference/update!.jl")
-  include("inference/logpriors.jl")
+  include("inference/logprior.jl")
   include("inference/start!.jl")
   include("inference/iterate!.jl")
 

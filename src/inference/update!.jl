@@ -1,9 +1,11 @@
-function update!(mc::MarkovChain{M},
-                 mcmc::MCMC{M},
+function update!(mc::MarkovChain{S, M},
+                 mcmc::MCMC{S, M},
                  Σ::Array{Float64, 2},
                  σ::Float64;
                  condition_on_network::Bool=false,
-                 event_batches::Int64=1) where M <: ILM
+                 event_batches::Int64=1) where {
+                 S <: DiseaseStateSequence, 
+                 M <: ILM}
   # Initialize
   new_events = mc.events[end]
   new_events_array = new_events[convert(DiseaseStates, S)[2:end]]
@@ -33,7 +35,7 @@ function update!(mc::MarkovChain{M},
         # Conditioning on network means that only event times valid under current network will be proposed. This is useful for models which may have additional contributions to the posterior based on network, and require more modest proposals (e.g. phylodynamic models).
         if condition_on_network
           proposed_event = generate(Event,
-                                    Event{M}(time, id, new_state),
+                                    Event{S}(time, id, new_state),
                                     σ,
                                     mcmc.event_extents,
                                     mcmc.event_observations,
@@ -41,7 +43,7 @@ function update!(mc::MarkovChain{M},
                                     new_network)
         else
           proposed_event = generate(Event,
-                                    Event{M}(time, id, new_state),
+                                    Event{S}(time, id, new_state),
                                     σ,
                                     mcmc.event_extents,
                                     mcmc.event_observations,
@@ -62,7 +64,7 @@ function update!(mc::MarkovChain{M},
         end
         # Only need to generate new `Events` on last event of batch
         if j == minimum([(batch_size*i + 1); length(aug_order)])
-          proposed_events = Events{M}(proposed_events_array)
+          proposed_events = Events{S}(proposed_events_array)
         end
       end
       proposed_params = new_params
@@ -70,9 +72,9 @@ function update!(mc::MarkovChain{M},
       # Propose new risk parameters
       proposed_events = new_events
       proposed_events_array = new_events_array
-      proposed_params = generate(RiskParameters{M}, new_params, Σ)
+      proposed_params = generate(RiskParameters{S}, new_params, Σ)
     end
-    proposed_lprior = logpriors(proposed_params, mcmc.risk_priors)
+    proposed_lprior = logprior(proposed_params, mcmc.risk_priors)
     # Based on the logprior and competiting MCMC iteration, this loglikelihood is required for acceptance
     # Calculating this in advance allows us to cut loglikelihood calculation short if it goes below threshold
     ll_acceptance_threshold = log(rand()) + new_lposterior - proposed_lprior
@@ -115,9 +117,11 @@ function update!(mc::MarkovChain{M},
   return mc
 end
 
-function update!(mcmc::MCMC{M},
+function update!(mcmc::MCMC{S, M},
                  Σ::Array{Float64, 2},
-                 σ::Float64) where M <: ILM
+                 σ::Float64) where {
+                 S <: DiseaseStateSequence,
+                 M <: ILM}
   @simd for mc in mcmc.markov_chains
     next!(mc, mcmc, Σ, σ)
   end

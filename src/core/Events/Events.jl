@@ -73,7 +73,7 @@ function Events{S}(x::DiseaseStates) where S <: DiseaseStateSequence
 end
 
 function Base.show(io::IO, x::Events{S}) where S <: DiseaseStateSequence
-  return print(io, "$T model event times (n=$(x.individuals))")
+  return print(io, "$S model event times (n=$(x.individuals))")
 end
 
 function Base.getindex(x::Events{S}, new_state::DiseaseState) where S <: DiseaseStateSequence

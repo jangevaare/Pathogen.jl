@@ -17,6 +17,6 @@ function initialize(::Type{TransmissionRates},
                           rf.transmissibility(rp.transmissibility, pop, k)
     end
   end
-  @debug "Initialization of $T TransmissionRates complete" external = tr.external ∑external = sum(tr.external) internal = tr.internal ∑internal = sum(tr.internal)
+  @debug "Initialization of $S Transmission Rates complete" external = tr.external ∑external = sum(tr.external) internal = tr.internal ∑internal = sum(tr.internal)
   return tr
 end
