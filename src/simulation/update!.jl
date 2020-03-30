@@ -1,4 +1,4 @@
-function update!(s::Simulation{M}, event::AbstractEvent) where M <: ILM
+function update!(s::Simulation, event::AbstractEvent)
   if _time(event) < s.time
     @error "Time of a new event must be >= that of the previous event"
   elseif _time(event) < Inf

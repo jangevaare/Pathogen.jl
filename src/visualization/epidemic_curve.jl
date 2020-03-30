@@ -1,3 +1,9 @@
+function advance(x::DiseaseState, ::Type{S}) where {S <: DiseaseStateSequence}
+  states = convert(DiseaseStates, S)
+  current_index = findfirst(Ref(x) .== states)
+  return states[current_index + 1]
+end
+
 function _count_by_state(events::Events{S},
                          state::DiseaseState,
                          time::Float64) where {S <: DiseaseStateSequence}

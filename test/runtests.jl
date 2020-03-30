@@ -125,7 +125,7 @@ end
   @test length(sim.disease_states) == n
   @test size(sim.transmission_network.internal) == (n, n)
 
-  obs = observe(sim, Uniform())
+  obs = generate(EventObservations, sim, Uniform())
   @test length(obs.infection) == n
 
   rpriors = RiskPriors{SEI}([Uniform(0.0, 0.01)],
@@ -188,7 +188,6 @@ end
                   Pathogen._count_by_state(sim.events, State_R, 50.0)]
 
   @test sum(state_counts) == n
-
   @test length(sim.disease_states) == n
   @test size(sim.transmission_network.internal) == (n, n)
 
@@ -255,7 +254,7 @@ end
   @test length(sim.disease_states) == n
   @test size(sim.transmission_network.internal) == (n, n)
 
-  obs = observe(sim, Uniform())
+  obs = generate(EventObservations, sim, Uniform())
   @test length(obs.infection) == n
 
   rpriors = RiskPriors{SI}([Uniform(0.0, 0.01)],

@@ -1,4 +1,4 @@
-function simulate!(sim::Simulation{M}; tmax::Float64=Inf, nmax::Int64=100000, pmax::Float64=Inf) where M <: ILM
+function simulate!(sim::Simulation; tmax::Float64=Inf, nmax::Int64=100000, pmax::Float64=Inf)
   if tmax <= 0.0
     @error "The simulation time maximum must be > 0.0"
   elseif nmax < 1

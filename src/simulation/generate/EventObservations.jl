@@ -2,7 +2,9 @@ function generate(::Type{EventObservations},
                   events::Events{S},
                   delay_infection::UnivariateDistribution,
                   delay_removal::UnivariateDistribution;
-                  force::Bool = false) where S <: Union{SEIR, SIR}
+                  force::Bool = false) where {
+                  S <: Union{SEIR, SIR},
+                  M <: TNILM}
   infection = fill(NaN, events.individuals)
   removal = fill(NaN, events.individuals)
   if force
@@ -53,15 +55,16 @@ function generate(::Type{EventObservations},
                   delay_infection::UnivariateDistribution,
                   delay_removal::UnivariateDistribution;
                   force::Bool = false) where {
-                  S <: Union{SEIR, SIR}, 
-                  M <: ILM}
+                  S <: Union{SEIR, SIR},
+                  M <: TNILM}
   return generate(EventObservations, sim.events, delay_infection, delay_removal, force=force)
 end
 
 function generate(::Type{EventObservations}, 
                   events::Events{S},
                   delay_infection::UnivariateDistribution) where {
-                  S <: Union{SEI, SI}}
+                  S <: Union{SEI, SI},
+                  M <: TNILM}
   infection = fill(NaN, events.individuals)
   @simd for i in findall(.!isnan.(events.infection))
     if events.infection[i] == -Inf
@@ -71,14 +74,14 @@ function generate(::Type{EventObservations},
     end
     @debug "Infection observation of i = $i at t = $(round(infection[i], digits=3))) (actual infection onset at t = $(round(events.infection[i], digits=3)))"
   end
-  return EventObservations{S, TNILM}(infection)
+  return EventObservations{S, M}(infection)
 end
 
 function generate(::Type{EventObservations}, 
                   sim::Simulation{S, M},
                   delay_infection::UnivariateDistribution) where {
                   S <: Union{SEI, SI},
-                  M <: ILM}
+                  M <: TNILM}
   return generate(EventObservations, sim.events, delay_infection)
 end
 

@@ -194,7 +194,7 @@ module Pathogen
     TransmissionNetworkDistribution, TNDistribution,
     TransmissionNetworkPrior, TNPrior,
     TransmissionNetworkPosterior, TNPosterior,
-    Simulation, simulate!,
+    Simulation, simulate!, generate,
     Events, EventObservations, EventExtents,
     MCMC, start!, iterate!
 end
