@@ -6,6 +6,7 @@ module Pathogen
         Distributions,
         RecipesBase,
         Logging,
+        StaticArrays,
         StatsBase,
         Statistics,
         ProgressMeter,

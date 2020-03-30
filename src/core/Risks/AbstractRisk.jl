@@ -1,37 +1,5 @@
 abstract type AbstractRisk{S <: DiseaseStateSequence} end
 
-function Base.copy(x::T) where {S <: SEIR, T <: AbstractRisk{S}}
-  return T{S}(copy(x.sparks),
-              copy(x.susceptibility),
-              copy(x.infectivity),
-              copy(x.transmissibility),
-              copy(x.latency),
-              copy(x.removal))
-end
-
-function Base.copy(x::T) where {S <: SEI, T <: AbstractRisk{S}}
-  return T{S}(copy(x.sparks),
-              copy(x.susceptibility),
-              copy(x.infectivity),
-              copy(x.transmissibility),
-              copy(x.latency))
-end
-
-function Base.copy(x::T) where {S <: SIR, T <: AbstractRisk{S}}
-  return T{S}(copy(x.sparks),
-              copy(x.susceptibility),
-              copy(x.infectivity),
-              copy(x.transmissibility),
-              copy(x.removal))
-end
-
-function Base.copy(x::T) where {S <: SI, T <: AbstractRisk{S}}
-  return T{S}(copy(x.sparks),
-              copy(x.susceptibility),
-              copy(x.infectivity),
-              copy(x.transmissibility))
-end
-
 function _indices(x::T; zeros::Bool=true) where {S <: DiseaseStateSequence, T <: AbstractRisk{S}}
   indices = [length(x.sparks)
              length(x.susceptibility)

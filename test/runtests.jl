@@ -20,7 +20,7 @@ risks = DataFrame(x = rand(Uniform(0, 5), n),
 pop = Population(risks,
                  [euclidean([risks[i, :x]; risks[i, :y]], [risks[j, :x]; risks[j, :y]]) for i = 1:n, j = 1:n])
 
-@testset "SEIR Model" begin
+@testset "SEIR Transmission Network ILM" begin
   # Some commonly used functions/examples provided in helpers/RiskFunctions.jl
   # For SEIR, risk functions and parameters in order of: sparks, susceptibility, infectivity, transmissibility, latency, and removal
   rf = RiskFunctions{SEIR}(_constant,
@@ -95,7 +95,7 @@ pop = Population(risks,
   @test length(mcmc.markov_chains) == 1
 end
 
-@testset "SEI Model" begin
+@testset "SEI Transmission Network ILM" begin
   rf = RiskFunctions{SEI}(_constant,
                           _coefficient,
                           _powerlaw,
@@ -162,7 +162,7 @@ end
 end
 
 
-@testset "SIR Model" begin
+@testset "SIR Transmission Network ILM" begin
   rf = RiskFunctions{SIR}(_constant,
                           _coefficient,
                           _powerlaw,
@@ -227,7 +227,7 @@ end
   @test length(mcmc.markov_chains) == 1
 end
 
-@testset "SI Model" begin
+@testset "SI Transmission Network ILM" begin
   rf = RiskFunctions{SI}(_constant,
                          _coefficient,
                          _powerlaw,

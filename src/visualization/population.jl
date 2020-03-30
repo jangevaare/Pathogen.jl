@@ -18,11 +18,11 @@ function _ids_by_state(events::Events{S},
   end
   ids = Int64[]
   if state == convert(DiseaseStates, S)[1] # S
-    nextstate = advance(state, T) # Either E or I
+    nextstate = advance(state, S) # Either E or I
     append!(ids, findall(events[nextstate] .> Ref(time))) # E/I after `time`
     append!(ids, findall(isnan.(events[nextstate]))) # Never E/I
   elseif state in convert(DiseaseStates, S)[2:end-1]
-    nextstate = advance(state, T) # Either I or R
+    nextstate = advance(state, S) # Either I or R
     append!(ids, findall((events[state] .<= Ref(time)) .& (events[nextstate] .> Ref(time)))) # E/I at or before time and I/R after time
     append!(ids, findall((events[state] .<= Ref(time)) .& isnan.(events[nextstate]))) # E/I at or before time and never I/R
   elseif state == convert(DiseaseStates, S)[end] # I or R
