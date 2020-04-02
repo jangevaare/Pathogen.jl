@@ -6,22 +6,23 @@ mutable struct MCMC{S <: DiseaseStateSequence, M <: ILM}
   risk_functions::RiskFunctions{S}
   risk_priors::RiskPriors{S}
   substitution_model::Union{Nothing, Type{<:NucleicAcidSubstitutionModel}}
-  substitution_model_priors::Union{Nothing, Vector{UnivariateDistribution}}
+  substitution_model_prior::Union{Nothing, Vector{UnivariateDistribution}}
   transmission_network_prior::Union{Nothing, TNPrior}
-  markov_chains::Vector{MarkovChain{S}}
+  markov_chains::Vector{MarkovChain{S, M}}
 
-  function MCMC(obs::EventObservations{S},
+  function MCMC(obs::EventObservations{S, M},
                 ee::EventExtents{S},
                 pop::Population,
                 states::DiseaseStates,
                 rf::RiskFunctions{S},
                 rp::RiskPriors{S};
                 tnprior::Union{Nothing, TNPrior}=nothing) where {
-                S <: DiseaseStateSequence}
-    return new{S, TNILM}(obs, ee, pop, states, rf, rp, nothing, nothing, tnprior, MarkovChain{S, TNILM}[])
+                S <: DiseaseStateSequence,
+                M <: TNILM}
+    return new{S, M}(obs, ee, pop, states, rf, rp, nothing, nothing, tnprior, MarkovChain{S, M}[])
   end
 
-  function MCMC(obs::EventObservations{S},
+  function MCMC(obs::EventObservations{S, M},
                 ee::EventExtents{S},
                 pop::Population,
                 states::DiseaseStates,
@@ -31,22 +32,24 @@ mutable struct MCMC{S <: DiseaseStateSequence, M <: ILM}
                 smp::Vector{UnivariateDistribution};
                 tnprior::Union{Nothing, TNPrior}=nothing) where {
                 S <: DiseaseStateSequence,
+                M <: PhyloILM,
                 N <: NucleicAcidSubstitutionModel}
-    return new{S, PhyloILM}(obs, ee, pop, states, rf, rp, sm, smp, tnprior, MarkovChain{S, PhyloILM}[])
+    return new{S, M}(obs, ee, pop, states, rf, rp, sm, smp, tnprior, MarkovChain{S, M}[])
   end
 end
 
-function MCMC(obs::EventObservations{S},
+function MCMC(obs::EventObservations{S, M},
               ee::EventExtents{S},
               pop::Population,
               rf::RiskFunctions{S},
               rp::RiskPriors{S};
               tnprior::Union{Nothing, TNPrior}=nothing) where {
-              S <: DiseaseStateSequence}
+              S <: DiseaseStateSequence,
+              M <: TNILM}
   return MCMC(obs, ee, pop, fill(State_S, pop.individuals), rf, rp, tnprior=tnprior)
 end
 
-function MCMC(obs::EventObservations{S},
+function MCMC(obs::EventObservations{S, M},
               ee::EventExtents{S},
               pop::Population,
               rf::RiskFunctions{S},
@@ -55,6 +58,7 @@ function MCMC(obs::EventObservations{S},
               smp::Vector{UnivariateDistribution};
               tnprior::Union{Nothing, TNPrior}=nothing) where {
               S <: DiseaseStateSequence,
+              M <: PhyloILM,
               N <: NucleicAcidSubstitutionModel}
   return MCMC(obs, ee, pop, fill(State_S, pop.individuals), rf, rp, sm, smp, tnprior=tnprior)
 end

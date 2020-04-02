@@ -25,6 +25,7 @@ module Pathogen
   include("core/Events/Event.jl")
   include("core/Events/Events.jl")
   include("core/Events/EventRates.jl")
+  include("core/Events/EventObservations.jl")
   include("core/Risks/AbstractRisk.jl")
   include("core/Risks/RiskFunctions.jl")
   include("core/Risks/RiskParameters.jl")
@@ -46,7 +47,6 @@ module Pathogen
   include("simulation/generate/Tree.jl")
   include("simulation/simulate!.jl")
   include("simulation/update!.jl")
-  include("simulation/EventObservations.jl")
   include("simulation/generate/EventObservations.jl")
 
   # Inference
@@ -61,6 +61,7 @@ module Pathogen
   include("inference/generate/RiskParameters.jl")
   include("inference/generate/Transmission.jl")
   include("inference/generate/TransmissionNetwork.jl")
+  include("inference/generate/Tree.jl")
   include("inference/loglikelihood.jl")
   include("inference/initialize.jl")
   include("inference/update!.jl")
@@ -75,113 +76,14 @@ module Pathogen
   include("visualization/transmission_network_distribution.jl")
   include("visualization/trace.jl")
 
+  # re-export PhyloModels, DataFrames, Distributions
+  for reexport_pkg in [PhyloModels, DataFrames, Distributions]
+    for name in names(reexport_pkg)
+      @eval export $(name)
+    end
+  end
+
   export
-    #re-exports from DataFrames.jl
-    DataFrame,
-    #re-exports from Distributions.jl
-    UnivariateDistribution,
-    Arcsine,
-    Bernoulli,
-    Beta,
-    BetaBinomial,
-    BetaPrime,
-    Binomial,
-    Biweight,
-    Categorical,
-    Cauchy,
-    Chernoff,
-    Chi,
-    Chisq,
-    Cosine,
-    DiagNormal,
-    DiagNormalCanon,
-    Dirichlet,
-    DirichletMultinomial,
-    DiscreteUniform,
-    DoubleExponential,
-    EdgeworthMean,
-    EdgeworthSum,
-    EdgeworthZ,
-    Erlang,
-    Epanechnikov,
-    Exponential,
-    FDist,
-    FisherNoncentralHypergeometric,
-    Frechet,
-    FullNormal,
-    FullNormalCanon,
-    Gamma,
-    DiscreteNonParametric,
-    GeneralizedPareto,
-    GeneralizedExtremeValue,
-    Geometric,
-    Gumbel,
-    Hypergeometric,
-    InverseWishart,
-    InverseGamma,
-    InverseGaussian,
-    IsoNormal,
-    IsoNormalCanon,
-    Kolmogorov,
-    KSDist,
-    KSOneSided,
-    Laplace,
-    Levy,
-    LKJ,
-    LocationScale,
-    Logistic,
-    LogNormal,
-    LogitNormal,
-    MatrixBeta,
-    MatrixFDist,
-    MatrixNormal,
-    MatrixTDist,
-    MixtureModel,
-    Multinomial,
-    MultivariateNormal,
-    MvLogNormal,
-    MvNormal,
-    MvNormalCanon,
-    MvNormalKnownCov,
-    MvTDist,
-    NegativeBinomial,
-    NoncentralBeta,
-    NoncentralChisq,
-    NoncentralF,
-    NoncentralHypergeometric,
-    NoncentralT,
-    Normal,
-    NormalCanon,
-    NormalInverseGaussian,
-    Pareto,
-    PGeneralizedGaussian,
-    Product,
-    Poisson,
-    PoissonBinomial,
-    QQPair,
-    Rayleigh,
-    Semicircle,
-    Skellam,
-    StudentizedRange,
-    SymTriangularDist,
-    TDist,
-    TriangularDist,
-    Triweight,
-    Truncated,
-    Uniform,
-    UnivariateGMM,
-    VonMises,
-    VonMisesFisher,
-    WalleniusNoncentralHypergeometric,
-    Weibull,
-    Wishart,
-    ZeroMeanIsoNormal,
-    ZeroMeanIsoNormalCanon,
-    ZeroMeanDiagNormal,
-    ZeroMeanDiagNormalCanon,
-    ZeroMeanFullNormal,
-    ZeroMeanFullNormalCanon,
-    # Pathogen.jl types
     IndividualLevelModel, ILM,
     PhylodynamicILM, PhyloILM,
     TransmissionNetworkILM, TNILM,

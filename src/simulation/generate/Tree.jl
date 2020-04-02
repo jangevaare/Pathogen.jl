@@ -19,8 +19,8 @@ end
 function generate(::Type{Tree},
                   events::Events{S},
                   obs::Vector{Float64},
-                  network::TransmissionNetwork,
-                  mrca::Float64) where {
+                  network::TransmissionNetwork;
+                  mrca::Float64=0.0) where {
                   S <: DiseaseStateSequence}
 
   if length(obs) != events.individuals
@@ -42,10 +42,10 @@ function generate(::Type{Tree},
   else
     throw(ErrorException("Unrecognized DiseaseStateSequence"))
   end
-
   event_nodes = Array{Union{Nothing, Int64}, 2}(fill(nothing, size(event_times)))
   event_order = sortperm(event_times[:])
   event_lookup = CartesianIndices(size(event_times))
+  @debug "event_nodes, event_order, and event_lookup created" ArraySize = size(event_times)
 
   pathways = [_pathway_from(i, network) for i = 1:events.individuals]
 
@@ -61,7 +61,13 @@ function generate(::Type{Tree},
     # Determine the individual and event type
     event_individual, event_type = Tuple(event_lookup[event_order[i]])
 
-    @debug "Building phylogenetic tree..." Event = i Individual = event_individual Type = event_type == 1 ? "Transmission" : "Observation"
+    @debug "Building phylogenetic tree..." Event = i Individual = event_individual Type = event_type == 1 ? "Transmission" : "Observation" Time = event_times[event_order[i]]
+
+    # For purposes of tree generation, replace -Inf times (initial condition coding) with start_time
+    if event_times[event_order[i]] == -Inf
+      @debug "Setting -Inf event time to $events.start_time"
+      event_times[event_order[i]] = events.start_time
+    end
 
     # For transmission events...
     if event_type == 1
@@ -73,7 +79,8 @@ function generate(::Type{Tree},
         if network.external[event_individual]
           @debug "Event $i is a significant external transmission"
           parent_node = 1
-          branch_length = mrca - event_times[event_order[i]]
+          branch_length = event_times[event_order[i]] - mrca
+          @debug "Parent node is the root" ParentNode = parent_node BranchLength = branch_length
           branch!(tree, parent_node, branch_length)
 
           # Record tree and node ID
@@ -88,9 +95,9 @@ function generate(::Type{Tree},
           # If infected initial condition, no source
           if source == nothing
             @debug "Event $i is an initial condition"
-
             parent_node = 1
-            branch_length = mrca - events.start_time
+            branch_length = events.start_time - mrca
+            @debug "Set parent node is the root" ParentNode = parent_node BranchLength = branch_length
 
             # Add branch and node
             branch!(tree, parent_node, branch_length)
@@ -146,7 +153,6 @@ function generate(::Type{Tree},
 
     # Infection observation event
     elseif event_type == 2
-
       # Determine if individual has had significant transmissions prior to being observed as infected
       prior_transmissions = findall(network.internal[event_individual, :][:] .&
                             (event_times[:, 1] .< event_times[event_order[i]]) .&
@@ -154,11 +160,15 @@ function generate(::Type{Tree},
 
       # Parent node is the internal node associated with the final pre-observation transmission
       if length(prior_transmissions) > 0
+        @debug "Individual $event_individual transmitted to others prior to their detection"
+        @debug "Prior transmission event times" PriorTransmissionIds = prior_transmissions PriorTransmissionTimes = event_times[prior_transmissions, 1] PriorTransmissioNodes = event_nodes[prior_transmissions, 1]
+
         parent_node = event_nodes[prior_transmissions[argmax(event_times[prior_transmissions, 1])], 1]
         branch_length = event_times[event_order[i]] - maximum(event_times[prior_transmissions, 1])
 
       # Individual has not transmitted to others prior to being observed as infected
       else
+        @debug "Individual $event_individual has not transmitted to others prior to their detection"
         parent_node = event_nodes[event_individual, 1]
         branch_length = event_times[event_order[i]] - event_times[event_individual, 1]
       end
@@ -167,14 +177,17 @@ function generate(::Type{Tree},
       if any(network.internal[event_individual, :][:] .& (event_times[:, 1] .>= event_times[event_order[i]]) .& significant_transmissions)
 
         # Internal node for observation
+        @debug "Individual $event_individual has significant future transmissions, add internal node for observation" ParentNode = parent_node BranchLength = branch_length
         branch!(tree, parent_node, branch_length)
 
         # Add zero-length branch so observation event will be a leaf node
+        @debug "Add a zero length branch to ensure observation of individual $event_individual is a leaf node" ParentNode = length(tree.nodes) BranchLength = 0.0
         branch!(tree, length(tree.nodes), 0.)
 
       # Individual does not go one to have any significant transmissions
       # so will surely be a leaf node
       else
+        @debug "Individual $event_individual does not have significant future transmissions - their infection observation represents a leaf node" ParentNode = parent_node BranchLength = branch_length
         branch!(tree, parent_node, branch_length)
       end
       # Record leaf node id

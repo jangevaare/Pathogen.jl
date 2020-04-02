@@ -14,18 +14,18 @@ function generate(::Type{Events},
         update!(events, Event{S}(-Inf, i, State_R))
       end
     elseif !isnan(obs.infection[i])
-      i_lb = obs.infection[i] - extents.infection
+      i_lb = maximum([obs.start_time; obs.infection[i] - extents.infection])
       i_ub = obs.infection[i]
       i_time = rand(Uniform(i_lb, i_ub))
       update!(events, Event{S}(i_time, i, State_I))
       if exposed_state
-        e_lb = i_time - extents.exposure
+        e_lb = maximum([obs.start_time; i_time - extents.exposure])
         e_ub = i_time
         e_time = rand(Uniform(e_lb, e_ub))
         update!(events, Event{S}(e_time, i, State_E))
       end
       if removed_state && !isnan(obs.removal[i])
-        r_lb = maximum([obs.infection[i]; obs.removal[i] - extents.removal])
+        r_lb = maximum([obs.start_time; obs.infection[i]; obs.removal[i] - extents.removal])
         r_ub = obs.removal[i]
         r_time = rand(Uniform(r_lb, r_ub))
         update!(events, Event{S}(r_time, i, State_R))

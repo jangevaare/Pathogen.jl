@@ -2,57 +2,58 @@ struct Events{S <: DiseaseStateSequence}
   exposure::Union{Nothing, Vector{Float64}}
   infection::Vector{Float64}
   removal::Union{Nothing, Vector{Float64}}
+  start_time::Float64
   individuals::Int64
 
-  function Events{S}(e::V, i::V, r::V) where {S <: SEIR, V <: Vector{Float64}}
+  function Events{S}(e::V, i::V, r::V; start_time::Float64=0.0) where {S <: SEIR, V <: Vector{Float64}}
     if length(unique((length.([e; i; r])))) != 1
       @error "Length of event time vectors must be equal"
     end
-    return new{S}(e, i, r, length(i))
+    return new{S}(e, i, r, start_time, length(i))
   end
 
-  function Events{S}(n::Int64) where S <: SEIR
-    return new{S}(fill(NaN, n), fill(NaN, n), fill(NaN, n), n)
+  function Events{S}(n::Int64; start_time::Float64=0.0) where S <: SEIR
+    return new{S}(fill(NaN, n), fill(NaN, n), fill(NaN, n), start_time, n)
   end
 
-  function Events{S}(e::V, i::V) where {S <: SEI, V <: Vector{Float64}}
+  function Events{S}(e::V, i::V; start_time::Float64=0.0) where {S <: SEI, V <: Vector{Float64}}
     if length(unique((length.([e; i])))) != 1
       @error "Length of event time vectors must be equal"
     end
-    return new{S}(e, i, nothing, length(i))
+    return new{S}(e, i, nothing, start_time, length(i))
   end
 
-  function Events{S}(n::Int64) where S <: SEI
-    return new{S}(fill(NaN, n), fill(NaN, n), nothing, n)
+  function Events{S}(n::Int64; start_time::Float64=0.0) where S <: SEI
+    return new{S}(fill(NaN, n), fill(NaN, n), nothing, start_time, n)
   end
 
-  function Events{S}(i::V, r::V) where {S <: SIR, V <: Vector{Float64}}
+  function Events{S}(i::V, r::V; start_time::Float64=0.0) where {S <: SIR, V <: Vector{Float64}}
     if length(unique((length.([i; r])))) != 1
       @error "Length of event time vectors must be equal"
     end
-    return new{S}(nothing, i, r, length(i))
+    return new{S}(nothing, i, r, start_time, length(i))
   end
 
-  function Events{S}(n::Int64) where S <: SIR
-    return new{S}(nothing, fill(NaN, n), fill(NaN, n), n)
+  function Events{S}(n::Int64; start_time::Float64=0.0) where S <: SIR
+    return new{S}(nothing, fill(NaN, n), fill(NaN, n), start_time, n)
   end
 
-  function Events{S}(i::V) where {S <: SI, V <: Vector{Float64}}
-    return new{S}(nothing, i, nothing, length(i))
+  function Events{S}(i::V; start_time::Float64=0.0) where {S <: SI, V <: Vector{Float64}}
+    return new{S}(nothing, i, nothing, start_time, length(i))
   end
 
-  function Events{S}(n::Int64) where S <: SI
-    return new{S}(nothing, fill(NaN, n), nothing, n)
+  function Events{S}(n::Int64; start_time::Float64=0.0) where S <: SI
+    return new{S}(nothing, fill(NaN, n), nothing, start_time, n)
   end
 end
 
-function Events{S}(a::Array{Float64,2}) where S <: DiseaseStateSequence
+function Events{S}(a::Array{Float64,2}; start_time::Float64=0.0) where S <: DiseaseStateSequence
   if size(a, 2) == 3
-    return Events{S}(a[:,1], a[:,2], a[:,3])
+    return Events{S}(a[:,1], a[:,2], a[:,3], start_time=start_time)
   elseif size(a, 2) == 2
-    return Events{S}(a[:,1], a[:,2])
+    return Events{S}(a[:,1], a[:,2], start_time=start_time)
   elseif size(a, 2) == 1
-    return Events{S}(a[:,1])
+    return Events{S}(a[:,1], start_time=start_time)
   else
     @error "Invalid array size for construction of an $(Events{S}) object"
   end

@@ -24,15 +24,6 @@ function Base.show(io::IO, x::DiseaseState)
 end
 
 Base.convert(::Type{DiseaseStates}, x::Type{SEIR}) = SVector{4}(State_S, State_E, State_I, State_R)
-
-function Base.convert(::Type{DiseaseStates}, x::Type{SEI})
-  return SVector{3}(State_S, State_E, State_I)
-end
-
-function Base.convert(::Type{DiseaseStates}, x::Type{SIR})
-  return SVector{3}(State_S, State_I, State_R)
-end
-
-function Base.convert(::Type{DiseaseStates}, x::Type{SI})
-  return SVector{2}(State_S, State_I)
-end
+Base.convert(::Type{DiseaseStates}, x::Type{SEI}) = SVector{3}(State_S, State_E, State_I)
+Base.convert(::Type{DiseaseStates}, x::Type{SIR}) = SVector{3}(State_S, State_I, State_R)
+Base.convert(::Type{DiseaseStates}, x::Type{SI}) = SVector{2}(State_S, State_I)

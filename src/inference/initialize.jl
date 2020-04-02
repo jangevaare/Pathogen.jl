@@ -6,8 +6,8 @@ function _initialization_attempt(mcmc::MCMC{S, M},
   rparams = generate(RiskParameters, mcmc)
   lprior = logprior(rparams, mcmc.risk_priors)
   if M <: PhyloILM
-    sm = generate(mcmc.substitution_model, mcmc.substitution_model_priors)
-    lprior += logprior(sm, mcmc.substitution_model_priors)
+    sm = generate(mcmc.substitution_model, mcmc.substitution_model_prior)
+    lprior += logprior(sm, mcmc.substitution_model_prior)
   end
   llikelihood, tr, tx = loglikelihood(rparams,
                                       mcmc.risk_functions,
@@ -20,7 +20,7 @@ function _initialization_attempt(mcmc::MCMC{S, M},
     network = generate(TransmissionNetwork, tr, mcmc, tx)
     if M <: PhyloILM
       tree, obs_nodes = generate(Tree, events, mcmc.event_observations, network)
-      leaf_data = Dict{Int64, GeneticSeq}()
+      leaf_data = Dict{Int64, RNASeq}()
       for k = eachindex(obs_nodes)
         if !isnothing(obs_nodes[k])
           leaf_data[obs_nodes[k]] = mcmc.event_observations.seq[k]

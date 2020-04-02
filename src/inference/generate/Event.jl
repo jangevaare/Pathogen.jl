@@ -23,7 +23,8 @@ function _bounds(id::Int64,
                    S <: DiseaseStateSequence,
                    M <: ILM}
   if new_state == State_E
-    lowerbounds = [events.infection[id] - extents.exposure]
+    lowerbounds = [events.infection[id] - extents.exposure
+                   obs.start_time]
     upperbounds = [events.infection[id]]
     path_to = _pathway_to(id, network, depth = 1)
     if length(path_to) > 1
@@ -37,7 +38,8 @@ function _bounds(id::Int64,
     path_from = _pathway_from(id, network, depth = 1)
     if S in [SEIR; SEI]
       lowerbounds = [obs.infection[id] - extents.infection
-                     events.exposure[id]]
+                     events.exposure[id]
+                     obs.start_time]
       upperbounds = [obs.infection[id]
                      events.exposure[id] + extents.exposure]
       if length(path_from) > 1
@@ -45,7 +47,8 @@ function _bounds(id::Int64,
         append!(upperbounds, events.exposure[child_hosts])
       end
     elseif S in [SIR; SI]
-      lowerbounds = [obs.infection[id] - extents.infection]
+      lowerbounds = [obs.infection[id] - extents.infection
+                     obs.start_time]
       upperbounds = [obs.infection[id]]
       path_to = _pathway_to(id, network, depth = 1)
       if length(path_from) > 1
@@ -63,7 +66,8 @@ function _bounds(id::Int64,
   elseif new_state == State_R
     path_from = _pathway_from(id, network, depth = 1)
     lowerbounds = [obs.removal[id] - extents.removal
-                   obs.infection[id]]
+                   obs.infection[id]
+                   obs.start_time]
     upperbounds = [obs.removal[id]]
     if length(path_from) > 1
       child_hosts = path_from[2:end]

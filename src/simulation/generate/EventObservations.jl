@@ -47,7 +47,7 @@ function generate(::Type{EventObservations},
       @debug "Removal observation of i = $i at t = $(round(removal[i], digits=3)) (actual removal at t = $(round(sim.events.removal[i], digits=3)))"
     end
   end
-  return EventObservations{S, M}(infection, removal)
+  return EventObservations{S, M}(infection, removal, start_time = sim.start_time)
 end
 
 function generate(::Type{EventObservations}, 
@@ -64,7 +64,7 @@ function generate(::Type{EventObservations},
     end
     @debug "Infection observation of i = $i at t = $(round(infection[i], digits=3))) (actual infection onset at t = $(round(sim.events.infection[i], digits=3)))"
   end
-  return EventObservations{S, M}(infection)
+  return EventObservations{S, M}(infection, start_time = sim.start_time)
 end
 
 function generate(::Type{EventObservations}, 
@@ -122,10 +122,9 @@ function generate(::Type{EventObservations},
                                infection,
                                sim.transmission_network)
   seq_full = simulate(RNASeq, tree, sim.substitution_model, seq_len)
-  seq_obs = [isnothing(event_nodes[i, 2]) ? nothing : seq_full[event_nodes[i, 2]] for i = eachindex(infection)]
-  return EventObservations{S, M}(infection, removal, seq_obs)
+  seq_obs = [isnothing(event_nodes[i]) ? nothing : seq_full[event_nodes[i]] for i = eachindex(infection)]
+  return EventObservations{S, M}(infection, removal, seq_obs, start_time = sim.start_time)
 end
-
 
 function generate(::Type{EventObservations}, 
                   sim::Simulation{S, M},
@@ -145,8 +144,9 @@ function generate(::Type{EventObservations},
   trees, tree_id, obs_leaf_node_id = generate(Tree,
                                               sim.events,
                                               infection,
-                                              sim.transmission_network)
+                                              sim.transmission_network,
+                                              start_time = sim.start_time)
   seq_full = [simulate(RNASeq, t, sim.substitution_model, seq_len) for t in trees]
   seq_obs = [isnan(infection[i]) ? nothing : seq_full[tree_id[i]][obs_leaf_node_id] for i = eachindex(infection)]
-  return EventObservations{S, M}(infection, seq_obs)
+  return EventObservations{S, M}(infection, seq_obs, start_time = sim.start_time)
 end

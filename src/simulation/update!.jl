@@ -1,5 +1,5 @@
 function update!(s::Simulation, event::AbstractEvent)
-  if _time(event) < s.time
+  if _time(event) < s.simulation_time
     @error "Time of a new event must be >= that of the previous event"
   elseif _time(event) < Inf
     update!(s.events, event)
@@ -19,7 +19,7 @@ function update!(s::Simulation, event::AbstractEvent)
     s.iterations += 1
   end
   # Update simulation time
-  s.time = _time(event)
+  s.simulation_time = _time(event)
   # Return updated Simulation object
   return s
 end

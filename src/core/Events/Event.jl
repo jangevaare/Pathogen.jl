@@ -1,7 +1,6 @@
 abstract type AbstractEvent end
 
-struct NoEvent <: AbstractEvent
-end
+struct NoEvent <: AbstractEvent end
 
 struct Event{S <: DiseaseStateSequence} <: AbstractEvent
   time::Float64
@@ -41,13 +40,13 @@ function _new_transmission(e::Event{S}) where S <: Union{SIR, SI}
   return e.new_state == State_I
 end
 
-function _individual(x::Event{S}) where S <: DiseaseStateSequence
-  return x.individual
-end
+# function _individual(x::Event{S}) where S <: DiseaseStateSequence
+#   return x.individual
+# end
 
-function _new_state(x::Event{S}) where S <: DiseaseStateSequence
-  return x.new_state
-end
+# function _new_state(x::Event{S}) where S <: DiseaseStateSequence
+#   return x.new_state
+# end
 
 function Base.show(io::IO, x::Event{S}) where S <: DiseaseStateSequence
   return print(io, "Transition of individual $(x.individual) into $(x.new_state) state at t = $(x.time)")

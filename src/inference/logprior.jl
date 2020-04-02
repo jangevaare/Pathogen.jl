@@ -1,4 +1,6 @@
-function logprior(rparams::RiskParameters{S}, rpriors::RiskPriors{S}) where S <: DiseaseStateSequence
+function logprior(rparams::RiskParameters{S}, 
+                  rpriors::RiskPriors{S}) where {
+                  S <: DiseaseStateSequence}
   lprior = 0.0
   for i in 1:length(rpriors.sparks)
     lprior == -Inf && break
@@ -34,7 +36,7 @@ end
 function logprior(sm::NucleicAcidSubstitutionModel,
                   sm_priors::Vector{UnivariateDistribution})
   lprior = 0.0
-  for param in [getproperty(x1, θ) for θ in [propertynames(x1)...]], dist in sm_priors
+  for param in [getproperty(sm, θ) for θ in [propertynames(sm)...]], dist in sm_priors
     lprior += Distributions.logpdf(param, dist)
     lprior == -Inf && break
   end
