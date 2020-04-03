@@ -31,7 +31,7 @@ function start!(mcmc::MCMC{S, M};
   if mc !== nothing
     push!(mcmc.markov_chains, mc)
   else
-    @error "Failed to initialize a Markov chain"
+    throw(ErrorException("Failed to initialize a Markov chain"))
   end
   return mcmc
 end

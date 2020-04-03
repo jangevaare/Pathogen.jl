@@ -12,6 +12,11 @@ function _initial_Σsm(mcmc::MCMC{S, M}) where {
   return Float64[i == j ? var(smp[i]) : 0.0 for i in 1:length(smp), j in 1:length(smp)]/(10 * length(smp))
 end
 
+function Base.convert(::Type{Array{Float64, 2}}, sm::Vector{NucleicAcidSubstitutionModel})
+  prop_names = [propertynames(sm[1])...]
+  return [getproperty(sm[i], θ) for i = 1:length(sm), θ in prop_names]
+end
+
 function iterate!(mc::MarkovChain{S, M},
                   mcmc::MCMC{S, M},
                   n::Int64,

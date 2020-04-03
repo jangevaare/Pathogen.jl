@@ -22,5 +22,5 @@ function Base.sum(x::TNDistribution)
 end
 
 function Base.show(io::IO, x::TNDistribution)
-  return print(io, "Transmission network distribution")
+  return print(io, "Transmission Network distribution")
 end

@@ -7,7 +7,7 @@ struct Events{S <: DiseaseStateSequence}
 
   function Events{S}(e::V, i::V, r::V; start_time::Float64=0.0) where {S <: SEIR, V <: Vector{Float64}}
     if length(unique((length.([e; i; r])))) != 1
-      @error "Length of event time vectors must be equal"
+      throw(ErrorException("Length of event time vectors must be equal"))
     end
     return new{S}(e, i, r, start_time, length(i))
   end
@@ -18,7 +18,7 @@ struct Events{S <: DiseaseStateSequence}
 
   function Events{S}(e::V, i::V; start_time::Float64=0.0) where {S <: SEI, V <: Vector{Float64}}
     if length(unique((length.([e; i])))) != 1
-      @error "Length of event time vectors must be equal"
+      throw(ErrorException("Length of event time vectors must be equal"))
     end
     return new{S}(e, i, nothing, start_time, length(i))
   end
@@ -29,7 +29,7 @@ struct Events{S <: DiseaseStateSequence}
 
   function Events{S}(i::V, r::V; start_time::Float64=0.0) where {S <: SIR, V <: Vector{Float64}}
     if length(unique((length.([i; r])))) != 1
-      @error "Length of event time vectors must be equal"
+      throw(ErrorException("Length of event time vectors must be equal"))
     end
     return new{S}(nothing, i, r, start_time, length(i))
   end
@@ -55,7 +55,7 @@ function Events{S}(a::Array{Float64,2}; start_time::Float64=0.0) where S <: Dise
   elseif size(a, 2) == 1
     return Events{S}(a[:,1], start_time=start_time)
   else
-    @error "Invalid array size for construction of an $(Events{S}) object"
+    throw(ErrorException("Invalid array size for construction of an $(Events{S}) object"))
   end
 end
 
@@ -67,7 +67,7 @@ function Events{S}(x::DiseaseStates) where S <: DiseaseStateSequence
         events[j][i] = -Inf
       end
     else
-      @error "Invalid initial state for individual $i"
+      throw(ErrorException("Invalid initial state for individual $i"))
     end
   end
   return events
@@ -85,7 +85,7 @@ function Base.getindex(x::Events{S}, new_state::DiseaseState) where S <: Disease
   elseif new_state == State_R
     return x.removal
   else
-    @error "Unrecognized indexing disease state"
+    throw(ErrorException("Unrecognized indexing disease state"))
   end
 end
 

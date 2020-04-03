@@ -29,7 +29,7 @@ function Base.getindex(x::EventRates{S}, new_state::DiseaseState) where S <: Dis
   elseif new_state == State_R && S <: Union{SEIR, SIR}
     return x.removal
   else
-    @error "Invalid indexing disease state"
+    throw(ErrorException("Invalid indexing disease state"))
   end
 end
 

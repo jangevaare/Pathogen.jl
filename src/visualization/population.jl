@@ -11,10 +11,8 @@ end
 function _ids_by_state(events::Events{S},
                        state::DiseaseState,
                        time::Float64) where {S <: DiseaseStateSequence}
-  if time < 0.0
-    @error "Time must be ≥ 0.0"
-  elseif state ∉ convert(DiseaseStates, S)
-    @error "Invalid state specified"
+  if state ∉ convert(DiseaseStates, S)
+    throw(ErrorException("Invalid state specified"))
   end
   ids = Int64[]
   if state == convert(DiseaseStates, S)[1] # S

@@ -12,7 +12,7 @@ struct EventObservations{S <: DiseaseStateSequence, M <: ILM}
                                    S <: Union{SEIR, SIR}, 
                                    M <: TNILM}
     if length(i) != length(r)
-      @error "Length of infection and removal times must be equal"
+      throw(ErrorException("Length of infection and removal times must be equal"))
     end
     return new{S, M}(i, r, nothing, start_time, length(i))
   end
@@ -36,7 +36,7 @@ struct EventObservations{S <: DiseaseStateSequence, M <: ILM}
                                    S <: Union{SEIR, SIR}, 
                                    M <: PhyloILM}
     if length(unique([length(i); length(r); length(seq)])) != 1
-      @error "Length of infection times, removal times, and genetic sequence vectors must be equal"
+      throw(ErrorException("Length of infection times, removal times, and genetic sequence vectors must be equal"))
     end
     return new{S, M}(i, r, seq, start_time, length(i))
   end
@@ -50,7 +50,7 @@ struct EventObservations{S <: DiseaseStateSequence, M <: ILM}
                                    S <: Union{SEIR, SIR}, 
                                    M <: PhyloILM}
     if length(i) != length(seq)
-      @error "Length of infection time and genetic sequence vectors must be equal"
+      throw(ErrorException("Length of infection time and genetic sequence vectors must be equal"))
     end
     return new{S, M}(i, nothing, seq, start_time, length(i))
   end
@@ -61,7 +61,7 @@ function EventObservations{S, M}(i::Array{Float64, 2};
                                  S <: Union{SEI, SI}, 
                                  M <: TNILM}
   if size(i, 2) != 1
-    @error "Invalid Array dimensions for observations of a $S model"
+    throw(ErrorException("Invalid Array dimensions for observations of a $S model"))
   end
   return EventObservations{S, M}(i[:,1], start_time=start_time)
 end
@@ -71,7 +71,7 @@ function EventObservations{S, M}(ir::Array{Float64, 2};
                                  S <: Union{SEIR, SIR}, 
                                  M <: TNILM}
   if size(ir, 2) != 2
-    @error "Invalid Array dimensions for observations of a $S model"
+    throw(ErrorException("Invalid Array dimensions for observations of a $S model"))
   end
   return EventObservations{S, M}(ir[:, 1], ir[:, 2], start_time=start_time)
 end
@@ -84,7 +84,7 @@ function EventObservations{S, M}(i::Array{Float64, 2},
                                  S <: Union{SEI, SI}, 
                                  M <: PhyloILM}
   if size(i, 2) != 1
-    @error "Invalid Array dimensions for observations of a $S model"
+    throw(ErrorException("Invalid Array dimensions for observations of a $S model"))
   end
   return EventObservations{S, M}(i[:,1], seq, start_time=start_time)
 end
@@ -97,7 +97,7 @@ function EventObservations{S, M}(ir::Array{Float64, 2},
                                  S <: Union{SEIR, SIR}, 
                                  M <: PhyloILM}
   if size(ir, 2) != 2
-    @error "Invalid Array dimensions for observations of a $S model"
+    throw(ErrorException("Invalid Array dimensions for observations of a $S model"))
   end
   return EventObservations{S, M}(ir[:, 1], ir[:, 2], seq, start_time=start_time)
 end

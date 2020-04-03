@@ -7,10 +7,8 @@ end
 function _count_by_state(events::Events{S},
                          state::DiseaseState,
                          time::Float64) where {S <: DiseaseStateSequence}
-  if time < 0.0
-    @error "Time must be ≥ 0.0"
-  elseif state ∉ convert(DiseaseStates, S)
-    @error "Invalid state specified"
+  if state ∉ convert(DiseaseStates, S)
+    throw(ErrorException("Invalid state specified"))
   end
   n_ids = 0
   if state == convert(DiseaseStates, S)[1] # S
@@ -33,7 +31,7 @@ function _epidemic_curve(events::Events{S},
                          min::Float64,
                          max::Float64) where {S <: DiseaseStateSequence}
   if min >= max
-    @error "Minimum time must be less than maximum time"
+    throw(ErrorException("Minimum time must be less than maximum time"))
   end
   local times
   if state == convert(DiseaseStates, S)[1]
@@ -45,7 +43,7 @@ function _epidemic_curve(events::Events{S},
   elseif state == convert(DiseaseStates, S)[end]
     times = events[state]
   else
-    @error "Invalid state specified"
+    throw(ErrorException("Invalid state specified"))
   end
   times = times[Ref(min) .< times .< Ref(max)]
   sort!(times)

@@ -35,9 +35,9 @@ mutable struct Simulation{S <: DiseaseStateSequence, M <: ILM}
                             M <: TNILM}
     @debug "Initializing $S $M Simulation with the following starting states:" states
     if length(states) != pop.individuals
-      @error "Length of initial disease state vector must match number of individuals"
+      throw(ErrorException("Length of initial disease state vector must match number of individuals"))
     elseif !all(in.(states, Ref(convert(DiseaseStates, S))))
-      @error "All states in initial disease state vector must be valid within specified epidemic model"
+      throw(ErrorException("All states in initial disease state vector must be valid within specified epidemic model"))
     end
     tr = initialize(TransmissionRates, states, pop, rf, rp)
     rates = initialize(EventRates, tr, states, pop, rf, rp)
@@ -54,9 +54,9 @@ mutable struct Simulation{S <: DiseaseStateSequence, M <: ILM}
                             M <: TNILM}
     @debug "Initializing $S $M Simulation with the following starting states:" states
     if length(states) != pop.individuals
-      @error "Length of initial disease state vector must match number of individuals"
+      throw(ErrorException("Length of initial disease state vector must match number of individuals"))
     elseif !all(in.(states, Ref(convert(DiseaseStates, S))))
-      @error "All states in initial disease state vector must be valid within specified epidemic model"
+      throw(ErrorException("All states in initial disease state vector must be valid within specified epidemic model"))
     end
     tr = initialize(TransmissionRates, states, pop, rf, rp)
     rates = initialize(EventRates, tr, states, pop, rf, rp)
@@ -90,9 +90,9 @@ function Simulation{S, M}(pop::Population,
                             M <: PhyloILM}
     @debug "Initializing $S $M Simulation with the following starting states:" states
     if length(states) != pop.individuals
-      @error "Length of initial disease state vector must match number of individuals"
+      throw(ErrorException("Length of initial disease state vector must match number of individuals"))
     elseif !all(in.(states, Ref(convert(DiseaseStates, S))))
-      @error "All states in initial disease state vector must be valid within specified epidemic model"
+      throw(ErrorException("All states in initial disease state vector must be valid within specified epidemic model"))
     end
     tr = initialize(TransmissionRates, states, pop, rf, rp)
     rates = initialize(EventRates, tr, states, pop, rf, rp)
@@ -110,9 +110,9 @@ function Simulation{S, M}(pop::Population,
                             M <: PhyloILM}
     @debug "Initializing $S $M Simulation with the following starting states:" states
     if length(states) != pop.individuals
-      @error "Length of initial disease state vector must match number of individuals"
+      throw(ErrorException("Length of initial disease state vector must match number of individuals"))
     elseif !all(in.(states, Ref(convert(DiseaseStates, S))))
-      @error "All states in initial disease state vector must be valid within specified epidemic model"
+      throw(ErrorException("All states in initial disease state vector must be valid within specified epidemic model"))
     end
     tr = initialize(TransmissionRates, states, pop, rf, rp)
     rates = initialize(EventRates, tr, states, pop, rf, rp)

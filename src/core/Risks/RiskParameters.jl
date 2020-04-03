@@ -36,7 +36,7 @@ function Base.similar(x::RiskParameters{S},
                       S <: DiseaseStateSequence}
   indices = _indices(x, zeros=false)
   if indices[end] != length(v)
-    @error "Incompatiable parameter vector"
+    throw(ErrorException("Incompatiable parameter vector"))
   end
   if S == SEIR
     return RiskParameters{S}(v[1:(indices[1])],

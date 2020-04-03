@@ -47,7 +47,7 @@ function initialize(::Type{MarkovChain},
                     S <: DiseaseStateSequence,
                     M <: ILM}
   if attempts <= 0
-    @error "Must have at least 1 initialization attempt"
+    throw(ErrorException("Must have at least 1 initialization attempt"))
   end
   local markov_chain
   max_lposterior = -Inf
@@ -60,7 +60,7 @@ function initialize(::Type{MarkovChain},
     put!(progress_channel, true)
   end
   if max_lposterior == -Inf
-    @error "Failed to initialize Markov Chain"
+    throw(ErrorException("Failed to initialize Markov Chain"))
     markov_chain = nothing
   end
   return markov_chain
@@ -73,7 +73,7 @@ function initialize(::Type{MarkovChain},
                     S <: DiseaseStateSequence,
                     M <: ILM}
   if attempts <= 0
-    @error "Must have at least 1 initialization attempt"
+    throw(ErrorException("Must have at least 1 initialization attempt"))
   end
   max_lposterior = -Inf
   local markov_chain
@@ -88,7 +88,7 @@ function initialize(::Type{MarkovChain},
   end
   finish!(pmeter)
   if max_lposterior == -Inf
-    @error "Failed to initialize Markov Chain"
+    throw(ErrorException("Failed to initialize Markov Chain"))
     markov_chain = nothing
   end
   return markov_chain

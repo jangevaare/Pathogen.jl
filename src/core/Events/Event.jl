@@ -11,7 +11,7 @@ struct Event{S <: DiseaseStateSequence} <: AbstractEvent
     if new_state in convert(DiseaseStates, S)
       return new{S}(time, id, new_state)
     else
-      @error "Invalid disease state provided for $S model."
+      throw(ErrorException("Invalid disease state provided for $S model."))
     end
   end
 

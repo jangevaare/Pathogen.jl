@@ -1,6 +1,6 @@
 function update!(s::Simulation, event::AbstractEvent)
   if _time(event) < s.simulation_time
-    @error "Time of a new event must be >= that of the previous event"
+    throw(ErrorException("Time of a new event must be >= that of the previous event"))
   elseif _time(event) < Inf
     update!(s.events, event)
     update!(s.disease_states, event)

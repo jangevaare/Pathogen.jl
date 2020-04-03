@@ -10,8 +10,8 @@ include(joinpath(@__DIR__, "risk_functions.jl"))
 # Set RNG seed
 Random.seed!(5432)
 
-# using Logging
-# global_logger(ConsoleLogger(stderr, LogLevel(-10000)))
+using Logging
+global_logger(ConsoleLogger(stderr, LogLevel(-10000)))
 
 # Define population
 n = 25
@@ -88,8 +88,8 @@ pop = Population(risks,
   end
   iterate!(mcmc, 100, 0.5)
   @test mcmc.markov_chains[1].iterations .== 100
-  @test sum(TNPosterior(mcmc)) ≈ sum(obs.infection .< Inf)-1
   tnd = TNDistribution(50:100, mcmc)
+  @test sum(tnd) ≈ sum(-Inf .< obs.infection .< Inf)
   mcmc = MCMC(obs, ee, pop, [State_I; fill(State_S, n-1)], rf, rpriors, tnprior=tnd)
   start!(mcmc, attempts=100)
   iterate!(mcmc, 100, 0.5)
@@ -154,8 +154,8 @@ end
   end
   iterate!(mcmc, 100, 0.5)
   @test mcmc.markov_chains[1].iterations .== 100
-  @test sum(TNPosterior(mcmc)) ≈ sum(obs.infection .< Inf)-1
   tnd = TNDistribution(50:100, mcmc)
+  @test sum(tnd) ≈ sum(-Inf .< obs.infection .< Inf)
   mcmc = MCMC(obs, ee, pop, rf, rpriors, tnprior=tnd)
   start!(mcmc, attempts=50)
   iterate!(mcmc, 50, 0.5)
@@ -220,8 +220,8 @@ end
   end
   iterate!(mcmc, 100, 0.5)
   @test mcmc.markov_chains[1].iterations .== 100
-  @test sum(TNPosterior(mcmc)) ≈ sum(obs.infection .< Inf)-1
   tnd = TNDistribution(50:100, mcmc)
+  @test sum(tnd) ≈ sum(-Inf .< obs.infection .< Inf)
   mcmc = MCMC(obs, ee, pop, rf, rpriors, tnprior=tnd)
   start!(mcmc, attempts=50)
   iterate!(mcmc, 50, 0.5)
@@ -277,8 +277,8 @@ end
   end
   iterate!(mcmc, 100, 0.5)
   @test mcmc.markov_chains[1].iterations .== 100
-  @test sum(TNPosterior(mcmc)) ≈ sum(obs.infection .< Inf)-1
   tnd = TNDistribution(50:100, mcmc)
+  @test sum(tnd) ≈ sum(-Inf .< obs.infection .< Inf)
   mcmc = MCMC(obs, ee, pop, rf, rpriors, tnprior=tnd)
   start!(mcmc, attempts=50)
   iterate!(mcmc, 50, 0.5)
@@ -353,9 +353,9 @@ end
   end
   iterate!(mcmc, 100, 0.5)
   @test mcmc.markov_chains[1].iterations .== 100
-  @test sum(TNPosterior(mcmc)) ≈ sum(obs.infection .< Inf)-1
   tnd = TNDistribution(50:100, mcmc)
-  mcmc = MCMC(obs, ee, pop, rf, rpriors, tnprior=tnd)
+  @test sum(tnd) ≈ sum(-Inf .< obs.infection .< Inf)
+  mcmc = MCMC(obs, ee, pop, rf, rpriors, JC69rel, UnivariateDistribution[], tnprior=tnd)
   start!(mcmc, attempts=100)
   iterate!(mcmc, 100, 0.5)
   @test length(mcmc.markov_chains) == 1
@@ -420,9 +420,9 @@ end
   end
   iterate!(mcmc, 100, 0.5)
   @test mcmc.markov_chains[1].iterations .== 100
-  @test sum(TNPosterior(mcmc)) ≈ sum(obs.infection .< Inf)-1
   tnd = TNDistribution(50:100, mcmc)
-  mcmc = MCMC(obs, ee, pop, rf, rpriors, tnprior=tnd)
+  @test sum(tnd) ≈ sum(-Inf .< obs.infection .< Inf)
+  mcmc = MCMC(obs, ee, pop, rf, rpriors, JC69rel,  UnivariateDistribution[], tnprior=tnd)
   start!(mcmc, attempts=50)
   iterate!(mcmc, 50, 0.5)
   @test length(mcmc.markov_chains) == 1
@@ -487,9 +487,9 @@ end
   end
   iterate!(mcmc, 100, 0.5)
   @test mcmc.markov_chains[1].iterations .== 100
-  @test sum(TNPosterior(mcmc)) ≈ sum(obs.infection .< Inf)-1
   tnd = TNDistribution(50:100, mcmc)
-  mcmc = MCMC(obs, ee, pop, rf, rpriors, tnprior=tnd)
+  @test sum(tnd) ≈ sum(-Inf .< obs.infection .< Inf)
+  mcmc = MCMC(obs, ee, pop, rf, rpriors, JC69rel, UnivariateDistribution[], tnprior=tnd)
   start!(mcmc, attempts=50)
   iterate!(mcmc, 50, 0.5)
   @test length(mcmc.markov_chains) == 1
@@ -545,9 +545,9 @@ end
   end
   iterate!(mcmc, 100, 0.5)
   @test mcmc.markov_chains[1].iterations .== 100
-  @test sum(TNPosterior(mcmc)) ≈ sum(obs.infection .< Inf)-1
   tnd = TNDistribution(50:100, mcmc)
-  mcmc = MCMC(obs, ee, pop, rf, rpriors, tnprior=tnd)
+  @test sum(tnd) ≈ sum(-Inf .< obs.infection .< Inf)
+  mcmc = MCMC(obs, ee, pop, rf, rpriors, JC69rel, UnivariateDistribution[], tnprior=tnd)
   start!(mcmc, attempts=50)
   iterate!(mcmc, 50, 0.5)
   @test length(mcmc.markov_chains) == 1

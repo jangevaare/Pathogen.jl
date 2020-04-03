@@ -17,7 +17,7 @@ function update!(mc::MarkovChain{S, M},
   aug_order = sample(event_indices, length(event_indices), replace=false)
   @debug "$(length(aug_order)) events to augment"
   if event_batches < 0
-    @error "Cannot have negative amount of event batches"
+    throw(ErrorException("Cannot have negative amount of event batches"))
   end
   if event_batches > length(aug_order)
     @warn "More event batches than there are events to augment ($(event_batches) > $(length(aug_order))), setting to maximum ($(length(aug_order)))"
@@ -151,7 +151,7 @@ function update!(mc::MarkovChain{S, M},
   aug_order = sample(event_indices, length(event_indices), replace=false)
   @debug "$(length(aug_order)) events to augment"
   if event_batches < 0
-    @error "Cannot have negative amount of event batches"
+    throw(ErrorException("Cannot have negative amount of event batches"))
   end
   if event_batches > length(aug_order)
     @warn "More event batches than there are events to augment ($(event_batches) > $(length(aug_order))), setting to maximum ($(length(aug_order)))"
@@ -240,10 +240,11 @@ function update!(mc::MarkovChain{S, M},
                                                      transmissions_output = true,
                                                      early_decision_value = ll_acceptance_threshold)
       if proposed_llikelihood > ll_acceptance_threshold
-        if i == event_batches + 2 | (i <= event_batches & !condition_on_network)
-          proposed_network = generate(TransmissionNetwork, tr, mcmc, tx)
+        if (i == event_batches + 2) || (i <= event_batches&& !condition_on_network)
+          proposed_network = generate(TransmissionNetwork, tnr, mcmc, tx)
+          @debug "Generating a Transmission Network proposal" ProposedNetwork = proposed_network
         end
-        @debug "Generating a Tree for proposed network and event times" Network = proposed_network
+        @debug "Generating a Tree for proposed network and event times" ProposedNetwork = proposed_network
         tree, obs_nodes = generate(Tree, proposed_events, mcmc.event_observations, proposed_network)
         leaf_data = Dict{Int64, RNASeq}()
         for k = eachindex(obs_nodes)

@@ -12,7 +12,7 @@ struct TransmissionRates
   function TransmissionRates(e::Vector{Float64},
                              i::Array{Float64, 2})
     @boundscheck if !(length(e) == size(i, 1) == size(i, 2))
-      @error "Argument dimensions mismatched"
+      throw(DimensionMismatch("Argument dimensions mismatched"))
     end
     return new(e, i, length(e))
   end
@@ -29,7 +29,7 @@ end
 
 function Base.sum(x::TransmissionRates, i::Int64)
   if i < 1 | i > x.individuals
-    @error "Invalid individual identifier" i
+    throw(ErrorException("Invalid individual identifier $i"))
   end
   return x.external[i] + sum(x.internal[:, i])
 end
