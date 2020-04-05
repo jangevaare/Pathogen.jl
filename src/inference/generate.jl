@@ -37,10 +37,11 @@ function generate(::Type{Transmission},
 end
 
 function generate(::Type{TransmissionNetwork},
+                  starting_states::Vector{DiseaseState},
                   tr::TransmissionRates,
                   tnd::Union{Nothing, TNDistribution},
-                  ids::Vector{Int64}) where T <: EpidemicModel
-  tn = TransmissionNetwork(tr.individuals)                
+                  ids::Vector{Int64})
+  tn = TransmissionNetwork(starting_states)                
   for i in ids
     tx = generate(Transmission, tr, tnd, i)
     update!(tn, tx)
@@ -51,8 +52,8 @@ end
 function generate(::Type{TransmissionNetwork},
                   tr::TransmissionRates,
                   mcmc::MCMC,
-                  ids::Vector{Int64}) where T <: EpidemicModel
-  return generate(TransmissionNetwork, tr, mcmc.transmission_network_prior, ids)
+                  ids::Vector{Int64})
+  return generate(TransmissionNetwork, mcmc.starting_states, tr, mcmc.transmission_network_prior, ids)
 end
 
 function generate(::Type{Events},

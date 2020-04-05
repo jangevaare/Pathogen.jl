@@ -17,7 +17,7 @@ mutable struct Simulation{T <: EpidemicModel}
     tr = initialize(TransmissionRates, states, pop, rf, rp)
     rates = initialize(EventRates, tr, states, pop, rf, rp)
     events = Events{T}(pop.individuals)
-    net = TransmissionNetwork(pop.individuals)
+    net = TransmissionNetwork(states)
     return new{T}(0.0, 0, pop, rf, rp, states, tr, rates, events, net)
   end
 
@@ -35,7 +35,7 @@ mutable struct Simulation{T <: EpidemicModel}
     tr = initialize(TransmissionRates, states, pop, rf, rp)
     rates = initialize(EventRates, tr, states, pop, rf, rp)
     events = Events{T}(states)
-    net = TransmissionNetwork(pop.individuals)
+    net = TransmissionNetwork(states)
     return new{T}(time, 0, pop, rf, rp, copy(states), tr, rates, events, net)
   end
 
@@ -52,7 +52,7 @@ mutable struct Simulation{T <: EpidemicModel}
     tr = initialize(TransmissionRates, states, pop, rf, rp)
     rates = initialize(EventRates, tr, states, pop, rf, rp)
     events = Events{T}(states)
-    net = TransmissionNetwork(pop.individuals)
+    net = TransmissionNetwork(states)
     return new{T}(0.0, 0, pop, rf, rp, copy(states), tr, rates, events, net)
   end
 end
