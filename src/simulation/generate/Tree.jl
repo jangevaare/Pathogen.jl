@@ -1,8 +1,10 @@
 function _pathway_from(id::Int64,
                        network::TransmissionNetwork;
-                       depth::Real=Inf)
-  path = Int64[]
+                       depth::Real=Inf,
+                       include_id::Bool=true)
+  local path
   if network.external[id] | any(network.internal[:, id])
+    path = Int64[]
     push!(path, id)
     path_lengths = [0]
     while (length(path) > path_lengths[end]) & (depth >= length(path_lengths))
@@ -11,25 +13,55 @@ function _pathway_from(id::Int64,
         append!(path, findall(network.internal[j, :]))
       end
     end
+    if include_id == false
+      path = path[2:end]
+    end
+  else
+    path = nothing
   end
-  @debug "_pathway_from: transmission pathway from $id: $path"
+  @debug "Transmission pathway from Individual $id: $path"
   return path
 end
 
+function _pathway_from(id::Nothing,
+                       network::TransmissionNetwork;
+                       depth::Real=Inf,
+                       include_id::Bool=true)
+  path = Union{Nothing, Int64}[nothing]
+  append!(path, findall(network.external))
+  path_lengths = [0; 1]
+  while (length(path) > path_lengths[end]) & (depth >= length(path_lengths)-1)
+    push!(path_lengths, length(path))
+    for j in path[(path_lengths[end-1]+1):path_lengths[end]]
+      append!(path, findall(network.internal[j, :]))
+    end
+  end
+  if include_id == false
+    path = path[2:end]
+  end
+  @debug "Transmission pathway from external source: $path"
+  return path
+end
+  
 
 function _pathway_to(id::Int64,
                      network::TransmissionNetwork;
-                     depth::Real=Inf)
-  path = Union{Nothing, Int64}[id]
+                     depth::Real=Inf,
+                     include_id::Bool=true)
+  local path
   if network.external[id] || any(network.internal[:, id])
+    path = Union{Nothing, Int64}[id]
     next_id = findfirst(network.internal[:, id])
     while (length(path) < depth) && (next_id !== nothing)
       push!(path, next_id)
       next_id = findfirst(network.internal[:, path[end]])
     end
     push!(path, next_id)
+    if include_id == false
+      path = path[2:end]
+    end
   else
-    push!(path, nothing)
+    path = nothing
   end
   @debug "Transmission pathway to Individual $id: $path"
   return path
@@ -74,10 +106,10 @@ function generate(::Type{Tree},
   event_lookup = CartesianIndices(size(event_times))
   @debug "event_nodes, event_order, and event_lookup created" ArraySize = size(event_times)
 
-  pathways = [_pathway_from(i, network) for i = 1:events.individuals]
+  pathways = [_pathway_from(i, network, include_id = true) for i = 1:events.individuals]
 
   # Determine significant transmissions (results in a observation in the future)
-  significant_transmissions = (event_times[:, 1] .== -Inf) .| [any(event_times[pathways[i], 2] .>= event_times[i, 1]) for i = 1:events.individuals]
+  significant_transmissions = (event_times[:, 1] .== -Inf) .| [pathways[i] !== nothing && any(event_times[pathways[i], 2] .>= event_times[i, 1]) for i = 1:events.individuals]
   @debug "Significant transmitters" significant_transmissions
 
   # Iterate through all events to build tree

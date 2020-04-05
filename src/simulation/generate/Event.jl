@@ -11,7 +11,7 @@ function generate(::Type{Event},
     return NoEvent()
   else
     # Generate new state
-    new_state = sample(convert(DiseaseStates, S)[2:end], totals)
+    new_state = sample(convert(DiseaseStates, S)[2:end], Weights(totals))
     # Generate event individual
     id = sample(1:rates.individuals, Weights(rates[new_state]))
     return Event{S}(time + rand(Exponential(1.0 / sum(totals))), id, new_state)

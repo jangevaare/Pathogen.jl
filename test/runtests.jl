@@ -8,7 +8,7 @@ using Test, Distributed, Random, LinearAlgebra, Distances, Pathogen
 include(joinpath(@__DIR__, "risk_functions.jl"))
 
 # Set RNG seed
-# Random.seed!(54321)
+Random.seed!(54321)
 
 # using Logging
 # global_logger(ConsoleLogger(stderr, LogLevel(-10000)))
@@ -94,6 +94,15 @@ pop = Population(risks,
   start!(mcmc, attempts=100)
   iterate!(mcmc, 100, 0.5)
   @test length(mcmc.markov_chains) == 1
+
+  for tn in [mcmc.markov_chains[1].transmission_network[1]; mcmc.markov_chains[1].transmission_network[end]]
+    for i = 1:n
+      pt = Pathogen._pathway_to(i, tn, depth=1, include_id = false)
+      if pt !== nothing
+        @test i in Pathogen._pathway_from(pt[1], tn, depth=1, include_id = false)
+      end
+    end
+  end
 end
 
 @testset "SEI Transmission Network ILM" begin
@@ -160,6 +169,15 @@ end
   start!(mcmc, attempts=50)
   iterate!(mcmc, 50, 0.5)
   @test length(mcmc.markov_chains) == 1
+
+  for tn in [mcmc.markov_chains[1].transmission_network[1]; mcmc.markov_chains[1].transmission_network[end]]
+    for i = 1:n
+      pt = Pathogen._pathway_to(i, tn, depth=1, include_id = false)
+      if pt !== nothing
+        @test i in Pathogen._pathway_from(pt[1], tn, depth=1, include_id = false)
+      end
+    end
+  end
 end
 
 
@@ -226,6 +244,15 @@ end
   start!(mcmc, attempts=50)
   iterate!(mcmc, 50, 0.5)
   @test length(mcmc.markov_chains) == 1
+
+  for tn in [mcmc.markov_chains[1].transmission_network[1]; mcmc.markov_chains[1].transmission_network[end]]
+    for i = 1:n
+      pt = Pathogen._pathway_to(i, tn, depth=1, include_id = false)
+      if pt !== nothing
+        @test i in Pathogen._pathway_from(pt[1], tn, depth=1, include_id = false)
+      end
+    end
+  end
 end
 
 @testset "SI Transmission Network ILM" begin
@@ -283,6 +310,15 @@ end
   start!(mcmc, attempts=50)
   iterate!(mcmc, 50, 0.5)
   @test length(mcmc.markov_chains) == 1
+
+  for tn in [mcmc.markov_chains[1].transmission_network[1]; mcmc.markov_chains[1].transmission_network[end]]
+    for i = 1:n
+      pt = Pathogen._pathway_to(i, tn, depth=1, include_id = false)
+      if pt !== nothing
+        @test i in Pathogen._pathway_from(pt[1], tn, depth=1, include_id = false)
+      end
+    end
+  end
 end
 
 # using Logging
@@ -362,6 +398,15 @@ end
   start!(mcmc, attempts=100)
   iterate!(mcmc, 100, 0.5)
   @test length(mcmc.markov_chains) == 1
+
+  for tn in [mcmc.markov_chains[1].transmission_network[1]; mcmc.markov_chains[1].transmission_network[end]]
+    for i = 1:n
+      pt = Pathogen._pathway_to(i, tn, depth=1, include_id = false)
+      if pt !== nothing
+        @test i in Pathogen._pathway_from(pt[1], tn, depth=1, include_id = false)
+      end
+    end
+  end
 end
 
 @testset "SEI Phylodynamic ILM" begin
@@ -429,6 +474,15 @@ end
   start!(mcmc, attempts=50)
   iterate!(mcmc, 50, 0.5)
   @test length(mcmc.markov_chains) == 1
+
+  for tn in [mcmc.markov_chains[1].transmission_network[1]; mcmc.markov_chains[1].transmission_network[end]]
+    for i = 1:n
+      pt = Pathogen._pathway_to(i, tn, depth=1, include_id = false)
+      if pt !== nothing
+        @test i in Pathogen._pathway_from(pt[1], tn, depth=1, include_id = false)
+      end
+    end
+  end
 end
 
 
@@ -496,6 +550,15 @@ end
   start!(mcmc, attempts=50)
   iterate!(mcmc, 50, 0.5)
   @test length(mcmc.markov_chains) == 1
+
+  for tn in [mcmc.markov_chains[1].transmission_network[1]; mcmc.markov_chains[1].transmission_network[end]]
+    for i = 1:n
+      pt = Pathogen._pathway_to(i, tn, depth=1, include_id = false)
+      if pt !== nothing
+        @test i in Pathogen._pathway_from(pt[1], tn, depth=1, include_id = false)
+      end
+    end
+  end
 end
 
 @testset "SI Phylodynamic ILM" begin
@@ -554,4 +617,13 @@ end
   start!(mcmc, attempts=50)
   iterate!(mcmc, 50, 0.5)
   @test length(mcmc.markov_chains) == 1
+
+  for tn in [mcmc.markov_chains[1].transmission_network[1]; mcmc.markov_chains[1].transmission_network[end]]
+    for i = 1:n
+      pt = Pathogen._pathway_to(i, tn, depth=1, include_id = false)
+      if pt !== nothing
+        @test i in Pathogen._pathway_from(pt[1], tn, depth=1, include_id = false)
+      end
+    end
+  end
 end

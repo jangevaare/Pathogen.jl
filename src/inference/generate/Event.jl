@@ -9,50 +9,47 @@ function _bounds(id::Int64,
   if new_state == State_E
     lowerbounds = [events.infection[id] - extents.exposure]
     upperbounds = [events.infection[id]]
-    parent_host = _source(id, network)
-    if parent_host !== nothing
-      push!(lowerbounds, events.infection[parent_host])
-      if (S == SEIR)&& !isnan(events.removal[parent_host])
-        push!(upperbounds, events.removal[parent_host])
+    source = _source(id, network)
+    if source !== nothing
+      push!(lowerbounds, events.infection[source])
+      if (S == SEIR) && !isnan(events.removal[source])
+        push!(upperbounds, events.removal[source])
       end
     end
   elseif new_state == State_I
-    path_from = _pathway_from(id, network, depth = 1)
+    path_from = _pathway_from(id, network, depth = 1, include_id = false)
     if S in [SEIR; SEI]
       lowerbounds = [obs.infection[id] - extents.infection
                      events.exposure[id]]
       upperbounds = [obs.infection[id]
                      events.exposure[id] + extents.exposure]
-      if length(path_from) > 1
-        child_hosts = path_from[2:end]
-        append!(upperbounds, events.exposure[child_hosts])
+      if length(path_from) > 0
+        append!(upperbounds, events.exposure[path_from])
       end
     elseif S in [SIR; SI]
       lowerbounds = [obs.infection[id] - extents.infection]
       upperbounds = [obs.infection[id]]
-      if length(path_from) > 1
-        child_hosts = path_from[2:end]
-        append!(upperbounds, events.infection[child_hosts])
+      if length(path_from) > 0
+        append!(upperbounds, events.infection[path_from])
       end
-      parent_host = _source(id, network)
-      if parent_host !== nothing
-        push!(lowerbounds, events.infection[parent_host])
-        if (S == SIR)&& !isnan(events.removal[parent_host])
-          push!(upperbounds, events.removal[parent_host])
+      source = _source(id, network)
+      if source !== nothing
+        push!(lowerbounds, events.infection[source])
+        if (S == SIR) && !isnan(events.removal[source])
+          push!(upperbounds, events.removal[source])
         end
       end
     end
   elseif new_state == State_R
-    path_from = _pathway_from(id, network, depth = 1)
+    path_from = _pathway_from(id, network, depth = 1, include_id = false)
     lowerbounds = [obs.removal[id] - extents.removal
                    obs.infection[id]]
     upperbounds = [obs.removal[id]]
-    if length(path_from) > 1
-      child_hosts = path_from[2:end]
+    if length(path_from) > 0
       if S == SEIR
-        append!(lowerbounds, events.exposure[child_hosts])
+        append!(lowerbounds, events.exposure[path_from])
       elseif S == SIR
-        append!(lowerbounds, events.infection[child_hosts])
+        append!(lowerbounds, events.infection[path_from])
       end
     end
   end
