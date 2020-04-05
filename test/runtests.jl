@@ -93,6 +93,14 @@ pop = Population(risks,
   start!(mcmc, attempts=100)
   iterate!(mcmc, 100, 0.5)
   @test length(mcmc.markov_chains) == 1
+
+  tn = mcmc.markov_chains[1].transmission_network[end]
+  for i = 1:25
+    pt = Pathogen._pathway_to(i, tn, depth=1)
+    if length(pt) >= 2
+      @test i in Pathogen._pathway_from(pt[2], tn, depth=1)
+    end
+  end
 end
 
 @testset "SEI Model" begin
@@ -159,6 +167,14 @@ end
   start!(mcmc, attempts=50)
   iterate!(mcmc, 50, 0.5)
   @test length(mcmc.markov_chains) == 1
+
+  tn = mcmc.markov_chains[1].transmission_network[end]
+  for i = 1:25
+    pt = Pathogen._pathway_to(i, tn, depth=1)
+    if length(pt) >= 2
+      @test i in Pathogen._pathway_from(pt[2], tn, depth=1)
+    end
+  end
 end
 
 
@@ -226,6 +242,14 @@ end
   start!(mcmc, attempts=50)
   iterate!(mcmc, 50, 0.5)
   @test length(mcmc.markov_chains) == 1
+
+  tn = mcmc.markov_chains[1].transmission_network[end]
+  for i = 1:25
+    pt = Pathogen._pathway_to(i, tn, depth=1)
+    if length(pt) >= 2
+      @test i in Pathogen._pathway_from(pt[2], tn, depth=1)
+    end
+  end
 end
 
 @testset "SI Model" begin
@@ -283,4 +307,12 @@ end
   start!(mcmc, attempts=50)
   iterate!(mcmc, 50, 0.5)
   @test length(mcmc.markov_chains) == 1
+
+  tn = mcmc.markov_chains[1].transmission_network[end]
+  for i = 1:25
+    pt = Pathogen._pathway_to(i, tn, depth=1)
+    if length(pt) >= 2
+      @test i in Pathogen._pathway_from(pt[2], tn, depth=1)
+    end
+  end
 end
