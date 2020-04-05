@@ -27,7 +27,7 @@ function loglikelihood(rp::RiskParameters{S},
     new_state = convert(DiseaseStates, S)[state_index+1]
     time = s.events[new_state][id]
     if time == -Inf
-      @debug "Skipping event $i" Event{S}(time, id, new_state)
+      @debug "Skipping initial event $i" Event{S}(time, id, new_state)
       continue
     elseif isnan(time)
       @debug "Loglikelihood calculation complete!"

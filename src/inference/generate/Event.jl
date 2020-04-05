@@ -1,19 +1,3 @@
-function _pathway_to(id::Int64,
-                     network::TransmissionNetwork;
-                     depth::Real=Inf)
-  path = Int64[]
-  if network.external[id] | any(network.internal[:, id])
-    push!(path, id)
-    next_id = findfirst(network.internal[:, id])
-    while (length(path) <= depth)&& (typeof(next_id) != Nothing)
-      push!(path, next_id)
-      next_id = findfirst(network.internal[:, path[end]])
-    end
-  end
-  @debug "_pathway_to: transmission pathway to $id: $path"
-  return path
-end
-
 function _bounds(id::Int64,
                  new_state::DiseaseState,
                  extents::EventExtents{S},
@@ -25,9 +9,8 @@ function _bounds(id::Int64,
   if new_state == State_E
     lowerbounds = [events.infection[id] - extents.exposure]
     upperbounds = [events.infection[id]]
-    path_to = _pathway_to(id, network, depth = 1)
-    if length(path_to) > 1
-      parent_host = path_to[2]
+    parent_host = _source(id, network)
+    if parent_host !== nothing
       push!(lowerbounds, events.infection[parent_host])
       if (S == SEIR)&& !isnan(events.removal[parent_host])
         push!(upperbounds, events.removal[parent_host])
@@ -47,13 +30,12 @@ function _bounds(id::Int64,
     elseif S in [SIR; SI]
       lowerbounds = [obs.infection[id] - extents.infection]
       upperbounds = [obs.infection[id]]
-      path_to = _pathway_to(id, network, depth = 1)
       if length(path_from) > 1
         child_hosts = path_from[2:end]
         append!(upperbounds, events.infection[child_hosts])
       end
-      if length(path_to) > 1
-        parent_host = path_to[2]
+      parent_host = _source(id, network)
+      if parent_host !== nothing
         push!(lowerbounds, events.infection[parent_host])
         if (S == SIR)&& !isnan(events.removal[parent_host])
           push!(upperbounds, events.removal[parent_host])

@@ -29,7 +29,7 @@ function generate(::Type{EventObservations},
     for i in findall(.!isnan.(sim.events.infection))
       if sim.events.infection[i] == -Inf
         infection[i] = -Inf
-        if sim.events.removal == -Inf
+        if sim.events.removal[i] == -Inf
           removal[i] = -Inf
         end
       else
@@ -80,17 +80,17 @@ function generate(::Type{EventObservations},
   if force
     for i in findall(.!isnan.(sim.events.infection))
       if sim.events.infection[i] == -Inf
-        infection[i] = NaN
+        infection[i] = -Inf
         if sim.events.removal[i] == -Inf
-          removal[i] = NaN
+          removal[i] = -Inf
+        elseif isnan(sim.events.removal[i])
+          infection[i] = sim.events.infection[i] + rand(delay_infection)
+        elseif sim.events.removal[i] > -Inf
+          infection_delay_ub = sim.events.removal[i] - sim.events.infection[i]
+          infection[i] = sim.events.infection[i] +
+                         rand(Truncated(delay_infection, 0.0, infection_delay_ub))
+          removal[i] = sim.events.removal[i] + rand(delay_removal)
         end
-      elseif isnan(sim.events.removal[i])
-        infection[i] = sim.events.infection[i] + rand(delay_infection)
-      elseif sim.events.removal[i] > -Inf
-        infection_delay_ub = sim.events.removal[i] - sim.events.infection[i]
-        infection[i] = sim.events.infection[i] +
-                       rand(Truncated(delay_infection, 0.0, infection_delay_ub))
-        removal[i] = sim.events.removal[i] + rand(delay_removal)
       end
       @debug "Infection observation of i = $i at t = $(round(infection[i], digits=3)) (actual infection onset at t = $(round(sim.events.infection[i], digits=3)))"
       @debug "Removal observation of i = $i at t = $(round(removal[i], digits=3)) (actual removal at t = $(round(sim.events.removal[i], digits=3)))"
@@ -98,9 +98,9 @@ function generate(::Type{EventObservations},
   else
     for i in findall(.!isnan.(sim.events.infection))
       if sim.events.infection[i] == -Inf
-        infection[i] = NaN
+        infection[i] = -Inf
         if sim.events.removal == -Inf
-          removal[i] = NaN
+          removal[i] = -Inf
         end
       else
         infection_delay = rand(delay_infection)
@@ -122,7 +122,7 @@ function generate(::Type{EventObservations},
                                infection,
                                sim.transmission_network)
   seq_full = simulate(RNASeq, tree, sim.substitution_model, seq_len)
-  seq_obs = [isnothing(event_nodes[i]) ? nothing : seq_full[event_nodes[i]] for i = eachindex(infection)]
+  seq_obs = Union{Nothing, RNASeq}[isnothing(event_nodes[i]) ? nothing : seq_full[event_nodes[i]] for i = eachindex(infection)]
   return EventObservations{S, M}(infection, removal, seq_obs, start_time = sim.start_time)
 end
 
@@ -141,12 +141,11 @@ function generate(::Type{EventObservations},
     end
     @debug "Infection observation of i = $i at t = $(round(infection[i], digits=3))) (actual infection onset at t = $(round(sim.events.infection[i], digits=3)))"
   end
-  trees, tree_id, obs_leaf_node_id = generate(Tree,
-                                              sim.events,
-                                              infection,
-                                              sim.transmission_network,
-                                              start_time = sim.start_time)
-  seq_full = [simulate(RNASeq, t, sim.substitution_model, seq_len) for t in trees]
-  seq_obs = [isnan(infection[i]) ? nothing : seq_full[tree_id[i]][obs_leaf_node_id] for i = eachindex(infection)]
+  tree, event_nodes = generate(Tree,
+                               sim.events,
+                               infection,
+                               sim.transmission_network)
+  seq_full = simulate(RNASeq, tree, sim.substitution_model, seq_len)
+  seq_obs = Union{Nothing, RNASeq}[isnothing(event_nodes[i]) ? nothing : seq_full[event_nodes[i]] for i = eachindex(infection)]
   return EventObservations{S, M}(infection, seq_obs, start_time = sim.start_time)
 end

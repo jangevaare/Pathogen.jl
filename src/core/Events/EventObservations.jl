@@ -47,7 +47,7 @@ struct EventObservations{S <: DiseaseStateSequence, M <: ILM}
                                    V <: Vector{Float64},
                                    G <: GeneticSeq,
                                    VG <: Vector{Union{Nothing, G}},
-                                   S <: Union{SEIR, SIR}, 
+                                   S <: Union{SEI, SI}, 
                                    M <: PhyloILM}
     if length(i) != length(seq)
       throw(ErrorException("Length of infection time and genetic sequence vectors must be equal"))

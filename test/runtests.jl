@@ -8,10 +8,10 @@ using Test, Distributed, Random, LinearAlgebra, Distances, Pathogen
 include(joinpath(@__DIR__, "risk_functions.jl"))
 
 # Set RNG seed
-Random.seed!(5432)
+# Random.seed!(54321)
 
-using Logging
-global_logger(ConsoleLogger(stderr, LogLevel(-10000)))
+# using Logging
+# global_logger(ConsoleLogger(stderr, LogLevel(-10000)))
 
 # Define population
 n = 25
@@ -66,7 +66,7 @@ pop = Population(risks,
                              [Uniform(0.0, 1.0)],
                              [Uniform(0.0, 1.0)])
   ee = EventExtents{SEIR}(20.0, 2.0, 2.0)
-  mcmc = MCMC(obs, ee, pop, rf, rpriors)
+  mcmc = MCMC(obs, ee, pop, [State_I; fill(State_S, n-1)], rf, rpriors)
   start!(mcmc, attempts=100)
   @test length(mcmc.markov_chains) == 1
   #@test all([length(mcmc.markov_chains[i].risk_parameters[1]) for i=1:3] .== length(rparams))
@@ -89,7 +89,7 @@ pop = Population(risks,
   iterate!(mcmc, 100, 0.5)
   @test mcmc.markov_chains[1].iterations .== 100
   tnd = TNDistribution(50:100, mcmc)
-  @test sum(tnd) ≈ sum(-Inf .< obs.infection .< Inf)
+  @test sum(tnd) ≈ sum(obs.infection .!== NaN)
   mcmc = MCMC(obs, ee, pop, [State_I; fill(State_S, n-1)], rf, rpriors, tnprior=tnd)
   start!(mcmc, attempts=100)
   iterate!(mcmc, 100, 0.5)
@@ -136,7 +136,7 @@ end
                             [Uniform(0.0, 1.0)])
 
   ee = EventExtents{SEI}(20.0, 2.0)
-  mcmc = MCMC(obs, ee, pop, rf, rpriors)
+  mcmc = MCMC(obs, ee, pop, [State_I; fill(State_S, n-1)], rf, rpriors)
   start!(mcmc, attempts = 100)
   @test length(mcmc.markov_chains) == 1
   #@test all([length(mcmc.markov_chains[i].risk_parameters[1]) for i=1:3] .== length(rparams))
@@ -155,8 +155,8 @@ end
   iterate!(mcmc, 100, 0.5)
   @test mcmc.markov_chains[1].iterations .== 100
   tnd = TNDistribution(50:100, mcmc)
-  @test sum(tnd) ≈ sum(-Inf .< obs.infection .< Inf)
-  mcmc = MCMC(obs, ee, pop, rf, rpriors, tnprior=tnd)
+  @test sum(tnd) ≈ sum(obs.infection .!== NaN)
+  mcmc = MCMC(obs, ee, pop, [State_I; fill(State_S, n-1)], rf, rpriors, tnprior=tnd)
   start!(mcmc, attempts=50)
   iterate!(mcmc, 50, 0.5)
   @test length(mcmc.markov_chains) == 1
@@ -202,7 +202,7 @@ end
                             [Uniform(0.0, 1.0)])
 
   ee = EventExtents{SIR}(2.0, 2.0)
-  mcmc = MCMC(obs, ee, pop, rf, rpriors)
+  mcmc = MCMC(obs, ee, pop, [State_I; fill(State_S, n-1)], rf, rpriors)
   start!(mcmc, attempts=100)
   @test length(mcmc.markov_chains) == 1
   #@test all([length(mcmc.markov_chains[i].risk_parameters[1]) for i=1:3] .== length(rparams))
@@ -221,8 +221,8 @@ end
   iterate!(mcmc, 100, 0.5)
   @test mcmc.markov_chains[1].iterations .== 100
   tnd = TNDistribution(50:100, mcmc)
-  @test sum(tnd) ≈ sum(-Inf .< obs.infection .< Inf)
-  mcmc = MCMC(obs, ee, pop, rf, rpriors, tnprior=tnd)
+  @test sum(tnd) ≈ sum(obs.infection .!== NaN)
+  mcmc = MCMC(obs, ee, pop, [State_I; fill(State_S, n-1)], rf, rpriors, tnprior=tnd)
   start!(mcmc, attempts=50)
   iterate!(mcmc, 50, 0.5)
   @test length(mcmc.markov_chains) == 1
@@ -264,7 +264,7 @@ end
                            UnivariateDistribution[])
 
   ee = EventExtents{SI}(2.0)
-  mcmc = MCMC(obs, ee, pop, rf, rpriors)
+  mcmc = MCMC(obs, ee, pop, [State_I; fill(State_S, n-1)], rf, rpriors)
   start!(mcmc, attempts=100)
   @test length(mcmc.markov_chains) == 1
   #@test all([length(mcmc.markov_chains[i].risk_parameters[1]) for i=1:3] .== length(rparams))
@@ -278,12 +278,15 @@ end
   iterate!(mcmc, 100, 0.5)
   @test mcmc.markov_chains[1].iterations .== 100
   tnd = TNDistribution(50:100, mcmc)
-  @test sum(tnd) ≈ sum(-Inf .< obs.infection .< Inf)
-  mcmc = MCMC(obs, ee, pop, rf, rpriors, tnprior=tnd)
+  @test sum(tnd) ≈ sum(obs.infection .!== NaN)
+  mcmc = MCMC(obs, ee, pop, [State_I; fill(State_S, n-1)], rf, rpriors, tnprior=tnd)
   start!(mcmc, attempts=50)
   iterate!(mcmc, 50, 0.5)
   @test length(mcmc.markov_chains) == 1
 end
+
+# using Logging
+# global_logger(ConsoleLogger(stderr, LogLevel(-10000)))
 
 @testset "SEIR Phylodynamic ILM" begin
   # Some commonly used functions/examples provided in helpers/RiskFunctions.jl
@@ -302,7 +305,7 @@ end
                                  [0.1],
                                  [0.05])
 
-  # sim = Simulation{TNILM}(pop, rf, rparams)
+  # sim = Simulation{TNILM}(pop, [State_I; fill(State_S, n-1)], rf, rparams)
   sim = Simulation{SEIR, PhyloILM}(pop,
                    [State_I; fill(State_S, n-1)],
                    0.0,
@@ -331,7 +334,7 @@ end
                              [Uniform(0.0, 1.0)],
                              [Uniform(0.0, 1.0)])
   ee = EventExtents{SEIR}(20.0, 2.0, 2.0)
-  mcmc = MCMC(obs, ee, pop, rf, rpriors, JC69rel, UnivariateDistribution[])
+  mcmc = MCMC(obs, ee, pop, [State_I; fill(State_S, n-1)], rf, rpriors, JC69rel, UnivariateDistribution[])
   start!(mcmc, attempts=100)
   @test length(mcmc.markov_chains) == 1
   #@test all([length(mcmc.markov_chains[i].risk_parameters[1]) for i=1:3] .== length(rparams))
@@ -354,8 +357,8 @@ end
   iterate!(mcmc, 100, 0.5)
   @test mcmc.markov_chains[1].iterations .== 100
   tnd = TNDistribution(50:100, mcmc)
-  @test sum(tnd) ≈ sum(-Inf .< obs.infection .< Inf)
-  mcmc = MCMC(obs, ee, pop, rf, rpriors, JC69rel, UnivariateDistribution[], tnprior=tnd)
+  @test sum(tnd) ≈ sum(obs.infection .!== NaN)
+  mcmc = MCMC(obs, ee, pop, [State_I; fill(State_S, n-1)], rf, rpriors, JC69rel, UnivariateDistribution[], tnprior=tnd)
   start!(mcmc, attempts=100)
   iterate!(mcmc, 100, 0.5)
   @test length(mcmc.markov_chains) == 1
@@ -402,7 +405,7 @@ end
                             [Uniform(0.0, 1.0)])
 
   ee = EventExtents{SEI}(20.0, 2.0)
-  mcmc = MCMC(obs, ee, pop, rf, rpriors, JC69rel, UnivariateDistribution[])
+  mcmc = MCMC(obs, ee, pop, [State_I; fill(State_S, n-1)], rf, rpriors, JC69rel, UnivariateDistribution[])
   start!(mcmc, attempts = 100)
   @test length(mcmc.markov_chains) == 1
   #@test all([length(mcmc.markov_chains[i].risk_parameters[1]) for i=1:3] .== length(rparams))
@@ -421,8 +424,8 @@ end
   iterate!(mcmc, 100, 0.5)
   @test mcmc.markov_chains[1].iterations .== 100
   tnd = TNDistribution(50:100, mcmc)
-  @test sum(tnd) ≈ sum(-Inf .< obs.infection .< Inf)
-  mcmc = MCMC(obs, ee, pop, rf, rpriors, JC69rel,  UnivariateDistribution[], tnprior=tnd)
+  @test sum(tnd) ≈ sum(obs.infection .!== NaN)
+  mcmc = MCMC(obs, ee, pop, [State_I; fill(State_S, n-1)], rf, rpriors, JC69rel,  UnivariateDistribution[], tnprior=tnd)
   start!(mcmc, attempts=50)
   iterate!(mcmc, 50, 0.5)
   @test length(mcmc.markov_chains) == 1
@@ -469,7 +472,7 @@ end
                             [Uniform(0.0, 1.0)])
 
   ee = EventExtents{SIR}(2.0, 2.0)
-  mcmc = MCMC(obs, ee, pop, rf, rpriors, JC69rel, UnivariateDistribution[])
+  mcmc = MCMC(obs, ee, pop, [State_I; fill(State_S, n-1)], rf, rpriors, JC69rel, UnivariateDistribution[])
   start!(mcmc, attempts=100)
   @test length(mcmc.markov_chains) == 1
   #@test all([length(mcmc.markov_chains[i].risk_parameters[1]) for i=1:3] .== length(rparams))
@@ -488,8 +491,8 @@ end
   iterate!(mcmc, 100, 0.5)
   @test mcmc.markov_chains[1].iterations .== 100
   tnd = TNDistribution(50:100, mcmc)
-  @test sum(tnd) ≈ sum(-Inf .< obs.infection .< Inf)
-  mcmc = MCMC(obs, ee, pop, rf, rpriors, JC69rel, UnivariateDistribution[], tnprior=tnd)
+  @test sum(tnd) ≈ sum(obs.infection .!== NaN)
+  mcmc = MCMC(obs, ee, pop, [State_I; fill(State_S, n-1)], rf, rpriors, JC69rel, UnivariateDistribution[], tnprior=tnd)
   start!(mcmc, attempts=50)
   iterate!(mcmc, 50, 0.5)
   @test length(mcmc.markov_chains) == 1
@@ -532,7 +535,7 @@ end
                            UnivariateDistribution[])
 
   ee = EventExtents{SI}(2.0)
-  mcmc = MCMC(obs, ee, pop, rf, rpriors, JC69rel, UnivariateDistribution[])
+  mcmc = MCMC(obs, ee, pop, [State_I; fill(State_S, n-1)], rf, rpriors, JC69rel, UnivariateDistribution[])
   start!(mcmc, attempts=100)
   @test length(mcmc.markov_chains) == 1
   #@test all([length(mcmc.markov_chains[i].risk_parameters[1]) for i=1:3] .== length(rparams))
@@ -546,8 +549,8 @@ end
   iterate!(mcmc, 100, 0.5)
   @test mcmc.markov_chains[1].iterations .== 100
   tnd = TNDistribution(50:100, mcmc)
-  @test sum(tnd) ≈ sum(-Inf .< obs.infection .< Inf)
-  mcmc = MCMC(obs, ee, pop, rf, rpriors, JC69rel, UnivariateDistribution[], tnprior=tnd)
+  @test sum(tnd) ≈ sum(obs.infection .!== NaN)
+  mcmc = MCMC(obs, ee, pop, [State_I; fill(State_S, n-1)], rf, rpriors, JC69rel, UnivariateDistribution[], tnprior=tnd)
   start!(mcmc, attempts=50)
   iterate!(mcmc, 50, 0.5)
   @test length(mcmc.markov_chains) == 1

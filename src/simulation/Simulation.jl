@@ -21,7 +21,7 @@ mutable struct Simulation{S <: DiseaseStateSequence, M <: ILM}
     tr = initialize(TransmissionRates, states, pop, rf, rp)
     rates = initialize(EventRates, tr, states, pop, rf, rp)
     events = Events{S}(pop.individuals)
-    net = TransmissionNetwork(pop.individuals)
+    net = TransmissionNetwork(states)
     return new{S, M}(0.0, 0.0, 0, pop, rf, rp, nothing, states, tr, rates, events, net)
   end
 
@@ -42,7 +42,7 @@ mutable struct Simulation{S <: DiseaseStateSequence, M <: ILM}
     tr = initialize(TransmissionRates, states, pop, rf, rp)
     rates = initialize(EventRates, tr, states, pop, rf, rp)
     events = Events{S}(states)
-    net = TransmissionNetwork(pop.individuals)
+    net = TransmissionNetwork(states)
     return new{S, M}(time, time, 0, pop, rf, rp, nothing, copy(states), tr, rates, events, net)
   end
 
@@ -61,7 +61,7 @@ mutable struct Simulation{S <: DiseaseStateSequence, M <: ILM}
     tr = initialize(TransmissionRates, states, pop, rf, rp)
     rates = initialize(EventRates, tr, states, pop, rf, rp)
     events = Events{S}(states)
-    net = TransmissionNetwork(pop.individuals)
+    net = TransmissionNetwork(states)
     return new{S, M}(0.0, 0.0, 0, pop, rf, rp, nothing, copy(states), tr, rates, events, net)
   end
 
@@ -75,7 +75,7 @@ function Simulation{S, M}(pop::Population,
     tr = initialize(TransmissionRates, states, pop, rf, rp)
     rates = initialize(EventRates, tr, states, pop, rf, rp)
     events = Events{S}(pop.individuals)
-    net = TransmissionNetwork(pop.individuals)
+    net = TransmissionNetwork(states)
     return new{S, M}(0.0, 0.0, 0, pop, rf, rp, sm, states, tr, rates, events, net)
   end
 
@@ -97,7 +97,7 @@ function Simulation{S, M}(pop::Population,
     tr = initialize(TransmissionRates, states, pop, rf, rp)
     rates = initialize(EventRates, tr, states, pop, rf, rp)
     events = Events{S}(states)
-    net = TransmissionNetwork(pop.individuals)
+    net = TransmissionNetwork(states)
     return new{S, M}(time, time, 0, pop, rf, rp, sm, copy(states), tr, rates, events, net)
   end
 
@@ -117,7 +117,7 @@ function Simulation{S, M}(pop::Population,
     tr = initialize(TransmissionRates, states, pop, rf, rp)
     rates = initialize(EventRates, tr, states, pop, rf, rp)
     events = Events{S}(states)
-    net = TransmissionNetwork(pop.individuals)
+    net = TransmissionNetwork(states)
     return new{S, M}(0.0, 0.0, 0, pop, rf, rp, sm, copy(states), tr, rates, events, net)
   end
 end
