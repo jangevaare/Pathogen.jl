@@ -13,6 +13,7 @@ module Pathogen
         OnlineStats
 
   import StatsBase.mean,
+         Base.summary,
          ProgressMeter.next!
 
   # Core
@@ -56,6 +57,7 @@ module Pathogen
   include("inference/logpriors.jl")
   include("inference/start!.jl")
   include("inference/iterate!.jl")
+  include("inference/summary.jl")
 
   # Visualization
   include("visualization/epidemic_curve.jl")
@@ -185,5 +187,6 @@ module Pathogen
     next!, simulate!,
     Events, EventObservations, EventExtents,
     observe,
-    MCMC, start!, iterate!
+    MCMC, start!, iterate!,
+    summary
 end

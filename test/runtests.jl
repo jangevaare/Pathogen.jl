@@ -93,6 +93,7 @@ pop = Population(risks,
   start!(mcmc, attempts=100)
   iterate!(mcmc, 100, 0.5)
   @test length(mcmc.markov_chains) == 1
+  @test typeof(summary(mcmc, burnin=50, thin=2)) == DataFrame
 
   tn = mcmc.markov_chains[1].transmission_network[end]
   for i = 1:25
@@ -167,6 +168,7 @@ end
   start!(mcmc, attempts=50)
   iterate!(mcmc, 50, 0.5)
   @test length(mcmc.markov_chains) == 1
+  @test typeof(summary(mcmc, burnin=50, thin=2)) == DataFrame
 
   tn = mcmc.markov_chains[1].transmission_network[end]
   for i = 1:25
@@ -242,6 +244,7 @@ end
   start!(mcmc, attempts=50)
   iterate!(mcmc, 50, 0.5)
   @test length(mcmc.markov_chains) == 1
+  @test typeof(summary(mcmc, burnin=50, thin=2)) == DataFrame
 
   tn = mcmc.markov_chains[1].transmission_network[end]
   for i = 1:25
@@ -307,6 +310,7 @@ end
   start!(mcmc, attempts=50)
   iterate!(mcmc, 50, 0.5)
   @test length(mcmc.markov_chains) == 1
+  @test typeof(summary(mcmc, burnin=50, thin=2)) == DataFrame
 
   tn = mcmc.markov_chains[1].transmission_network[end]
   for i = 1:25

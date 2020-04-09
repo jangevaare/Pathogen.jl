@@ -34,7 +34,7 @@ function Base.copy(x::AbstractRisk{SI})
 end
 
 
-function _indices(x::AbstractRisk{T}; zeros::Bool=true) where T <: EpidemicModel
+function _indices(x::AbstractRisk{T}; zeros::Bool=true, cumulative::Bool=true) where T <: EpidemicModel
   indices = [length(x.sparks)
              length(x.susceptibility)
              length(x.infectivity)
@@ -49,7 +49,11 @@ function _indices(x::AbstractRisk{T}; zeros::Bool=true) where T <: EpidemicModel
   elseif zeros
     push!(indices, 0)
   end
-  return cumsum(indices)
+  if cumulative
+    return cumsum(indices)
+  else
+    return indices
+  end
 end
 
 

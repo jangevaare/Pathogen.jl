@@ -1,4 +1,4 @@
-struct RiskFunctions{T} <: AbstractRisk{T}
+struct RiskFunctions{T <: EpidemicModel}
   sparks::Union{Nothing, Function}
   susceptibility::Union{Nothing, Function}
   infectivity::Union{Nothing, Function}
