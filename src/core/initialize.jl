@@ -10,13 +10,14 @@ function initialize(::Type{TransmissionRates},
     #tr.external[i] = rf.susceptibility(rp.susceptibility, pop, i) * rf.sparks(rp.sparks, pop, i)
     tr.external[i] = rf.sparks(rp.sparks, pop, i)
     # Internal exposure
+    susceptibility = rf.susceptibility(rp.susceptibility, pop, i)
     for k in findall(states .== Ref(State_I))
-      tr.internal[k, i] = rf.susceptibility(rp.susceptibility, pop, i) *
+      tr.internal[k, i] = susceptibility *
                           rf.infectivity(rp.infectivity, pop, i, k) *
                           rf.transmissibility(rp.transmissibility, pop, k)
     end
   end
-  @debug "Initialization of $T TransmissionRates complete" external = tr.external ∑external = sum(tr.external) internal = tr.internal ∑internal = sum(tr.internal)
+  @debug "Initialization of $T TransmissionRates complete" ∑external = sum(tr.external) ∑internal = sum(tr.internal)
   return tr
 end
 
@@ -43,6 +44,6 @@ function initialize(::Type{EventRates},
       end
     end
   end
-  @debug "Initialization of $T EventRates complete" rates = rates[_state_progressions[T][2:end]]
+  @debug "Initialization of $T EventRates complete" rates = [sum(rates[k]) for k in _state_progressions[T][2:end]]
   return rates
 end

@@ -1,9 +1,9 @@
-function _bounds(id::Int64,
+function _bounds(id::I,
                  new_state::DiseaseState,
                  extents::EventExtents{T},
                  obs::EventObservations{T},
                  events::Events{T},
-                 network::TransmissionNetwork) where T <: EpidemicModel
+                 network::TransmissionNetwork) where {I <: Integer, T <: EpidemicModel}
   if new_state == State_E
     lowerbounds = [events.infection[id] - extents.exposure]
     upperbounds = [events.infection[id]]
@@ -76,11 +76,11 @@ function _bounds(last_event::Event{T},
 end
 
 
-function _bounds(id::Int64,
+function _bounds(id::I,
                  new_state::DiseaseState,
                  extents::EventExtents{T},
                  obs::EventObservations{T},
-                 events::Events{T}) where T <: EpidemicModel
+                 events::Events{T}) where {I <: Integer, T <: EpidemicModel}
   if new_state == State_E
     lowerbounds = [events.infection[id] - extents.exposure]
     upperbounds = [events.infection[id]]

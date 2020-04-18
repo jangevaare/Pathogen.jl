@@ -1,7 +1,7 @@
-function _pathway_to(id::Int64,
+function _pathway_to(id::I,
                      network::TransmissionNetwork;
-                     depth::Real=Inf)
-  path = Int64[]
+                     depth::Real=Inf) where {I <: Integer}
+  path = I[]
   if network.external[id] | any(network.internal[:, id])
     push!(path, id)
     next_id = findfirst(network.internal[:, id])

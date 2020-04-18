@@ -2,7 +2,7 @@ struct TransmissionNetwork
   external::BitArray{1}
   internal::BitArray{2}
 
-  function TransmissionNetwork(individuals::Int64)
+  function TransmissionNetwork(individuals::Integer)
     return new(fill(0, individuals),
                fill(0, (individuals, individuals)))
   end

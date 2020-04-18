@@ -3,7 +3,7 @@ struct TransmissionRates
   internal::Array{Float64, 2}
   individuals::Int64
 
-  function TransmissionRates(individuals::Int64)
+  function TransmissionRates(individuals::Integer)
     return new(fill(0., individuals),
                fill(0., (individuals, individuals)),
                individuals)
@@ -27,8 +27,8 @@ function Base.sum(x::TransmissionRates)
   return sum(x.external) + sum(x.internal)
 end
 
-function Base.sum(x::TransmissionRates, i::Int64)
-  if i < 1 | i > x.individuals
+function Base.sum(x::TransmissionRates, i::Integer)
+  if i < 1 || i > x.individuals
     @error "Invalid individual identifier" i
   end
   return x.external[i] + sum(x.internal[:, i])

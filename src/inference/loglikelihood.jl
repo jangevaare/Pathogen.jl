@@ -29,7 +29,7 @@ function loglikelihood(rp::RiskParameters{T},
       @debug "Skipping event $i" Event{T}(time, id, new_state)
       continue
     elseif isnan(time)
-      @debug "Loglikelihood calculation complete!"
+      @debug "Loglikelihood calculation complete!" loglikelihood = ll
       break
     end
     event = Event{T}(time, id, new_state)
@@ -82,7 +82,7 @@ function loglikelihood(rp::RiskParameters{T},
             s.risk_functions,
             s.risk_parameters)
   end
-  return loglikelihood_output ? ll : nothing, 
+  return loglikelihood_output ? ll : nothing,
          transmission_rates_output ? s.transmission_rates : nothing,
          transmissions_output ? transmissions : nothing
 end

@@ -1,18 +1,18 @@
 function generate(::Type{Transmission},
                   tr::TransmissionRates,
                   tnd::Nothing,
-                  id::Int64) where T <: EpidemicModel
-  external_or_internal = Weights([tr.external[id]; 
+                  id::I) where {I <: Integer, T <: EpidemicModel}
+  external_or_internal = Weights([tr.external[id];
                                   sum(tr.internal[:,id])])
   if sum(external_or_internal) == 0.0
-    @error "All transmission rates = 0.0, No transmission can be generated"
+    @error "All transmission rates = 0.0, No transmission generated" external_or_internal
     return NoTransmission()
   elseif sample([true; false], external_or_internal)
-    @debug "Exogenous tranmission generated"
+    @debug "Exogenous tranmission generated" external_or_internal
     return ExogenousTransmission(id)
   else
     source = sample(1:tr.individuals, Weights(tr.internal[:, id]))
-    @debug "Endogenous transmission generated (source id = $source)"
+    @debug "Endogenous transmission generated (source id = $source)" external_or_internal
     return EndogenousTransmission(id, source)
   end
 end
@@ -20,18 +20,18 @@ end
 function generate(::Type{Transmission},
                   tr::TransmissionRates,
                   tnd::TNDistribution,
-                  id::Int64) where T <: EpidemicModel
-  external_or_internal = Weights([tr.external[id] * tnd.external[id]; 
+                  id::I) where {I <: Integer, T <: EpidemicModel}
+  external_or_internal = Weights([tr.external[id] * tnd.external[id];
                                  sum(tr.internal[:,id]) * sum(tnd.internal[:,id])])
   if sum(external_or_internal) == 0.0
-    @error "All transmission rates = 0.0, No transmission can be generated"
+    @error "All transmission rates = 0.0, No transmission generated" external_or_internal
     return NoTransmission()
   elseif sample([true; false], external_or_internal)
-    @debug "Exogenous tranmission generated"
+    @debug "Exogenous tranmission generated" external_or_internal
     return ExogenousTransmission(id)
   else
     source = sample(1:tr.individuals, Weights(tr.internal[:, id] .* tnd.internal[:, id]))
-    @debug "Endogenous transmission generated (source id = $source)"
+    @debug "Endogenous transmission generated (source id = $source)" external_or_internal
     return EndogenousTransmission(id, source)
   end
 end
@@ -40,8 +40,8 @@ function generate(::Type{TransmissionNetwork},
                   starting_states::Vector{DiseaseState},
                   tr::TransmissionRates,
                   tnd::Union{Nothing, TNDistribution},
-                  ids::Vector{Int64})
-  tn = TransmissionNetwork(starting_states)                
+                  ids::Vector{I}) where {I <: Integer}
+  tn = TransmissionNetwork(starting_states)
   for i in ids
     tx = generate(Transmission, tr, tnd, i)
     update!(tn, tx)
@@ -52,7 +52,7 @@ end
 function generate(::Type{TransmissionNetwork},
                   tr::TransmissionRates,
                   mcmc::MCMC,
-                  ids::Vector{Int64})
+                  ids::Vector{I}) where {I <: Integer}
   return generate(TransmissionNetwork, mcmc.starting_states, tr, mcmc.transmission_network_prior, ids)
 end
 

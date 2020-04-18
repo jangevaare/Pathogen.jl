@@ -11,7 +11,7 @@ struct Events{T <: EpidemicModel}
     return new{T}(e, i, r, length(i))
   end
 
-  function Events{T}(n::Int64) where T <: SEIR
+  function Events{T}(n::Integer) where T <: SEIR
     return new{T}(fill(NaN, n), fill(NaN, n), fill(NaN, n), n)
   end
 
@@ -22,7 +22,7 @@ struct Events{T <: EpidemicModel}
     return new{T}(e, i, nothing, length(i))
   end
 
-  function Events{T}(n::Int64) where T <: SEI
+  function Events{T}(n::Integer) where T <: SEI
     return new{T}(fill(NaN, n), fill(NaN, n), nothing, n)
   end
 
@@ -33,7 +33,7 @@ struct Events{T <: EpidemicModel}
     return new{T}(nothing, i, r, length(i))
   end
 
-  function Events{T}(n::Int64) where T <: SIR
+  function Events{T}(n::Integer) where T <: SIR
     return new{T}(nothing, fill(NaN, n), fill(NaN, n), n)
   end
 
@@ -41,7 +41,7 @@ struct Events{T <: EpidemicModel}
     return new{T}(nothing, i, nothing, length(i))
   end
 
-  function Events{T}(n::Int64) where T <: SI
+  function Events{T}(n::Integer) where T <: SI
     return new{T}(nothing, fill(NaN, n), nothing, n)
   end
 end
