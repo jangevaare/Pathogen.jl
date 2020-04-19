@@ -32,9 +32,9 @@ function initialize(::Type{EventRates},
   for i = 1:n_ids
     if states[i] == State_S
       if T in [SEIR; SEI]
-        rates.exposure[i] = tr.external[i] + sum(tr.internal[:,i])
+        rates.exposure[i] = sum(tr, i)
       elseif T in [SIR; SI]
-        rates.infection[i] = tr.external[i] + sum(tr.internal[:,i])
+        rates.infection[i] = sum(tr, i)
       end
     elseif states[i] == State_E
       rates.infection[i] = rf.latency(rp.latency, pop, i)
