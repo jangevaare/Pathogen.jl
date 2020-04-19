@@ -6,7 +6,7 @@ addprocs(3)
 @everywhere include(joinpath(@__DIR__, "risk_functions.jl"))
 
 # Set RNG seed
-Random.seed!(5432)
+Random.seed!(4321)
 
 # using Logging
 # global_logger(ConsoleLogger(stderr, LogLevel(-10000)))
@@ -30,17 +30,14 @@ pop = Population(risks,
                            _constant,
                            _constant)
 
-  rparams = RiskParameters{SEIR}([0.001],
+  rparams = RiskParameters{SEIR}([0.01],
                                  [1.0],
                                  [2.0, 5.0],
                                  Float64[],
                                  [0.1],
                                  [0.05])
 
-  # sim = Simulation(pop, [State_I; fill(State_S, n-1)], rf, rparams)
   sim = Simulation(pop,
-                   [State_I; fill(State_S, n-1)],
-                   0.0,
                    rf,
                    rparams)
 
@@ -58,20 +55,20 @@ pop = Population(risks,
   obs = observe(sim, Uniform(), Uniform())
   @test length(obs.infection) == n
 
-  rpriors = RiskPriors{SEIR}([Uniform(0.0, 0.01)],
+  rpriors = RiskPriors{SEIR}([Uniform(0.0, 0.1)],
                              [Uniform(0.0, 2.0)],
                              [Uniform(0.0, 4.0); Uniform(1.0, 8.0)],
                              UnivariateDistribution[],
                              [Uniform(0.0, 1.0)],
                              [Uniform(0.0, 1.0)])
   ee = EventExtents{SEIR}(20.0, 2.0, 2.0)
-  mcmc = MCMC(obs, ee, pop, [State_I; fill(State_S, n-1)], rf, rpriors)
+  mcmc = MCMC(obs, ee, pop, rf, rpriors)
   start!(mcmc, 3, attempts=100)
   @test length(mcmc.markov_chains) == 3
   @test all([length(mcmc.markov_chains[i].risk_parameters[1]) for i=1:3] .== length(rparams))
 
   # Check bounds of Events initialization
-  for j = 1:3, i = 1:n
+  for j = 1:1, i = 1:n
     if mcmc.markov_chains[j].events[1].exposure[i] > -Inf
       l, u = Pathogen._bounds(i, State_E, ee, obs, mcmc.markov_chains[j].events[1], mcmc.markov_chains[j].transmission_network[1])
       @test l < u
@@ -85,18 +82,18 @@ pop = Population(risks,
       @test l < u
     end
   end
-  iterate!(mcmc, 100, 0.5)
+  iterate!(mcmc, 100, 1.0, condition_on_network=true)
   @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
   @test sum(TNPosterior(mcmc)) ≈ sum(obs.infection .!== NaN)
   tnd = TNDistribution(50:100, mcmc)
-  mcmc = MCMC(obs, ee, pop, [State_I; fill(State_S, n-1)], rf, rpriors, tnprior=tnd)
+  mcmc = MCMC(obs, ee, pop, rf, rpriors, tnprior=tnd)
   start!(mcmc, attempts=100)
-  iterate!(mcmc, 100, 0.5)
+  iterate!(mcmc, 100, 1.0, condition_on_network=false)
   @test length(mcmc.markov_chains) == 1
   @test typeof(summary(mcmc, burnin=50, thin=2)) == DataFrame
 
   tn = mcmc.markov_chains[1].transmission_network[end]
-  for i = 1:25
+  for i = 1:n
     pt = Pathogen._pathway_to(i, tn, depth=1)
     if length(pt) >= 2
       @test i in Pathogen._pathway_from(pt[2], tn, depth=1)
@@ -111,15 +108,13 @@ end
                           _one,
                           _constant)
 
-  rparams = RiskParameters{SEI}([0.001],
+  rparams = RiskParameters{SEI}([0.01],
                                 [1.0],
                                 [2.0, 5.0],
                                 Float64[],
                                 [0.1])
 
   sim = Simulation(pop,
-                   [State_I; fill(State_S, n-1)],
-                   0.0,
                    rf,
                    rparams)
 
@@ -137,14 +132,14 @@ end
   obs = observe(sim, Uniform())
   @test length(obs.infection) == n
 
-  rpriors = RiskPriors{SEI}([Uniform(0.0, 0.01)],
+  rpriors = RiskPriors{SEI}([Uniform(0.0, 0.1)],
                             [Uniform(0.0, 2.0)],
                             [Uniform(0.0, 4.0); Uniform(1.0, 8.0)],
                             UnivariateDistribution[],
                             [Uniform(0.0, 1.0)])
 
   ee = EventExtents{SEI}(20.0, 2.0)
-  mcmc = MCMC(obs, ee, pop, [State_I; fill(State_S, n-1)], rf, rpriors)
+  mcmc = MCMC(obs, ee, pop, rf, rpriors)
   start!(mcmc, 3, attempts = 100)
   @test length(mcmc.markov_chains) == 3
   @test all([length(mcmc.markov_chains[i].risk_parameters[1]) for i=1:3] .== length(rparams))
@@ -160,18 +155,18 @@ end
       @test l < u
     end
   end
-  iterate!(mcmc, 100, 0.5)
+  iterate!(mcmc, 100, 1.0, condition_on_network=true)
   @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
   @test sum(TNPosterior(mcmc)) ≈ sum(obs.infection .!== NaN)
   tnd = TNDistribution(50:100, mcmc)
-  mcmc = MCMC(obs, ee, pop, [State_I; fill(State_S, n-1)], rf, rpriors, tnprior=tnd)
+  mcmc = MCMC(obs, ee, pop, rf, rpriors, tnprior=tnd)
   start!(mcmc, attempts=50)
-  iterate!(mcmc, 50, 0.5)
+  iterate!(mcmc, 100, 1.0, condition_on_network=false)
   @test length(mcmc.markov_chains) == 1
   @test typeof(summary(mcmc, burnin=50, thin=2)) == DataFrame
 
   tn = mcmc.markov_chains[1].transmission_network[end]
-  for i = 1:25
+  for i = 1:n
     pt = Pathogen._pathway_to(i, tn, depth=1)
     if length(pt) >= 2
       @test i in Pathogen._pathway_from(pt[2], tn, depth=1)
@@ -187,15 +182,13 @@ end
                           _one,
                           _constant)
 
-  rparams = RiskParameters{SIR}([0.001],
+  rparams = RiskParameters{SIR}([0.01],
                                 [1.0],
                                 [2.0, 5.0],
                                 Float64[],
                                 [0.05])
 
   sim = Simulation(pop,
-                   [State_I; fill(State_S, n-1)],
-                   0.0,
                    rf,
                    rparams)
 
@@ -213,14 +206,14 @@ end
   obs = observe(sim, Uniform(), Uniform())
   @test length(obs.infection) == n
 
-  rpriors = RiskPriors{SIR}([Uniform(0.0, 0.01)],
+  rpriors = RiskPriors{SIR}([Uniform(0.0, 0.1)],
                             [Uniform(0.0, 2.0)],
                             [Uniform(0.0, 4.0); Uniform(1.0, 8.0)],
                             UnivariateDistribution[],
                             [Uniform(0.0, 1.0)])
 
   ee = EventExtents{SIR}(2.0, 2.0)
-  mcmc = MCMC(obs, ee, pop, [State_I; fill(State_S, n-1)], rf, rpriors)
+  mcmc = MCMC(obs, ee, pop, rf, rpriors)
   start!(mcmc, 3, attempts=100)
   @test length(mcmc.markov_chains) == 3
   @test all([length(mcmc.markov_chains[i].risk_parameters[1]) for i=1:3] .== length(rparams))
@@ -236,18 +229,18 @@ end
       @test l < u
     end
   end
-  iterate!(mcmc, 100, 0.5)
+  iterate!(mcmc, 100, 1.0, condition_on_network=true)
   @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
   @test sum(TNPosterior(mcmc)) ≈ sum(obs.infection .!== NaN)
   tnd = TNDistribution(50:100, mcmc)
-  mcmc = MCMC(obs, ee, pop, [State_I; fill(State_S, n-1)], rf, rpriors, tnprior=tnd)
+  mcmc = MCMC(obs, ee, pop, rf, rpriors, tnprior=tnd)
   start!(mcmc, attempts=50)
-  iterate!(mcmc, 50, 0.5)
+  iterate!(mcmc, 100, 1.0, condition_on_network=false)
   @test length(mcmc.markov_chains) == 1
   @test typeof(summary(mcmc, burnin=50, thin=2)) == DataFrame
 
   tn = mcmc.markov_chains[1].transmission_network[end]
-  for i = 1:25
+  for i = 1:n
     pt = Pathogen._pathway_to(i, tn, depth=1)
     if length(pt) >= 2
       @test i in Pathogen._pathway_from(pt[2], tn, depth=1)
@@ -261,14 +254,12 @@ end
                          _powerlaw,
                          _one)
 
-  rparams = RiskParameters{SI}([0.001],
+  rparams = RiskParameters{SI}([0.01],
                                [1.0],
                                [2.0, 5.0],
                                Float64[])
 
   sim = Simulation(pop,
-                   [State_I; fill(State_S, n-1)],
-                   0.0,
                    rf,
                    rparams)
 
@@ -285,13 +276,13 @@ end
   obs = observe(sim, Uniform())
   @test length(obs.infection) == n
 
-  rpriors = RiskPriors{SI}([Uniform(0.0, 0.01)],
+  rpriors = RiskPriors{SI}([Uniform(0.0, 0.1)],
                            [Uniform(0.0, 2.0)],
                            [Uniform(0.0, 4.0); Uniform(1.0, 8.0)],
                            UnivariateDistribution[])
 
   ee = EventExtents{SI}(2.0)
-  mcmc = MCMC(obs, ee, pop, [State_I; fill(State_S, n-1)], rf, rpriors)
+  mcmc = MCMC(obs, ee, pop, rf, rpriors)
   start!(mcmc, 3, attempts=100)
   @test length(mcmc.markov_chains) == 3
   @test all([length(mcmc.markov_chains[i].risk_parameters[1]) for i=1:3] .== length(rparams))
@@ -302,18 +293,18 @@ end
       @test l < u
     end
   end
-  iterate!(mcmc, 100, 0.5)
+  iterate!(mcmc, 100, 1.0, condition_on_network=true)
   @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
   @test sum(TNPosterior(mcmc)) ≈ sum(obs.infection .!== NaN)
   tnd = TNDistribution(50:100, mcmc)
-  mcmc = MCMC(obs, ee, pop, [State_I; fill(State_S, n-1)], rf, rpriors, tnprior=tnd)
+  mcmc = MCMC(obs, ee, pop, rf, rpriors, tnprior=tnd)
   start!(mcmc, attempts=50)
-  iterate!(mcmc, 50, 0.5)
+  iterate!(mcmc, 100, 1.0, condition_on_network=false)
   @test length(mcmc.markov_chains) == 1
   @test typeof(summary(mcmc, burnin=50, thin=2)) == DataFrame
 
   tn = mcmc.markov_chains[1].transmission_network[end]
-  for i = 1:25
+  for i = 1:n
     pt = Pathogen._pathway_to(i, tn, depth=1)
     if length(pt) >= 2
       @test i in Pathogen._pathway_from(pt[2], tn, depth=1)
