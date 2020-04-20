@@ -32,6 +32,8 @@ pkg> add Pathogen#master
 
 Examples of Pathogen.jl workflow are included in the examples directory as a Jupyter notebooks.
 1. [SIR simulation, inference, and visualization](https://github.com/jangevaare/Pathogen.jl/blob/master/examples/SIR%20Simulation/SIR%20TN-ILM%20Simulation%20and%20Inference.ipynb)
+2. [Analysis of a Tomato Spotted Wilt Virus experimental epidemic](https://github.com/jangevaare/Pathogen.jl/blob/master/examples/Tomato%20Spotted%20Wilt%20Virus/TSWV.ipynb)
+3. [Analysis of 1861 Hagelloch Measles outbreak](https://github.com/jangevaare/Pathogen.jl/blob/master/examples/1861%20Hagelloch%20Measles/1861%20Hagelloch.ipynb)
 ![Epidemic simulation](https://github.com/jangevaare/Pathogen.jl/raw/master/examples/SIR%20Simulation/epianimation.gif)
 
 ## More information
