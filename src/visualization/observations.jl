@@ -1,26 +1,19 @@
-function _count_by_state(events::Events{T},
+function _count_by_state(events::EventObservations{T},
                          state::DiseaseState,
                          time::Float64) where T <: EpidemicModel
   local n_ids
-  if state ∉ _state_progressions[T]
-    @error "Invalid state specified"
-  end
-  if state == _state_progressions[T][1] # S
-    nextstate = advance(state, T) # Either E or I
-    n_ids = sum(events[nextstate] .> Ref(time)) # E/I after `time`
-    n_ids += sum(isnan.(events[nextstate])) # Never E/I
-  elseif state in _state_progressions[T][2:end-1]
-    nextstate = advance(state, T) # Either I or R
+  if state == State_I && T ∈ [SEIR, SIR]
+    nextstate = State_R
     n_ids = sum((events[state] .<= Ref(time)) .& (events[nextstate] .> Ref(time))) # E/I at or before time and I/R after time
-    n_ids += sum((events[state] .<= Ref(time)) .& isnan.(events[nextstate])) # E/I at or before time and never I/R
-  elseif state == _state_progressions[T][end] # I or R
+    n_ids += sum((events[state] .<= Ref(time)) .& isnan.(events[nextstate])) # E/I at or before time and never I/R 
+  else
     n_ids = sum(events[state] .<= Ref(time)) # I/R at or before time
   end
-  @debug "$n_ids individual(s) in state $state at t = $time"
+  @debug "$n_ids individual(s) observered in state $state at t = $time"
   return n_ids
 end
 
-function _epidemic_curve(events::Events{T},
+function _obs_curve(events::EventObservations{T},
                          state::DiseaseState,
                          min::Float64,
                          max::Float64) where T <: EpidemicModel
@@ -28,16 +21,10 @@ function _epidemic_curve(events::Events{T},
     @error "Minimum time must be less than maximum time"
   end
   local times
-  if state == _state_progressions[T][1]
-    nextstate = _state_progressions[T][2]
-    times = events[nextstate]
-  elseif state in _state_progressions[T][2:end-1]
-    nextstate = advance(state, T)
-    times = events[[state; nextstate]][:]
-  elseif state == _state_progressions[T][end]
-    times = events[state]
+  if state == State_I && T ∈ [SEIR, SIR]
+    times = events[[State_I; State_R]][:]
   else
-    @error "Invalid state specified"
+    times = events[state]
   end
   times = times[Ref(min) .< times .< Ref(max)]
   sort!(times)
@@ -47,7 +34,7 @@ function _epidemic_curve(events::Events{T},
   return times, counts
 end
 
-@recipe function f(events::Events{T},
+@recipe function f(events::EventObservations{T},
                    state::DiseaseState,
                    min::Float64,
                    max::Float64) where T<: EpidemicModel
@@ -58,29 +45,17 @@ end
   linecolor --> :cornflowerblue
   label --> ""
   seriestype --> :steppost
-  _epidemic_curve(events, state, min, max)
+  _obs_curve(events, state, min, max)
 end
 
-@recipe function f(events::Events{T},
+@recipe function f(events::EventObservations{T},
                    state::DiseaseState) where T <: EpidemicModel
   events, state, 0.0, maximum(events)
 end
 
-@recipe function f(events::Events{T},
+@recipe function f(events::EventObservations{T},
                    min::Float64,
                    max::Float64) where T<: EpidemicModel
-  @series begin
-    linecolor --> :purple
-    label --> "S"
-    events, State_S, min, max
-  end
-  if T in [SEIR; SEI]
-    @series begin
-      linecolor --> :lightblue4
-      label --> "E"
-      events, State_E, min, max
-    end
-  end
   @series begin
     linecolor --> :lightgreen
     label --> "I"
@@ -95,6 +70,6 @@ end
   end
 end
 
-@recipe function f(events::Events{T}) where T <: EpidemicModel
+@recipe function f(events::EventObservations{T}) where T <: EpidemicModel
   events, 0.0, maximum(events)
 end

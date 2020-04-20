@@ -23,6 +23,7 @@ module Pathogen
   include("core/Events/Event.jl")
   include("core/Events/Events.jl")
   include("core/Events/EventRates.jl")
+  include("core/Events/EventObservations.jl")
   include("core/Risks/AbstractRisk.jl")
   include("core/Risks/RiskFunctions.jl")
   include("core/Risks/RiskParameters.jl")
@@ -37,7 +38,6 @@ module Pathogen
   include("simulation/generate.jl")
   include("simulation/simulate!.jl")
   include("simulation/update!.jl")
-  include("simulation/EventObservations.jl")
   include("simulation/observe.jl")
 
   # Inference
@@ -61,6 +61,7 @@ module Pathogen
 
   # Visualization
   include("visualization/epidemic_curve.jl")
+  include("visualization/observations.jl")
   include("visualization/population.jl")
   include("visualization/transmission_network.jl")
   include("visualization/transmission_network_distribution.jl")
