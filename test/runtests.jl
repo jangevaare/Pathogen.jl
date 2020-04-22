@@ -84,8 +84,8 @@ pop = Population(risks,
   end
   iterate!(mcmc, 100, 1.0, condition_on_network=true)
   @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
-  @test sum(TNPosterior(mcmc)) ≈ sum(obs.infection .!== NaN)
-  tnd = TNDistribution(50:100, mcmc)
+  tnd = TNDistribution(mcmc, burnin=2)
+  @test sum(tnd) ≈ sum(obs.infection .!== NaN)
   mcmc = MCMC(obs, ee, pop, rf, rpriors, tnprior=tnd)
   start!(mcmc, attempts=100)
   iterate!(mcmc, 100, 1.0, condition_on_network=false)
@@ -157,8 +157,8 @@ end
   end
   iterate!(mcmc, 100, 1.0, condition_on_network=true)
   @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
-  @test sum(TNPosterior(mcmc)) ≈ sum(obs.infection .!== NaN)
-  tnd = TNDistribution(50:100, mcmc)
+  tnd = TNDistribution(mcmc, burnin=2)
+  @test sum(tnd) ≈ sum(obs.infection .!== NaN)
   mcmc = MCMC(obs, ee, pop, rf, rpriors, tnprior=tnd)
   start!(mcmc, attempts=50)
   iterate!(mcmc, 100, 1.0, condition_on_network=false)
@@ -231,8 +231,8 @@ end
   end
   iterate!(mcmc, 100, 1.0, condition_on_network=true)
   @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
-  @test sum(TNPosterior(mcmc)) ≈ sum(obs.infection .!== NaN)
-  tnd = TNDistribution(50:100, mcmc)
+  tnd = TNDistribution(mcmc, burnin=2)
+  @test sum(tnd) ≈ sum(obs.infection .!== NaN)
   mcmc = MCMC(obs, ee, pop, rf, rpriors, tnprior=tnd)
   start!(mcmc, attempts=50)
   iterate!(mcmc, 100, 1.0, condition_on_network=false)
@@ -295,8 +295,8 @@ end
   end
   iterate!(mcmc, 100, 1.0, condition_on_network=true)
   @test all([mcmc.markov_chains[i].iterations for i = 1:3] .== 100)
-  @test sum(TNPosterior(mcmc)) ≈ sum(obs.infection .!== NaN)
-  tnd = TNDistribution(50:100, mcmc)
+  tnd = TNDistribution(mcmc, burnin=2)
+  @test sum(tnd) ≈ sum(obs.infection .!== NaN)
   mcmc = MCMC(obs, ee, pop, rf, rpriors, tnprior=tnd)
   start!(mcmc, attempts=50)
   iterate!(mcmc, 100, 1.0, condition_on_network=false)

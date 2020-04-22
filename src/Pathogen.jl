@@ -28,6 +28,7 @@ module Pathogen
   include("core/Risks/RiskFunctions.jl")
   include("core/Risks/RiskParameters.jl")
   include("core/Transmissions/Transmission.jl")
+  include("core/Transmissions/AbstractTransmissionNetwork.jl")
   include("core/Transmissions/TransmissionNetwork.jl")
   include("core/Transmissions/TransmissionRates.jl")
   include("core/initialize.jl")

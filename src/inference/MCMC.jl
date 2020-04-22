@@ -32,10 +32,6 @@ function Base.show(io::IO, x::MCMC{T}) where T <: EpidemicModel
   return print(io, "$T model MCMC with $(length(x.markov_chains)) chains")
 end
 
-function TransmissionNetworkDistribution(x::MCMC)
-  return TNDistribution([TNDistribution(y) for y in x.markov_chains])
-end
-
-function TransmissionNetworkDistribution(iter, x::MCMC)
-  return TNDistribution([TNDistribution(iter, y) for y in x.markov_chains])
+function TransmissionNetworkDistribution(x::MCMC; burnin::Int64=0, thin::Int64=1)
+  return TNDistribution([TNDistribution(y, burnin=burnin, thin=thin) for y in x.markov_chains])
 end

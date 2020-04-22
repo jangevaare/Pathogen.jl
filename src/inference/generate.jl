@@ -3,7 +3,7 @@ function generate(::Type{Transmission},
                   tnd::Nothing,
                   id::I) where {I <: Integer, T <: EpidemicModel}
   external_or_internal = Weights([tr.external[id];
-                                  sum(tr.internal[:,id])])
+                                  sum(tr.internal[:, id])])
   if sum(external_or_internal) == 0.0
     @error "All transmission rates = 0.0, No transmission generated" external_or_internal
     return NoTransmission()
@@ -11,7 +11,7 @@ function generate(::Type{Transmission},
     @debug "Exogenous tranmission generated" external_or_internal
     return ExogenousTransmission(id)
   else
-    source = sample(1:tr.individuals, Weights(tr.internal[:, id]))
+    source = sample(1:individuals(tr), Weights(tr.internal[:, id]))
     @debug "Endogenous transmission generated (source id = $source)" external_or_internal
     return EndogenousTransmission(id, source)
   end
@@ -21,8 +21,9 @@ function generate(::Type{Transmission},
                   tr::TransmissionRates,
                   tnd::TNDistribution,
                   id::I) where {I <: Integer, T <: EpidemicModel}
+  internalweights = tr.internal[:, id] .* tnd.internal[:, id]
   external_or_internal = Weights([tr.external[id] * tnd.external[id];
-                                 sum(tr.internal[:,id]) * sum(tnd.internal[:,id])])
+                                 sum(internalweights)])
   if sum(external_or_internal) == 0.0
     @error "All transmission rates = 0.0, No transmission generated" external_or_internal
     return NoTransmission()
@@ -30,7 +31,7 @@ function generate(::Type{Transmission},
     @debug "Exogenous tranmission generated" external_or_internal
     return ExogenousTransmission(id)
   else
-    source = sample(1:tr.individuals, Weights(tr.internal[:, id] .* tnd.internal[:, id]))
+    source = sample(1:individuals(tr), Weights(internalweights))
     @debug "Endogenous transmission generated (source id = $source)" external_or_internal
     return EndogenousTransmission(id, source)
   end
