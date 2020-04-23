@@ -23,3 +23,23 @@ const TransmissionNetworkPrior = TransmissionNetworkDistribution
 const TNPrior = TransmissionNetworkPrior
 const TransmissionNetworkPosterior = TransmissionNetworkDistribution
 const TNPosterior = TransmissionNetworkPosterior
+
+
+"""
+Generate the posterior mode transmission network from a `TNDistribution`
+"""
+function mode(tnd::TNDistribution)
+  tn = TransmissionNetwork(individuals(tnd))
+  for i = 1:individuals(tnd)
+    txfreq = [tnd.external[i]; tnd.internal[:,i]]
+    if any(txfreq .> 0.)
+      source = findmax([tnd.external[i]; tnd.internal[:,i]])[2]
+      if source == 1
+        tn.external[i] = 1
+      else
+        tn.internal[source-1, i] = 1
+      end
+    end
+  end
+  return tn
+end
