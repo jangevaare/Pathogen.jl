@@ -13,6 +13,7 @@ module Pathogen
         OnlineStats
 
   import StatsBase.mean,
+         StatsBase.mode,
          Base.summary,
          ProgressMeter.next!
 
@@ -66,6 +67,7 @@ module Pathogen
   include("visualization/population.jl")
   include("visualization/transmission_network.jl")
   include("visualization/transmission_network_distribution.jl")
+  include("visualization/degree_distribution.jl")
   include("visualization/trace.jl")
 
   export
@@ -174,13 +176,14 @@ module Pathogen
     ZeroMeanDiagNormalCanon,
     ZeroMeanFullNormal,
     ZeroMeanFullNormalCanon,
-    # Pathogen.jl types
+    # Pathogen.jl types/functions
     EpidemicModel,
     SEIR, SEI, SIR, SI,
     DiseaseState,
     State_S, State_E, State_I, State_R,
     RiskFunctions, RiskParameters, RiskPriors,
     Population,
+    AbstractTransmissionNetwork,
     TransmissionNetwork,
     TransmissionNetworkDistribution, TNDistribution,
     TransmissionNetworkPrior, TNPrior,
@@ -191,5 +194,5 @@ module Pathogen
     Events, EventObservations, EventExtents,
     observe,
     MCMC, start!, iterate!,
-    summary
+    summary, mean, mode
 end
