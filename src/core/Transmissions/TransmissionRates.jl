@@ -1,4 +1,4 @@
-struct TransmissionRates <: AbstractTransmissionNetwork
+struct TransmissionRates <: AbstractTN
   external::Vector{Float64}
   internal::Array{Float64, 2}
 

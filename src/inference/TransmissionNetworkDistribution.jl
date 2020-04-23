@@ -1,4 +1,4 @@
-struct TransmissionNetworkDistribution <: AbstractTransmissionNetwork
+struct TransmissionNetworkDistribution <: AbstractTN
   external::Array{Float64, 1}
   internal::Array{Float64, 2}
 
