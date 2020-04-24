@@ -63,10 +63,16 @@ function loglikelihood(rp::RiskParameters{T},
         ll = -Inf
         break
       end
+      if isnan(ll)
+        @debug "Loglikelihood calculation stopped early as loglikelihood = NaN"
+        ll = -Inf
+        break
+      end
       # Get the individual rate associated with the event that occurred
       event_rate = s.event_rates[event.new_state][event.individual]
       # Add the specific event contribution to loglikelihood
       ll += log(event_rate / rate_total)
+      @debug "Loglikelihood updated for event $i" loglikelihood = ll
     end
     # Updates
     last_event = event
@@ -81,7 +87,9 @@ function loglikelihood(rp::RiskParameters{T},
             s.population,
             s.risk_functions,
             s.risk_parameters)
+    @debug "Rates updated for event $i"
   end
+  @debug "Loglikelihood calculation stopped" loglikelihood = ll
   return loglikelihood_output ? ll : nothing,
          transmission_rates_output ? s.transmission_rates : nothing,
          transmissions_output ? transmissions : nothing

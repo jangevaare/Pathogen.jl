@@ -3,20 +3,21 @@ function initialize(::Type{MarkovChain},
                     progress_channel::RemoteChannel;
                     attempts::Int64=1000) where T <: EpidemicModel
   if attempts <= 0
-    @error "Must have at least 1 initialization attempt"
+    error("Must have at least 1 initialization attempt")
   end
   max_lposterior = -Inf
   local markov_chain
   for i in 1:attempts
     events = generate(Events, mcmc)
     rparams = generate(RiskParameters, mcmc)
+    @debug "Risk function parameters for attempt $i" θ = convert(Vector{Float64}, rparams)
     lprior = logpriors(rparams, mcmc.risk_priors)
     llikelihood, tr, tx = loglikelihood(rparams,
-                                            mcmc.risk_functions,
-                                            events,
-                                            mcmc.population,
-                                            mcmc.starting_states,
-                                            early_decision_value = max_lposterior - lprior)
+                                        mcmc.risk_functions,
+                                        events,
+                                        mcmc.population,
+                                        mcmc.starting_states,
+                                        early_decision_value = max_lposterior - lprior)
     lposterior = llikelihood + lprior
     if lposterior > max_lposterior
       network = generate(TransmissionNetwork, tr, mcmc, tx)
@@ -26,7 +27,7 @@ function initialize(::Type{MarkovChain},
     put!(progress_channel, true)
   end
   if max_lposterior == -Inf
-    @error "Failed to initialize Markov Chain"
+    error("Failed to initialize Markov Chain")
   end
   return markov_chain
 end
@@ -35,16 +36,16 @@ function initialize(::Type{MarkovChain},
                     mcmc::MCMC{T};
                     attempts::Int64=1000) where T <: EpidemicModel
   if attempts <= 0
-    @error "Must have at least 1 initialization attempt"
+    error("Must have at least 1 initialization attempt")
   end
   max_lposterior = -Inf
   local markov_chain
   pmeter = Progress(attempts, "Initialization progress")
   for i in 1:attempts
-    @debug "Beginning MarkovChain initialization attempt $i"
     next!(pmeter)
     events = generate(Events, mcmc)
     rparams = generate(RiskParameters, mcmc)
+    @debug "Risk function parameters for attempt $i" θ = convert(Vector{Float64}, rparams)
     lprior = logpriors(rparams, mcmc.risk_priors)
     llikelihood, tr, tx = loglikelihood(rparams,
                                             mcmc.risk_functions,
@@ -61,7 +62,7 @@ function initialize(::Type{MarkovChain},
   end
   finish!(pmeter)
   if max_lposterior == -Inf
-    @error "Failed to initialize Markov Chain"
+    error("Failed to initialize Markov Chain")
     markov_chain = nothing
   end
   return markov_chain
