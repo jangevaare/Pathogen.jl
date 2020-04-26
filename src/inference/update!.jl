@@ -3,8 +3,10 @@ function update!(mc::MarkovChain{T},
                  Σ::Array{Float64, 2},
                  σ::Float64;
                  condition_on_network::Bool=false,
-                 event_batches::Int64=1) where T <: EpidemicModel
+                 event_batches::Int64=1,
+                 transmission_rate_cache::Union{Nothing, TransmissionRateCache}=nothing) where T <: EpidemicModel
   # Initialize
+  new_tr_cache = transmission_rate_cache
   new_events = mc.events[end]
   new_events_array = new_events[_state_progressions[T][2:end]]
   new_params = mc.risk_parameters[end]
@@ -23,11 +25,18 @@ function update!(mc::MarkovChain{T},
   end
   batch_size = fld(length(aug_order), event_batches)
   @debug "Performing data augmentation in batches of $batch_size events at a time"
-  for i = 1:(event_batches + 1)
-    if i <= event_batches
+  for i = 1:(1 + event_batches)
+    if i == 1
+      # Propose new risk parameters
+      proposed_events = new_events
+      proposed_events_array = new_events_array
+      proposed_params = generate(RiskParameters{T}, new_params, Σ)
+      @debug "Generating new TransmissionRateCache for TN-ILM parameter proposal"
+      proposed_tr_cache = TransmissionRateCache(size(new_events_array, 1))
+    else
       proposed_events_array = copy(new_events_array)
       proposed_events = Events{T}(proposed_events_array)
-      for j = (batch_size*(i-1) + 1):min(batch_size*i,length(aug_order))
+      for j = (batch_size*(i-2) + 1):min(batch_size*(i-1),length(aug_order))
         id, state_index = Tuple(CartesianIndices((new_events.individuals,
                                             length(_state_progressions[T][2:end])))[aug_order[j]])
         new_state = _state_progressions[T][state_index+1]
@@ -59,11 +68,7 @@ function update!(mc::MarkovChain{T},
         proposed_events = Events{T}(proposed_events_array)
       end
       proposed_params = new_params
-    else
-      # Propose new risk parameters
-      proposed_events = new_events
-      proposed_events_array = new_events_array
-      proposed_params = generate(RiskParameters{T}, new_params, Σ)
+      proposed_tr_cache = new_tr_cache
     end
     proposed_lprior = logpriors(proposed_params, mcmc.risk_priors)
     # Based on the logprior and competiting MCMC iteration, this loglikelihood is required for acceptance
@@ -77,7 +82,8 @@ function update!(mc::MarkovChain{T},
                                            mcmc.starting_states,
                                            transmission_rates_output = false,
                                            transmissions_output = false,
-                                           early_decision_value = ll_acceptance_threshold)[1]
+                                           early_decision_value = ll_acceptance_threshold,
+                                           transmission_rate_cache = proposed_tr_cache)[1]
       proposed_lposterior = proposed_lprior + proposed_llikelihood
     else
       proposed_llikelihood = -Inf
@@ -86,6 +92,7 @@ function update!(mc::MarkovChain{T},
     if proposed_llikelihood >= ll_acceptance_threshold
       @debug "MCMC proposal accepted (acceptance probability = $(round(min(1.0, exp(proposed_lposterior - new_lposterior)), digits=3)))"
       new_params = proposed_params
+      new_tr_cache = proposed_tr_cache
       new_events = proposed_events
       new_events_array = proposed_events_array
       new_lposterior = proposed_lposterior
@@ -99,7 +106,8 @@ function update!(mc::MarkovChain{T},
                           new_events,
                           mcmc.population,
                           mcmc.starting_states,
-                          loglikelihood_output = false)[[2; 3]]
+                          loglikelihood_output = false,
+                          transmission_rate_cache = new_tr_cache)[[2; 3]]
   new_network = generate(TransmissionNetwork, tnr, mcmc, tx)
   push!(mc.events, new_events)
   push!(mc.transmission_network, new_network)
