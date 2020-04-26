@@ -32,6 +32,7 @@ module Pathogen
   include("core/Transmissions/AbstractTransmissionNetwork.jl")
   include("core/Transmissions/TransmissionNetwork.jl")
   include("core/Transmissions/TransmissionRates.jl")
+  include("core/Transmissions/TransmissionRateCache.jl")
   include("core/initialize.jl")
   include("core/update!.jl")
 

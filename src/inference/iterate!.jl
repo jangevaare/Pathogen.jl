@@ -17,11 +17,12 @@ function iterate!(mc::MarkovChain{T},
     use_adapted_cov = true
     adapted_cov = OnlineStats.value(mc.cov) * 2.38^2 / length(mc.risk_parameters[1])
   end
+  tr_cache = TransmissionRateCache(mcmc.population.individuals)
   for i = 1:n
     if use_adapted_cov
-      update!(mc, mcmc, adapted_cov, σ, condition_on_network = condition_on_network, event_batches = event_batches)
+      update!(mc, mcmc, adapted_cov, σ, condition_on_network = condition_on_network, event_batches = event_batches, transmission_rate_cache=tr_cache)
     else
-      update!(mc, mcmc, Σ, σ, condition_on_network = condition_on_network, event_batches = event_batches)
+      update!(mc, mcmc, Σ, σ, condition_on_network = condition_on_network, event_batches = event_batches, transmission_rate_cache=tr_cache)
     end
     next!(pmeter)
     @logmsg LogLevel(-5000) "MCMC progress" progress = i/n
@@ -55,11 +56,12 @@ function iterate!(mc::MarkovChain{T},
     use_adapted_cov = true
     adapted_cov = OnlineStats.value(mc.cov) * 2.38^2 / length(mc.risk_parameters[1])
   end
+  tr_cache = TransmissionRateCache(mcmc.population.individuals)
   for i = 1:n
     if use_adapted_cov
-      update!(mc, mcmc, adapted_cov, σ, condition_on_network = condition_on_network, event_batches = event_batches)
+      update!(mc, mcmc, adapted_cov, σ, condition_on_network = condition_on_network, event_batches = event_batches, transmission_rate_cache=tr_cache)
     else
-      update!(mc, mcmc, Σ, σ, condition_on_network = condition_on_network, event_batches = event_batches)
+      update!(mc, mcmc, Σ, σ, condition_on_network = condition_on_network, event_batches = event_batches, transmission_rate_cache=tr_cache)
     end
     put!(progress_channel, true)
     if adapt_cov != 0 && mod(i, adapt_cov) == 0

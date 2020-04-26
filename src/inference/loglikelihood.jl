@@ -6,7 +6,8 @@ function loglikelihood(rp::RiskParameters{T},
                        loglikelihood_output::Bool=true,
                        transmission_rates_output::Bool=true,
                        transmissions_output::Bool=true,
-                       early_decision_value::Float64=-Inf) where T <: EpidemicModel
+                       early_decision_value::Float64=-Inf,
+                       transmission_rate_cache::Union{Nothing, TransmissionRateCache}=nothing) where T <: EpidemicModel
   # Initialize
   ll = 0.0
   transmissions = Int64[]
@@ -86,7 +87,8 @@ function loglikelihood(rp::RiskParameters{T},
             s.disease_states,
             s.population,
             s.risk_functions,
-            s.risk_parameters)
+            s.risk_parameters,
+            transmission_rate_cache = transmission_rate_cache)
     @debug "Rates updated for event $i"
   end
   @debug "Loglikelihood calculation stopped" loglikelihood = ll

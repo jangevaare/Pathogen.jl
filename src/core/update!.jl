@@ -33,18 +33,32 @@ function update!(tr::TransmissionRates,
                  pop::Population,
                  rf::RiskFunctions{T},
                  rp::RiskParameters{T};
-                 xzero::Bool=false) where T <: EpidemicModel
+                 xzero::Bool=false,
+                 transmission_rate_cache::Union{Nothing, TransmissionRateCache}=nothing) where T <: EpidemicModel
   id = event.individual
   if _new_transmission(event) && xzero
     tr.external[id] = 0.0
     tr.internal[:, id] .= 0.0
   end
   if event.new_state == State_I
-    transmissibility = rf.transmissibility(rp.transmissibility, pop, id)
-    @simd for i in findall(states .== Ref(State_S))
-      tr.internal[id, i] = rf.susceptibility(rp.susceptibility, pop, i) *
-                           rf.infectivity(rp.infectivity, pop, i, id) *
-                           transmissibility
+    if transmission_rate_cache == nothing
+      transmissibility = rf.transmissibility(rp.transmissibility, pop, id)
+      @inbounds @simd for i in findall(states .== Ref(State_S))
+        tr.internal[id, i] = rf.susceptibility(rp.susceptibility, pop, i) *
+                                    rf.infectivity(rp.infectivity, pop, i, id) *
+                                    transmissibility
+      end
+    else
+      @inbounds @simd for i in findall(states .== Ref(State_S))
+        if transmission_rate_cache.internal[id, i] == nothing
+          tr.internal[id, i] = rf.susceptibility(rp.susceptibility, pop, i) *
+                               rf.infectivity(rp.infectivity, pop, i, id) *
+                               rf.transmissibility(rp.transmissibility, pop, id)
+          transmission_rate_cache.internal[id, i] = tr.internal[id, i]
+        else
+          tr.internal[id, i] = transmission_rate_cache.internal[id, i]
+        end
+      end
     end
   elseif event.new_state == State_R
     tr.internal[id, states .== Ref(State_S)] .= 0.0
@@ -111,8 +125,9 @@ function update!(tr::TransmissionRates,
                  states::Vector{DiseaseState},
                  pop::Population,
                  rf::RiskFunctions{T},
-                 rp::RiskParameters{T}) where T <: EpidemicModel
-  update!(tr, event, states, pop, rf, rp)
+                 rp::RiskParameters{T};
+                 transmission_rate_cache::Union{Nothing, TransmissionRateCache}=nothing) where T <: EpidemicModel
+  update!(tr, event, states, pop, rf, rp, transmission_rate_cache=transmission_rate_cache)
   update!(rates, tr, event, states, pop, rf, rp)
   return tr, rates
 end
