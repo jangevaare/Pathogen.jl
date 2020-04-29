@@ -61,7 +61,7 @@ pop = Population(risks,
                              UnivariateDistribution[],
                              [Uniform(0.0, 1.0)],
                              [Uniform(0.0, 1.0)])
-  ee = EventExtents{SEIR}(20.0, 2.0, 2.0)
+  ee = EventExtents{SEIR}((2.0, 20.0), 2.0, 2.0)
   mcmc = MCMC(obs, ee, pop, rf, rpriors)
   start!(mcmc, 3, attempts=100)
   @test length(mcmc.markov_chains) == 3
@@ -140,7 +140,7 @@ end
                             UnivariateDistribution[],
                             [Uniform(0.0, 1.0)])
 
-  ee = EventExtents{SEI}(20.0, 2.0)
+  ee = EventExtents{SEI}((2.0, 20.0), 2.0)
   mcmc = MCMC(obs, ee, pop, rf, rpriors)
   start!(mcmc, 3, attempts = 100)
   @test length(mcmc.markov_chains) == 3
