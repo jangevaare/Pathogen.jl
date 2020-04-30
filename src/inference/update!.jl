@@ -27,7 +27,9 @@ function update!(mc::MarkovChain{S, M},
   @debug "Performing data augmentation in batches of $batch_size events at a time"
   for i = 1:(event_batches + 1)
     if i <= event_batches
-      for j = (batch_size*(i-1) + 1):minimum([(batch_size*i + 1); length(aug_order)])
+      proposed_events_array = copy(new_events_array)
+      proposed_events = Events{S}(proposed_events_array)
+      for j = (batch_size*(i-1) + 1):min(batch_size*i + 1, length(aug_order))
         id, state_index = Tuple(CartesianIndices((new_events.individuals,
                                             length(convert(DiseaseStates, S)[2:end])))[aug_order[j]])
         new_state = convert(DiseaseStates, S)[state_index+1]
@@ -41,7 +43,7 @@ function update!(mc::MarkovChain{S, M},
                                     σ,
                                     mcmc.event_extents,
                                     mcmc.event_observations,
-                                    new_events,
+                                    proposed_events,
                                     new_network)
         else
           proposed_event = generate(Event,
@@ -49,25 +51,13 @@ function update!(mc::MarkovChain{S, M},
                                     σ,
                                     mcmc.event_extents,
                                     mcmc.event_observations,
-                                    new_events)
+                                    proposed_events)
         end
-        # For the first event of batch, we'll create an events array from current Markov chain position
-        # For other events in batch, we'll update proposal itself
-        if j == (batch_size*(i-1) + 1)
-          proposed_events_array = reshape([new_events_array[1:(aug_order[j]-1)]
-                                           _time(proposed_event)
-                                           new_events_array[(aug_order[j]+1):end]],
-                                          size(new_events_array))
-        else
-          proposed_events_array = reshape([proposed_events_array[1:(aug_order[j]-1)]
-                                           _time(proposed_event)
-                                           proposed_events_array[(aug_order[j]+1):end]],
-                                          size(new_events_array))
-        end
-        # Only need to generate new `Events` on last event of batch
-        if j == minimum([(batch_size*i + 1); length(aug_order)])
-          proposed_events = Events{S}(proposed_events_array)
-        end
+        proposed_events_array = reshape([proposed_events_array[1:(aug_order[j]-1)]
+                                         _time(proposed_event)
+                                         proposed_events_array[(aug_order[j]+1):end]],
+                                        size(new_events_array))
+        proposed_events = Events{S}(proposed_events_array)
       end
       proposed_params = new_params
     else
