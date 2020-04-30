@@ -80,6 +80,7 @@ module Pathogen
   include("visualization/transmission_network.jl")
   include("visualization/transmission_network_distribution.jl")
   include("visualization/trace.jl")
+  include("visualization/out_degree.jl")
 
   # re-export PhyloModels, DataFrames, Distributions
   for reexport_pkg in [PhyloModels, DataFrames, Distributions]
