@@ -4,11 +4,11 @@ function _bounds(id::Int64,
                  obs::EventObservations{S, M},
                  events::Events{S},
                  network::TransmissionNetwork) where {
-                   S <: DiseaseStateSequence,
-                   M <: ILM}
+                 S <: DiseaseStateSequence,
+                 M <: ILM}
   if new_state == State_E
-    lowerbounds = [events.infection[id] - extents.exposure]
-    upperbounds = [events.infection[id]]
+    lowerbounds = [events.infection[id] - extents.exposure[2]]
+    upperbounds = [events.infection[id] - extents.exposure[1]]
     source = _source(id, network)
     if source !== nothing
       push!(lowerbounds, events.infection[source])
@@ -19,16 +19,16 @@ function _bounds(id::Int64,
   elseif new_state == State_I
     path_from = _pathway_from(id, network, depth = 1, include_id = false)
     if S in [SEIR; SEI]
-      lowerbounds = [obs.infection[id] - extents.infection
-                     events.exposure[id]]
-      upperbounds = [obs.infection[id]
-                     events.exposure[id] + extents.exposure]
+      lowerbounds = [obs.infection[id] - extents.infection[2]
+                     events.exposure[id] + extents.exposure[1]]
+      upperbounds = [obs.infection[id] - extents.infection[1]
+                     events.exposure[id] + extents.exposure[2]]
       if length(path_from) > 0
         append!(upperbounds, events.exposure[path_from])
       end
     elseif S in [SIR; SI]
-      lowerbounds = [obs.infection[id] - extents.infection]
-      upperbounds = [obs.infection[id]]
+      lowerbounds = [obs.infection[id] - extents.infection[2]]
+      upperbounds = [obs.infection[id] - extents.infection[1]]
       if length(path_from) > 0
         append!(upperbounds, events.infection[path_from])
       end
@@ -42,9 +42,9 @@ function _bounds(id::Int64,
     end
   elseif new_state == State_R
     path_from = _pathway_from(id, network, depth = 1, include_id = false)
-    lowerbounds = [obs.removal[id] - extents.removal
+    lowerbounds = [obs.removal[id] - extents.removal[2]
                    obs.infection[id]]
-    upperbounds = [obs.removal[id]]
+    upperbounds = [obs.removal[id] - extents.removal[1]]
     if length(path_from) > 0
       if S == SEIR
         append!(lowerbounds, events.exposure[path_from])
@@ -85,22 +85,22 @@ function _bounds(id::Int64,
                  S <: DiseaseStateSequence,
                  M <: ILM}
   if new_state == State_E
-    lowerbounds = [events.infection[id] - extents.exposure]
-    upperbounds = [events.infection[id]]
+    lowerbounds = [events.infection[id] - extents.exposure[2]]
+    upperbounds = [events.infection[id] - extents.exposure[1]]
   elseif new_state == State_I
     if S in [SEIR; SEI]
-      lowerbounds = [obs.infection[id] - extents.infection
-                     events.exposure[id]]
-      upperbounds = [obs.infection[id]
-                     events.exposure[id] + extents.exposure]
+      lowerbounds = [obs.infection[id] - extents.infection[2]
+                     events.exposure[id] + extents.exposure[1]]
+      upperbounds = [obs.infection[id] - extents.infection[1]
+                     events.exposure[id] + extents.exposure[2]]
     elseif S in [SIR; SI]
-      lowerbounds = [obs.infection[id] - extents.infection]
-      upperbounds = [obs.infection[id]]
+      lowerbounds = [obs.infection[id] - extents.infection[2]]
+      upperbounds = [obs.infection[id] - extents.infection[1]]
     end
   elseif new_state == State_R
-    lowerbounds = [obs.removal[id] - extents.removal
+    lowerbounds = [obs.removal[id] - extents.removal[2]
                    obs.infection[id]]
-    upperbounds = [obs.removal[id]]
+    upperbounds = [obs.removal[id] - extents.removal[1]]
   end
   # Must be later than epidemic start time
   push!(lowerbounds, obs.start_time)

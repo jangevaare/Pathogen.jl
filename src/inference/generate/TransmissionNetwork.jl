@@ -3,7 +3,7 @@ function generate(::Type{TransmissionNetwork},
                   tr::TransmissionRates,
                   tnd::Union{Nothing, TNDistribution},
                   ids::Vector{Int64}) where M <: ILM
-  tn = TransmissionNetwork(starting_states)                
+  tn = TransmissionNetwork(starting_states)
   for i in ids
     tx = generate(Transmission, tr, tnd, i)
     update!(tn, tx)
