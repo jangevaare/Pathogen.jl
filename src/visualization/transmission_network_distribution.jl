@@ -4,6 +4,7 @@ function _transmission_pathway_density(pop::Population,
   x = pop.risks[[i; j], :x]
   y = pop.risks[[i; j], :y]
   dens = tn.internal[j, i]
+  @debug "Transmission pathway density for individuals $i and $j" xy1 = (x[1], y[1]) xy2 = (x[2], y[2]) density = dens
   return x, y, dens
 end
 

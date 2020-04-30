@@ -32,7 +32,9 @@ function update!(mc::MarkovChain{S, M},
                                             length(convert(DiseaseStates, S)[2:end])))[aug_order[j]])
         new_state = convert(DiseaseStates, S)[state_index+1]
         time = new_events[new_state][id]
-        # Conditioning on network means that only event times valid under current network will be proposed. This is useful for models which may have additional contributions to the posterior based on network, and require more modest proposals (e.g. phylodynamic models).
+        # Conditioning on network means that only event times valid under current network will be proposed.
+        # This is useful for models which may have additional contributions to the posterior based on network,
+        # and require more modest proposals (e.g. phylodynamic models).
         if condition_on_network
           proposed_event = generate(Event,
                                     Event{S}(time, id, new_state),

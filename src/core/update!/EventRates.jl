@@ -37,13 +37,13 @@ function update!(rates::EventRates{S},
     if S ==SEIR
       @simd for i in findall(states .== Ref(State_S))
         # This assumes `TransmissionRates` already updated!
-        rates.exposure[i] = sum(tr.internal[:, i])
+        rates.exposure[i] = sum(tr, i)
         @logmsg LogLevel(-5000) "Exposure rate total for i = $i updated"  λ = rates.exposure[i]
       end
     elseif S ==SIR
       @simd for i in findall(states .== Ref(State_S))
         # This assumes `TransmissionRates` already updated!
-        rates.infection[i] = sum(tr.internal[:, i])
+        rates.infection[i] = sum(tr, i)
         @logmsg LogLevel(-5000) "Infection rate for i = $i updated" λ = rates.infection[i]
       end
     end

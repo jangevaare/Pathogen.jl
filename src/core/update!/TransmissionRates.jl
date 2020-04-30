@@ -18,9 +18,7 @@ function update!(tr::TransmissionRates,
                            transmissibility
     end
   elseif event.new_state == State_R
-    @simd for i in findall(states .== Ref(State_S))
-      tr.internal[id, i] = 0.0
-    end
+    tr.internal[id, states .== Ref(State_S)] .= 0.0
   end
   return tr
 end

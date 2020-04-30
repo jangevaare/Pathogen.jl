@@ -101,6 +101,8 @@ module Pathogen
     TransmissionNetworkDistribution, TNDistribution,
     TransmissionNetworkPrior, TNPrior,
     TransmissionNetworkPosterior, TNPosterior,
+    Transmission,
+    EndogenousTransmission, ExogenousTransmission, NoTransmission,
     individuals,
     Simulation, simulate!, generate,
     Events, EventObservations, EventExtents,

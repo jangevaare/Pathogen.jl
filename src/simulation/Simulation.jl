@@ -14,30 +14,33 @@ mutable struct Simulation{S <: DiseaseStateSequence, M <: ILM}
 
   function Simulation{S, M}(pop::Population,
                             rf::RiskFunctions{S},
-                            rp::RiskParameters{S}) where {
-                            S <: DiseaseStateSequence, 
+                            rp::RiskParameters{S};
+                            time::Float64 = 0.0) where {
+                            S <: DiseaseStateSequence,
                             M <: TNILM}
     states = fill(State_S, pop.individuals)
     tr = initialize(TransmissionRates, states, pop, rf, rp)
     rates = initialize(EventRates, tr, states, pop, rf, rp)
     events = Events{S}(pop.individuals)
     net = TransmissionNetwork(states)
-    return new{S, M}(0.0, 0.0, 0, pop, rf, rp, nothing, states, tr, rates, events, net)
+    return new{S, M}(time, time, 0, pop, rf, rp, nothing, states, tr, rates, events, net)
   end
-
 
   function Simulation{S, M}(pop::Population,
                             states::DiseaseStates,
-                            time::Float64,
                             rf::RiskFunctions{S},
-                            rp::RiskParameters{S}) where {
-                            S <: DiseaseStateSequence, 
+                            rp::RiskParameters{S};
+                            time::Float64 = 0.0,
+                            skip_checks::Bool=false) where {
+                            S <: DiseaseStateSequence,
                             M <: TNILM}
-    @debug "Initializing $S $M Simulation with the following starting states:" states
-    if length(states) != pop.individuals
-      throw(ErrorException("Length of initial disease state vector must match number of individuals"))
-    elseif !all(in.(states, Ref(convert(DiseaseStates, S))))
-      throw(ErrorException("All states in initial disease state vector must be valid within specified epidemic model"))
+    @debug "Initializing $T Simulation with the following starting states:" states
+    if !skip_checks
+      if length(states) != pop.individuals
+        @error "Length of initial disease state vector must match number of individuals"
+      elseif !all(in.(states, Ref(convert(DiseaseStates, S))))
+        @error "All states in initial disease state vector must be valid within specified epidemic model"
+      end
     end
     tr = initialize(TransmissionRates, states, pop, rf, rp)
     rates = initialize(EventRates, tr, states, pop, rf, rp)
@@ -47,52 +50,36 @@ mutable struct Simulation{S <: DiseaseStateSequence, M <: ILM}
   end
 
   function Simulation{S, M}(pop::Population,
-                            states::DiseaseStates,
                             rf::RiskFunctions{S},
-                            rp::RiskParameters{S}) where {
-                            S <: DiseaseStateSequence, 
-                            M <: TNILM}
-    @debug "Initializing $S $M Simulation with the following starting states:" states
-    if length(states) != pop.individuals
-      throw(ErrorException("Length of initial disease state vector must match number of individuals"))
-    elseif !all(in.(states, Ref(convert(DiseaseStates, S))))
-      throw(ErrorException("All states in initial disease state vector must be valid within specified epidemic model"))
-    end
-    tr = initialize(TransmissionRates, states, pop, rf, rp)
-    rates = initialize(EventRates, tr, states, pop, rf, rp)
-    events = Events{S}(states)
-    net = TransmissionNetwork(states)
-    return new{S, M}(0.0, 0.0, 0, pop, rf, rp, nothing, copy(states), tr, rates, events, net)
-  end
-
-function Simulation{S, M}(pop::Population,
-                          rf::RiskFunctions{S},
-                          rp::RiskParameters{S},
-                          sm::NASM) where {
-                          S <: DiseaseStateSequence, 
-                          M <: PhyloILM}
+                            rp::RiskParameters{S},
+                            sm::NASM;
+                            time::Float64 = 0.0) where {
+                            S <: DiseaseStateSequence,
+                            M <: PhyloILM}
     states = fill(State_S, pop.individuals)
     tr = initialize(TransmissionRates, states, pop, rf, rp)
     rates = initialize(EventRates, tr, states, pop, rf, rp)
     events = Events{S}(pop.individuals)
     net = TransmissionNetwork(states)
-    return new{S, M}(0.0, 0.0, 0, pop, rf, rp, sm, states, tr, rates, events, net)
+    return new{S, M}(time, time, 0, pop, rf, rp, sm, states, tr, rates, events, net)
   end
-
 
   function Simulation{S, M}(pop::Population,
                             states::DiseaseStates,
-                            time::Float64,
                             rf::RiskFunctions{S},
                             rp::RiskParameters{S},
-                            sm::NASM) where {
-                            S <: DiseaseStateSequence, 
+                            sm::NASM;
+                            time::Float64 = 0.0,
+                            skip_checks::Bool=false) where {
+                            S <: DiseaseStateSequence,
                             M <: PhyloILM}
-    @debug "Initializing $S $M Simulation with the following starting states:" states
-    if length(states) != pop.individuals
-      throw(ErrorException("Length of initial disease state vector must match number of individuals"))
-    elseif !all(in.(states, Ref(convert(DiseaseStates, S))))
-      throw(ErrorException("All states in initial disease state vector must be valid within specified epidemic model"))
+    @debug "Initializing $T Simulation with the following starting states:" states
+    if !skip_checks
+      if length(states) != pop.individuals
+        @error "Length of initial disease state vector must match number of individuals"
+      elseif !all(in.(states, Ref(convert(DiseaseStates, S))))
+        @error "All states in initial disease state vector must be valid within specified epidemic model"
+      end
     end
     tr = initialize(TransmissionRates, states, pop, rf, rp)
     rates = initialize(EventRates, tr, states, pop, rf, rp)
@@ -100,31 +87,11 @@ function Simulation{S, M}(pop::Population,
     net = TransmissionNetwork(states)
     return new{S, M}(time, time, 0, pop, rf, rp, sm, copy(states), tr, rates, events, net)
   end
-
-  function Simulation{S, M}(pop::Population,
-                            states::DiseaseStates,
-                            rf::RiskFunctions{S},
-                            rp::RiskParameters{S},
-                            sm::NASM) where {
-                            S <: DiseaseStateSequence, 
-                            M <: PhyloILM}
-    @debug "Initializing $S $M Simulation with the following starting states:" states
-    if length(states) != pop.individuals
-      throw(ErrorException("Length of initial disease state vector must match number of individuals"))
-    elseif !all(in.(states, Ref(convert(DiseaseStates, S))))
-      throw(ErrorException("All states in initial disease state vector must be valid within specified epidemic model"))
-    end
-    tr = initialize(TransmissionRates, states, pop, rf, rp)
-    rates = initialize(EventRates, tr, states, pop, rf, rp)
-    events = Events{S}(states)
-    net = TransmissionNetwork(states)
-    return new{S, M}(0.0, 0.0, 0, pop, rf, rp, sm, copy(states), tr, rates, events, net)
-  end
 end
 
-function Base.show(io::IO, 
+function Base.show(io::IO,
                    x::Simulation{S, M}) where {
-                   S <: DiseaseStateSequence, 
+                   S <: DiseaseStateSequence,
                    M <: ILM}
   y = "$S $M epidemic simulation @ time = $(round(x.simulation_time, digits=2))\n"
 

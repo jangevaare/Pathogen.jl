@@ -41,7 +41,6 @@ pop = Population(risks,
 
   sim = Simulation{SEIR, TNILM}(pop,
                    [State_I; fill(State_S, n-1)],
-                   0.0,
                    rf,
                    rparams)
 
@@ -121,7 +120,6 @@ end
 
   sim = Simulation{SEI, TNILM}(pop,
                    [State_I; fill(State_S, n-1)],
-                   0.0,
                    rf,
                    rparams)
 
@@ -198,7 +196,6 @@ end
 
   sim = Simulation{SIR, TNILM}(pop,
                    [State_I; fill(State_S, n-1)],
-                   0.0,
                    rf,
                    rparams)
 
@@ -271,7 +268,6 @@ end
 
   sim = Simulation{SI, TNILM}(pop,
                    [State_I; fill(State_S, n-1)],
-                   0.0,
                    rf,
                    rparams)
 
@@ -348,7 +344,6 @@ end
   # sim = Simulation{TNILM}(pop, [State_I; fill(State_S, n-1)], rf, rparams)
   sim = Simulation{SEIR, PhyloILM}(pop,
                    [State_I; fill(State_S, n-1)],
-                   0.0,
                    rf,
                    rparams,
                    JC69())
@@ -428,7 +423,6 @@ end
 
   sim = Simulation{SEI, PhyloILM}(pop,
                    [State_I; fill(State_S, n-1)],
-                   0.0,
                    rf,
                    rparams,
                    JC69())
@@ -505,7 +499,6 @@ end
 
   sim = Simulation{SIR, PhyloILM}(pop,
                    [State_I; fill(State_S, n-1)],
-                   0.0,
                    rf,
                    rparams,
                    JC69())
@@ -578,7 +571,6 @@ end
 
   sim = Simulation{SI, PhyloILM}(pop,
                    [State_I; fill(State_S, n-1)],
-                   0.0,
                    rf,
                    rparams,
                    JC69())
