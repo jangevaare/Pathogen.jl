@@ -6,3 +6,4 @@ testing/
 .DS_Store
 *.cov
 Manifest.toml
+*.JLD2
