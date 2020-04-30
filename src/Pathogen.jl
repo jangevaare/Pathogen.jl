@@ -15,7 +15,8 @@ module Pathogen
         PhyloModels
 
   import StatsBase.mean,
-         ProgressMeter.next!
+         ProgressMeter.next!,
+         Base.summary
 
   # Core
   include("core/IndividualLevelModel.jl")
@@ -70,6 +71,7 @@ module Pathogen
   include("inference/logprior.jl")
   include("inference/start!.jl")
   include("inference/iterate!.jl")
+  include("inference/summary.jl")
 
   # Visualization
   include("visualization/epidemic_curve.jl")
@@ -102,5 +104,5 @@ module Pathogen
     individuals,
     Simulation, simulate!, generate,
     Events, EventObservations, EventExtents,
-    MCMC, start!, iterate!
+    MCMC, start!, iterate!, summary
 end
