@@ -1,4 +1,4 @@
-struct RiskFunctions{S} <: AbstractRisk{S}
+struct RiskFunctions{S<:DiseaseStateSequence}
   sparks::Union{Nothing, Function}
   susceptibility::Union{Nothing, Function}
   infectivity::Union{Nothing, Function}

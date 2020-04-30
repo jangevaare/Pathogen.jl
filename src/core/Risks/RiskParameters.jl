@@ -31,7 +31,7 @@ function Base.convert(::Type{Array{Float64, 2}},
 end
 
 
-function Base.similar(x::RiskParameters{S}, 
+function Base.similar(x::RiskParameters{S},
                       v::Vector{Float64}) where {
                       S <: DiseaseStateSequence}
   indices = _indices(x, zeros=false)

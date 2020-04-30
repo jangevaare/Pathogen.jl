@@ -1,6 +1,9 @@
 abstract type AbstractRisk{S <: DiseaseStateSequence} end
 
-function _indices(x::T; zeros::Bool=true) where {S <: DiseaseStateSequence, T <: AbstractRisk{S}}
+function _indices(x::AbstractRisk{S};
+                  zeros::Bool=true,
+                  cumulative::Bool=true) where {
+                  S <: DiseaseStateSequence}
   indices = [length(x.sparks)
              length(x.susceptibility)
              length(x.infectivity)
@@ -15,14 +18,16 @@ function _indices(x::T; zeros::Bool=true) where {S <: DiseaseStateSequence, T <:
   elseif zeros
     push!(indices, 0)
   end
-  return cumsum(indices)
+  if cumulative
+    return cumsum(indices)
+  else
+    return indices
+  end
 end
-
 
 function Base.length(x::T) where {S <: DiseaseStateSequence, T <: AbstractRisk{S}}
   return _indices(x)[end]
 end
-
 
 function Base.getindex(x::T, i::Int64) where {S <: DiseaseStateSequence, T <: AbstractRisk{S}}
   indices = _indices(x, zeros = true)
