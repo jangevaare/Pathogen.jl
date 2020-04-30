@@ -11,7 +11,7 @@ function generate(::Type{Transmission},
       @debug "Exogenous tranmission generated"
       return ExogenousTransmission(id)
     else
-      source = sample(1:tr.individuals, Weights(tr.internal[:, id]))
+      source = sample(1:individuals(tr), Weights(tr.internal[:, id]))
       @debug "Endogenous transmission generated (source id = $source)"
       return EndogenousTransmission(id, source)
     end

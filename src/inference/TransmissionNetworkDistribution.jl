@@ -1,4 +1,4 @@
-struct TransmissionNetworkDistribution
+struct TransmissionNetworkDistribution <: AbstractTN
   external::Array{Float64, 1}
   internal::Array{Float64, 2}
 
@@ -16,11 +16,3 @@ const TransmissionNetworkPrior = TransmissionNetworkDistribution
 const TNPrior = TransmissionNetworkPrior
 const TransmissionNetworkPosterior = TransmissionNetworkDistribution
 const TNPosterior = TransmissionNetworkPosterior
-
-function Base.sum(x::TNDistribution)
-  return sum(x.external) + sum(x.internal)
-end
-
-function Base.show(io::IO, x::TNDistribution)
-  return print(io, "Transmission Network distribution")
-end

@@ -30,8 +30,10 @@ module Pathogen
   include("core/Risks/RiskFunctions.jl")
   include("core/Risks/RiskParameters.jl")
   include("core/Transmissions/Transmission.jl")
+  include("core/Transmissions/AbstractTransmissionNetwork.jl")
   include("core/Transmissions/TransmissionNetwork.jl")
   include("core/Transmissions/TransmissionRates.jl")
+  include("core/Transmissions/TransmissionRateCache.jl")
   include("core/initialize/TransmissionRates.jl")
   include("core/initialize/EventRates.jl")
   include("core/update!/DiseaseStates.jl")
@@ -93,10 +95,11 @@ module Pathogen
     State_S, State_E, State_I, State_R,
     RiskFunctions, RiskParameters, RiskPriors,
     Population,
-    TransmissionNetwork, 
+    TransmissionNetwork,
     TransmissionNetworkDistribution, TNDistribution,
     TransmissionNetworkPrior, TNPrior,
     TransmissionNetworkPosterior, TNPosterior,
+    individuals,
     Simulation, simulate!, generate,
     Events, EventObservations, EventExtents,
     MCMC, start!, iterate!

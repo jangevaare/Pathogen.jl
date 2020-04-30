@@ -1,4 +1,4 @@
-struct TransmissionNetwork
+struct TransmissionNetwork <: AbstractTN
   external::BitArray{1}
   internal::BitArray{2}
 
@@ -22,13 +22,4 @@ struct TransmissionNetwork
   function TransmissionNetwork(starting_states::DiseaseStates)
     return new(starting_states .!= Ref(State_S), fill(0, (length(starting_states), length(starting_states))))
   end
-end
-
-function Base.copy(x::TransmissionNetwork)
-  return TransmissionNetwork(copy(x.external),
-                             copy(x.internal))
-end
-
-function Base.show(io::IO, object::TransmissionNetwork)
-  return print(io, "Transmission network with $(sum(object.external)) external, and $(sum(object.internal)) internal transmission(s)")
 end
