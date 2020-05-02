@@ -19,9 +19,6 @@ function individuals(x::TN) where {TN <: AbstractTN}
   return length(x.external)
 end
 
-function Base.sum(x::TN, i::Integer) where {TN <: AbstractTN}
-  if i < 1 || i > individuals(x)
-    @error "Invalid individual identifier" i
-  end
+function Base.sum(x::TN, i) where {TN <: AbstractTN}
   return x.external[i] + sum(x.internal[:, i])
 end

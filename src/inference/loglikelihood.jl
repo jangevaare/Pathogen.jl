@@ -22,7 +22,7 @@ function loglikelihood(rp::RiskParameters{S},
   last_event_switch = false
   local last_event
   for i = 1:length(event_order)
-    id, state_index = Tuple(CartesianIndices((events.individuals,
+    id, state_index = Tuple(CartesianIndices((individuals(events),
                                         length(convert(DiseaseStates, S)[2:end])))[event_order[i]])
     new_state = convert(DiseaseStates, S)[state_index+1]
     time = s.events[new_state][id]

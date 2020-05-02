@@ -5,7 +5,7 @@ function generate(::Type{TransmissionNetwork},
                   ids::Vector{Int64}) where M <: ILM
   tn = TransmissionNetwork(starting_states)
   for i in ids
-    tx = generate(Transmission, tr, tnd, i)
+    tx = generate(AbstractTransmission, tr, tnd, i)
     update!(tn, tx)
   end
   return tn

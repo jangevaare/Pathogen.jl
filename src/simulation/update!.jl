@@ -1,11 +1,11 @@
 function update!(s::Simulation, event::AbstractEvent)
-  if _time(event) < s.simulation_time
+  if _time(event) < s.time
     throw(ErrorException("Time of a new event must be >= that of the previous event"))
   elseif _time(event) < Inf
     update!(s.events, event)
     update!(s.disease_states, event)
     update!(s.transmission_network,
-            generate(Transmission,
+            generate(AbstractTransmission,
                      s.transmission_rates,
                      event))
     update!(s.transmission_rates,
@@ -19,7 +19,7 @@ function update!(s::Simulation, event::AbstractEvent)
     s.iterations += 1
   end
   # Update simulation time
-  s.simulation_time = _time(event)
+  s.time = _time(event)
   # Return updated Simulation object
   return s
 end

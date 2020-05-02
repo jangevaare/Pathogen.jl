@@ -3,7 +3,7 @@ function _pathway_from(id::Int64,
                        depth::Real=Inf,
                        include_id::Bool=true)
   local path
-  if network.external[id] | any(network.internal[:, id])
+  if network.external[id] || any(network.internal[:, id])
     path = Int64[]
     push!(path, id)
     path_lengths = [0]
@@ -14,7 +14,7 @@ function _pathway_from(id::Int64,
       end
     end
     if include_id == false
-      path = path[2:end]
+      popfirst!(path)
     end
   else
     path = nothing
@@ -37,12 +37,11 @@ function _pathway_from(id::Nothing,
     end
   end
   if include_id == false
-    path = path[2:end]
+    popfirst!(path)
   end
   @debug "Transmission pathway from external source: $path"
   return path
 end
-  
 
 function _pathway_to(id::Int64,
                      network::TransmissionNetwork;
@@ -58,7 +57,7 @@ function _pathway_to(id::Int64,
     end
     push!(path, next_id)
     if include_id == false
-      path = path[2:end]
+      popfirst!(path)
     end
   else
     path = nothing
@@ -76,19 +75,16 @@ end
 function generate(::Type{Tree},
                   events::Events{S},
                   obs::Vector{Float64},
-                  network::TransmissionNetwork;
-                  mrca::Float64=0.0) where {
+                  network::TransmissionNetwork) where {
                   S <: DiseaseStateSequence}
 
-  if length(obs) != events.individuals
+  if length(obs) != individuals(events)
     throw(ErrorException("Infection observation vector does not match number of individuals in population"))
-  elseif mrca > events.start_time
-    throw(ErrorException("Most recent common ancestor to external transmissions must be <= the start of an epidemic"))
   end
 
   # Initialization
   # trees = Tree[]
-  tree = Tree(mrca)
+  tree = Tree()
   addnode!(tree) # Root/MRCA node
   local event_times
   local parent_node
@@ -106,11 +102,13 @@ function generate(::Type{Tree},
   event_lookup = CartesianIndices(size(event_times))
   @debug "event_nodes, event_order, and event_lookup created" ArraySize = size(event_times)
 
-  pathways = [_pathway_from(i, network, include_id = true) for i = 1:events.individuals]
+  pathways = [_pathway_from(i, network, include_id = true) for i = 1:individuals(events)]
 
   # Determine significant transmissions (results in a observation in the future)
-  significant_transmissions = (event_times[:, 1] .== -Inf) .| [pathways[i] !== nothing && any(event_times[pathways[i], 2] .>= event_times[i, 1]) for i = 1:events.individuals]
+  significant_transmissions = (event_times[:, 1] .== -Inf) .| [pathways[i] !== nothing && any(event_times[pathways[i], 2] .>= event_times[i, 1]) for i = 1:individuals(events)]
   @debug "Significant transmitters" significant_transmissions
+
+  start_time = minimum(events)
 
   # Iterate through all events to build tree
   for i = eachindex(event_order)
@@ -127,8 +125,8 @@ function generate(::Type{Tree},
 
     # For purposes of tree generation, replace -Inf times (initial condition coding) with start_time
     if event_time == -Inf
-      @debug "Setting -Inf event time to $(events.start_time)"
-      event_time = events.start_time
+      @debug "Setting -Inf event time to $(start_time)"
+      event_time = start_time
     end
 
     # For transmission events...
@@ -141,7 +139,8 @@ function generate(::Type{Tree},
         if network.external[event_individual]
           @debug "Event $i is a significant external transmission"
           parent_node = 1
-          branch_length = event_time - mrca
+          @warn "Current support is intended for a single intial event with no external exposures"
+          branch_length = event_time - start_time
           @debug "Set parent node to the root" ParentNode = parent_node BranchLength = branch_length
           branch!(tree, parent_node, branch_length)
 
@@ -158,7 +157,8 @@ function generate(::Type{Tree},
           if source === nothing
             @debug "Event $i is due to an initial condition" Source1 = _source1(event_individual, network) Source2 = source
             parent_node = 1
-            branch_length = events.start_time - mrca
+            branch_length = 0.0
+            @warn "Current support is intended for a single intial event with no external exposures"
             @debug "Set parent node to the root" ParentNode = parent_node BranchLength = branch_length
 
             # Add branch and node
@@ -169,7 +169,7 @@ function generate(::Type{Tree},
 
           # Previous significant transmissions from this source of transmission
           else
-            @debug "Event $i is a significant internal transmission" Source = source 
+            @debug "Event $i is a significant internal transmission" Source = source
             source_prior_transmissions = findall(network.internal[source, :][:] .& (event_times[:, 1] .< event_time) .& significant_transmissions)
 
             # For when the source of transmission has yet to be detected...
@@ -247,7 +247,7 @@ function generate(::Type{Tree},
 
         # Add zero-length branch so observation event will be a leaf node
         @debug "Add a zero length branch to ensure observation of individual $event_individual is a leaf node" ParentNode = length(tree.nodes) BranchLength = 0.0
-        branch!(tree, length(tree.nodes), 0.)
+        branch!(tree, length(tree.nodes), 0.0)
 
       # Individual does not go one to have any significant transmissions
       # so will surely be a leaf node

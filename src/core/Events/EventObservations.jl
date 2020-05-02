@@ -2,34 +2,29 @@ struct EventObservations{S <: DiseaseStateSequence, M <: ILM}
   infection::Vector{Float64}
   removal::Union{Nothing, Vector{Float64}}
   seq::Union{Nothing, Vector{Union{Nothing, GeneticSeq}}}
-  start_time::Float64
-  individuals::Int64
 
   function EventObservations{S, M}(i::V,
-                                   r::V;
-                                   start_time::Float64=0.0) where {
+                                   r::V) where {
                                    V <: Vector{Float64},
                                    S <: Union{SEIR, SIR},
                                    M <: TNILM}
     if length(i) != length(r)
       throw(ErrorException("Length of infection and removal times must be equal"))
     end
-    return new{S, M}(i, r, nothing, start_time, length(i))
+    return new{S, M}(i, r, nothing)
   end
 
-  function EventObservations{S, M}(i::V;
-                                   start_time::Float64=0.0) where {
+  function EventObservations{S, M}(i::V) where {
                                    V <: Vector{Float64},
                                    S <: Union{SEI, SI},
                                    M <: TNILM}
-    return new{S, M}(i, nothing, nothing, start_time, length(i))
+    return new{S, M}(i, nothing, nothing)
   end
 
 
   function EventObservations{S, M}(i::V,
                                    r::V,
-                                   seq::VG;
-                                   start_time::Float64=0.0) where {
+                                   seq::VG) where {
                                    V <: Vector{Float64},
                                    G <: GeneticSeq,
                                    VG <: Vector{Union{Nothing, G}},
@@ -38,12 +33,11 @@ struct EventObservations{S <: DiseaseStateSequence, M <: ILM}
     if length(unique([length(i); length(r); length(seq)])) != 1
       throw(ErrorException("Length of infection times, removal times, and genetic sequence vectors must be equal"))
     end
-    return new{S, M}(i, r, seq, start_time, length(i))
+    return new{S, M}(i, r, seq)
   end
 
   function EventObservations{S, M}(i::V,
-                                   seq::VG;
-                                   start_time::Float64=0.0) where {
+                                   seq::VG) where {
                                    V <: Vector{Float64},
                                    G <: GeneticSeq,
                                    VG <: Vector{Union{Nothing, G}},
@@ -52,33 +46,30 @@ struct EventObservations{S <: DiseaseStateSequence, M <: ILM}
     if length(i) != length(seq)
       throw(ErrorException("Length of infection time and genetic sequence vectors must be equal"))
     end
-    return new{S, M}(i, nothing, seq, start_time, length(i))
+    return new{S, M}(i, nothing, seq)
   end
 end
 
-function EventObservations{S, M}(i::Array{Float64, 2};
-                                 start_time::Float64=0.0) where {
+function EventObservations{S, M}(i::Array{Float64, 2}) where {
                                  S <: Union{SEI, SI},
                                  M <: TNILM}
   if size(i, 2) != 1
     throw(ErrorException("Invalid Array dimensions for observations of a $S model"))
   end
-  return EventObservations{S, M}(i[:,1], start_time=start_time)
+  return EventObservations{S, M}(i[:,1])
 end
 
-function EventObservations{S, M}(ir::Array{Float64, 2};
-                                 start_time::Float64=0.0) where {
+function EventObservations{S, M}(ir::Array{Float64, 2}) where {
                                  S <: Union{SEIR, SIR},
                                  M <: TNILM}
   if size(ir, 2) != 2
     throw(ErrorException("Invalid Array dimensions for observations of a $S model"))
   end
-  return EventObservations{S, M}(ir[:, 1], ir[:, 2], start_time=start_time)
+  return EventObservations{S, M}(ir[:, 1], ir[:, 2])
 end
 
 function EventObservations{S, M}(i::Array{Float64, 2},
-                                 seq::VG;
-                                 start_time::Float64=0.0) where {
+                                 seq::VG) where {
                                  G <: GeneticSeq,
                                  VG <: Vector{Union{Nothing, G}},
                                  S <: Union{SEI, SI},
@@ -86,12 +77,11 @@ function EventObservations{S, M}(i::Array{Float64, 2},
   if size(i, 2) != 1
     throw(ErrorException("Invalid Array dimensions for observations of a $S model"))
   end
-  return EventObservations{S, M}(i[:,1], seq, start_time=start_time)
+  return EventObservations{S, M}(i[:,1], seq)
 end
 
 function EventObservations{S, M}(ir::Array{Float64, 2},
-                                 seq::VG;
-                                 start_time::Float64=0.0) where {
+                                 seq::VG) where {
                                  G <: GeneticSeq,
                                  VG <: Vector{Union{Nothing, G}},
                                  S <: Union{SEIR, SIR},
@@ -99,22 +89,70 @@ function EventObservations{S, M}(ir::Array{Float64, 2},
   if size(ir, 2) != 2
     throw(ErrorException("Invalid Array dimensions for observations of a $S model"))
   end
-  return EventObservations{S, M}(ir[:, 1], ir[:, 2], seq, start_time=start_time)
+  return EventObservations{S, M}(ir[:, 1], ir[:, 2], seq)
+end
+
+function individuals(x::EventObservations{S, M}) where {
+                     S <: DiseaseStateSequence,
+                     M <: ILM}
+  return length(x.infection)
 end
 
 function Base.show(io::IO,
                    x::EventObservations{S, M}) where {
                    S <: DiseaseStateSequence,
                    M <: ILM}
-  return print(io, "$S $M observations (n=$(x.individuals))")
+  return print(io, "$S $M observations (n=$(individuals(x)))")
+end
+
+function Base.getindex(x::EventObservations{S, M},
+                       new_state::DiseaseState) where {
+                       S <: DiseaseStateSequence,
+                       M <: ILM}
+  if new_state == State_I
+    return x.infection
+  elseif (new_state == State_R) && (T ∈ [SEIR, SIR])
+    return x.removal
+  else
+    error("Unrecognized indexing disease state")
+  end
+end
+
+function Base.getindex(x::EventObservations{S, M},
+                       states::DiseaseStates) where {
+                       S <: DiseaseStateSequence,
+                       M <: ILM}
+  y = x[states[1]]
+  for i = 2:length(states)
+    y = hcat(y, x[states[i]])
+  end
+  return y
+end
+
+function Base.convert(::Type{Array{Float64, 2}}, x::EventObservations{S, M}) where {
+                      S <: DiseaseStateSequence,
+                      M <: ILM}
+  states = T ∈ [SEI, SI] ? [State_I] : [State_I, State_R]
+  return x[states]
+end
+
+function Base.convert(::Type{Vector{Float64}}, x::EventObservations{S, M}) where {
+                      S <: DiseaseStateSequence,
+                      M <: ILM}
+  states = T ∈ [SEI, SI] ? [State_I] : [State_I, State_R]
+  return x[states][:]
+end
+
+function Base.minimum(x::EventObservations{S, M}) where {
+                      S <: DiseaseStateSequence,
+                      M <: ILM}
+  y = convert(Array{Float64, 2}, x)
+  return minimum(y[.!isnan.(y)])
 end
 
 function Base.maximum(x::EventObservations{S, M}) where {
                       S <: DiseaseStateSequence,
                       M <: ILM}
-  if x.removed == nothing
-    return maximum(x.infected)
-  else
-    return max(maximum(x.infected), maximum(removed))
-  end
+  y = convert(Array{Float64, 2}, x)
+  return maximum(y[.!isnan.(y)])
 end

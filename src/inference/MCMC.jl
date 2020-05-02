@@ -46,7 +46,7 @@ function MCMC(obs::EventObservations{S, M},
               tnprior::Union{Nothing, TNPrior}=nothing) where {
               S <: DiseaseStateSequence,
               M <: TNILM}
-  return MCMC(obs, ee, pop, fill(State_S, pop.individuals), rf, rp, tnprior=tnprior)
+  return MCMC(obs, ee, pop, fill(State_S, individuals(pop)), rf, rp, tnprior=tnprior)
 end
 
 function MCMC(obs::EventObservations{S, M},
@@ -60,7 +60,7 @@ function MCMC(obs::EventObservations{S, M},
               S <: DiseaseStateSequence,
               M <: PhyloILM,
               N <: NucleicAcidSubstitutionModel}
-  return MCMC(obs, ee, pop, fill(State_S, pop.individuals), rf, rp, sm, smp, tnprior=tnprior)
+  return MCMC(obs, ee, pop, fill(State_S, individuals(pop)), rf, rp, sm, smp, tnprior=tnprior)
 end
 
 function Base.show(io::IO, x::MCMC{S, M}) where {

@@ -53,8 +53,6 @@ function _bounds(id::Int64,
       end
     end
   end
-  # Must be later than epidemic start time
-  push!(lowerbounds, obs.start_time)
   @debug "Transition of $id into $new_state with bounds: \n  [max($(round.(lowerbounds, digits=3))),\n   min($(round.(upperbounds, digits=3)))]"
   lowerbound = maximum(lowerbounds)
   upperbound = minimum(upperbounds)
@@ -102,8 +100,6 @@ function _bounds(id::Int64,
                    obs.infection[id]]
     upperbounds = [obs.removal[id] - extents.removal[1]]
   end
-  # Must be later than epidemic start time
-  push!(lowerbounds, obs.start_time)
   @debug "Transition of $id into $new_state with bounds: \n  [max($(round.(lowerbounds, digits=3))),\n   min($(round.(upperbounds, digits=3)))]"
   lowerbound = maximum(lowerbounds)
   upperbound = minimum(upperbounds)
@@ -124,7 +120,7 @@ function _bounds(last_event::Event{S},
                  extents, obs, events)
 end
 
-function generate(::Type{Event},
+function generate(::Type{AbstractEvent},
                   last_event::Event{S},
                   σ::Float64,
                   extents::EventExtents{S},
@@ -139,7 +135,7 @@ function generate(::Type{Event},
   return Event(time, last_event)
 end
 
-function generate(::Type{Event},
+function generate(::Type{AbstractEvent},
                   last_event::Event{S},
                   σ::Float64,
                   extents::EventExtents{S},

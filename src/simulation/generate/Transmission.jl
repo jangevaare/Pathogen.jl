@@ -1,6 +1,8 @@
-function generate(::Type{Transmission},
+function generate(::Type{T},
                   tr::TransmissionRates,
-                  event::Event{S}) where S <: DiseaseStateSequence
+                  event::Event{S}) where {
+                  T <: AbstractTransmission,
+                  S <: DiseaseStateSequence}
   id = event.individual
   if _new_transmission(event)
     external_or_internal = Weights([tr.external[id]; sum(tr.internal[:,id])])

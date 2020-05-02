@@ -5,8 +5,8 @@ function generate(::Type{EventObservations},
                   force::Bool = false) where {
                   S <: Union{SEIR, SIR},
                   M <: TNILM}
-  infection = fill(NaN, sim.events.individuals)
-  removal = fill(NaN, sim.events.individuals)
+  infection = fill(NaN, individuals(sim.events))
+  removal = fill(NaN, individuals(sim.events))
   if force
     for i in findall(.!isnan.(sim.events.infection))
       if sim.events.infection[i] == -Inf
@@ -47,15 +47,15 @@ function generate(::Type{EventObservations},
       @debug "Removal observation of i = $i at t = $(round(removal[i], digits=3)) (actual removal at t = $(round(sim.events.removal[i], digits=3)))"
     end
   end
-  return EventObservations{S, M}(infection, removal, start_time = sim.start_time)
+  return EventObservations{S, M}(infection, removal)
 end
 
-function generate(::Type{EventObservations}, 
+function generate(::Type{EventObservations},
                   sim::Simulation{S, M},
                   delay_infection::UnivariateDistribution) where {
                   S <: Union{SEI, SI},
                   M <: TNILM}
-  infection = fill(NaN, sim.events.individuals)
+  infection = fill(NaN, individuals(sim.events))
   @simd for i in findall(.!isnan.(sim.events.infection))
     if sim.events.infection[i] == -Inf
       infection[i] = -Inf
@@ -64,19 +64,19 @@ function generate(::Type{EventObservations},
     end
     @debug "Infection observation of i = $i at t = $(round(infection[i], digits=3))) (actual infection onset at t = $(round(sim.events.infection[i], digits=3)))"
   end
-  return EventObservations{S, M}(infection, start_time = sim.start_time)
+  return EventObservations{S, M}(infection)
 end
 
-function generate(::Type{EventObservations}, 
+function generate(::Type{EventObservations},
                   sim::Simulation{S, M},
                   delay_infection::UnivariateDistribution,
                   delay_removal::UnivariateDistribution,
                   seq_len::Int64;
                   force::Bool = false) where {
-                  S <: Union{SEIR, SIR}, 
+                  S <: Union{SEIR, SIR},
                   M <: PhyloILM}
-  infection = fill(NaN, sim.events.individuals)
-  removal = fill(NaN, sim.events.individuals)
+  infection = fill(NaN, individuals(sim.events))
+  removal = fill(NaN, individuals(sim.events))
   if force
     for i in findall(.!isnan.(sim.events.infection))
       if sim.events.infection[i] == -Inf
@@ -123,16 +123,16 @@ function generate(::Type{EventObservations},
                                sim.transmission_network)
   seq_full = simulate(RNASeq, tree, sim.substitution_model, seq_len)
   seq_obs = Union{Nothing, RNASeq}[isnothing(event_nodes[i]) ? nothing : seq_full[event_nodes[i]] for i = eachindex(infection)]
-  return EventObservations{S, M}(infection, removal, seq_obs, start_time = sim.start_time)
+  return EventObservations{S, M}(infection, removal, seq_obs)
 end
 
-function generate(::Type{EventObservations}, 
+function generate(::Type{EventObservations},
                   sim::Simulation{S, M},
                   delay_infection::UnivariateDistribution,
                   seq_len::Int64) where {
                   S <: Union{SEI, SI},
                   M <: PhyloILM}
-  infection = fill(NaN, sim.events.individuals)
+  infection = fill(NaN, individuals(sim.events))
   @simd for i in findall(.!isnan.(sim.events.infection))
     if sim.events.infection[i] == -Inf
       infection[i] = -Inf
@@ -147,5 +147,5 @@ function generate(::Type{EventObservations},
                                sim.transmission_network)
   seq_full = simulate(RNASeq, tree, sim.substitution_model, seq_len)
   seq_obs = Union{Nothing, RNASeq}[isnothing(event_nodes[i]) ? nothing : seq_full[event_nodes[i]] for i = eachindex(infection)]
-  return EventObservations{S, M}(infection, seq_obs, start_time = sim.start_time)
+  return EventObservations{S, M}(infection, seq_obs)
 end

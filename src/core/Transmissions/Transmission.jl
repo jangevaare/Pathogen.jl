@@ -1,15 +1,15 @@
-abstract type Transmission end
+abstract type AbstractTransmission end
 
-struct ExogenousTransmission <: Transmission
+struct ExogenousTransmission <: AbstractTransmission
   individual::Int64
 end
 
-struct EndogenousTransmission <: Transmission
+struct EndogenousTransmission <: AbstractTransmission
   individual::Int64
   source::Int64
 end
 
-struct NoTransmission <: Transmission
+struct NoTransmission <: AbstractTransmission
 end
 
 function Base.show(io::IO, x::ExogenousTransmission)

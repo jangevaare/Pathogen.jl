@@ -30,7 +30,7 @@ function update!(mc::MarkovChain{S, M},
       proposed_events_array = copy(new_events_array)
       proposed_events = Events{S}(proposed_events_array)
       for j = (batch_size*(i-1) + 1):min(batch_size*i + 1, length(aug_order))
-        id, state_index = Tuple(CartesianIndices((new_events.individuals,
+        id, state_index = Tuple(CartesianIndices((individuals(new_events),
                                             length(convert(DiseaseStates, S)[2:end])))[aug_order[j]])
         new_state = convert(DiseaseStates, S)[state_index+1]
         time = new_events[new_state][id]
@@ -38,7 +38,7 @@ function update!(mc::MarkovChain{S, M},
         # This is useful for models which may have additional contributions to the posterior based on network,
         # and require more modest proposals (e.g. phylodynamic models).
         if condition_on_network
-          proposed_event = generate(Event,
+          proposed_event = generate(AbstractEvent,
                                     Event{S}(time, id, new_state),
                                     σ,
                                     mcmc.event_extents,
@@ -46,7 +46,7 @@ function update!(mc::MarkovChain{S, M},
                                     proposed_events,
                                     new_network)
         else
-          proposed_event = generate(Event,
+          proposed_event = generate(AbstractEvent,
                                     Event{S}(time, id, new_state),
                                     σ,
                                     mcmc.event_extents,
@@ -155,12 +155,12 @@ function update!(mc::MarkovChain{S, M},
     @debug "Beginning sub-step $i"
     if i <= event_batches
       for j = (batch_size*(i-1) + 1):minimum([(batch_size*i + 1); length(aug_order)])
-        id, state_index = Tuple(CartesianIndices((new_events.individuals,
+        id, state_index = Tuple(CartesianIndices((individuals(new_events),
                                             length(convert(DiseaseStates, S)[2:end])))[aug_order[j]])
         new_state = convert(DiseaseStates, S)[state_index+1]
         time = new_events[new_state][id]
         if condition_on_network
-          proposed_event = generate(Event,
+          proposed_event = generate(AbstractEvent,
                                     Event{S}(time, id, new_state),
                                     σ,
                                     mcmc.event_extents,
@@ -168,7 +168,7 @@ function update!(mc::MarkovChain{S, M},
                                     new_events,
                                     new_network)
         else
-          proposed_event = generate(Event,
+          proposed_event = generate(AbstractEvent,
                                     Event{S}(time, id, new_state),
                                     σ,
                                     mcmc.event_extents,

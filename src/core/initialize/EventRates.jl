@@ -22,6 +22,6 @@ function initialize(::Type{EventRates},
       end
     end
   end
-  @debug "Initialization of $S EventRates complete" rates = rates[convert(DiseaseStates, S)[2:end]]
+  @debug "Initialization of $S EventRates complete" Σrates = sum(rates[convert(DiseaseStates, S)[2:end]], dims=1)
   return rates
 end

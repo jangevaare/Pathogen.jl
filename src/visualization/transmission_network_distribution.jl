@@ -20,7 +20,7 @@ end
   axis --> nothing
   framestyle --> :none
   linecolor --> :black
-  n = pop.individuals
+  n = individuals(pop)
   for i = 1:n, j =1:n
     if tn.internal[j, i] > 0.0
       @series begin

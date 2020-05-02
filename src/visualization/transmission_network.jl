@@ -22,7 +22,7 @@ end
   axis --> nothing
   titlefontcolor --> :black
   framestyle --> :none
-  n = pop.individuals
+  n = individuals(pop)
   susceptible = _ids_by_state(events, State_S, time)
   for i = 1:n
     if i ∉ susceptible
@@ -63,7 +63,7 @@ end
   titlefontcolor --> :black
   linecolor --> :black
   framestyle --> :none
-  n = pop.individuals
+  n = individuals(pop)
   for i = 1:n
     if !tn.external[i] & any(tn.internal[:, i])
       @series begin

@@ -2,58 +2,56 @@ struct Events{S <: DiseaseStateSequence}
   exposure::Union{Nothing, Vector{Float64}}
   infection::Vector{Float64}
   removal::Union{Nothing, Vector{Float64}}
-  start_time::Float64
-  individuals::Int64
 
-  function Events{S}(e::V, i::V, r::V; start_time::Float64=0.0) where {S <: SEIR, V <: Vector{Float64}}
+  function Events{S}(e::V, i::V, r::V;) where {S <: SEIR, V <: Vector{Float64}}
     if length(unique((length.([e; i; r])))) != 1
       throw(ErrorException("Length of event time vectors must be equal"))
     end
-    return new{S}(e, i, r, start_time, length(i))
+    return new{S}(e, i, r)
   end
 
-  function Events{S}(n::Int64; start_time::Float64=0.0) where S <: SEIR
-    return new{S}(fill(NaN, n), fill(NaN, n), fill(NaN, n), start_time, n)
+  function Events{S}(n::Int64) where S <: SEIR
+    return new{S}(fill(NaN, n), fill(NaN, n), fill(NaN, n))
   end
 
-  function Events{S}(e::V, i::V; start_time::Float64=0.0) where {S <: SEI, V <: Vector{Float64}}
+  function Events{S}(e::V, i::V) where {S <: SEI, V <: Vector{Float64}}
     if length(unique((length.([e; i])))) != 1
       throw(ErrorException("Length of event time vectors must be equal"))
     end
-    return new{S}(e, i, nothing, start_time, length(i))
+    return new{S}(e, i, nothing)
   end
 
-  function Events{S}(n::Int64; start_time::Float64=0.0) where S <: SEI
-    return new{S}(fill(NaN, n), fill(NaN, n), nothing, start_time, n)
+  function Events{S}(n::Int64) where S <: SEI
+    return new{S}(fill(NaN, n), fill(NaN, n), nothing)
   end
 
-  function Events{S}(i::V, r::V; start_time::Float64=0.0) where {S <: SIR, V <: Vector{Float64}}
+  function Events{S}(i::V, r::V) where {S <: SIR, V <: Vector{Float64}}
     if length(unique((length.([i; r])))) != 1
       throw(ErrorException("Length of event time vectors must be equal"))
     end
-    return new{S}(nothing, i, r, start_time, length(i))
+    return new{S}(nothing, i, r)
   end
 
-  function Events{S}(n::Int64; start_time::Float64=0.0) where S <: SIR
-    return new{S}(nothing, fill(NaN, n), fill(NaN, n), start_time, n)
+  function Events{S}(n::Int64) where S <: SIR
+    return new{S}(nothing, fill(NaN, n), fill(NaN, n))
   end
 
-  function Events{S}(i::V; start_time::Float64=0.0) where {S <: SI, V <: Vector{Float64}}
-    return new{S}(nothing, i, nothing, start_time, length(i))
+  function Events{S}(i::V) where {S <: SI, V <: Vector{Float64}}
+    return new{S}(nothing, i, nothing)
   end
 
-  function Events{S}(n::Int64; start_time::Float64=0.0) where S <: SI
-    return new{S}(nothing, fill(NaN, n), nothing, start_time, n)
+  function Events{S}(n::Int64) where S <: SI
+    return new{S}(nothing, fill(NaN, n), nothing)
   end
 end
 
-function Events{S}(a::Array{Float64,2}; start_time::Float64=0.0) where S <: DiseaseStateSequence
+function Events{S}(a::Array{Float64,2}) where S <: DiseaseStateSequence
   if size(a, 2) == 3
-    return Events{S}(a[:,1], a[:,2], a[:,3], start_time=start_time)
+    return Events{S}(a[:,1], a[:,2], a[:,3])
   elseif size(a, 2) == 2
-    return Events{S}(a[:,1], a[:,2], start_time=start_time)
+    return Events{S}(a[:,1], a[:,2])
   elseif size(a, 2) == 1
-    return Events{S}(a[:,1], start_time=start_time)
+    return Events{S}(a[:,1])
   else
     throw(ErrorException("Invalid array size for construction of an $(Events{S}) object"))
   end
@@ -73,8 +71,13 @@ function Events{S}(x::DiseaseStates) where S <: DiseaseStateSequence
   return events
 end
 
+function individuals(x::Events{S}) where{
+                     S <: DiseaseStateSequence}
+  return length(x.infection)
+end
+
 function Base.show(io::IO, x::Events{S}) where S <: DiseaseStateSequence
-  return print(io, "$S model event times (n=$(x.individuals))")
+  return print(io, "$S model event times (n=$(individuals(x)))")
 end
 
 function Base.getindex(x::Events{S}, new_state::DiseaseState) where S <: DiseaseStateSequence
@@ -114,13 +117,13 @@ function Base.convert(::Type{Array{Float64, 2}}, x::Array{Events{S}, 1}) where S
 end
 
 function Base.minimum(x::Events{S}) where S <: DiseaseStateSequence
-  y = convert(Array{Float64, 2}, x)
-  return minimum(y[.!isnan.(y)])
+  y = convert(Array{Float64, 2}, x)[:]
+  return minimum(y[.!isnan.(y) .& (y .> -Inf)])
 end
 
 function Base.maximum(x::Events{S}) where S <: DiseaseStateSequence
-  y = convert(Array{Float64, 2}, x)
-  return maximum(y[.!isnan.(y)])
+  y = convert(Array{Float64, 2}, x)[:]
+  return maximum(y[.!isnan.(y) .& (y .> -Inf)])
 end
 
 function Statistics.mean(x::Vector{Events{S}}) where S <: DiseaseStateSequence
