@@ -1,7 +1,7 @@
 function generate(::Type{Transmission},
                   tr::TransmissionRates,
                   tnd::Nothing,
-                  id::I) where {I <: Integer, T <: EpidemicModel}
+                  id::I) where {I <: Integer, T <: DiseaseStateSequence}
   external_or_internal = Weights([tr.external[id];
                                   sum(tr.internal[:, id])])
   if sum(external_or_internal) == 0.0
@@ -20,7 +20,7 @@ end
 function generate(::Type{Transmission},
                   tr::TransmissionRates,
                   tnd::TNDistribution,
-                  id::I) where {I <: Integer, T <: EpidemicModel}
+                  id::I) where {I <: Integer, T <: DiseaseStateSequence}
   internalweights = tr.internal[:, id] .* tnd.internal[:, id]
   external_or_internal = Weights([tr.external[id] * tnd.external[id];
                                  sum(internalweights)])
@@ -59,7 +59,7 @@ end
 
 function generate(::Type{Events},
                   obs::EventObservations{T},
-                  extents::EventExtents{T}) where T <: EpidemicModel
+                  extents::EventExtents{T}) where T <: DiseaseStateSequence
   events = Events{T}(individuals(obs))
   exposed_state = T in [SEIR; SEI]
   removed_state = T in [SEIR; SIR]
@@ -94,7 +94,7 @@ function generate(::Type{Events},
   return events
 end
 
-function generate(::Type{Events}, mcmc::MCMC{T}) where T <: EpidemicModel
+function generate(::Type{Events}, mcmc::MCMC{T}) where T <: DiseaseStateSequence
   return generate(Events, mcmc.event_observations, mcmc.event_extents)
 end
 
@@ -103,7 +103,7 @@ function generate(::Type{Event},
                   σ::Float64,
                   extents::EventExtents{T},
                   obs::EventObservations,
-                  events::Events{T}) where T <: EpidemicModel
+                  events::Events{T}) where T <: DiseaseStateSequence
   lowerbound, upperbound = _bounds(last_event, extents, obs, events)
   time = rand(truncated(Normal(_time(last_event), σ),
                         lowerbound,
@@ -117,7 +117,7 @@ function generate(::Type{Event},
                   extents::EventExtents{T},
                   obs::EventObservations,
                   events::Events{T},
-                  network::TransmissionNetwork) where T <: EpidemicModel
+                  network::TransmissionNetwork) where T <: DiseaseStateSequence
   lowerbound, upperbound = _bounds(last_event, extents, obs, events, network)
   time = rand(truncated(Normal(_time(last_event), σ),
                         lowerbound,
@@ -125,7 +125,7 @@ function generate(::Type{Event},
   return Event(time, last_event)
 end
 
-function generate(::Type{RiskParameters{T}}, rpriors::RiskPriors{T}) where T <: EpidemicModel
+function generate(::Type{RiskParameters{T}}, rpriors::RiskPriors{T}) where T <: DiseaseStateSequence
   sparks = Float64[rand(x) for x in rpriors.sparks]
   susceptibility = Float64[rand(x) for x in rpriors.susceptibility]
   infectivity = Float64[rand(x) for x in rpriors.infectivity]
@@ -163,19 +163,19 @@ function generate(::Type{RiskParameters{T}}, rpriors::RiskPriors{T}) where T <: 
   end
 end
 
-function generate(::Type{RiskParameters}, mcmc::MCMC{T}) where T <: EpidemicModel
+function generate(::Type{RiskParameters}, mcmc::MCMC{T}) where T <: DiseaseStateSequence
   return generate(RiskParameters{T}, mcmc.risk_priors)
 end
 
 function generate(::Type{RiskParameters{T}},
                   last_rparams::RiskParameters{T},
-                  Σ::Array{Float64, 2}) where T <: EpidemicModel
+                  Σ::Array{Float64, 2}) where T <: DiseaseStateSequence
   rparams_vector = rand(MvNormal(convert(Vector{Float64}, last_rparams), Σ))
   return _like(last_rparams, rparams_vector)
 end
 
 function generate(::Type{RiskParameters{T}},
                   mc::MarkovChain{T},
-                  Σ::Array{Float64, 2}) where T <: EpidemicModel
+                  Σ::Array{Float64, 2}) where T <: DiseaseStateSequence
   return generate(RiskParameters{T}, mc.risk_parameters[end], Σ)
 end

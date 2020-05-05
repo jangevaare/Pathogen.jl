@@ -1,7 +1,7 @@
 function initialize(::Type{MarkovChain},
                     mcmc::MCMC{T},
                     progress_channel::RemoteChannel;
-                    attempts::Int64=1000) where T <: EpidemicModel
+                    attempts::Int64=1000) where T <: DiseaseStateSequence
   if attempts <= 0
     error("Must have at least 1 initialization attempt")
   end
@@ -37,7 +37,7 @@ end
 
 function initialize(::Type{MarkovChain},
                     mcmc::MCMC{T};
-                    attempts::Int64=1000) where T <: EpidemicModel
+                    attempts::Int64=1000) where T <: DiseaseStateSequence
   if attempts <= 0
     error("Must have at least 1 initialization attempt")
   end

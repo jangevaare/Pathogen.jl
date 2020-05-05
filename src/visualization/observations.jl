@@ -1,6 +1,6 @@
 function _count_by_state(events::EventObservations{T},
                          state::DiseaseState,
-                         time::Float64) where T <: EpidemicModel
+                         time::Float64) where T <: DiseaseStateSequence
   local n_ids
   if state == State_I && T ∈ [SEIR, SIR]
     nextstate = State_R
@@ -16,7 +16,7 @@ end
 function _obs_curve(events::EventObservations{T},
                          state::DiseaseState,
                          min::Float64,
-                         max::Float64) where T <: EpidemicModel
+                         max::Float64) where T <: DiseaseStateSequence
   if min >= max
     @error "Minimum time must be less than maximum time"
   end
@@ -37,7 +37,7 @@ end
 @recipe function f(events::EventObservations{T},
                    state::DiseaseState,
                    min::Float64,
-                   max::Float64) where T<: EpidemicModel
+                   max::Float64) where T<: DiseaseStateSequence
   xguide --> "Time"
   yguide --> "N"
   xlims --> (min - 1.0, max + 1.0)
@@ -49,13 +49,13 @@ end
 end
 
 @recipe function f(events::EventObservations{T},
-                   state::DiseaseState) where T <: EpidemicModel
+                   state::DiseaseState) where T <: DiseaseStateSequence
   events, state, 0.0, maximum(events)
 end
 
 @recipe function f(events::EventObservations{T},
                    min::Float64,
-                   max::Float64) where T<: EpidemicModel
+                   max::Float64) where T<: DiseaseStateSequence
   @series begin
     linecolor --> :lightgreen
     label --> "I"
@@ -70,6 +70,6 @@ end
   end
 end
 
-@recipe function f(events::EventObservations{T}) where T <: EpidemicModel
+@recipe function f(events::EventObservations{T}) where T <: DiseaseStateSequence
   events, 0.0, maximum(events)
 end

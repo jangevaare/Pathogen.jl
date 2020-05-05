@@ -1,11 +1,11 @@
 function update!(events::Events{T},
-                 event::Event{T}) where T <: EpidemicModel
+                 event::Event{T}) where T <: DiseaseStateSequence
   events[event.new_state][event.individual] = event.time
   return events
 end
 
 function update!(states::Vector{DiseaseState},
-                 event::Event{T}) where T <: EpidemicModel
+                 event::Event{T}) where T <: DiseaseStateSequence
   states[event.individual] = event.new_state
   return states
 end
@@ -34,7 +34,7 @@ function update!(tr::TransmissionRates,
                  rf::RiskFunctions{T},
                  rp::RiskParameters{T};
                  xzero::Bool=false,
-                 transmission_rate_cache::Union{Nothing, TransmissionRateCache}=nothing) where T <: EpidemicModel
+                 transmission_rate_cache::Union{Nothing, TransmissionRateCache}=nothing) where T <: DiseaseStateSequence
   id = event.individual
   if _new_transmission(event) && xzero
     tr.external[id] = 0.0
@@ -72,7 +72,7 @@ function update!(rates::EventRates{T},
                  states::Vector{DiseaseState},
                  pop::Population,
                  rf::RiskFunctions{T},
-                 rp::RiskParameters{T}) where T <: EpidemicModel
+                 rp::RiskParameters{T}) where T <: DiseaseStateSequence
   id = event.individual
   if event.new_state == State_E
     rates.exposure[id] = 0.0
@@ -126,7 +126,7 @@ function update!(tr::TransmissionRates,
                  pop::Population,
                  rf::RiskFunctions{T},
                  rp::RiskParameters{T};
-                 transmission_rate_cache::Union{Nothing, TransmissionRateCache}=nothing) where T <: EpidemicModel
+                 transmission_rate_cache::Union{Nothing, TransmissionRateCache}=nothing) where T <: DiseaseStateSequence
   update!(tr, event, states, pop, rf, rp, transmission_rate_cache=transmission_rate_cache)
   update!(rates, tr, event, states, pop, rf, rp)
   return tr, rates

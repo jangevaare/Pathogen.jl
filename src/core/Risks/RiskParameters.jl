@@ -13,24 +13,24 @@ struct RiskParameters{T} <: AbstractRisk{T}
 end
 
 
-function Base.show(io::IO, x::RiskParameters{T}) where T <: EpidemicModel
+function Base.show(io::IO, x::RiskParameters{T}) where T <: DiseaseStateSequence
   return print(io, "$T model risk function parameters")
 end
 
 
 function Base.convert(::Type{Vector{Float64}},
-                      x::RiskParameters{T}) where T <: EpidemicModel
+                      x::RiskParameters{T}) where T <: DiseaseStateSequence
   return [x[i] for i = 1:length(x)]
 end
 
 
 function Base.convert(::Type{Array{Float64, 2}},
-                      x::Vector{RiskParameters{T}}) where T <: EpidemicModel
+                      x::Vector{RiskParameters{T}}) where T <: DiseaseStateSequence
   return [x[i][j] for i = 1:length(x), j = 1:length(x[1])]
 end
 
 
-function _like(x::RiskParameters{T}, v::Vector{Float64}) where T <: EpidemicModel
+function _like(x::RiskParameters{T}, v::Vector{Float64}) where T <: DiseaseStateSequence
   indices = _indices(x, zeros=false)
   if indices[end] != length(v)
     @error "Incompatiable parameter vector"

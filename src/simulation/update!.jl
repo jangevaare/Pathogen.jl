@@ -1,4 +1,4 @@
-function update!(s::Simulation{T}, event::AbstractEvent) where T <: EpidemicModel
+function update!(s::Simulation{T}, event::AbstractEvent) where T <: DiseaseStateSequence
   if _time(event) < s.time
     @error "Time of a new event must be >= that of the previous event"
   elseif _time(event) < Inf

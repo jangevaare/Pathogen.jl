@@ -1,4 +1,4 @@
-struct EventObservations{T <: EpidemicModel}
+struct EventObservations{T <: DiseaseStateSequence}
   infection::Vector{Float64}
   removal::Union{Nothing, Vector{Float64}}
 
@@ -29,15 +29,15 @@ function EventObservations{T}(ir::Array{Float64, 2}) where T <: Union{SEIR, SIR}
 end
 
 function individuals(x::EventObservations{M}) where {
-                     M <: EpidemicModel}
+                     M <: DiseaseStateSequence}
   return length(x.infection)
 end
 
-function Base.show(io::IO, x::EventObservations{T}) where T <: EpidemicModel
+function Base.show(io::IO, x::EventObservations{T}) where T <: DiseaseStateSequence
   return print(io, "$T model observations (n=$(individuals(x)))")
 end
 
-function Base.getindex(x::EventObservations{T}, new_state::DiseaseState) where T <: EpidemicModel
+function Base.getindex(x::EventObservations{T}, new_state::DiseaseState) where T <: DiseaseStateSequence
   if new_state == State_I
     return x.infection
   elseif (new_state == State_R) && (T ∈ [SEIR, SIR])
@@ -47,7 +47,7 @@ function Base.getindex(x::EventObservations{T}, new_state::DiseaseState) where T
   end
 end
 
-function Base.getindex(x::EventObservations{T}, states::Vector{DiseaseState}) where T <: EpidemicModel
+function Base.getindex(x::EventObservations{T}, states::Vector{DiseaseState}) where T <: DiseaseStateSequence
   y = x[states[1]]
   for i = 2:length(states)
     y = hcat(y, x[states[i]])
@@ -55,22 +55,22 @@ function Base.getindex(x::EventObservations{T}, states::Vector{DiseaseState}) wh
   return y
 end
 
-function Base.convert(::Type{Array{Float64, 2}}, x::EventObservations{T}) where T <: EpidemicModel
+function Base.convert(::Type{Array{Float64, 2}}, x::EventObservations{T}) where T <: DiseaseStateSequence
   states = T ∈ [SEI, SI] ? [State_I] : [State_I, State_R]
   return x[states]
 end
 
-function Base.convert(::Type{Vector{Float64}}, x::EventObservations{T}) where T <: EpidemicModel
+function Base.convert(::Type{Vector{Float64}}, x::EventObservations{T}) where T <: DiseaseStateSequence
   states = T ∈ [SEI, SI] ? [State_I] : [State_I, State_R]
   return x[states][:]
 end
 
-function Base.minimum(x::EventObservations{T}) where T <: EpidemicModel
+function Base.minimum(x::EventObservations{T}) where T <: DiseaseStateSequence
   y = convert(Array{Float64, 2}, x)
   return minimum(y[.!isnan.(y)])
 end
 
-function Base.maximum(x::EventObservations{T}) where T <: EpidemicModel
+function Base.maximum(x::EventObservations{T}) where T <: DiseaseStateSequence
   y = convert(Array{Float64, 2}, x)
   return maximum(y[.!isnan.(y)])
 end

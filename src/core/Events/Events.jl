@@ -1,4 +1,4 @@
-struct Events{T <: EpidemicModel}
+struct Events{T <: DiseaseStateSequence}
   exposure::Union{Nothing, Vector{Float64}}
   infection::Vector{Float64}
   removal::Union{Nothing, Vector{Float64}}
@@ -45,7 +45,7 @@ struct Events{T <: EpidemicModel}
   end
 end
 
-function Events{T}(a::Array{Float64,2}) where T <: EpidemicModel
+function Events{T}(a::Array{Float64,2}) where T <: DiseaseStateSequence
   if size(a, 2) == 3
     return Events{T}(a[:,1], a[:,2], a[:,3])
   elseif size(a, 2) == 2
@@ -57,11 +57,11 @@ function Events{T}(a::Array{Float64,2}) where T <: EpidemicModel
   end
 end
 
-function Events{T}(x::Vector{DiseaseState}) where T <: EpidemicModel
+function Events{T}(x::Vector{DiseaseState}) where T <: DiseaseStateSequence
   events = Events{T}(length(x))
   for i = 1:length(x)
-    if x[i] in _state_progressions[T]
-      for j = _state_progressions[T][2:findfirst(Ref(x[i]) .== _state_progressions[T])]
+    if x[i] in convert(DiseaseStates, T)
+      for j = convert(DiseaseStates, T)[2:findfirst(Ref(x[i]) .== convert(DiseaseStates, T))]
         events[j][i] = -Inf
       end
     else
@@ -72,15 +72,15 @@ function Events{T}(x::Vector{DiseaseState}) where T <: EpidemicModel
 end
 
 function individuals(x::Events{M}) where{
-                     M <: EpidemicModel}
+                     M <: DiseaseStateSequence}
   return length(x.infection)
 end
 
-function Base.show(io::IO, x::Events{T}) where T <: EpidemicModel
+function Base.show(io::IO, x::Events{T}) where T <: DiseaseStateSequence
   return print(io, "$T model event times (n=$(individuals(x)))")
 end
 
-function Base.getindex(x::Events{T}, new_state::DiseaseState) where T <: EpidemicModel
+function Base.getindex(x::Events{T}, new_state::DiseaseState) where T <: DiseaseStateSequence
   if new_state == State_E
     return x.exposure
   elseif new_state == State_I
@@ -92,7 +92,7 @@ function Base.getindex(x::Events{T}, new_state::DiseaseState) where T <: Epidemi
   end
 end
 
-function Base.getindex(x::Events{T}, states::Vector{DiseaseState}) where T <: EpidemicModel
+function Base.getindex(x::Events{T}, states::Vector{DiseaseState}) where T <: DiseaseStateSequence
   y = x[states[1]]
   for i = 2:length(states)
     y = hcat(y, x[states[i]])
@@ -100,15 +100,15 @@ function Base.getindex(x::Events{T}, states::Vector{DiseaseState}) where T <: Ep
   return y
 end
 
-function Base.convert(::Type{Array{Float64, 2}}, x::Events{T}) where T <: EpidemicModel
-  return x[_state_progressions[T][2:end]]
+function Base.convert(::Type{Array{Float64, 2}}, x::Events{T}) where T <: DiseaseStateSequence
+  return x[convert(DiseaseStates, T)[2:end]]
 end
 
-function Base.convert(::Type{Vector{Float64}}, x::Events{T}) where T <: EpidemicModel
-  return x[_state_progressions[T][2:end]][:]
+function Base.convert(::Type{Vector{Float64}}, x::Events{T}) where T <: DiseaseStateSequence
+  return x[convert(DiseaseStates, T)[2:end]][:]
 end
 
-function Base.convert(::Type{Array{Float64, 2}}, x::Array{Events{T}, 1}) where T <: EpidemicModel
+function Base.convert(::Type{Array{Float64, 2}}, x::Array{Events{T}, 1}) where T <: DiseaseStateSequence
   y = convert(Vector{Float64}, x[1])'
   for i = 2:length(x)
     y = vcat(y, convert(Vector{Float64}, x[i])')
@@ -116,16 +116,16 @@ function Base.convert(::Type{Array{Float64, 2}}, x::Array{Events{T}, 1}) where T
   return y
 end
 
-function Base.minimum(x::Events{T}) where T <: EpidemicModel
+function Base.minimum(x::Events{T}) where T <: DiseaseStateSequence
   y = convert(Array{Float64, 2}, x)
   return minimum(y[.!isnan.(y)])
 end
 
-function Base.maximum(x::Events{T}) where T <: EpidemicModel
+function Base.maximum(x::Events{T}) where T <: DiseaseStateSequence
   y = convert(Array{Float64, 2}, x)
   return maximum(y[.!isnan.(y)])
 end
 
-function Statistics.mean(x::Vector{Events{T}}) where T <: EpidemicModel
+function Statistics.mean(x::Vector{Events{T}}) where T <: DiseaseStateSequence
   return Events{T}(mean([convert(Array{Float64, 2}, i) for i in x]))
 end

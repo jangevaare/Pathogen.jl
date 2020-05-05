@@ -1,4 +1,4 @@
-@recipe function f(x::Vector{RiskParameters{T}}) where T <: EpidemicModel
+@recipe function f(x::Vector{RiskParameters{T}}) where T <: DiseaseStateSequence
   xguide --> "Iteration"
   yguide --> "Value"
   legend --> :none
@@ -7,7 +7,7 @@
 end
 
 @recipe function f(iter,
-                   x::Vector{RiskParameters{T}}) where T <: EpidemicModel
+                   x::Vector{RiskParameters{T}}) where T <: DiseaseStateSequence
   xguide --> "Iteration"
   yguide --> "Value"
   legend --> :none

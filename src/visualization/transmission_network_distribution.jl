@@ -10,7 +10,7 @@ end
 
 @recipe function f(tn::TNDistribution,
                    pop::Population;
-                   show_individuals=true::Bool) where T <: EpidemicModel
+                   show_individuals=true::Bool) where T <: DiseaseStateSequence
   xguide --> ""
   yguide --> ""
   legend --> :none

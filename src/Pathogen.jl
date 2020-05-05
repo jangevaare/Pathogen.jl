@@ -10,7 +10,8 @@ module Pathogen
         Statistics,
         ProgressMeter,
         LinearAlgebra,
-        OnlineStats
+        OnlineStats,
+        StaticArrays
 
   import StatsBase.mean,
          StatsBase.mode,
@@ -18,7 +19,7 @@ module Pathogen
          ProgressMeter.next!
 
   # Core
-  include("core/EpidemicModel.jl")
+  include("core/DiseaseStateSequence.jl")
   include("core/DiseaseState.jl")
   include("core/Population.jl")
   include("core/Events/Event.jl")
@@ -71,112 +72,14 @@ module Pathogen
   include("visualization/degree_distribution.jl")
   include("visualization/trace.jl")
 
+  # re-export PhyloModels, DataFrames, Distributions
+  for reexport_pkg in [DataFrames, Distributions]
+    for name in names(reexport_pkg)
+      @eval export $(name)
+    end
+  end
+
   export
-    #re-exports from DataFrames.jl
-    DataFrame,
-    #re-exports from Distributions.jl
-    UnivariateDistribution,
-    Arcsine,
-    Bernoulli,
-    Beta,
-    BetaBinomial,
-    BetaPrime,
-    Binomial,
-    Biweight,
-    Categorical,
-    Cauchy,
-    Chernoff,
-    Chi,
-    Chisq,
-    Cosine,
-    DiagNormal,
-    DiagNormalCanon,
-    Dirichlet,
-    DirichletMultinomial,
-    DiscreteUniform,
-    DoubleExponential,
-    EdgeworthMean,
-    EdgeworthSum,
-    EdgeworthZ,
-    Erlang,
-    Epanechnikov,
-    Exponential,
-    FDist,
-    FisherNoncentralHypergeometric,
-    Frechet,
-    FullNormal,
-    FullNormalCanon,
-    Gamma,
-    DiscreteNonParametric,
-    GeneralizedPareto,
-    GeneralizedExtremeValue,
-    Geometric,
-    Gumbel,
-    Hypergeometric,
-    InverseWishart,
-    InverseGamma,
-    InverseGaussian,
-    IsoNormal,
-    IsoNormalCanon,
-    Kolmogorov,
-    KSDist,
-    KSOneSided,
-    Laplace,
-    Levy,
-    LKJ,
-    LocationScale,
-    Logistic,
-    LogNormal,
-    LogitNormal,
-    MatrixBeta,
-    MatrixFDist,
-    MatrixNormal,
-    MatrixTDist,
-    MixtureModel,
-    Multinomial,
-    MultivariateNormal,
-    MvLogNormal,
-    MvNormal,
-    MvNormalCanon,
-    MvNormalKnownCov,
-    MvTDist,
-    NegativeBinomial,
-    NoncentralBeta,
-    NoncentralChisq,
-    NoncentralF,
-    NoncentralHypergeometric,
-    NoncentralT,
-    Normal,
-    NormalCanon,
-    NormalInverseGaussian,
-    Pareto,
-    PGeneralizedGaussian,
-    Product,
-    Poisson,
-    PoissonBinomial,
-    QQPair,
-    Rayleigh,
-    Semicircle,
-    Skellam,
-    StudentizedRange,
-    SymTriangularDist,
-    TDist,
-    TriangularDist,
-    Triweight,
-    Truncated,
-    Uniform,
-    UnivariateGMM,
-    VonMises,
-    VonMisesFisher,
-    WalleniusNoncentralHypergeometric,
-    Weibull,
-    Wishart,
-    ZeroMeanIsoNormal,
-    ZeroMeanIsoNormalCanon,
-    ZeroMeanDiagNormal,
-    ZeroMeanDiagNormalCanon,
-    ZeroMeanFullNormal,
-    ZeroMeanFullNormalCanon,
     # Pathogen.jl types/functions
     EpidemicModel,
     SEIR, SEI, SIR, SI,

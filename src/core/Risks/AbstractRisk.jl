@@ -1,4 +1,4 @@
-abstract type AbstractRisk{T <: EpidemicModel} end
+abstract type AbstractRisk{T <: DiseaseStateSequence} end
 
 
 function Base.copy(x::AbstractRisk{SEIR})
@@ -34,7 +34,7 @@ function Base.copy(x::AbstractRisk{SI})
 end
 
 
-function _indices(x::AbstractRisk{T}; zeros::Bool=true, cumulative::Bool=true) where T <: EpidemicModel
+function _indices(x::AbstractRisk{T}; zeros::Bool=true, cumulative::Bool=true) where T <: DiseaseStateSequence
   indices = [length(x.sparks)
              length(x.susceptibility)
              length(x.infectivity)
@@ -57,13 +57,13 @@ function _indices(x::AbstractRisk{T}; zeros::Bool=true, cumulative::Bool=true) w
 end
 
 
-function Base.length(x::AbstractRisk{T}) where T <: EpidemicModel
+function Base.length(x::AbstractRisk{T}) where T <: DiseaseStateSequence
   return _indices(x)[end]
 end
 
 
 function Base.getindex(x::AbstractRisk{T},
-                       i::Int64) where T <: EpidemicModel
+                       i::Int64) where T <: DiseaseStateSequence
   indices = _indices(x, zeros = true)
   riskfunc = findfirst(i .<= indices)
   return getfield(x, riskfunc)[end - (indices[riskfunc] - i)]

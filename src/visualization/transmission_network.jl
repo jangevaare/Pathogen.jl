@@ -8,7 +8,7 @@ end
                    events::Events{T},
                    time::Float64;
                    show_individuals=true::Bool,
-                   show_states=true::Bool) where T <: EpidemicModel
+                   show_states=true::Bool) where T <: DiseaseStateSequence
   if show_states & !show_individuals
     @warn "Will not show disease states without also showing individuals"
   end
@@ -52,7 +52,7 @@ end
 
 @recipe function f(tn::TransmissionNetwork,
                    pop::Population;
-                   show_individuals=true::Bool) where T <: EpidemicModel
+                   show_individuals=true::Bool) where T <: DiseaseStateSequence
   xguide --> ""
   yguide --> ""
   legend --> :none

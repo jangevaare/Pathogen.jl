@@ -1,6 +1,6 @@
 _subscript(i::Integer) = i<0 ? error("$i is negative") : join('₀'+d for d in reverse(digits(i)))
 
-function _parameters(x::RiskParameters{M}) where {M <: EpidemicModel}
+function _parameters(x::RiskParameters{M}) where {M <: DiseaseStateSequence}
   inds = _indices(x, cumulative=false)
   params1 = ["ϵ", "Ωs", "κ", "Ωt", "Ωl", "Ωr"]
   params2 = String[]
@@ -15,7 +15,7 @@ end
 """
 Produces a data frame summarizing MCMC results.
 """
-function summary(mcmc::MCMC{M}; burnin::Int64=0, thin::Int64=1, bychain::Bool=true, credibleinterval::Float64=0.95) where M <: EpidemicModel
+function summary(mcmc::MCMC{M}; burnin::Int64=0, thin::Int64=1, bychain::Bool=true, credibleinterval::Float64=0.95) where M <: DiseaseStateSequence
   !(0.0 < credibleinterval < 1.0) && error("`credibleinterval` must be between 0 and 1")
   ci = (1-credibleinterval)/2
   params = _parameters(mcmc.markov_chains[1].risk_parameters[1])

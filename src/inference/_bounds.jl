@@ -3,7 +3,7 @@ function _bounds(id::I,
                  extents::EventExtents{T},
                  obs::EventObservations{T},
                  events::Events{T},
-                 network::TransmissionNetwork) where {I <: Integer, T <: EpidemicModel}
+                 network::TransmissionNetwork) where {I <: Integer, T <: DiseaseStateSequence}
   if new_state == State_E
     lowerbounds = [events.infection[id] - extents.exposure[2]]
     upperbounds = [events.infection[id] - extents.exposure[1]]
@@ -69,7 +69,7 @@ function _bounds(last_event::Event{T},
                  extents::EventExtents{T},
                  obs::EventObservations{T},
                  events::Events{T},
-                 network::TransmissionNetwork) where T <: EpidemicModel
+                 network::TransmissionNetwork) where T <: DiseaseStateSequence
   return _bounds(last_event.individual,
                  last_event.new_state,
                  extents, obs, events, network)
@@ -80,7 +80,7 @@ function _bounds(id::I,
                  new_state::DiseaseState,
                  extents::EventExtents{T},
                  obs::EventObservations{T},
-                 events::Events{T}) where {I <: Integer, T <: EpidemicModel}
+                 events::Events{T}) where {I <: Integer, T <: DiseaseStateSequence}
   if new_state == State_E
     lowerbounds = [events.infection[id] - extents.exposure[2]]
     upperbounds = [events.infection[id] - extents.exposure[1]]
@@ -111,7 +111,7 @@ end
 function _bounds(last_event::Event{T},
                  extents::EventExtents{T},
                  obs::EventObservations{T},
-                 events::Events{T}) where T <: EpidemicModel
+                 events::Events{T}) where T <: DiseaseStateSequence
   return _bounds(last_event.individual,
                  last_event.new_state,
                  extents, obs, events)

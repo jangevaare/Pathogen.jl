@@ -1,4 +1,4 @@
-function logpriors(rparams::RiskParameters{T}, rpriors::RiskPriors{T}) where T <: EpidemicModel
+function logpriors(rparams::RiskParameters{T}, rpriors::RiskPriors{T}) where T <: DiseaseStateSequence
   lprior = 0.0
   for i in 1:length(rpriors.sparks)
     lprior == -Inf && break

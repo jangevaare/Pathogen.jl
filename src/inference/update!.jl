@@ -4,11 +4,11 @@ function update!(mc::MarkovChain{T},
                  σ::Float64;
                  condition_on_network::Bool=false,
                  event_batches::Int64=1,
-                 transmission_rate_cache::Union{Nothing, TransmissionRateCache}=nothing) where T <: EpidemicModel
+                 transmission_rate_cache::Union{Nothing, TransmissionRateCache}=nothing) where T <: DiseaseStateSequence
   # Initialize
   new_tr_cache = transmission_rate_cache
   new_events = mc.events[end]
-  new_events_array = new_events[_state_progressions[T][2:end]]
+  new_events_array = new_events[convert(DiseaseStates, T)[2:end]]
   new_params = mc.risk_parameters[end]
   new_network = mc.transmission_network[end]
   new_lposterior = mc.log_posterior[end]
@@ -38,8 +38,8 @@ function update!(mc::MarkovChain{T},
       proposed_events = Events{T}(proposed_events_array)
       for j = (batch_size*(i-2) + 1):min(batch_size*(i-1),length(aug_order))
         id, state_index = Tuple(CartesianIndices((individuals(new_events),
-                                            length(_state_progressions[T][2:end])))[aug_order[j]])
-        new_state = _state_progressions[T][state_index+1]
+                                            length(convert(DiseaseStates, T)[2:end])))[aug_order[j]])
+        new_state = convert(DiseaseStates, T)[state_index+1]
         time = new_events[new_state][id]
 
         # Conditioning on network means that only event times valid under current network will be proposed.
@@ -118,7 +118,7 @@ end
 
 function update!(mcmc::MCMC{T},
                  Σ::Array{Float64, 2},
-                 σ::Float64) where T <: EpidemicModel
+                 σ::Float64) where T <: DiseaseStateSequence
   @simd for mc in mcmc.markov_chains
     next!(mc, mcmc, Σ, σ)
   end

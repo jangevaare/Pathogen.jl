@@ -1,4 +1,4 @@
-mutable struct Simulation{T <: EpidemicModel}
+mutable struct Simulation{T <: DiseaseStateSequence}
   time::Float64
   iterations::Int64
   population::Population
@@ -12,7 +12,7 @@ mutable struct Simulation{T <: EpidemicModel}
 
   function Simulation(pop::Population,
                       rf::RiskFunctions{T},
-                      rp::RiskParameters{T}) where T <: EpidemicModel
+                      rp::RiskParameters{T}) where T <: DiseaseStateSequence
     states = fill(State_S, individuals(pop))
     tr = initialize(TransmissionRates, states, pop, rf, rp)
     rates = initialize(EventRates, tr, states, pop, rf, rp)
@@ -26,12 +26,12 @@ mutable struct Simulation{T <: EpidemicModel}
                       rf::RiskFunctions{T},
                       rp::RiskParameters{T};
                       time::Float64 = 0.0,
-                      skip_checks::Bool=false) where T <: EpidemicModel
+                      skip_checks::Bool=false) where T <: DiseaseStateSequence
     @debug "Initializing $T Simulation with the following starting states:" states
     if !skip_checks
       if length(states) != individuals(pop)
         @error "Length of initial disease state vector must match number of individuals"
-      elseif !all(in.(states, Ref(_state_progressions[T])))
+      elseif !all(in.(states, Ref(convert(DiseaseStates, T))))
         @error "All states in initial disease state vector must be valid within specified epidemic model"
       end
     end
@@ -43,9 +43,9 @@ mutable struct Simulation{T <: EpidemicModel}
   end
 end
 
-function Base.show(io::IO, x::Simulation{T}) where T <: EpidemicModel
+function Base.show(io::IO, x::Simulation{T}) where T <: DiseaseStateSequence
   y = "$T epidemic simulation @ time = $(round(x.time, digits=2))\n"
-  for s in _state_progressions[T]
+  for s in convert(DiseaseStates, T)
     y *= "\n$s = $(sum(x.disease_states .== Ref(s)))"
   end
   return print(io, y)

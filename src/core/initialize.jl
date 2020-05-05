@@ -2,7 +2,7 @@ function initialize(::Type{TransmissionRates},
                     states::Vector{DiseaseState},
                     pop::Population,
                     rf::RiskFunctions{T},
-                    rp::RiskParameters{T}) where T <: EpidemicModel
+                    rp::RiskParameters{T}) where T <: DiseaseStateSequence
   n_ids = length(states)
   tr = TransmissionRates(n_ids)
   for i in findall(states .== Ref(State_S))
@@ -26,7 +26,7 @@ function initialize(::Type{EventRates},
                     states::Vector{DiseaseState},
                     pop::Population,
                     rf::RiskFunctions{T},
-                    rp::RiskParameters{T}) where T <: EpidemicModel
+                    rp::RiskParameters{T}) where T <: DiseaseStateSequence
   n_ids = length(states)
   rates = EventRates{T}(n_ids)
   for i = 1:n_ids
@@ -44,6 +44,6 @@ function initialize(::Type{EventRates},
       end
     end
   end
-  @debug "Initialization of $T EventRates complete" rates = [sum(rates[k]) for k in _state_progressions[T][2:end]]
+  @debug "Initialization of $T EventRates complete" rates = [sum(rates[k]) for k in convert(DiseaseStates, T)[2:end]]
   return rates
 end
