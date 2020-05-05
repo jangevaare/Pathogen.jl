@@ -37,7 +37,7 @@ function update!(mc::MarkovChain{T},
       proposed_events_array = copy(new_events_array)
       proposed_events = Events{T}(proposed_events_array)
       for j = (batch_size*(i-2) + 1):min(batch_size*(i-1),length(aug_order))
-        id, state_index = Tuple(CartesianIndices((new_events.individuals,
+        id, state_index = Tuple(CartesianIndices((individuals(new_events),
                                             length(_state_progressions[T][2:end])))[aug_order[j]])
         new_state = _state_progressions[T][state_index+1]
         time = new_events[new_state][id]

@@ -2,47 +2,46 @@ struct Events{T <: EpidemicModel}
   exposure::Union{Nothing, Vector{Float64}}
   infection::Vector{Float64}
   removal::Union{Nothing, Vector{Float64}}
-  individuals::Int64
 
   function Events{T}(e::V, i::V, r::V) where {T <: SEIR, V <: Vector{Float64}}
     if length(unique((length.([e; i; r])))) != 1
       @error "Length of event time vectors must be equal"
     end
-    return new{T}(e, i, r, length(i))
+    return new{T}(e, i, r)
   end
 
   function Events{T}(n::Integer) where T <: SEIR
-    return new{T}(fill(NaN, n), fill(NaN, n), fill(NaN, n), n)
+    return new{T}(fill(NaN, n), fill(NaN, n), fill(NaN, n))
   end
 
   function Events{T}(e::V, i::V) where {T <: SEI, V <: Vector{Float64}}
     if length(unique((length.([e; i])))) != 1
       @error "Length of event time vectors must be equal"
     end
-    return new{T}(e, i, nothing, length(i))
+    return new{T}(e, i, nothing)
   end
 
   function Events{T}(n::Integer) where T <: SEI
-    return new{T}(fill(NaN, n), fill(NaN, n), nothing, n)
+    return new{T}(fill(NaN, n), fill(NaN, n), nothing)
   end
 
   function Events{T}(i::V, r::V) where {T <: SIR, V <: Vector{Float64}}
     if length(unique((length.([i; r])))) != 1
       @error "Length of event time vectors must be equal"
     end
-    return new{T}(nothing, i, r, length(i))
+    return new{T}(nothing, i, r)
   end
 
   function Events{T}(n::Integer) where T <: SIR
-    return new{T}(nothing, fill(NaN, n), fill(NaN, n), n)
+    return new{T}(nothing, fill(NaN, n), fill(NaN, n))
   end
 
   function Events{T}(i::V) where {T <: SI, V <: Vector{Float64}}
-    return new{T}(nothing, i, nothing, length(i))
+    return new{T}(nothing, i, nothing)
   end
 
   function Events{T}(n::Integer) where T <: SI
-    return new{T}(nothing, fill(NaN, n), nothing, n)
+    return new{T}(nothing, fill(NaN, n), nothing)
   end
 end
 
@@ -72,8 +71,13 @@ function Events{T}(x::Vector{DiseaseState}) where T <: EpidemicModel
   return events
 end
 
+function individuals(x::Events{M}) where{
+                     M <: EpidemicModel}
+  return length(x.infection)
+end
+
 function Base.show(io::IO, x::Events{T}) where T <: EpidemicModel
-  return print(io, "$T model event times (n=$(x.individuals))")
+  return print(io, "$T model event times (n=$(individuals(x)))")
 end
 
 function Base.getindex(x::Events{T}, new_state::DiseaseState) where T <: EpidemicModel

@@ -60,10 +60,10 @@ end
 function generate(::Type{Events},
                   obs::EventObservations{T},
                   extents::EventExtents{T}) where T <: EpidemicModel
-  events = Events{T}(obs.individuals)
+  events = Events{T}(individuals(obs))
   exposed_state = T in [SEIR; SEI]
   removed_state = T in [SEIR; SIR]
-  for i = 1:obs.individuals
+  for i = 1:individuals(obs)
     if obs.infection[i] == -Inf
       update!(events, Event{T}(-Inf, i, State_I))
       if exposed_state

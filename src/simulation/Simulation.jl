@@ -13,10 +13,10 @@ mutable struct Simulation{T <: EpidemicModel}
   function Simulation(pop::Population,
                       rf::RiskFunctions{T},
                       rp::RiskParameters{T}) where T <: EpidemicModel
-    states = fill(State_S, pop.individuals)
+    states = fill(State_S, individuals(pop))
     tr = initialize(TransmissionRates, states, pop, rf, rp)
     rates = initialize(EventRates, tr, states, pop, rf, rp)
-    events = Events{T}(pop.individuals)
+    events = Events{T}(individuals(pop))
     net = TransmissionNetwork(states)
     return new{T}(0.0, 0, pop, rf, rp, states, tr, rates, events, net)
   end
@@ -29,7 +29,7 @@ mutable struct Simulation{T <: EpidemicModel}
                       skip_checks::Bool=false) where T <: EpidemicModel
     @debug "Initializing $T Simulation with the following starting states:" states
     if !skip_checks
-      if length(states) != pop.individuals
+      if length(states) != individuals(pop)
         @error "Length of initial disease state vector must match number of individuals"
       elseif !all(in.(states, Ref(_state_progressions[T])))
         @error "All states in initial disease state vector must be valid within specified epidemic model"

@@ -2,23 +2,27 @@ struct EventRates{T <: EpidemicModel}
   exposure::Union{Nothing, Vector{Float64}}
   infection::Union{Nothing, Vector{Float64}}
   removal::Union{Nothing, Vector{Float64}}
-  individuals::Int64
 
   function EventRates{T}(n::Int64) where T <: SEIR
-    return new{T}(fill(0.0, n), fill(0.0, n), fill(0.0, n), n)
+    return new{T}(fill(0.0, n), fill(0.0, n), fill(0.0, n))
   end
 
   function EventRates{T}(n::Int64) where T <: SEI
-    return new{T}(fill(0.0, n), fill(0.0, n), nothing, n)
+    return new{T}(fill(0.0, n), fill(0.0, n), nothing)
   end
   
   function EventRates{T}(n::Int64) where T <: SIR
-    return new{T}(nothing, fill(0.0, n), fill(0.0, n), n)
-  end  
+    return new{T}(nothing, fill(0.0, n), fill(0.0, n))
+  end
   
   function EventRates{T}(n::Int64) where T <: SI
-    return new{T}(nothing, fill(0.0, n), nothing, n)
+    return new{T}(nothing, fill(0.0, n), nothing)
   end
+end
+
+function individuals(x::EventRates{T}) where {
+                     T <: EpidemicModel}
+  return length(x.infection)
 end
 
 function Base.getindex(x::EventRates{T}, new_state::DiseaseState) where T <: EpidemicModel

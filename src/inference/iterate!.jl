@@ -17,7 +17,7 @@ function iterate!(mc::MarkovChain{T},
     use_adapted_cov = true
     adapted_cov = OnlineStats.value(mc.cov) * 2.38^2 / length(mc.risk_parameters[1])
   end
-  tr_cache = TransmissionRateCache(mcmc.population.individuals)
+  tr_cache = TransmissionRateCache(individuals(mcmc.population))
   for i = 1:n
     if use_adapted_cov
       update!(mc, mcmc, adapted_cov, σ, condition_on_network = condition_on_network, event_batches = event_batches, transmission_rate_cache=tr_cache)
@@ -56,7 +56,7 @@ function iterate!(mc::MarkovChain{T},
     use_adapted_cov = true
     adapted_cov = OnlineStats.value(mc.cov) * 2.38^2 / length(mc.risk_parameters[1])
   end
-  tr_cache = TransmissionRateCache(mcmc.population.individuals)
+  tr_cache = TransmissionRateCache(individuals(mcmc.population))
   for i = 1:n
     if use_adapted_cov
       update!(mc, mcmc, adapted_cov, σ, condition_on_network = condition_on_network, event_batches = event_batches, transmission_rate_cache=tr_cache)

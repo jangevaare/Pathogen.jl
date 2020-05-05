@@ -46,7 +46,7 @@ end
   axis --> nothing
   titlefontcolor --> :black
   framestyle --> :none
-  _population(pop, 1:pop.individuals)
+  _population(pop, 1:individuals(pop))
 end
 
 

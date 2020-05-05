@@ -2,8 +2,8 @@ function observe(events::Events{T},
                  delay_infection::UnivariateDistribution,
                  delay_removal::UnivariateDistribution;
                  force::Bool = false) where T <: Union{SEIR, SIR}
-  infection = fill(NaN, events.individuals)
-  removal = fill(NaN, events.individuals)
+  infection = fill(NaN, individuals(events))
+  removal = fill(NaN, individuals(events))
   if force
     for i in findall(.!isnan.(events.infection))
       if events.infection[i] == -Inf
@@ -56,7 +56,7 @@ end
 
 function observe(events::Events{T},
                  delay_infection::UnivariateDistribution) where T <: Union{SEI, SI}
-  infection = fill(NaN, events.individuals)
+  infection = fill(NaN, individuals(events))
   @simd for i in findall(.!isnan.(events.infection))
     if events.infection[i] == -Inf
       infection[i] = -Inf

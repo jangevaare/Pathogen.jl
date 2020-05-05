@@ -25,7 +25,7 @@ function MCMC(obs::EventObservations{T},
               rf::RiskFunctions{T},
               rp::RiskPriors{T};
               tnprior::Union{Nothing, TNPrior}=nothing) where T <: EpidemicModel
-  return MCMC(obs, ee, pop, fill(State_S, pop.individuals), rf, rp, tnprior=tnprior)
+  return MCMC(obs, ee, pop, fill(State_S, individuals(pop)), rf, rp, tnprior=tnprior)
 end
 
 function Base.show(io::IO, x::MCMC{T}) where T <: EpidemicModel

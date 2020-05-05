@@ -1,17 +1,16 @@
 struct EventObservations{T <: EpidemicModel}
   infection::Vector{Float64}
   removal::Union{Nothing, Vector{Float64}}
-  individuals::Int64
 
   function EventObservations{T}(i::V, r::V) where {V<:Vector{Float64}, T <: Union{SEIR, SIR}}
     if length(i) != length(r)
       error("Length of infection and removal times must be equal")
     end
-    return new{T}(i, r, length(i))
+    return new{T}(i, r)
   end
 
   function EventObservations{T}(i::V) where {V<:Vector{Float64}, T <: Union{SEI, SI}}
-    return new{T}(i, nothing, length(i))
+    return new{T}(i, nothing)
   end
 end
 
@@ -29,8 +28,13 @@ function EventObservations{T}(ir::Array{Float64, 2}) where T <: Union{SEIR, SIR}
   return EventObservations(ir[:, 1], ir[:, 2])
 end
 
+function individuals(x::EventObservations{M}) where {
+                     M <: EpidemicModel}
+  return length(x.infection)
+end
+
 function Base.show(io::IO, x::EventObservations{T}) where T <: EpidemicModel
-  return print(io, "$T model observations (n=$(x.individuals))")
+  return print(io, "$T model observations (n=$(individuals(x)))")
 end
 
 function Base.getindex(x::EventObservations{T}, new_state::DiseaseState) where T <: EpidemicModel
