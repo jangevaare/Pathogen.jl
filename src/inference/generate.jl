@@ -38,7 +38,7 @@ function generate(::Type{Transmission},
 end
 
 function generate(::Type{TransmissionNetwork},
-                  starting_states::Vector{DiseaseState},
+                  starting_states::DiseaseStates,
                   tr::TransmissionRates,
                   tnd::Union{Nothing, TNDistribution},
                   ids::Vector{I}) where {I <: Integer}

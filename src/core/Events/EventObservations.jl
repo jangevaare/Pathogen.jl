@@ -47,7 +47,7 @@ function Base.getindex(x::EventObservations{T}, new_state::DiseaseState) where T
   end
 end
 
-function Base.getindex(x::EventObservations{T}, states::Vector{DiseaseState}) where T <: DiseaseStateSequence
+function Base.getindex(x::EventObservations{T}, states::DiseaseStates) where T <: DiseaseStateSequence
   y = x[states[1]]
   for i = 2:length(states)
     y = hcat(y, x[states[i]])

@@ -57,7 +57,7 @@ function Events{T}(a::Array{Float64,2}) where T <: DiseaseStateSequence
   end
 end
 
-function Events{T}(x::Vector{DiseaseState}) where T <: DiseaseStateSequence
+function Events{T}(x::DiseaseStates) where T <: DiseaseStateSequence
   events = Events{T}(length(x))
   for i = 1:length(x)
     if x[i] in convert(DiseaseStates, T)
@@ -92,7 +92,7 @@ function Base.getindex(x::Events{T}, new_state::DiseaseState) where T <: Disease
   end
 end
 
-function Base.getindex(x::Events{T}, states::Vector{DiseaseState}) where T <: DiseaseStateSequence
+function Base.getindex(x::Events{T}, states::DiseaseStates) where T <: DiseaseStateSequence
   y = x[states[1]]
   for i = 2:length(states)
     y = hcat(y, x[states[i]])

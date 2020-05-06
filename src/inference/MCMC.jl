@@ -2,7 +2,7 @@ mutable struct MCMC{T <: DiseaseStateSequence}
   event_observations::EventObservations{T}
   event_extents::EventExtents{T}
   population::Population
-  starting_states::Vector{DiseaseState}
+  starting_states::DiseaseStates
   risk_functions::RiskFunctions{T}
   risk_priors::RiskPriors{T}
   transmission_network_prior::Union{Nothing, TNPrior}
@@ -11,7 +11,7 @@ mutable struct MCMC{T <: DiseaseStateSequence}
   function MCMC(obs::EventObservations{T},
                 ee::EventExtents{T},
                 pop::Population,
-                states::Vector{DiseaseState},
+                states::DiseaseStates,
                 rf::RiskFunctions{T},
                 rp::RiskPriors{T};
                 tnprior::Union{Nothing, TNPrior}=nothing) where T <: DiseaseStateSequence

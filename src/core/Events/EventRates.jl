@@ -37,7 +37,7 @@ function Base.getindex(x::EventRates{T}, new_state::DiseaseState) where T <: Dis
   end
 end
 
-function Base.getindex(x::EventRates{T}, new_states::Vector{DiseaseState}) where T <: DiseaseStateSequence
+function Base.getindex(x::EventRates{T}, new_states::DiseaseStates) where T <: DiseaseStateSequence
   y = x[new_states[1]]
   for i=2:length(new_states)
     y = hcat(y, x[new_states[i]])

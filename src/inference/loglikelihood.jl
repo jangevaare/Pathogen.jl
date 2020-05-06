@@ -2,7 +2,7 @@ function loglikelihood(rp::RiskParameters{T},
                        rf::RiskFunctions{T},
                        events::Events{T},
                        pop::Population,
-                       starting_states::Vector{DiseaseState};
+                       starting_states::DiseaseStates;
                        loglikelihood_output::Bool=true,
                        transmission_rates_output::Bool=true,
                        transmissions_output::Bool=true,

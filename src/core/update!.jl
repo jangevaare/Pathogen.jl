@@ -4,7 +4,7 @@ function update!(events::Events{T},
   return events
 end
 
-function update!(states::Vector{DiseaseState},
+function update!(states::DiseaseStates,
                  event::Event{T}) where T <: DiseaseStateSequence
   states[event.individual] = event.new_state
   return states
@@ -29,7 +29,7 @@ end
 
 function update!(tr::TransmissionRates,
                  event::Event{T},
-                 states::Vector{DiseaseState},
+                 states::DiseaseStates,
                  pop::Population,
                  rf::RiskFunctions{T},
                  rp::RiskParameters{T};
@@ -69,7 +69,7 @@ end
 function update!(rates::EventRates{T},
                  tr::TransmissionRates,
                  event::Event{T},
-                 states::Vector{DiseaseState},
+                 states::DiseaseStates,
                  pop::Population,
                  rf::RiskFunctions{T},
                  rp::RiskParameters{T}) where T <: DiseaseStateSequence
@@ -122,7 +122,7 @@ end
 function update!(tr::TransmissionRates,
                  rates::EventRates{T},
                  event::Event{T},
-                 states::Vector{DiseaseState},
+                 states::DiseaseStates,
                  pop::Population,
                  rf::RiskFunctions{T},
                  rp::RiskParameters{T};

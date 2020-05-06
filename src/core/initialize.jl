@@ -1,5 +1,5 @@
 function initialize(::Type{TransmissionRates},
-                    states::Vector{DiseaseState},
+                    states::DiseaseStates,
                     pop::Population,
                     rf::RiskFunctions{T},
                     rp::RiskParameters{T}) where T <: DiseaseStateSequence
@@ -23,7 +23,7 @@ end
 
 function initialize(::Type{EventRates},
                     tr::TransmissionRates,
-                    states::Vector{DiseaseState},
+                    states::DiseaseStates,
                     pop::Population,
                     rf::RiskFunctions{T},
                     rp::RiskParameters{T}) where T <: DiseaseStateSequence

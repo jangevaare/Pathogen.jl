@@ -4,7 +4,7 @@ mutable struct Simulation{T <: DiseaseStateSequence}
   population::Population
   risk_functions::RiskFunctions{T}
   risk_parameters::RiskParameters{T}
-  disease_states::Vector{DiseaseState}
+  disease_states::DiseaseStates
   transmission_rates::TransmissionRates
   event_rates::EventRates{T}
   events::Events{T}
@@ -22,7 +22,7 @@ mutable struct Simulation{T <: DiseaseStateSequence}
   end
 
   function Simulation(pop::Population,
-                      states::Vector{DiseaseState},
+                      states::DiseaseStates,
                       rf::RiskFunctions{T},
                       rp::RiskParameters{T};
                       time::Float64 = 0.0,

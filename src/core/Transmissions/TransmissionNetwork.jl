@@ -19,7 +19,7 @@ struct TransmissionNetwork <: AbstractTN
     return new(external, internal)
   end
 
-  function TransmissionNetwork(starting_states::Vector{DiseaseState})
+  function TransmissionNetwork(starting_states::DiseaseStates)
     return new(starting_states .!= Ref(State_S), fill(0, (length(starting_states), length(starting_states))))
   end
 end
