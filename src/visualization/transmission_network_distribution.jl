@@ -21,7 +21,7 @@ end
   framestyle --> :none
   linecolor --> :black
   n = individuals(pop)
-  for i = 1:n, j =1:n
+  for i = 1:n, j = 1:n
     if tn.internal[j, i] > 0.0
       @series begin
         x, y, density = _transmission_pathway_density(pop, tn, i, j)

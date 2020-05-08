@@ -65,7 +65,7 @@ module Pathogen
 
   # Visualization
   include("visualization/epidemic_curve.jl")
-  #include("visualization/epidemic_curve_distribution.jl")
+  include("visualization/epidemic_curve_distribution.jl")
   include("visualization/observations.jl")
   include("visualization/population.jl")
   include("visualization/transmission_network.jl")
