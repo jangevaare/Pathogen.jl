@@ -27,5 +27,5 @@ function Base.show(io::IO, x::MarkovChain{T}) where T <: DiseaseStateSequence
 end
 
 function TransmissionNetworkDistribution(x::MarkovChain; burnin::Int64=0, thin::Int64=1)
-  return TNDistribution(x.transmission_network[burnin:thin:end])
+  return TNDistribution(x.transmission_network[1+burnin:thin:end])
 end
