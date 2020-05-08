@@ -11,8 +11,8 @@ const State_R = DiseaseState(0b1000)
 
 const DiseaseStates = Vector{DiseaseState}
 
-const _DiseaseStateVector = SVector{4}(State_S, State_E, State_I, State_R)
-const _DiseaseStateCharVector = SVector{4}('S', 'E', 'I', 'R')
+const _DiseaseStateVector = [State_S, State_E, State_I, State_R]
+const _DiseaseStateCharVector = ['S', 'E', 'I', 'R']
 
 # `DiseaseState` conversion to/from `Char`
 function Base.convert(::Type{Char}, x::DiseaseState)
@@ -23,7 +23,14 @@ function Base.show(io::IO, x::DiseaseState)
   return print(io, convert(Char, x))
 end
 
-Base.convert(::Type{DiseaseStates}, x::Type{SEIR}) = SVector{4}(State_S, State_E, State_I, State_R)
-Base.convert(::Type{DiseaseStates}, x::Type{SEI}) = SVector{3}(State_S, State_E, State_I)
-Base.convert(::Type{DiseaseStates}, x::Type{SIR}) = SVector{3}(State_S, State_I, State_R)
-Base.convert(::Type{DiseaseStates}, x::Type{SI}) = SVector{2}(State_S, State_I)
+Base.convert(::Type{DiseaseStates}, x::Type{SEIR}) = [State_S, State_E, State_I, State_R]
+Base.convert(::Type{DiseaseStates}, x::Type{SEI}) = [State_S, State_E, State_I]
+Base.convert(::Type{DiseaseStates}, x::Type{SIR}) = [State_S, State_I, State_R]
+Base.convert(::Type{DiseaseStates}, x::Type{SI}) = [State_S, State_I]
+
+Base.convert(::Type{Tuple}, x::Type{SEIR}) = (State_S, State_E, State_I, State_R)
+Base.convert(::Type{Tuple}, x::Type{SEI}) = (State_S, State_E, State_I)
+Base.convert(::Type{Tuple}, x::Type{SIR}) = (State_S, State_I, State_R)
+Base.convert(::Type{Tuple}, x::Type{SI}) = (State_S, State_I)
+
+Base.iterate(::Type{S}, v...) where {S <: DiseaseStateSequence} = iterate(convert(Tuple, S), v...)

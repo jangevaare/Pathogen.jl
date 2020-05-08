@@ -61,8 +61,8 @@ function generate(::Type{Events},
                   obs::EventObservations{T},
                   extents::EventExtents{T}) where T <: DiseaseStateSequence
   events = Events{T}(individuals(obs))
-  exposed_state = T in [SEIR; SEI]
-  removed_state = T in [SEIR; SIR]
+  exposed_state = State_E ∈ T
+  removed_state = State_R ∈ T
   for i = 1:individuals(obs)
     if obs.infection[i] == -Inf
       update!(events, Event{T}(-Inf, i, State_I))
@@ -130,10 +130,10 @@ function generate(::Type{RiskParameters{T}}, rpriors::RiskPriors{T}) where T <: 
   susceptibility = Float64[rand(x) for x in rpriors.susceptibility]
   infectivity = Float64[rand(x) for x in rpriors.infectivity]
   transmissibility = Float64[rand(x) for x in rpriors.transmissibility]
-  if T in [SEIR; SEI]
+  if State_E ∈ T
     latency = Float64[rand(x) for x in rpriors.latency]
   end
-  if T in [SEIR; SIR]
+  if State_R ∈ T
     removal = Float64[rand(x) for x in rpriors.removal]
   end
   if T == SEIR

@@ -72,7 +72,7 @@ end
     label --> "S"
     x, y
   end
-  if T in [SEIR; SEI]
+  if State_E ∈ T
     @series begin
       ids_exposed = _ids_by_state(events, State_E, time)
       x, y = _population(pop, ids_exposed)
@@ -90,7 +90,7 @@ end
     label --> "I"
     x, y
   end
-  if T in [SEIR; SIR]
+  if State_R ∈ T
     @series begin
       ids_removed = _ids_by_state(events, State_R, time)
       x, y = _population(pop, ids_removed)

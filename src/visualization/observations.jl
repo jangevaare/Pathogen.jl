@@ -2,7 +2,7 @@ function _count_by_state(events::EventObservations{T},
                          state::DiseaseState,
                          time::Float64) where T <: DiseaseStateSequence
   local n_ids
-  if state == State_I && T ∈ [SEIR, SIR]
+  if state == State_I && State_R ∈ T
     nextstate = State_R
     n_ids = sum((events[state] .<= Ref(time)) .& (events[nextstate] .> Ref(time))) # E/I at or before time and I/R after time
     n_ids += sum((events[state] .<= Ref(time)) .& isnan.(events[nextstate])) # E/I at or before time and never I/R 
@@ -21,7 +21,7 @@ function _obs_curve(events::EventObservations{T},
     @error "Minimum time must be less than maximum time"
   end
   local times
-  if state == State_I && T ∈ [SEIR, SIR]
+  if state == State_I && State_R ∈ T
     times = events[[State_I; State_R]][:]
   else
     times = events[state]
@@ -61,7 +61,7 @@ end
     label --> "I"
     events, State_I, min, max
   end
-  if T in [SEIR; SIR]
+  if State_R ∈ T
     @series begin
       linecolor --> :yellow
       label --> "R"

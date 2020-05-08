@@ -42,7 +42,7 @@ function _like(x::RiskParameters{T}, v::Vector{Float64}) where T <: DiseaseState
                              v[(indices[3]+1):(indices[4])],
                              v[(indices[4]+1):(indices[5])],
                              v[(indices[5]+1):(indices[6])])
-  elseif T in [SEI; SIR]
+  elseif T in (SEI, SIR)
     return RiskParameters{T}(v[1:(indices[1])],
                              v[(indices[1]+1):(indices[2])],
                              v[(indices[2]+1):(indices[3])],

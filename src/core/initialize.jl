@@ -31,15 +31,15 @@ function initialize(::Type{EventRates},
   rates = EventRates{T}(n_ids)
   for i = 1:n_ids
     if states[i] == State_S
-      if T in [SEIR; SEI]
+      if State_E ∈ T
         rates.exposure[i] = sum(tr, i)
-      elseif T in [SIR; SI]
+      elseif State_E ∉ T
         rates.infection[i] = sum(tr, i)
       end
     elseif states[i] == State_E
       rates.infection[i] = rf.latency(rp.latency, pop, i)
     elseif states[i] == State_I
-      if T in [SEIR; SIR]
+      if State_R ∈ T
         rates.removal[i] = rf.removal(rp.removal, pop, i)
       end
     end

@@ -80,7 +80,7 @@ end
     label --> "S"
     events, State_S, min, max
   end
-  if T in [SEIR; SEI]
+  if State_E ∈ T
     @series begin
       linecolor --> :lightblue4
       label --> "E"
@@ -92,7 +92,7 @@ end
     label --> "I"
     events, State_I, min, max
   end
-  if T in [SEIR; SIR]
+  if State_R ∈ T
     @series begin
       linecolor --> :yellow
       label --> "R"

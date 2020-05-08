@@ -10,15 +10,15 @@ module Pathogen
         Statistics,
         ProgressMeter,
         LinearAlgebra,
-        OnlineStats,
-        StaticArrays
+        OnlineStats
 
+  # Methods for functions not in Base
   import StatsBase.mean,
          StatsBase.mode,
-         Base.summary,
          ProgressMeter.next!
 
   # Core
+  include("core/IndividualLevelModel.jl")
   include("core/DiseaseStateSequence.jl")
   include("core/DiseaseState.jl")
   include("core/Population.jl")
@@ -65,6 +65,7 @@ module Pathogen
 
   # Visualization
   include("visualization/epidemic_curve.jl")
+  #include("visualization/epidemic_curve_distribution.jl")
   include("visualization/observations.jl")
   include("visualization/population.jl")
   include("visualization/transmission_network.jl")
@@ -82,8 +83,8 @@ module Pathogen
   export
     # Pathogen.jl types/functions
     EpidemicModel,
-    SEIR, SEI, SIR, SI,
-    DiseaseState,
+    SEIR, SEI, SIR, SI, DiseaseStateSequence,
+    DiseaseState, DiseaseStates,
     State_S, State_E, State_I, State_R,
     RiskFunctions, RiskParameters, RiskPriors,
     Population,

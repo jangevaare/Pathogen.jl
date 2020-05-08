@@ -39,12 +39,12 @@ function _indices(x::AbstractRisk{T}; zeros::Bool=true, cumulative::Bool=true) w
              length(x.susceptibility)
              length(x.infectivity)
              length(x.transmissibility)]
-  if T in [SEIR; SEI]
+  if State_E ∈ T
     push!(indices, length(x.latency))
   elseif zeros
     push!(indices, 0)
   end
-  if T in [SEIR; SIR]
+  if State_R ∈ T
     push!(indices, length(x.removal))
   elseif zeros
     push!(indices, 0)
