@@ -10,7 +10,8 @@ module Pathogen
         Statistics,
         ProgressMeter,
         LinearAlgebra,
-        OnlineStats
+        OnlineStats,
+        PhyloModels
 
   # Methods for functions not in Base
   import StatsBase.mean,
@@ -39,10 +40,11 @@ module Pathogen
 
   # Simulation
   include("simulation/Simulation.jl")
-  include("simulation/generate.jl")
+  include("simulation/generate/Event.jl")
+  include("simulation/generate/EventObservations.jl")
+  include("simulation/generate/Transmission.jl")
   include("simulation/simulate!.jl")
   include("simulation/update!.jl")
-  include("simulation/observe.jl")
 
   # Inference
   include("inference/TransmissionNetworkDistribution.jl")
@@ -74,7 +76,7 @@ module Pathogen
   include("visualization/trace.jl")
 
   # re-export PhyloModels, DataFrames, Distributions
-  for reexport_pkg in [DataFrames, Distributions]
+  for reexport_pkg in [PhyloModels, DataFrames, Distributions]
     for name in names(reexport_pkg)
       @eval export $(name)
     end
