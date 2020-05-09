@@ -1,8 +1,6 @@
 struct Population
   risks::AbstractDataFrame
   distances::Union{Nothing, AbstractArray}
-
-  Population(risks, distances) = new(risks, distances)
 end
 
 Population(risks) = Population(risks, nothing)
