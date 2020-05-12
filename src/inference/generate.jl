@@ -57,9 +57,12 @@ function generate(::Type{TransmissionNetwork},
   return generate(TransmissionNetwork, mcmc.starting_states, tr, mcmc.transmission_network_prior, ids)
 end
 
-function generate(::Type{Events},
-                  obs::EventObservations{T},
-                  extents::EventExtents{T}) where T <: DiseaseStateSequence
+function generate(
+  ::Type{Events},
+  obs::EventObservations{T, M},
+  extents::EventExtents{T}) where {
+    T <: DiseaseStateSequence,
+    M <: ILM}
   events = Events{T}(individuals(obs))
   exposed_state = State_E ∈ T
   removed_state = State_R ∈ T
@@ -178,4 +181,21 @@ function generate(::Type{RiskParameters{T}},
                   mc::MarkovChain{T},
                   Σ::Array{Float64, 2}) where T <: DiseaseStateSequence
   return generate(RiskParameters{T}, mc.risk_parameters[end], Σ)
+end
+
+function generate(::Type{SM},
+                  priors::Vector{UnivariateDistribution}) where {
+                  SM <: NucleicAcidSubstitutionModel}
+  return SM([rand(x) for x in priors])
+end
+
+function generate(::Type{SM},
+                  last_sm::SM,
+                  Σ::Array{Float64, 2}) where {
+                  SM <: NucleicAcidSubstitutionModel}
+  if size(Σ) == (0,0)
+    return last_sm
+  else
+    return SM(rand(MvNormal([getproperty(last_sm, θ) for θ in [fieldnames(SM)...]], Σ)), false)
+  end
 end

@@ -41,6 +41,7 @@ module Pathogen
   # Simulation
   include("simulation/Simulation.jl")
   include("simulation/generate/Event.jl")
+  include("simulation/generate/Tree.jl")
   include("simulation/generate/EventObservations.jl")
   include("simulation/generate/Transmission.jl")
   include("simulation/simulate!.jl")
@@ -52,15 +53,13 @@ module Pathogen
   include("inference/EventExtents.jl")
   include("inference/MarkovChain.jl")
   include("inference/MCMC.jl")
-  include("inference/_pathway_from.jl")
-  include("inference/_pathway_to.jl")
   include("inference/_accept.jl")
   include("inference/_bounds.jl")
   include("inference/generate.jl")
   include("inference/initialize.jl")
   include("inference/update!.jl")
   include("inference/loglikelihood.jl")
-  include("inference/logpriors.jl")
+  include("inference/logprior.jl")
   include("inference/start!.jl")
   include("inference/iterate!.jl")
   include("inference/summary.jl")
@@ -76,8 +75,8 @@ module Pathogen
   include("visualization/trace.jl")
 
   # re-export PhyloModels, DataFrames, Distributions
-  for reexport_pkg in [PhyloModels, DataFrames, Distributions]
-    for name in names(reexport_pkg)
+  for pkg in [PhyloModels, DataFrames, Distributions]
+    for name in names(pkg)
       @eval export $(name)
     end
   end
@@ -97,7 +96,7 @@ module Pathogen
     TransmissionNetworkPosterior, TNPosterior,
     EndogenousTransmission, ExogenousTransmission, NoTransmission,
     Simulation,
-    next!, simulate!,
+    next!, simulate!, generate,
     Events, EventObservations, EventExtents,
     observe,
     MCMC, start!, iterate!,

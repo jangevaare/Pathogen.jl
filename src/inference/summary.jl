@@ -15,7 +15,14 @@ end
 """
 Produces a data frame summarizing MCMC results.
 """
-function Base.summary(mcmc::MCMC{M}; burnin::Int64=0, thin::Int64=1, bychain::Bool=true, credibleinterval::Float64=0.95) where M <: DiseaseStateSequence
+function Base.summary(
+  mcmc::MCMC{M};
+  burnin::Int64=0,
+  thin::Int64=1,
+  bychain::Bool=true,
+  credibleinterval::Float64=0.95) where {
+  M <: DiseaseStateSequence}
+
   !(0.0 <= credibleinterval <= 1.0) && error("`credibleinterval` must be between 0 and 1")
   ci = (1-credibleinterval)/2
   params = _parameters(mcmc.markov_chains[1].risk_parameters[1])

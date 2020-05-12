@@ -93,4 +93,5 @@ function generate(
   end
 end
 
-observe(x...) = generate(EventObservations, x...)
+observe(x,y,z; force::Bool=false, seq_len::Union{Nothing, Int64}=nothing) = generate(EventObservations, x, y, z, force=force, seq_len=seq_len)
+observe(x,y; seq_len::Union{Nothing, Int64}=nothing) = generate(EventObservations, x, y, seq_len=seq_len)

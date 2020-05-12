@@ -118,12 +118,12 @@ end
 
 function Base.minimum(x::Events{T}) where T <: DiseaseStateSequence
   y = convert(Array{Float64, 2}, x)
-  return minimum(y[.!isnan.(y)])
+  return minimum(y[.!isnan.(y) .& (y .> -Inf)])
 end
 
 function Base.maximum(x::Events{T}) where T <: DiseaseStateSequence
   y = convert(Array{Float64, 2}, x)
-  return maximum(y[.!isnan.(y)])
+  return maximum(y[.!isnan.(y) .& (y .> -Inf)])
 end
 
 function Statistics.mean(x::Vector{Events{T}}) where T <: DiseaseStateSequence
