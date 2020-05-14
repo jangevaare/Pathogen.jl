@@ -40,7 +40,7 @@ Examples of Pathogen.jl workflow are included in the examples directory as a Jup
 This package is detailed in this [preprint article](https://arxiv.org/abs/2002.05850).
 
     @article{pathogenjl,
-      title={Pathogen.jl:Infectious Disease Transmission Network Modelling with {Julia}},
+      title={Pathogen.jl: Infectious Disease Transmission Network Modelling with {Julia}},
       author={Justin Angevaare and Zeny Feng and Rob Deardon},
       year={2020},
       eprint={2002.05850},
