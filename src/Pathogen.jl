@@ -82,8 +82,7 @@ module Pathogen
   end
 
   export
-    # Pathogen.jl types/functions
-    EpidemicModel,
+    ILM, TransmissionNetworkILM, TNILM, PhylodynamicILM, PhyloILM,
     SEIR, SEI, SIR, SI, DiseaseStateSequence,
     DiseaseState, DiseaseStates,
     State_S, State_E, State_I, State_R,

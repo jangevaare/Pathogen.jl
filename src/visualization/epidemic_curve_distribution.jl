@@ -35,6 +35,7 @@ end
                    times;
                    credibleinterval=0.95) where {
                    S<: DiseaseStateSequence}
+  color --> _state_colors(S)
   for s in convert(Tuple, S)
     @series begin
       credibleinterval := credibleinterval
