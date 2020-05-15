@@ -19,7 +19,7 @@ mutable struct Simulation{S <: DiseaseStateSequence, M <: ILM}
     time::Float64 = 0.0,
     skip_checks::Bool=false) where {
       S <: DiseaseStateSequence}
-    @debug "Initializing $S TNILM Simulation with the following starting states:" states = convert(DiseaseStates, S) counts = [sum(states .== s) for s in convert(DiseaseStates, S)]
+    @debug "Initializing $S TNILM Simulation with the following starting states:" states = convert(DiseaseStates, S) counts = [sum(states .== Ref(s)) for s in convert(DiseaseStates, S)]
     if !skip_checks
       if length(states) != individuals(pop)
         error("Length of initial disease state vector must match number of individuals")
