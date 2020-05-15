@@ -128,6 +128,7 @@ function update!(mc::MarkovChain{T, M},
                  T <: DiseaseStateSequence,
                  M <: PhyloILM}
   # Initialize
+  local tnr
   new_tr_cache = transmission_rate_cache
   new_events = mc.events[end]
   new_events_array = convert(Array{Float64, 2}, new_events)
@@ -148,7 +149,7 @@ function update!(mc::MarkovChain{T, M},
   end
   batch_size = fld(length(aug_order), event_batches)
   @debug "Performing data augmentation in batches of $batch_size events at a time"
-  for i = 1:(1 + event_batches + 1)
+  for i = 1:(1 + event_batches) # + 1)
     if i == 1
       # Propose new risk parameters
       proposed_events = new_events
@@ -161,12 +162,14 @@ function update!(mc::MarkovChain{T, M},
     elseif i < (event_batches + 2)
       proposed_events_array = copy(new_events_array)
       proposed_events = Events{T}(proposed_events_array)
+      t_ids = Int64[]
       for j = (batch_size*(i-2) + 1):min(batch_size*(i-1),length(aug_order))
         id, state_index = Tuple(CartesianIndices((individuals(new_events),
                                             length(convert(DiseaseStates, T)[2:end])))[aug_order[j]])
+        # Generate new transmission source for transmission events
+        state_index == 1 && push!(t_ids, id)
         new_state = convert(DiseaseStates, T)[state_index+1]
         time = new_events[new_state][id]
-
         proposed_event = generate(Event,
                                   Event{T}(time, id, new_state),
                                   σ,
@@ -183,7 +186,9 @@ function update!(mc::MarkovChain{T, M},
       proposed_rp = new_rp
       proposed_sm = new_sm
       proposed_tr_cache = new_tr_cache
-      proposed_network = new_network
+      # Try this to enhance TN mixing..?
+      proposed_network = generate(TransmissionNetwork, new_network, tnr, mcmc, t_ids)
+      #proposed_network = new_network
     elseif i == (event_batches + 2)
       proposed_events = new_events
       proposed_events_array = new_events_array
@@ -218,7 +223,7 @@ function update!(mc::MarkovChain{T, M},
       end
       if proposed_llikelihood > ll_acceptance_threshold
         if i == event_batches + 2
-          proposed_network = generate(TransmissionNetwork, tnr, mcmc, tx)
+          proposed_network = generate(TransmissionNetwork, new_network, tnr, mcmc, sample(tx))
           @debug "Generating a Transmission Network proposal" ProposedNetwork = proposed_network
         end
         @debug "Generating a Tree for proposed network and event times" ProposedNetwork = proposed_network
