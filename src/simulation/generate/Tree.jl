@@ -21,7 +21,7 @@ function _pathway_from(
   else
     path = nothing
   end
-  @debug "Transmission pathway from Individual $id: $path"
+  @logmsg LogLevel(-5000) "Transmission pathway from Individual $id: $path"
   return path
 end
 
@@ -44,7 +44,7 @@ function _pathway_from(
   if include_id == false
     popfirst!(path)
   end
-  @debug "Transmission pathway from external source: $path"
+  @logmsg LogLevel(-5000) "Transmission pathway from external source: $path"
   return path
 end
 
@@ -69,13 +69,13 @@ function _pathway_to(
   else
     path = nothing
   end
-  @debug "Transmission pathway to Individual $id: $path"
+  @logmsg LogLevel(-5000) "Transmission pathway to Individual $id: $path"
   return path
 end
 
 function _source(id::Int64, network::TransmissionNetwork)
   source = findfirst(network.internal[:, id])
-  @debug "Transmission source lookup" Individual = id Source = source
+  @logmsg LogLevel(-5000) "Transmission source lookup" Individual = id Source = source
   return source
 end
 
@@ -84,7 +84,7 @@ function generate(
   events::Events{S},
   obs::Vector{Float64},
   network::TransmissionNetwork) where {
-    S <: DiseaseStateSequence}
+  S <: DiseaseStateSequence}
 
   if length(obs) != individuals(events)
     throw(ErrorException("Infection observation vector does not match number of individuals in population"))
@@ -98,23 +98,21 @@ function generate(
   local parent_node
   local branch_length
 
-  if S in [SEIR; SEI]
+  if State_E in S
     event_times = [events.exposure obs]
-  elseif S in [SIR; SI]
-    event_times = [events.infection obs]
   else
-    throw(ErrorException("Unrecognized DiseaseStateSequence"))
+    event_times = [events.infection obs]
   end
   event_nodes = Array{Union{Nothing, Int64}, 2}(fill(nothing, size(event_times)))
   event_order = sortperm(event_times[:])
   event_lookup = CartesianIndices(size(event_times))
-  @debug "event_nodes, event_order, and event_lookup created" ArraySize = size(event_times)
+  @logmsg LogLevel(-5000) "event_nodes, event_order, and event_lookup created" ArraySize = size(event_times)
 
   pathways = [_pathway_from(i, network, include_id = true) for i = 1:individuals(events)]
 
   # Determine significant transmissions (results in a observation in the future)
   significant_transmissions = (event_times[:, 1] .== -Inf) .| [pathways[i] !== nothing && any(event_times[pathways[i], 2] .>= event_times[i, 1]) for i = 1:individuals(events)]
-  @debug "Significant transmitters" significant_transmissions
+  @logmsg LogLevel(-5000) "Significant transmitters" significant_transmissions
 
   start_time = minimum(events)
 
@@ -133,7 +131,7 @@ function generate(
 
     # For purposes of tree generation, replace -Inf times (initial condition coding) with start_time
     if event_time == -Inf
-      @debug "Setting -Inf event time to $(start_time)"
+      @logmsg LogLevel(-5000) "Setting -Inf event time to $(start_time)"
       event_time = start_time
     end
 
@@ -145,14 +143,14 @@ function generate(
 
         # For significant external transmission events...
         if network.external[event_individual]
-          @debug "Event $i is a significant external transmission"
+          @logmsg LogLevel(-5000) "Event $i is a significant external transmission"
           parent_node = 1
           expos += 1
           if expos > 1
             @warn "Current support is intended for a single intial event with no external exposures" ExternalExposures = expos
           end
           branch_length = event_time - start_time
-          @debug "Set parent node to the root" ParentNode = parent_node BranchLength = branch_length
+          @logmsg LogLevel(-5000) "Set parent node to the root" ParentNode = parent_node BranchLength = branch_length
           branch!(tree, parent_node, branch_length)
 
           # Record tree and node ID
@@ -166,61 +164,48 @@ function generate(
 
           # If initial condition, no source
           if source === nothing
-            @debug "Event $i is due to an initial condition" Source1 = _source1(event_individual, network) Source2 = source
-            parent_node = 1
-            branch_length = 0.0
-            expos += 1
-            if expos > 1
-              @warn "Current support is intended for a single intial event with no external exposures" ExternalExposures = expos
-            end
-            @debug "Set parent node to the root" ParentNode = parent_node BranchLength = branch_length
-
-            # Add branch and node
-            branch!(tree, parent_node, branch_length)
-
-            # Record node id
-            event_nodes[event_order[i]] = length(tree.nodes)
+            @warn "Shouldn't be!"
 
           # Previous significant transmissions from this source of transmission
           else
-            @debug "Event $i is a significant internal transmission" Source = source
+            @logmsg LogLevel(-5000) "Event $i is a significant internal transmission" Source = source
             source_prior_transmissions = findall(network.internal[source, :][:] .& (event_times[:, 1] .< event_time) .& significant_transmissions)
 
             # For when the source of transmission has yet to be detected...
             if isnan(event_times[source, 2]) || event_times[source, 2] > event_times[event_individual, 1]
-              @debug "Individual $source, the transmission source for individual $event_individual had not yet been detected"
+              @logmsg LogLevel(-5000) "Individual $source, the transmission source for individual $event_individual had not yet been detected"
               # When there have been prior transmissions from this undetected source
               if length(source_prior_transmissions) > 0
-                @debug "Individual $source has had earlier transmissions" PriorTransmissionIds = source_prior_transmissions PriorTransmissionTimes = event_times[source_prior_transmissions, 1] PriorTransmissioNodes = event_nodes[source_prior_transmissions, 1]
+                @logmsg LogLevel(-5000) "Individual $source has had earlier transmissions" PriorTransmissionIds = source_prior_transmissions PriorTransmissionTimes = event_times[source_prior_transmissions, 1] PriorTransmissioNodes = event_nodes[source_prior_transmissions, 1]
                 parent_node = event_nodes[source_prior_transmissions[argmax(event_times[source_prior_transmissions, 1])], 1]
                 branch_length = event_time - maximum(event_times[source_prior_transmissions, 1])
 
               # When there have not been any prior transmissions from this undetected source
               else
                 parent_node = event_nodes[source, 1]
-                branch_length = event_time - event_times[source, 1]
-                @debug "Individual $source has had no earlier transmissions" Source = source ParentNode1 = event_nodes[source, 1] ParentNode2 = parent_node BranchLength = branch_length EventTime = event_time ParentNodeTime = event_times[source, 1]
+                branch_length = event_time - max(event_times[source, 1], start_time)
+                @logmsg LogLevel(-5000) "Individual $source has had no earlier transmissions" Source = source ParentNode1 = event_nodes[source, 1] ParentNode2 = parent_node BranchLength = branch_length EventTime = event_time ParentNodeTime = event_times[source, 1]
               end
 
             # For when the source of transmission has been detected...
             else
-              @debug "Individual $source, the transmission source for individual $event_individual had been already detected"
+              @logmsg LogLevel(-5000) "Individual $source, the transmission source for individual $event_individual had been already detected"
               # And detection of source of transmission is most recent, relevant event...
               if length(source_prior_transmissions) == 0 || all(event_times[source, 2] .> event_times[source_prior_transmissions, 1])
-                @debug "The detection of individual $source is the recentmost relevant event to transmission of Individual $event_individual"
+                @logmsg LogLevel(-5000) "The detection of individual $source is the recentmost relevant event to transmission of Individual $event_individual"
                 # Determine parent node of the observation leaf node
                 parent_node = parentnode(tree, event_nodes[source, 2])
-                branch_length = event_time - event_times[source, 2]
+                branch_length = event_time - max(event_times[source, 2], start_time)
 
               # Or some prior transmission is most recent, relevant event...
               else
-                @debug "Individual $source has had earlier transmissions, after detection" PriorTransmissionIds = source_prior_transmissions PriorTransmissionTimes = event_times[source_prior_transmissions, 1] PriorTransmissioNodes = event_nodes[source_prior_transmissions, 1]
+                @logmsg LogLevel(-5000) "Individual $source has had earlier transmissions, after detection" PriorTransmissionIds = source_prior_transmissions PriorTransmissionTimes = event_times[source_prior_transmissions, 1] PriorTransmissioNodes = event_nodes[source_prior_transmissions, 1]
                 parent_node = event_nodes[source_prior_transmissions[argmax(event_times[source_prior_transmissions, 1])], 1]
                 branch_length = event_time - maximum(event_times[source_prior_transmissions, 1])
               end
             end
             # Add branch and node
-            @debug "branch! information" Individual = event_individual Source = source ParentNode = parent_node Node = length(tree.nodes) + 1 BranchLength = branch_length
+            @logmsg LogLevel(-5000) "branch! information" Individual = event_individual Source = source ParentNode = parent_node Node = length(tree.nodes) + 1 BranchLength = branch_length
             branch!(tree, parent_node, branch_length)
 
             # Record node id
@@ -228,7 +213,7 @@ function generate(
           end
         end
       else
-        @debug "Event $i is an insignificant transmission"
+        @logmsg LogLevel(-5000) "Event $i is an insignificant transmission"
       end
 
     # Infection observation event
@@ -238,35 +223,32 @@ function generate(
                             (event_times[:, 1] .< event_time) .&
                             significant_transmissions)
 
-      # Parent node is the internal node associated with the final pre-observation transmission
       if length(prior_transmissions) > 0
-        @debug "Individual $event_individual transmitted to others prior to their detection" PriorTransmissionIds = prior_transmissions PriorTransmissionTimes = event_times[prior_transmissions, 1] PriorTransmissioNodes = event_nodes[prior_transmissions, 1]
-
-        parent_node = event_nodes[prior_transmissions[argmax(event_times[prior_transmissions, 1])], 1]
-        branch_length = event_time - maximum(event_times[prior_transmissions, 1])
-
-      # Individual has not transmitted to others prior to being observed as infected
+        # Parent node will be the internal node associated with the final pre-observation transmission
+        @logmsg LogLevel(-5000) "Individual $event_individual transmitted to others prior to their detection" PriorTransmissionIds = prior_transmissions PriorTransmissionTimes = event_times[prior_transmissions, 1] PriorTransmissioNodes = event_nodes[prior_transmissions, 1]
+        parent_id = prior_transmissions[argmax(event_times[prior_transmissions, 1])]
+        parent_node = event_nodes[parent_id, 1]
+        branch_length = event_time - event_times[parent_id, 1]
       else
-        @debug "Individual $event_individual has not transmitted to others prior to their detection"
+        # Individual has not transmitted to others prior to being observed as infected
+        @logmsg LogLevel(-5000) "Individual $event_individual has not transmitted to others prior to their detection"
         parent_node = event_nodes[event_individual, 1]
-        branch_length = event_time - event_times[event_individual, 1]
+        branch_length = event_time - max(event_times[event_individual, 1], start_time)
       end
 
-      # Individual goes on to have significant transmissions
       if any(network.internal[event_individual, :][:] .& (event_times[:, 1] .>= event_time) .& significant_transmissions)
-
+        # Individual goes on to have significant transmissions
         # Internal node for observation
-        @debug "Individual $event_individual has significant future transmissions, add internal node for observation" ParentNode = parent_node BranchLength = branch_length
+        @logmsg LogLevel(-5000) "Individual $event_individual has significant future transmissions, add internal node for observation" ParentNode = parent_node BranchLength = branch_length
         branch!(tree, parent_node, branch_length)
-
         # Add zero-length branch so observation event will be a leaf node
-        @debug "Add a zero length branch to ensure observation of individual $event_individual is a leaf node" ParentNode = length(tree.nodes) BranchLength = 0.0
+        @logmsg LogLevel(-5000) "Add a zero length branch to ensure observation of individual $event_individual is a leaf node" ParentNode = length(tree.nodes) BranchLength = 0.0
         branch!(tree, length(tree.nodes), 0.0)
 
-      # Individual does not go one to have any significant transmissions
-      # so will surely be a leaf node
       else
-        @debug "Individual $event_individual does not have significant future transmissions - their infection observation represents a leaf node" ParentNode = parent_node BranchLength = branch_length
+        # Individual does not go one to have any significant transmissions
+        # so will surely be a leaf node
+        @logmsg LogLevel(-5000) "Individual $event_individual does not have significant future transmissions - their infection observation represents a leaf node" ParentNode = parent_node BranchLength = branch_length
         branch!(tree, parent_node, branch_length)
       end
       # Record leaf node id
