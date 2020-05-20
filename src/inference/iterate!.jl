@@ -17,16 +17,17 @@ function Base.convert(::Type{Array{Float64, 2}}, sm::Vector{NucleicAcidSubstitut
   return [getproperty(sm[i], θ) for i = 1:length(sm), θ in prop_names]
 end
 
-function iterate!(mc::MarkovChain{S, M},
-                  mcmc::MCMC{S, M},
-                  n::Int64,
-                  Σrp::Array{Float64, 2},
-                  σ::Float64;
-                  condition_on_network::Bool=false,
-                  event_batches::Int64=1,
-                  adapt_cov::Int64=100) where {
-                  S <: DiseaseStateSequence,
-                  M <: TNILM}
+function iterate!(
+  mc::MarkovChain{S, M},
+  mcmc::MCMC{S, M},
+  n::Int64,
+  Σrp::Array{Float64, 2},
+  σ::Float64;
+  condition_on_network::Bool=false,
+  event_batches::Int64=1,
+  adapt_cov::Int64=100) where {
+    S <: DiseaseStateSequence,
+    M <: TNILM}
   if adapt_cov < 0
     @warn "`adapt_cov` argument indicates the increment in iterations in which the covariance matrix is updated and must be ≧ 0. Setting to 0 for non-adaptive Metropolis-Hastings."
     adapt_cov = 0
@@ -54,24 +55,25 @@ function iterate!(mc::MarkovChain{S, M},
           use_adapted_Σrp = true
           @debug "Now using adapted covariance matrix for adaptive MCMC on core $(Distributed.myid()) (updated every $adapt_cov iterations)"
         end
-        adapted_cov = OnlineStats.value(mc.Σrp) * 2.38^2 / length(mc.risk_parameters[1])
-        @debug "Covariance matrix updated for Adaptive Metropolis-Hastings MCMC" Covariance = adapted_cov
+        adapted_Σrp = OnlineStats.value(mc.Σrp) * 2.38^2 / length(mc.risk_parameters[1])
+        @debug "Covariance matrix updated for Adaptive Metropolis-Hastings MCMC" Covariance = adapted_Σrp
       end
     end
   end
   return mc
 end
 
-function iterate!(mc::MarkovChain{S, M},
-                  mcmc::MCMC{S, M},
-                  n::Int64,
-                  Σrp::Array{Float64, 2},
-                  Σsm::Array{Float64, 2},
-                  σ::Float64;
-                  event_batches::Int64=1,
-                  adapt_cov::Int64=100) where {
-                  S <: DiseaseStateSequence,
-                  M <: PhyloILM}
+function iterate!(
+  mc::MarkovChain{S, M},
+  mcmc::MCMC{S, M},
+  n::Int64,
+  Σrp::Array{Float64, 2},
+  Σsm::Array{Float64, 2},
+  σ::Float64;
+  event_batches::Int64=1,
+  adapt_cov::Int64=100) where {
+    S <: DiseaseStateSequence,
+    M <: PhyloILM}
   if adapt_cov < 0
     @warn "`adapt_cov` argument indicates the increment in iterations in which the covariance matrix is updated and must be ≧ 0. Setting to 0 for non-adaptive Metropolis-Hastings."
     adapt_cov = 0
@@ -166,25 +168,26 @@ function iterate!(mc::MarkovChain{S, M},
           use_adapted_Σrp = true
           @debug "Now using adapted covariance matrix for adaptive MCMC on core $(Distributed.myid()) (updated every $adapt_cov iterations)"
         end
-        adapted_cov = OnlineStats.value(mc.Σrp) * 2.38^2 / length(mc.risk_parameters[1])
-        @debug "Covariance matrix updated for Adaptive Metropolis-Hastings MCMC" Covariance = adapted_cov
+        adapted_Σrp = OnlineStats.value(mc.Σrp) * 2.38^2 / length(mc.risk_parameters[1])
+        @debug "Covariance matrix updated for Adaptive Metropolis-Hastings MCMC" Covariance = adapted_Σrp
       end
     end
   end
   return mc
 end
 
-function iterate!(mc::MarkovChain{S, M},
-                  mcmc::MCMC{S, M},
-                  n::Int64,
-                  Σrp::Array{Float64, 2},
-                  Σsm::Array{Float64, 2},
-                  σ::Float64,
-                  progress_channel::RemoteChannel;
-                  event_batches::Int64=1,
-                  adapt_cov::Int64=100) where {
-                  S <: DiseaseStateSequence,
-                  M <: PhyloILM}
+function iterate!(
+  mc::MarkovChain{S, M},
+  mcmc::MCMC{S, M},
+  n::Int64,
+  Σrp::Array{Float64, 2},
+  Σsm::Array{Float64, 2},
+  σ::Float64,
+  progress_channel::RemoteChannel;
+  event_batches::Int64=1,
+  adapt_cov::Int64=100) where {
+    S <: DiseaseStateSequence,
+    M <: PhyloILM}
   if adapt_cov < 0
     @warn "`adapt_cov` argument indicates the increment in iterations in which the covariance matrix is updated and must be ≧ 0. Setting to 0 for non-adaptive Metropolis-Hastings."
     adapt_cov = 0
@@ -241,15 +244,16 @@ function iterate!(mc::MarkovChain{S, M},
   return mc
 end
 
-function iterate!(mcmc::MCMC{S, M},
-                  n::Int64,
-                  Σrp::Array{Float64, 2},
-                  σ::Float64;
-                  condition_on_network::Bool=false,
-                  event_batches::Int64=1,
-                  adapt_cov::Int64=100) where {
-                  S <: DiseaseStateSequence,
-                  M <: TNILM}
+function iterate!(
+  mcmc::MCMC{S, M},
+  n::Int64,
+  Σrp::Array{Float64, 2},
+  σ::Float64;
+  condition_on_network::Bool=false,
+  event_batches::Int64=1,
+  adapt_cov::Int64=100) where {
+    S <: DiseaseStateSequence,
+    M <: TNILM}
   if length(mcmc.markov_chains) == 1
     iterate!(mcmc.markov_chains[1], mcmc, n, Σrp, σ,
              condition_on_network = condition_on_network,
@@ -281,16 +285,17 @@ function iterate!(mcmc::MCMC{S, M},
 end
 
 
-function iterate!(mcmc::MCMC{S, M},
-                  n::Int64,
-                  Σrp::Array{Float64, 2},
-                  Σsm::Array{Float64, 2},
-                  σ::Float64;
-                  condition_on_network::Bool=false,
-                  event_batches::Int64=1,
-                  adapt_cov::Int64=100) where {
-                  S <: DiseaseStateSequence,
-                  M <: PhyloILM}
+function iterate!(
+  mcmc::MCMC{S, M},
+  n::Int64,
+  Σrp::Array{Float64, 2},
+  Σsm::Array{Float64, 2},
+  σ::Float64;
+  condition_on_network::Bool=false,
+  event_batches::Int64=1,
+  adapt_cov::Int64=100) where {
+    S <: DiseaseStateSequence,
+    M <: PhyloILM}
   if length(mcmc.markov_chains) == 1
     iterate!(mcmc.markov_chains[1], mcmc, n, Σrp, Σsm, σ,
              event_batches = event_batches,
@@ -320,72 +325,83 @@ function iterate!(mcmc::MCMC{S, M},
   end
 end
 
-function iterate!(mc::MarkovChain{S, M},
-                  mcmc::MCMC{S, M},
-                  n::Int64,
-                  σ::Float64;
-                  condition_on_network::Bool=false,
-                  event_batches::Int64=1,
-                  adapt_cov::Int64=100) where {
-                  S <: DiseaseStateSequence,
-                  M <: TNILM}
-  return iterate!(mc,
-                  mcmc,
-                  n,
-                  _initial_Σrp(mcmc),
-                  σ,
-                  condition_on_network = condition_on_network,
-                  event_batches = event_batches,
-                  adapt_cov = adapt_cov)
+function iterate!(
+  mc::MarkovChain{S, M},
+  mcmc::MCMC{S, M},
+  n::Int64,
+  σ::Float64;
+  condition_on_network::Bool=false,
+  event_batches::Int64=1,
+  adapt_cov::Int64=100) where {
+    S <: DiseaseStateSequence,
+    M <: TNILM}
+  return iterate!(
+    mc,
+    mcmc,
+    n,
+    _initial_Σrp(mcmc),
+    σ,
+    condition_on_network = condition_on_network,
+    event_batches = event_batches,
+    adapt_cov = adapt_cov)
 end
 
-function iterate!(mc::MarkovChain{S, M},
-                  mcmc::MCMC{S, M},
-                  n::Int64,
-                  σ::Float64;
-                  event_batches::Int64=1,
-                  adapt_cov::Int64=100) where {
-                  S <: DiseaseStateSequence,
-                  M <: PhyloILM}
-  return iterate!(mc,
-                  mcmc,
-                  n,
-                  _initial_Σrp(mcmc),
-                  _initial_Σsm(mcmc),
-                  σ,
-                  event_batches = event_batches,
-                  adapt_cov = adapt_cov)
+function iterate!(
+  mc::MarkovChain{S, M},
+  mcmc::MCMC{S, M},
+  n::Int64,
+  σ::Float64;
+  event_batches::Int64=1,
+  adapt_cov::Int64=100,
+  DA_couple::Bool=false) where {
+    S <: DiseaseStateSequence,
+    M <: PhyloILM}
+  return iterate!(
+    mc,
+    mcmc,
+    n,
+    _initial_Σrp(mcmc),
+    _initial_Σsm(mcmc),
+    σ,
+    event_batches = event_batches,
+    adapt_cov = adapt_cov,
+    DA_couple = DA_couple)
 end
 
-function iterate!(mcmc::MCMC{S, M},
-                  n::Int64,
-                  σ::Float64;
-                  condition_on_network::Bool=false,
-                  event_batches::Int64=1,
-                  adapt_cov::Int64=100) where {
-                  S <: DiseaseStateSequence,
-                  M <: TNILM}
-  return iterate!(mcmc,
-                  n,
-                  _initial_Σrp(mcmc),
-                  σ,
-                  condition_on_network = condition_on_network,
-                  event_batches = event_batches,
-                  adapt_cov = adapt_cov)
+function iterate!(
+  mcmc::MCMC{S, M},
+  n::Int64,
+  σ::Float64;
+  condition_on_network::Bool=false,
+  event_batches::Int64=1,
+  adapt_cov::Int64=100) where {
+    S <: DiseaseStateSequence,
+    M <: TNILM}
+  return iterate!(
+    mcmc,
+    n,
+    _initial_Σrp(mcmc),
+    σ,
+    condition_on_network = condition_on_network,
+    event_batches = event_batches,
+    adapt_cov = adapt_cov)
 end
 
-function iterate!(mcmc::MCMC{S, M},
-                  n::Int64,
-                  σ::Float64;
-                  event_batches::Int64=1,
-                  adapt_cov::Int64=100) where {
-                  S <: DiseaseStateSequence,
-                  M <: PhyloILM}
-  return iterate!(mcmc,
-                  n,
-                  _initial_Σrp(mcmc),
-                  _initial_Σsm(mcmc),
-                  σ,
-                  event_batches = event_batches,
-                  adapt_cov = adapt_cov)
+function iterate!(
+  mcmc::MCMC{S, M},
+  n::Int64,
+  σ::Float64;
+  event_batches::Int64=1,
+  adapt_cov::Int64=100,
+  DA_couple::Bool=false) where {
+    S <: DiseaseStateSequence,
+    M <: PhyloILM}
+  return iterate!(
+    mcmc,
+    n,
+    _initial_Σrp(mcmc),
+    _initial_Σsm(mcmc),
+    σ,
+    event_batches = event_batches,
+    adapt_cov = adapt_cov)
 end
