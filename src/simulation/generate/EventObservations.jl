@@ -10,17 +10,21 @@ function generate(
   infection = fill(NaN, individuals(sim.events))
   removal = fill(NaN, individuals(sim.events))
   if force
-    for i in findall(.!isnan.(sim.events.infection))
+    for i in findall(sim.events.infection .!== NaN)
       if sim.events.infection[i] == -Inf
         infection[i] = -Inf
         if sim.events.removal[i] == -Inf
           removal[i] = -Inf
-        elseif isnan(sim.events.removal[i])
+        else
+          removal[i] = sim.events.removal[i] + rand(delay_removal)
+        end
+      else
+        if isnan(sim.events.removal[i])
           infection[i] = sim.events.infection[i] + rand(delay_infection)
         elseif sim.events.removal[i] > -Inf
           infection_delay_ub = sim.events.removal[i] - sim.events.infection[i]
           infection[i] = sim.events.infection[i] +
-                         rand(Truncated(delay_infection, 0.0, infection_delay_ub))
+            rand(Truncated(delay_infection, 0.0, infection_delay_ub))
           removal[i] = sim.events.removal[i] + rand(delay_removal)
         end
       end
@@ -28,15 +32,17 @@ function generate(
       @debug "Removal observation of i = $i at t = $(round(removal[i], digits=3)) (actual removal at t = $(round(sim.events.removal[i], digits=3)))"
     end
   else
-    for i in findall(.!isnan.(sim.events.infection))
+    for i in findall(sim.events.infection .!== NaN)
       if sim.events.infection[i] == -Inf
         infection[i] = -Inf
         if sim.events.removal == -Inf
           removal[i] = -Inf
+        else
+          removal[i] = sim.events.removal[i] + rand(delay_removal)
         end
       else
         infection_delay = rand(delay_infection)
-        if isnan(sim.events.removal[i])
+        if sim.events.removal[i] === NaN
           infection[i] = sim.events.infection[i] + infection_delay
         else
           if infection_delay + sim.events.infection[i] < sim.events.removal[i]
@@ -94,4 +100,4 @@ function generate(
 end
 
 observe(x,y,z; force::Bool=false, seq_len::Union{Nothing, Int64}=nothing) = generate(EventObservations, x, y, z, force=force, seq_len=seq_len)
-observe(x,y; seq_len::Union{Nothing, Int64}=nothing) = generate(EventObservations, x, y, seq_len=seq_len)
+observe(x,y; force::Bool=false, seq_len::Union{Nothing, Int64}=nothing) = generate(EventObservations, x, y, force=force, seq_len=seq_len)
