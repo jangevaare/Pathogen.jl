@@ -96,7 +96,7 @@ end
                    min,
                    max) where {
                    S <: DiseaseStateSequence}
-  color --> _state_colors(S)
+  seriescolor --> _state_colors(S)
   for s in convert(Tuple, S)
     @series begin
       events, s, min, max

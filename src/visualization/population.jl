@@ -32,7 +32,7 @@ function _ids_by_state(events::Events{T},
   return ids
 end
 
-@recipe function f(pop::Population) where T <: DiseaseStateSequence
+@recipe function f(pop::Population)
   xguide --> ""
   yguide --> ""
   legend --> :none
@@ -51,8 +51,8 @@ end
 
 
 @recipe function f(pop::Population,
-                   events::Events{T},
-                   time::Float64) where T <: DiseaseStateSequence
+                   events::Events{S},
+                   time::Float64) where S <: DiseaseStateSequence
   xguide --> ""
   yguide --> ""
   legend --> :topright
@@ -64,40 +64,12 @@ end
   axis --> nothing
   titlefontcolor --> :black
   framestyle --> :none
-  @series begin
-    ids_susceptible = _ids_by_state(events, State_S, time)
-    x, y = _population(pop, ids_susceptible)
-    seriestype := :scatter
-    seriescolor --> :purple
-    label --> "S"
-    x, y
-  end
-  if State_E ∈ T
+  seriestype := :scatter
+  seriescolor --> _state_colors(S)
+  for s in convert(Tuple, S)
     @series begin
-      ids_exposed = _ids_by_state(events, State_E, time)
-      x, y = _population(pop, ids_exposed)
-      seriestype := :scatter
-      seriescolor --> :lightblue4
-      label --> "E"
-      x, y
-    end
-  end
-  @series begin
-    ids_infected = _ids_by_state(events, State_I, time)
-    x, y = _population(pop, ids_infected)
-    seriestype := :scatter
-    seriescolor --> :lightgreen
-    label --> "I"
-    x, y
-  end
-  if State_R ∈ T
-    @series begin
-      ids_removed = _ids_by_state(events, State_R, time)
-      x, y = _population(pop, ids_removed)
-      seriestype := :scatter
-      seriescolor --> :yellow
-      label --> "R"
-      x, y
+      label --> convert(Char, s)
+      _population(pop, _ids_by_state(events, s, time))
     end
   end
 end
