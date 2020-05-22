@@ -111,7 +111,7 @@ function Base.getindex(x::EventObservations{S, M},
                        M <: ILM}
   if new_state == State_I
     return x.infection
-  elseif (new_state == State_R) && (State_R ∈ T)
+  elseif (new_state == State_R) && (State_R ∈ S)
     return x.removal
   else
     error("Unrecognized indexing disease state")
@@ -132,14 +132,14 @@ end
 function Base.convert(::Type{Array{Float64, 2}}, x::EventObservations{S, M}) where {
                       S <: DiseaseStateSequence,
                       M <: ILM}
-  states = State_R ∉ T ? [State_I] : [State_I, State_R]
+  states = State_R ∉ S ? [State_I] : [State_I, State_R]
   return x[states]
 end
 
 function Base.convert(::Type{Vector{Float64}}, x::EventObservations{S, M}) where {
                       S <: DiseaseStateSequence,
                       M <: ILM}
-  states = State_R ∉ T ? [State_I] : [State_I, State_R]
+  states = State_R ∉ S ? [State_I] : [State_I, State_R]
   return x[states][:]
 end
 
