@@ -27,6 +27,8 @@ end
   yguide --> "N"
   label --> convert(Char, state)
   legend --> :topright
+  fillcolor --> _state_color(state)
+  linecolor --> _state_color(state)
   fillalpha --> 0.5
   linealpha --> 0.7
   seriestype := :shape
@@ -37,8 +39,6 @@ end
                    times;
                    credibleinterval=0.95) where {
                    S<: DiseaseStateSequence}
-  fillcolor --> _state_colors(S)
-  linecolor --> _state_colors(S)
   for s in convert(Tuple, S)
     @series begin
       credibleinterval := credibleinterval

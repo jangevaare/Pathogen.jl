@@ -26,10 +26,8 @@ function _count_by_state(events::Events{T},
   return n_ids
 end
 
-function _state_colors(x::Type{S}) where {S <: DiseaseStateSequence}
-  cols = getindex([:purple, :lightblue4, :lightgreen, :yellow],
-    [s ∈ S for s in Pathogen._DiseaseStateVector])
-  return reshape(cols, (1,length(cols)))
+function _state_color(x::DiseaseState)
+  return [:purple, :lightblue4, :lightgreen, :yellow][findfirst(Ref(x) .== Pathogen._DiseaseStateVector)]
 end
 
 function _epidemic_curve(events::Events{T},
@@ -84,6 +82,7 @@ end
   xguide --> "Time"
   yguide --> "N"
   label --> convert(Char, state)
+  linecolor --> _state_color(state)
   _epidemic_curve(events, state, min, max)
 end
 
@@ -92,11 +91,12 @@ end
   events, state, 0.0, maximum(events)
 end
 
-@recipe function f(events::Events{S},
-                   min,
-                   max) where {
-                   S <: DiseaseStateSequence}
-  seriescolor --> _state_colors(S)
+@recipe function f(
+  events::Events{S},
+  min,
+  max) where {
+  S <: DiseaseStateSequence}
+
   for s in convert(Tuple, S)
     @series begin
       events, s, min, max

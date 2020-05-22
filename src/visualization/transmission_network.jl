@@ -7,8 +7,8 @@ end
                    pop::Population,
                    events::Events{T},
                    time::Float64;
-                   show_individuals=true::Bool,
-                   show_states=true::Bool) where T <: DiseaseStateSequence
+                   show_individuals=true,
+                   show_states=true) where T <: DiseaseStateSequence
   if show_states & !show_individuals
     @warn "Will not show disease states without also showing individuals"
   end
@@ -50,9 +50,21 @@ end
   end
 end
 
+@recipe function f(
+  sim::Simulation{T, M},
+  time::Float64;
+  show_individuals=true,
+  show_states=true) where {
+  T <: DiseaseStateSequence,
+  M <: ILM}
+  show_individuals := show_individuals
+  show_states := show_states
+  sim.transmission_network, sim.population, sim.events, time
+end
+
 @recipe function f(tn::TransmissionNetwork,
                    pop::Population;
-                   show_individuals=true::Bool) where T <: DiseaseStateSequence
+                   show_individuals=true)
   xguide --> ""
   yguide --> ""
   legend --> :none

@@ -62,13 +62,12 @@ end
   markerstrokecolor --> :black
   markersize --> 2.75
   axis --> nothing
-  titlefontcolor --> :black
   framestyle --> :none
   seriestype := :scatter
-  seriescolor --> _state_colors(S)
   for s in convert(Tuple, S)
     @series begin
       label --> convert(Char, s)
+      markercolor --> _state_color(s)
       _population(pop, _ids_by_state(events, s, time))
     end
   end
