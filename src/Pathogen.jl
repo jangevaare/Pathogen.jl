@@ -99,5 +99,5 @@ module Pathogen
     Events, EventObservations, EventExtents,
     observe,
     MCMC, start!, iterate!,
-    summary, mean, mode
+    summary, mean, mode, innerjoin, leftantijoin
 end

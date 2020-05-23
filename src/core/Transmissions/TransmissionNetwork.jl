@@ -23,3 +23,11 @@ struct TransmissionNetwork <: AbstractTN
     return new(starting_states .!= Ref(State_S), fill(0, (length(starting_states), length(starting_states))))
   end
 end
+
+function innerjoin(x::TN, y::TN) where {TN <: TransmissionNetwork}
+  return TN(x.external .* y.external, x.internal .* y.internal)
+end
+
+function leftantijoin(x::TN, y::TN) where {TN <: TransmissionNetwork}
+  return TN(x.external .* .!y.external, x.internal .* .!y.internal)
+end
