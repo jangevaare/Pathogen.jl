@@ -57,3 +57,63 @@ end
     end
   end
 end
+
+@recipe function f(
+  x::MCMC,
+  state::DiseaseState,
+  times;
+  credibleinterval=0.95,
+  thin=1,
+  burnin=0,
+  bychain=false)
+  if !bychain
+    y = x.markov_chains[1].events[1+burnin:thin:end]
+    for i in 2:length(x.markov_chains)
+      append!(y, x.markov_chains[i].events[1+burnin:thin:end])
+    end
+    @series begin
+      xguide --> "Time"
+      yguide --> "N"
+      legend --> :topright
+      label --> convert(Char, state)
+      fillcolor --> _state_color(state)
+      linecolor --> _state_color(state)
+      fillalpha --> 0.5
+      linealpha --> 0.7
+      seriestype := :shape
+      _epidemic_curve_distribution(y, state, times, credibleinterval=credibleinterval)
+    end
+  else
+    label --> convert(Char, state)
+    for i in eachindex(x.markov_chains)
+      @series begin
+        burnin := burnin
+        thin := thin
+        credibleinterval := credibleinterval
+        label := :none
+        x.markov_chains[i].events, state, times
+      end
+    end
+  end
+end
+
+
+@recipe function f(
+  x::MCMC{S, M},
+  times;
+  credibleinterval=0.95,
+  thin=1,
+  burnin=0,
+  bychain=false) where {
+    S <: DiseaseStateSequence,
+    M <: ILM}
+  for s in convert(Tuple, S)
+    @series begin
+      credibleinterval := credibleinterval
+      burnin := burnin
+      thin := thin
+      bychain := bychain
+      x, s, times
+    end
+  end
+end

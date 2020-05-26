@@ -21,7 +21,7 @@ end
   linecolor --> :black
   axis --> nothing
   titlefontcolor --> :black
-  framestyle --> :none
+  framestyle --> :box
   n = individuals(pop)
   susceptible = _ids_by_state(events, State_S, time)
   for i = 1:n
@@ -74,7 +74,7 @@ end
   axis --> nothing
   titlefontcolor --> :black
   linecolor --> :black
-  framestyle --> :none
+  framestyle --> :box
   n = individuals(pop)
   for i = 1:n
     if !tn.external[i] & any(tn.internal[:, i])

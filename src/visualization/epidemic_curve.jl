@@ -20,7 +20,7 @@ function _count_by_state(events::Events{T},
     nextstate = advance(state, T) # Either I or R
     # E/I at or before time and I/R after time, or I/R never
     @simd for i = 1:individuals(events)
-      n_ids += (events[state][i] <= time) && (events[nextstate][i] > time) || (events[nextstate][i] === NaN)
+      n_ids += (events[state][i] <= time) && ((events[nextstate][i] > time) || (events[nextstate][i] === NaN))
     end
   elseif state == convert(DiseaseStates, T)[end] # I or R
     @simd for i = 1:individuals(events)

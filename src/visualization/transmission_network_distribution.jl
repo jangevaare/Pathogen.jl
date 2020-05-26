@@ -18,7 +18,7 @@ end
   ylims --> extrema(pop.risks[!, :y]) .+ (sum(extrema(pop.risks[!, :y]).*(-1,1)) .* (-0.05, 0.05))
   aspect_ratio := :equal
   axis --> nothing
-  framestyle --> :none
+  framestyle --> :box
   linecolor --> :black
   n = individuals(pop)
   for i = 1:n, j = 1:n

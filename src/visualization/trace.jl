@@ -33,6 +33,7 @@ end
   end
   xguide --> "Iteration"
   yguide --> "Value"
+  guidefontsize --> 8
   seriestype --> :line
   if 0 <= p <= np
     for i in eachindex(x.markov_chains)
@@ -60,6 +61,7 @@ end
   end
   layout := (np, 1)
   legend --> :none
+  link --> :y
   for i = 1:np
     @series begin
       subplot := i
