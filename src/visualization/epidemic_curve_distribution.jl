@@ -1,14 +1,19 @@
-function _epidemic_curve_distribution(x::Vector{Events{S}},
-                                      state::DiseaseState,
-                                      times;
-                                      credibleinterval::Float64=0.95) where {
-                                      S <: DiseaseStateSequence}
+function _epidemic_curve_distribution(
+  x::Vector{Events{S}},
+  state::DiseaseState,
+  times;
+  credibleinterval::Float64=0.95) where {
+    S <: DiseaseStateSequence}
   !(0.0 <= credibleinterval <= 1.0) && error("`credibleinterval` must be between 0 and 1")
   ci = (1-credibleinterval)/2
+  
   lwr  = Array{Tuple{Float64,Float64}, 1}(undef, length(times))
   upr  = Array{Tuple{Float64,Float64}, 1}(undef, length(times))
   for t in eachindex(times)
-    y = _count_by_state.(x, Ref(state), times[t])
+    y = Array{Int64, 1}(undef, length(x))
+    for i in eachindex(x)
+      y[i] = _count_by_state(x[i], state, times[t])
+    end
     q = quantile(y, [ci, 1-ci])
     lwr[t] = (times[t], q[1])
     upr[t] = (times[t], q[2])
@@ -16,13 +21,14 @@ function _epidemic_curve_distribution(x::Vector{Events{S}},
   return [lwr; reverse(upr)]
 end
 
-
-
-@recipe function f(x::Vector{Events{S}},
-                   state::DiseaseState,
-                   times;
-                   credibleinterval=0.95)  where {
-                   S <: DiseaseStateSequence}
+@recipe function f(
+  x::Vector{Events{S}},
+  state::DiseaseState,
+  times;
+  credibleinterval=0.95,
+  thin=1,
+  burnin=0)  where {
+    S <: DiseaseStateSequence}
   xguide --> "Time"
   yguide --> "N"
   label --> convert(Char, state)
@@ -32,16 +38,21 @@ end
   fillalpha --> 0.5
   linealpha --> 0.7
   seriestype := :shape
-  _epidemic_curve_distribution(x, state, times, credibleinterval=credibleinterval)
+  _epidemic_curve_distribution(x[1+burnin:thin:end], state, times, credibleinterval=credibleinterval)
 end
 
-@recipe function f(x::Vector{Events{S}},
-                   times;
-                   credibleinterval=0.95) where {
-                   S<: DiseaseStateSequence}
+@recipe function f(
+  x::Vector{Events{S}},
+  times;
+  credibleinterval=0.95,
+  thin=1,
+  burnin=0) where {
+    S <: DiseaseStateSequence}
   for s in convert(Tuple, S)
     @series begin
       credibleinterval := credibleinterval
+      burnin := burnin
+      thin := thin
       x, s, times
     end
   end

@@ -88,7 +88,7 @@ function Base.getindex(x::Events{T}, new_state::DiseaseState) where T <: Disease
   elseif new_state == State_R
     return x.removal
   else
-    @error "Unrecognized indexing disease state"
+    error("Unsupported indexing disease state")
   end
 end
 
