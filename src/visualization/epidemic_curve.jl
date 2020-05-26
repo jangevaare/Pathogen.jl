@@ -80,6 +80,7 @@ end
   yguide --> "N"
   label --> convert(Char, state)
   linecolor --> _state_color(state)
+  seriestype --> :steppre
   _epidemic_curve(events, state, min, max)
 end
 
@@ -114,6 +115,7 @@ end
   yguide --> "N"
   label --> convert(Char, state)
   linecolor --> _state_color(state)
+  seriestype --> :steppre
   _epidemic_curve(events, state, times)
 end
 

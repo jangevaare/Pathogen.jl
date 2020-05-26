@@ -11,7 +11,7 @@ function _epidemic_curve_distribution(
   upr  = Array{Tuple{Float64,Float64}, 1}(undef, length(times))
   for t in eachindex(times)
     y = Array{Int64, 1}(undef, length(x))
-    for i in eachindex(x)
+    @simd for i in eachindex(x)
       y[i] = _count_by_state(x[i], state, times[t])
     end
     q = quantile(y, [ci, 1-ci])
