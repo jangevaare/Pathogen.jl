@@ -43,10 +43,10 @@ end
       end
     end
   elseif np < p <= (np + sp)
-    for mc in x.markov_chains
+    for i in eachindex(x.markov_chains)
       @series begin
         label --> "Markov chain $i"
-        iter, getindex.(mc.substitution_model[iter], p-np)
+        iter, getindex.(x.markov_chains[i].substitution_model[iter], p-np)
       end
     end
   else
