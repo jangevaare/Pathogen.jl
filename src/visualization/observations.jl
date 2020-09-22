@@ -39,7 +39,7 @@ function _obs_curve(
   sort!(times)
   insert!(times, 1, min)
   push!(times, max)
-  counts = [_count_by_state(events, state, t) for t in times]
+  counts = _count_by_state.(Ref(events), Ref(state), times)
   return times, counts
 end
 
@@ -52,7 +52,6 @@ end
     M <: ILM}
   xguide --> "Time"
   yguide --> "N"
-  xlims --> (min - 1.0, max + 1.0)
   linewidth --> 2.0
   linecolor --> _state_color(state)
   label --> ""
