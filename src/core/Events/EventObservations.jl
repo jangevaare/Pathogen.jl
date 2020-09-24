@@ -3,93 +3,85 @@ struct EventObservations{S <: DiseaseStateSequence, M <: ILM}
   removal::Union{Nothing, Vector{Float64}}
   seq::Union{Nothing, Vector{Union{Nothing, GeneticSeq}}}
 
-  function EventObservations{S, M}(i::V,
-                                   r::V) where {
-                                   V <: Vector{Float64},
-                                   S <: Union{SEIR, SIR},
-                                   M <: TNILM}
+  function EventObservations{S}(i::V,
+                                r::V) where {
+                                V <: Vector{Float64},
+                                S <: Union{SEIR, SIR}}
     if length(i) != length(r)
       throw(ErrorException("Length of infection and removal times must be equal"))
     end
-    return new{S, M}(i, r, nothing)
+    return new{S, TNILM}(i, r, nothing)
   end
 
-  function EventObservations{S, M}(i::V) where {
-                                   V <: Vector{Float64},
-                                   S <: Union{SEI, SI},
-                                   M <: TNILM}
-    return new{S, M}(i, nothing, nothing)
+  function EventObservations{S}(i::V) where {
+                                V <: Vector{Float64},
+                                S <: Union{SEI, SI}}
+    return new{S, TNILM}(i, nothing, nothing)
   end
 
 
-  function EventObservations{S, M}(i::V,
-                                   r::V,
-                                   seq::VG) where {
-                                   V <: Vector{Float64},
-                                   G <: GeneticSeq,
-                                   VG <: Vector{Union{Nothing, G}},
-                                   S <: Union{SEIR, SIR},
-                                   M <: PhyloILM}
+  function EventObservations{S}(i::V,
+                                r::V,
+                                seq::VG) where {
+                                V <: Vector{Float64},
+                                G <: GeneticSeq,
+                                VG <: Vector{Union{Nothing, G}},
+                                S <: Union{SEIR, SIR}}
     if length(unique([length(i); length(r); length(seq)])) != 1
       throw(ErrorException("Length of infection times, removal times, and genetic sequence vectors must be equal"))
     end
-    return new{S, M}(i, r, seq)
+    return new{S, PhyloILM}(i, r, seq)
   end
 
-  function EventObservations{S, M}(i::V,
+  function EventObservations{S}(i::V,
                                    s::VG) where {
                                    V <: Vector{Float64},
                                    G <: GeneticSeq,
                                    VG <: Vector{Union{Nothing, G}},
-                                   S <: Union{SEI, SI},
-                                   M <: PhyloILM}
+                                   S <: Union{SEI, SI}}
     if length(i) != length(s)
       throw(ErrorException("Length of infection time and genetic sequence vectors must be equal"))
     end
-    return new{S, M}(i, nothing, s)
+    return new{S, PhyloILM}(i, nothing, s)
   end
 end
 
-function EventObservations{S, M}(i::Array{Float64, 2}) where {
-                                 S <: Union{SEI, SI},
-                                 M <: TNILM}
+function EventObservations{S}(i::Array{Float64, 2}) where {
+                              S <: Union{SEI, SI}}
   if size(i, 2) != 1
     throw(ErrorException("Invalid Array dimensions for observations of a $S model"))
   end
-  return EventObservations{S, M}(i[:,1])
+  return EventObservations{S}(i[:,1])
 end
 
-function EventObservations{S, M}(ir::Array{Float64, 2}) where {
-                                 S <: Union{SEIR, SIR},
-                                 M <: TNILM}
+function EventObservations{S}(ir::Array{Float64, 2}) where {
+                              S <: Union{SEIR, SIR}}
   if size(ir, 2) != 2
     throw(ErrorException("Invalid Array dimensions for observations of a $S model"))
   end
-  return EventObservations{S, M}(ir[:, 1], ir[:, 2])
+  return EventObservations{S}(ir[:, 1], ir[:, 2])
 end
 
-function EventObservations{S, M}(i::Array{Float64, 2},
-                                 s::VG) where {
-                                 G <: GeneticSeq,
-                                 VG <: Vector{Union{Nothing, G}},
-                                 S <: Union{SEI, SI},
-                                 M <: PhyloILM}
+function EventObservations{S}(i::Array{Float64, 2},
+                              s::VG) where {
+                              G <: GeneticSeq,
+                              VG <: Vector{Union{Nothing, G}},
+                              S <: Union{SEI, SI}}
   if size(i, 2) != 1
     throw(ErrorException("Invalid Array dimensions for observations of a $S model"))
   end
-  return EventObservations{S, M}(i[:,1], s)
+  return EventObservations{S}(i[:,1], s)
 end
 
-function EventObservations{S, M}(ir::Array{Float64, 2},
-                                 s::VG) where {
-                                 G <: GeneticSeq,
-                                 VG <: Vector{Union{Nothing, G}},
-                                 S <: Union{SEIR, SIR},
-                                 M <: PhyloILM}
+function EventObservations{S}(ir::Array{Float64, 2},
+                              s::VG) where {
+                              G <: GeneticSeq,
+                              VG <: Vector{Union{Nothing, G}},
+                              S <: Union{SEIR, SIR}}
   if size(ir, 2) != 2
     throw(ErrorException("Invalid Array dimensions for observations of a $S model"))
   end
-  return EventObservations{S, M}(ir[:, 1], ir[:, 2], s)
+  return EventObservations{S}(ir[:, 1], ir[:, 2], s)
 end
 
 function individuals(x::EventObservations{S, M}) where {

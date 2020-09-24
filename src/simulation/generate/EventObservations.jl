@@ -63,9 +63,9 @@ function generate(
                                 sim.transmission_network)
     seq_full = simulate(RNASeq, tree, sim.substitution_model, seq_len)
     seq_obs = Union{Nothing, RNASeq}[isnothing(event_nodes[i]) ? nothing : seq_full[event_nodes[i]] for i = eachindex(infection)]
-    return EventObservations{S, M}(infection, removal, seq_obs)
+    return EventObservations{S}(infection, removal, seq_obs)
   elseif M == TNILM
-    return EventObservations{S, M}(infection, removal)
+    return EventObservations{S}(infection, removal)
   end
 end
 
@@ -93,9 +93,9 @@ function generate(
                                 sim.transmission_network)
     seq_full = simulate(RNASeq, tree, sim.substitution_model, seq_len)
     seq_obs = Union{Nothing, RNASeq}[isnothing(event_nodes[i]) ? nothing : seq_full[event_nodes[i]] for i = eachindex(infection)]
-    return EventObservations{S, M}(infection, seq_obs)
+    return EventObservations{S}(infection, seq_obs)
   elseif M == TNILM
-    return EventObservations{S, M}(infection)
+    return EventObservations{S}(infection)
   end
 end
 
