@@ -7,7 +7,7 @@ function Base.getindex(x::NASM, i::Int64)
 end
 
 @recipe function f(iter,
-                   x::Vector{RiskParameters{T}}) where T <: DiseaseStateSequence
+                   x::Vector{RiskParameters{T}}) where {T <: DiseaseStateSequence}
   xguide --> "Iteration"
   yguide --> "Value"
   legend --> :none
@@ -59,7 +59,7 @@ end
   if M == PhyloILM
     np += length(x.markov_chains[1].substitution_model[1])
   end
-  layout := (np, 1)
+  layout --> (np, 1)
   legend --> :none
   link --> :y
   for i = 1:np
