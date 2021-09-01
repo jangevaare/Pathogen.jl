@@ -2,7 +2,10 @@
 [![DOI](https://zenodo.org/badge/35234698.svg)](https://zenodo.org/badge/latestdoi/35234698)
 [![Latest Release](https://img.shields.io/github/release/jangevaare/Pathogen.jl.svg)](https://github.com/jangevaare/Pathogen.jl/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/jangevaare/Pathogen.jl/blob/master/LICENSE)
-[![CI-stable](https://github.com/jangevaare/Pathogen.jl/actions/workflows/ci-stable.yml/badge.svg)](https://github.com/jangevaare/Pathogen.jl/actions/workflows/ci-stable.yml)
+
+[![test-lts](https://github.com/jangevaare/Pathogen.jl/actions/workflows/test-lts.yml/badge.svg)](https://github.com/jangevaare/Pathogen.jl/actions/workflows/test-lts.yml)
+[![test-stable](https://github.com/jangevaare/Pathogen.jl/actions/workflows/test-stable.yml/badge.svg)](https://github.com/jangevaare/Pathogen.jl/actions/workflows/test-stable.yml)
+[![test-nightly](https://github.com/jangevaare/Pathogen.jl/actions/workflows/test-nightly.yml/badge.svg)](https://github.com/jangevaare/Pathogen.jl/actions/workflows/test-nightly.yml)
 [![codecov.io](http://codecov.io/github/jangevaare/Pathogen.jl/coverage.svg?branch=master)](http://codecov.io/github/jangevaare/Pathogen.jl?branch=master)
 
 Authors: Justin Angevaare, Zeny Feng, Rob Deardon
