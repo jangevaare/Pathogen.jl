@@ -241,6 +241,6 @@ function generate(
   if size(Σ) == (0,0)
     return last_sm
   else
-    return SM(rand(MvNormal([getproperty(last_sm, θ) for θ in [fieldnames(SM)...]], Σ)), false)
+    return SM(rand(MvNormal([getproperty(last_sm, θ) for θ in [fieldnames(SM)...]], Σ)), safe=false)
   end
 end
