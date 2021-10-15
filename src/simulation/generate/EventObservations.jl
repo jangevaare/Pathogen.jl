@@ -1,12 +1,13 @@
-function generate(
-  ::Type{EventObservations},
-  sim::Simulation{S, M},
-  delay_infection::UnivariateDistribution,
-  delay_removal::UnivariateDistribution;
-  seq_len::Union{Nothing, Int64}=nothing,
-  force::Bool = false) where {
-    S <: Union{SEIR, SIR},
-    M <: ILM}
+function generate(rng::AbstractRNG,
+                  ::Type{EventObservations},
+                  sim::Simulation{S, M},
+                  delay_infection::UnivariateDistribution{D},
+                  delay_removal::UnivariateDistribution{D};
+                  seq_len::Union{Nothing, Int64}=nothing,
+                  force::Bool = false) where {
+                    S <: Union{SEIR, SIR},
+                    M <: ILM,
+                    D <: Distributions.ValueSupport}
   infection = fill(NaN, individuals(sim.events))
   removal = fill(NaN, individuals(sim.events))
   if force
@@ -16,16 +17,16 @@ function generate(
         if sim.events.removal[i] == -Inf
           removal[i] = -Inf
         else
-          removal[i] = sim.events.removal[i] + rand(delay_removal)
+          removal[i] = sim.events.removal[i] + rand(rng, delay_removal)
         end
       else
         if isnan(sim.events.removal[i])
-          infection[i] = sim.events.infection[i] + rand(delay_infection)
+          infection[i] = sim.events.infection[i] + rand(rng, delay_infection)
         elseif sim.events.removal[i] > -Inf
           infection_delay_ub = sim.events.removal[i] - sim.events.infection[i]
           infection[i] = sim.events.infection[i] +
-            rand(Truncated(delay_infection, 0.0, infection_delay_ub))
-          removal[i] = sim.events.removal[i] + rand(delay_removal)
+            rand(rng, Truncated(delay_infection, 0.0, infection_delay_ub))
+          removal[i] = sim.events.removal[i] + rand(rng, delay_removal)
         end
       end
       @debug "Infection observation of i = $i at t = $(round(infection[i], digits=3)) (actual infection onset at t = $(round(sim.events.infection[i], digits=3)))"
@@ -38,16 +39,16 @@ function generate(
         if sim.events.removal == -Inf
           removal[i] = -Inf
         else
-          removal[i] = sim.events.removal[i] + rand(delay_removal)
+          removal[i] = sim.events.removal[i] + rand(rng, delay_removal)
         end
       else
-        infection_delay = rand(delay_infection)
+        infection_delay = rand(rng, delay_infection)
         if sim.events.removal[i] === NaN
           infection[i] = sim.events.infection[i] + infection_delay
         else
           if infection_delay + sim.events.infection[i] < sim.events.removal[i]
             infection[i] = sim.events.infection[i] + infection_delay
-            removal[i] = sim.events.removal[i] + rand(delay_removal)
+            removal[i] = sim.events.removal[i] + rand(rng, delay_removal)
           end
         end
       end
@@ -69,19 +70,20 @@ function generate(
   end
 end
 
-function generate(
-  ::Type{EventObservations},
-  sim::Simulation{S, M},
-  delay_infection::UnivariateDistribution;
-  seq_len::Union{Nothing, Int64}=nothing) where {
-    S <: Union{SEI, SI},
-    M <: ILM}
+function generate(rng::AbstractRNG,
+                  ::Type{EventObservations},
+                  sim::Simulation{S, M},
+                  delay_infection::UnivariateDistribution{D};
+                  seq_len::Union{Nothing, Int64}=nothing) where {
+                    S <: Union{SEI, SI},
+                    M <: ILM,
+                    D <: Distributions.ValueSupport}
   infection = fill(NaN, individuals(sim.events))
   @simd for i in findall(.!isnan.(sim.events.infection))
     if sim.events.infection[i] == -Inf
       infection[i] = -Inf
     else
-      infection[i] = sim.events.infection[i] + rand(delay_infection)
+      infection[i] = sim.events.infection[i] + rand(rng, delay_infection)
     end
     @debug "Infection observation of i = $i at t = $(round(infection[i], digits=3))) (actual infection onset at t = $(round(sim.events.infection[i], digits=3)))"
   end
@@ -99,5 +101,8 @@ function generate(
   end
 end
 
-observe(x,y,z; force::Bool=false, seq_len::Union{Nothing, Int64}=nothing) = generate(EventObservations, x, y, z, force=force, seq_len=seq_len)
-observe(x,y; seq_len::Union{Nothing, Int64}=nothing) = generate(EventObservations, x, y, seq_len=seq_len)
+observe(rng::AbstractRNG, x::Simulation, y::UnivariateDistribution, z::UnivariateDistribution; kwargs...) = generate(rng, EventObservations, x, y, z; kwargs...)
+observe(rng::AbstractRNG, x::Simulation, y::UnivariateDistribution; kwargs...) = generate(rng, EventObservations, x, y; kwargs...)
+
+observe(x::Simulation, y::UnivariateDistribution, z::UnivariateDistribution; kwargs...) = observe(default_rng(), x,y,z; kwargs...)
+observe(x::Simulation, y::UnivariateDistribution; kwargs...) = observe(default_rng(), x, y; kwargs...)

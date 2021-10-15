@@ -1,4 +1,5 @@
-function generate(::Type{Transmission},
+function generate(rng::AbstractRNG,
+                  ::Type{Transmission},
                   tr::TransmissionRates,
                   event::Event{T}) where T <: DiseaseStateSequence
   id = event.individual
@@ -7,11 +8,11 @@ function generate(::Type{Transmission},
     if sum(external_or_internal) == 0.0
       @error "All transmission rates = 0.0, No transmission can be generated"
       return NoTransmission()
-    elseif sample([true; false], external_or_internal)
+    elseif sample(rng, [true; false], external_or_internal)
       @debug "Exogenous tranmission generated"
       return ExogenousTransmission(id)
     else
-      source = sample(1:individuals(tr), Weights(tr.internal[:, id]))
+      source = sample(rng, 1:individuals(tr), Weights(tr.internal[:, id]))
       @debug "Endogenous transmission generated (source id = $source)"
       return EndogenousTransmission(id, source)
     end
@@ -19,4 +20,11 @@ function generate(::Type{Transmission},
     @debug "No transmission generated"
     return NoTransmission()
   end
+end
+
+function generate(rng::AbstractRNG,
+                  ::Type{Transmission},
+                  tr::TransmissionRates,
+                  event::NoEvent)
+  return NoTransmission()
 end

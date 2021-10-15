@@ -11,7 +11,8 @@ module Pathogen
         ProgressMeter,
         LinearAlgebra,
         OnlineStats,
-        PhyloModels
+        PhyloModels,
+        Random
 
   # Methods for functions not in Base
   import StatsBase.mean,
@@ -44,8 +45,8 @@ module Pathogen
   include("simulation/generate/Tree.jl")
   include("simulation/generate/EventObservations.jl")
   include("simulation/generate/Transmission.jl")
-  include("simulation/simulate!.jl")
   include("simulation/update!.jl")
+  include("simulation/simulate!.jl")
 
   # Inference
   include("inference/TransmissionNetworkDistribution.jl")

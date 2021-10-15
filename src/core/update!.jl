@@ -126,8 +126,9 @@ function update!(tr::TransmissionRates,
                  pop::Population,
                  rf::RiskFunctions{T},
                  rp::RiskParameters{T};
-                 transmission_rate_cache::Union{Nothing, TransmissionRateCache}=nothing) where T <: DiseaseStateSequence
-  update!(tr, event, states, pop, rf, rp, transmission_rate_cache=transmission_rate_cache)
+                 xzero::Bool=false,
+                 transmission_rate_cache::Union{Nothing, TransmissionRateCache}=nothing) where {T <: DiseaseStateSequence}
+  update!(tr, event, states, pop, rf, rp; xzero = xzero, transmission_rate_cache=transmission_rate_cache)
   update!(rates, tr, event, states, pop, rf, rp)
   return tr, rates
 end

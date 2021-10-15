@@ -1,3 +1,14 @@
+"""
+    initialize(::Type{TransmissionRates},
+                    states::DiseaseStates,
+                    pop::Population,
+                    rf::RiskFunctions{T},
+                    rp::RiskParameters{T}) where T <: DiseaseStateSequence
+
+Initialize `TransmissionRates` for a `Population` with specified `DiseaseStates`.
+`TransmissionRates` are an array storage of rates of disease transmission between individuals.
+`TransmissionRates` are specific to the defined `RiskFunctions`, and their parametrization in `RiskParameters`.
+"""
 function initialize(::Type{TransmissionRates},
                     states::DiseaseStates,
                     pop::Population,
@@ -21,6 +32,16 @@ function initialize(::Type{TransmissionRates},
   return tr
 end
 
+"""
+    function initialize(::Type{EventRates},
+                        tr::TransmissionRates,
+                        states::DiseaseStates,
+                        pop::Population,
+                        rf::RiskFunctions{T},
+                        rp::RiskParameters{T}) where T <: DiseaseStateSequence
+
+Initialize `EventRates`, which represent the rates for all competing events in an epidemic (e.g. removal of individual x; exposure of individual y)
+"""
 function initialize(::Type{EventRates},
                     tr::TransmissionRates,
                     states::DiseaseStates,
