@@ -16,6 +16,7 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+SubstitutionModels = "8365b1bb-bd83-58ee-a267-f2965fc81c73"
 
 [compat]
 DataFrames = "^0.19, 0.20, 0.21, 0.22, 1.0"
@@ -25,6 +26,7 @@ PhyloModels = "0.3"
 ProgressMeter = "^1.2"
 RecipesBase = "0.7, 0.8, 1"
 StatsBase = "0.32, 0.33"
+SubstitutionModels = "0.5"
 julia = "^1.1"
 
 [extras]
