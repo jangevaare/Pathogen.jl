@@ -1,4 +1,8 @@
-function simulate!(sim::Simulation{T}; tmax::Float64=Inf, nmax::Int64=100000, pmax::Float64=Inf) where T <: EpidemicModel
+function simulate!(rng::AbstractRNG,
+                   sim::Simulation;
+                   tmax::Float64=Inf,
+                   nmax::Int64=100000,
+                   pmax::Float64=Inf)
   if tmax <= 0.0
     @error "The simulation time maximum must be > 0.0"
   elseif nmax < 1
@@ -10,13 +14,15 @@ function simulate!(sim::Simulation{T}; tmax::Float64=Inf, nmax::Int64=100000, pm
   end
   stoptime = time() + pmax
   while true
-    event = generate(Event, sim.event_rates, sim.time)
+    # Generate the new event and associated specific transmission when applicable
+    event = generate(rng, Event, sim.event_rates, sim.time)
+    transmission = generate(rng, Transmission, sim.transmission_rates, event)
     if _time(event) > tmax
       sim.time = tmax
       @debug "Simulation stopped: simulation time maximum reached"
       break
     else
-      update!(sim, event)
+      update!(sim, event, transmission)
     end
     if sim.iterations >= nmax
       @debug "Simulation stopped: iteration maximum reached"
@@ -28,3 +34,5 @@ function simulate!(sim::Simulation{T}; tmax::Float64=Inf, nmax::Int64=100000, pm
   end
   return sim
 end
+
+simulate!(sim::Simulation; kwargs...) = simulate!(default_rng(), sim; kwargs...)
