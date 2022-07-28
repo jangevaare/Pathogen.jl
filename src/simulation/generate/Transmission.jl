@@ -9,7 +9,7 @@ function generate(rng::AbstractRNG,
       @error "All transmission rates = 0.0, No transmission can be generated"
       return NoTransmission()
     elseif sample(rng, [true; false], external_or_internal)
-      @debug "Exogenous tranmission generated"
+      @debug "Exogenous transmission generated"
       return ExogenousTransmission(id)
     else
       source = sample(rng, 1:individuals(tr), Weights(tr.internal[:, id]))
