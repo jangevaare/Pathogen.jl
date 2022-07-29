@@ -37,7 +37,7 @@ function loglikelihood(rp::RiskParameters{T},
     if _new_transmission(event) & transmissions_output
       push!(transmissions, id)
     end
-    @debug "Calculating the loglikehood contribution of event $i" event
+    @debug "Calculating the loglikelihood contribution of event $i" event
     # Get event rate totals
     rate_total = sum(s.event_rates)
     if rate_total < 0.0
@@ -52,7 +52,7 @@ function loglikelihood(rp::RiskParameters{T},
     if loglikelihood_output
       if last_event_switch
         ΔT = _time(event) - _time(last_event)
-        # Add event occurence contribution to loglikelihood
+        # Add event occurrence contribution to loglikelihood
         ll += log(rate_total) - rate_total * ΔT
       end
       # Stop log likelihood calculation anytime the loglikelihood goes to -Inf

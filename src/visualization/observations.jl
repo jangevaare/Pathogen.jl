@@ -15,7 +15,7 @@ function _count_by_state(
       n_ids += events[state][i] <= time
     end
   end
-  @debug "$n_ids individual(s) observered in state $state at t = $time"
+  @debug "$n_ids individual(s) observed in state $state at t = $time"
   return n_ids
 end
 

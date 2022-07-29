@@ -9,7 +9,7 @@ function generate(
     @error "All transmission rates = 0.0, No transmission generated" external_or_internal
     return NoTransmission()
   elseif sample([true; false], external_or_internal)
-    @debug "Exogenous tranmission generated" external_or_internal
+    @debug "Exogenous transmission generated" external_or_internal
     return ExogenousTransmission(id)
   else
     source = sample(1:individuals(tr), Weights(tr.internal[:, id]))
@@ -30,7 +30,7 @@ function generate(
     @error "All transmission rates = 0.0, No transmission generated" external_or_internal
     return NoTransmission()
   elseif sample([true; false], external_or_internal)
-    @debug "Exogenous tranmission generated" external_or_internal
+    @debug "Exogenous transmission generated" external_or_internal
     return ExogenousTransmission(id)
   else
     source = sample(1:individuals(tr), Weights(internalweights))
