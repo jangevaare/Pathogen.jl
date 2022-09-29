@@ -39,13 +39,18 @@ Examples of Pathogen.jl workflow are included in the examples directory as a Jup
 3. [Analysis of 1861 Hagelloch Measles outbreak](https://github.com/jangevaare/Pathogen.jl/blob/master/examples/1861%20Hagelloch%20Measles/1861%20Hagelloch.ipynb)
 ![Epidemic simulation](https://github.com/jangevaare/Pathogen.jl/raw/master/examples/SIR%20Simulation/epianimation.gif)
 
-## More information
-This package is detailed in this [preprint article](https://arxiv.org/abs/2002.05850).
+## Citation and more information
+This package is detailed in [Pathogen.jl: Infectious Disease Transmission Network Modeling with Julia](https://doi.org/10.18637/jss.v104.i04), in the Journal of Statistical Software.
 
     @article{pathogenjl,
-      title={Pathogen.jl: Infectious Disease Transmission Network Modelling with {Julia}},
-      author={Justin Angevaare and Zeny Feng and Rob Deardon},
-      year={2020},
-      eprint={2002.05850},
-      archivePrefix={arXiv},
-      url = {https://arxiv.org/abs/2002.05850}}
+      title   = {Pathogen.jl: Infectious Disease Transmission Network Modeling with Julia},
+      author  = {Angevaare, Justin and
+                 Feng, Zeny and
+                 Deardon, Rob},
+      year    = {2022},
+      journal = {Journal of Statistical Software},
+      volume  = {104},
+      number  = {4},
+      pages   = {1–30},
+      url     = {https://www.jstatsoft.org/index.php/jss/article/view/v104i04},
+      doi     = {10.18637/jss.v104.i04}}
