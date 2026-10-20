@@ -9,34 +9,33 @@ function _initialization_attempt(rng::AbstractRNG, mcmc::MCMC{S, M},
     sm = generate(rng, mcmc.substitution_model, mcmc.substitution_model_prior)
     lprior += logprior(sm, mcmc.substitution_model_prior)
   end
-  llikelihood, tr, tx = loglikelihood(rparams,
-                                      mcmc.risk_functions,
-                                      events,
-                                      mcmc.population,
-                                      mcmc.starting_states,
-                                      early_decision_value = max_lposterior - lprior)
-  lposterior = llikelihood + lprior
-  if lposterior > max_lposterior
-    network = generate(rng, TransmissionNetwork, tr, mcmc, tx)
-    if M <: PhyloILM
-      tree, obs_nodes = generate(Tree, events, mcmc.event_observations, network)
-      leaf_data = Dict{Int64, RNASeq}()
-      for k = eachindex(obs_nodes)
-        if !isnothing(obs_nodes[k])
-          leaf_data[obs_nodes[k]] = mcmc.event_observations.seq[k]
-        end
+  llikelihood, tr, tx = loglikelihood(rparams, mcmc.risk_functions, events,
+                                      mcmc.population, mcmc.starting_states)
+  base_posterior = llikelihood + lprior
+  # Network and sequence log probabilities cannot increase this upper bound.
+  base_posterior > max_lposterior || return nothing
+  _has_network_support(tr, mcmc.transmission_network_prior, tx) || return nothing
+  network = generate(rng, TransmissionNetwork, tr, mcmc, tx)
+  terms = _network_logprobabilities(network, tr, mcmc.transmission_network_prior,
+                                    tx, mcmc.starting_states)
+  base_posterior + sum(terms) > max_lposterior || return nothing
+  if M <: PhyloILM
+    tree, obs_nodes = generate(Tree, events, mcmc.event_observations, network)
+    leaf_data = Dict{Int64, RNASeq}()
+    for k in eachindex(obs_nodes)
+      if !isnothing(obs_nodes[k])
+        leaf_data[obs_nodes[k]] = mcmc.event_observations.seq[k]
       end
-      lposterior += PhyloModels.loglikelihood(tree, sm, leaf_data)
     end
+    base_posterior += PhyloModels.loglikelihood(tree, sm, leaf_data)
   end
-  if lposterior > max_lposterior
-    if M <: PhyloILM
-      return MarkovChain{S, M}(events, network, rparams, sm, lposterior)
-    elseif M <: TNILM
-      return MarkovChain{S, M}(events, network, rparams, lposterior)
-    end
+  base_posterior + sum(terms) > max_lposterior || return nothing
+  if M <: PhyloILM
+    return MarkovChain{S, M}(events, network, rparams, sm, base_posterior;
+                             network_logprobabilities=terms)
   else
-    return nothing
+    return MarkovChain{S, M}(events, network, rparams, base_posterior;
+                             network_logprobabilities=terms)
   end
 end
 

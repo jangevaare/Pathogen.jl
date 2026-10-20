@@ -122,5 +122,15 @@ Event-time acceptance includes the reverse-to-forward proposal density ratio.
 Each batch evaluates both densities in the same event order, recomputing bounds
 as times change. A batch with no reverse support is rejected. For coupled
 phylogenetic updates, the reverse bounds use the proposed transmission network.
-This correction affects acceptance decisions; stored posterior values contain
-only the model likelihood and prior.
+Stored `log_posterior` values include the epidemic likelihood, parameter priors,
+sequence likelihood when present, and the conditional probabilities of recorded
+transmission sources. Source probabilities use the available transmission rates,
+multiplied by `TNDistribution` weights when supplied, and normalized for each
+recipient. Initial disease states are conditioned upon and add no source factor.
+
+Fixed-network proposals include changes in these source probabilities. When a
+proposal redraws parents, the source factors cancel against the proposal density
+only for the recipients redrawn. Default TNILM updates still integrate out the
+network during parameter and event moves, then sample the full network from its
+conditional distribution. Proposal corrections affect acceptance decisions and
+are not included in stored posterior values.
