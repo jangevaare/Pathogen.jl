@@ -23,5 +23,5 @@ function Base.sum(x::TN, i::Integer) where {TN <: AbstractTN}
   if i < 1 || i > individuals(x)
     @error "Invalid individual identifier" i
   end
-  return x.external[i] + sum(x.internal[:, i])
+  return x.external[i] + sum(@view x.internal[:, i])
 end

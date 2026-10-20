@@ -31,6 +31,37 @@ function perf_fixture(::Type{S}; n=8, phylo=false) where S
   return sim, mcmc
 end
 
+@testset "Incremental removals preserve hazards and historical weights" begin
+  for S in (SIR, SEIR)
+    sim, _ = perf_fixture(S)
+    states = copy([State_I; fill(State_S, Pathogen.individuals(sim.population)-1)])
+    tr = Pathogen.initialize(Pathogen.TransmissionRates, states, sim.population, sim.risk_functions, sim.risk_parameters)
+    rates = Pathogen.initialize(Pathogen.EventRates, tr, states, sim.population, sim.risk_functions, sim.risk_parameters)
+    history = [(0.1, 2, State_I), (0.2, 1, State_R), (0.3, 3, State_I), (0.4, 2, State_R), (0.5, 3, State_R)]
+    for (t, id, state) in history
+      if S == SEIR && state == State_I
+        exposure = Pathogen.Event{S}(t-0.01, id, State_E)
+        Pathogen.update!(states, exposure)
+        Pathogen.update!(tr, rates, exposure, states, sim.population, sim.risk_functions, sim.risk_parameters)
+      end
+      historical = copy(tr.internal[:, states .!= Ref(State_S)])
+      event = Pathogen.Event{S}(t, id, state)
+      Pathogen.update!(states, event)
+      Pathogen.update!(tr, rates, event, states, sim.population, sim.risk_functions, sim.risk_parameters)
+      expected_tr = Pathogen.initialize(Pathogen.TransmissionRates, states, sim.population, sim.risk_functions, sim.risk_parameters)
+      expected = Pathogen.initialize(Pathogen.EventRates, expected_tr, states, sim.population, sim.risk_functions, sim.risk_parameters)
+      @test rates.infection ≈ expected.infection
+      @test rates.removal ≈ expected.removal
+      if S == SEIR
+        @test rates.exposure ≈ expected.exposure
+      end
+      if state == State_R
+        @test tr.internal[:, states .!= Ref(State_S)] == historical
+      end
+    end
+  end
+end
+
 @testset "Complete likelihood before rejection" begin
   pop = Population(DataFrame(x=[1]))
   rf = RiskFunctions{SIR}(perf_constant, perf_one, perf_pair, perf_one, perf_constant)

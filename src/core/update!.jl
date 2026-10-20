@@ -128,7 +128,20 @@ function update!(tr::TransmissionRates,
                  rp::RiskParameters{T};
                  xzero::Bool=false,
                  transmission_rate_cache::Union{Nothing, TransmissionRateCache}=nothing) where {T <: DiseaseStateSequence}
-  update!(tr, event, states, pop, rf, rp; xzero = xzero, transmission_rate_cache=transmission_rate_cache)
-  update!(rates, tr, event, states, pop, rf, rp)
+  if event.new_state == State_R
+    # Remove this source from current hazards before clearing its rates. Columns
+    # for already-infected recipients retain their historical transmission weights.
+    target = State_E ∈ T ? rates.exposure : rates.infection
+    for i in eachindex(states)
+      if states[i] == State_S
+        target[i] = max(0.0, target[i] - tr.internal[event.individual, i])
+        tr.internal[event.individual, i] = 0.0
+      end
+    end
+    rates.removal[event.individual] = 0.0
+  else
+    update!(tr, event, states, pop, rf, rp; xzero = xzero, transmission_rate_cache=transmission_rate_cache)
+    update!(rates, tr, event, states, pop, rf, rp)
+  end
   return tr, rates
 end
