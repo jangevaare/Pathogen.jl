@@ -4,6 +4,40 @@ perf_one(p, pop, i) = 1.0
 perf_constant(p, pop, i) = p[1]
 perf_pair(p, pop, i, j) = p[1] * (1.0 + abs(i-j) / 10)
 
+@testset "Child traversal and significant transmission propagation" begin
+  for shape in (:chain, :star, :forest)
+    n = 12
+    network = TransmissionNetwork(n)
+    network.external[1] = true
+    for i in 2:n
+      if shape == :forest && i == 7
+        network.external[i] = true
+      else
+        parent = shape == :chain ? i-1 : shape == :star ? 1 : (i < 7 ? i-1 : 7)
+        Pathogen.update!(network, EndogenousTransmission(i, parent))
+      end
+    end
+    children = Pathogen._children(network)
+    @test sum(length, children) == n - sum(network.external)
+    @test Pathogen._pathway_from(1, network; depth=1) == [1; children[1]]
+    @test Pathogen._source(1, network) === nothing
+    for i in 2:n
+      @test Pathogen._source(i, network) == findfirst(network.internal[:, i])
+    end
+    times = [collect(0.0:n-1) fill(NaN, n)]
+    times[network.external, 1] .= -Inf
+    for observed in (Int[], [n], [2, 5, n])
+      times[:, 2] .= NaN
+      times[observed, 2] = observed .+ 1.0
+      expected = [times[i, 1] == -Inf || any(times[Pathogen._pathway_from(i, network), 2] .>= times[i, 1]) for i in 1:n]
+      @test Pathogen._significant_transmissions(times, network, children) == expected
+    end
+  end
+  cyclic = TransmissionNetwork(2)
+  cyclic.internal[1, 2] = cyclic.internal[2, 1] = true
+  @test_throws ArgumentError Pathogen._significant_transmissions(zeros(2, 2), cyclic, Pathogen._children(cyclic))
+end
+
 @testset "Event proposals own their vectors and cover every event" begin
   for S in (SI, SIR, SEI, SEIR)
     states = convert(DiseaseStates, S)[2:end]

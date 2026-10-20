@@ -1,18 +1,54 @@
+# Build outgoing adjacency once for traversal; sparse columns already provide
+# direct access to the (at most one) parent of each recipient.
+function _children(network::TransmissionNetwork)
+  children = [Int[] for _ in 1:individuals(network)]
+  for recipient in 1:individuals(network), k in nzrange(network.internal, recipient)
+    if nonzeros(network.internal)[k]
+      push!(children[rowvals(network.internal)[k]], recipient)
+    end
+  end
+  return children
+end
+
+# Propagate the latest descendant observation from leaves towards roots. This
+# replaces constructing a separate list of all descendants for every person.
+function _significant_transmissions(event_times, network::TransmissionNetwork, children)
+  n = individuals(network)
+  latest = [isnan(event_times[i, 2]) ? -Inf : event_times[i, 2] for i in 1:n]
+  pending = length.(children)
+  ready = findall(iszero, pending)
+  processed = 0
+  while !isempty(ready)
+    child = pop!(ready)
+    processed += 1
+    parent = _source(child, network)
+    if parent !== nothing
+      latest[parent] = max(latest[parent], latest[child])
+      pending[parent] -= 1
+      pending[parent] == 0 && push!(ready, parent)
+    end
+  end
+  processed == n || throw(ArgumentError("Transmission network contains a cycle"))
+  return [event_times[i, 1] == -Inf ||
+          ((network.external[i] || _source(i, network) !== nothing) && latest[i] >= event_times[i, 1]) for i in 1:n]
+end
+
 function _pathway_from(
   id::Int64,
   network::TransmissionNetwork;
   depth::Real=Inf,
-  include_id::Bool=true)
+  include_id::Bool=true,
+  children=nothing)
 
   local path
-  if network.external[id] || any(network.internal[:, id])
+  if network.external[id] || _source(id, network) !== nothing
     path = Int64[]
     push!(path, id)
     path_lengths = [0]
     while (length(path) > path_lengths[end]) & (depth >= length(path_lengths))
       push!(path_lengths, length(path))
       for j in path[(path_lengths[end-1]+1):path_lengths[end]]
-        append!(path, findall(network.internal[j, :]))
+        append!(path, children === nothing ? findall(network.internal[j, :]) : children[j])
       end
     end
     if include_id == false
@@ -30,7 +66,8 @@ function _pathway_from(
   id::Nothing,
   network::TransmissionNetwork;
   depth::Real=Inf,
-  include_id::Bool=true)
+  include_id::Bool=true,
+  children=nothing)
 
   path = Union{Nothing, Int64}[nothing]
   append!(path, findall(network.external))
@@ -38,7 +75,7 @@ function _pathway_from(
   while (length(path) > path_lengths[end]) & (depth >= length(path_lengths)-1)
     push!(path_lengths, length(path))
     for j in path[(path_lengths[end-1]+1):path_lengths[end]]
-      append!(path, findall(network.internal[j, :]))
+      append!(path, children === nothing ? findall(network.internal[j, :]) : children[j])
     end
   end
   if include_id == false
@@ -55,12 +92,12 @@ function _pathway_to(
   include_id::Bool=true)
 
   local path
-  if network.external[id] || any(network.internal[:, id])
+  if network.external[id] || _source(id, network) !== nothing
     path = Union{Nothing, Int64}[id]
-    next_id = findfirst(network.internal[:, id])
+    next_id = _source(id, network)
     while (length(path) < depth) && (next_id !== nothing)
       push!(path, next_id)
-      next_id = findfirst(network.internal[:, path[end]])
+      next_id = _source(path[end], network)
     end
     push!(path, next_id)
     if include_id == false
@@ -74,9 +111,12 @@ function _pathway_to(
 end
 
 function _source(id::Int64, network::TransmissionNetwork)
-  source = findfirst(network.internal[:, id])
-  @logmsg LogLevel(-5000) "Transmission source lookup" Individual = id Source = source
-  return source
+  for k in nzrange(network.internal, id)
+    if nonzeros(network.internal)[k]
+      return rowvals(network.internal)[k]
+    end
+  end
+  return nothing
 end
 
 function generate(
@@ -108,10 +148,8 @@ function generate(
   event_lookup = CartesianIndices(size(event_times))
   @logmsg LogLevel(-5000) "event_nodes, event_order, and event_lookup created" ArraySize = size(event_times)
 
-  pathways = [_pathway_from(i, network, include_id = true) for i = 1:individuals(events)]
-
-  # Determine significant transmissions (results in a observation in the future)
-  significant_transmissions = (event_times[:, 1] .== -Inf) .| [pathways[i] !== nothing && any(event_times[pathways[i], 2] .>= event_times[i, 1]) for i = 1:individuals(events)]
+  children = _children(network)
+  significant_transmissions = _significant_transmissions(event_times, network, children)
   @logmsg LogLevel(-5000) "Significant transmitters" significant_transmissions
 
   start_time = minimum(events)
@@ -169,7 +207,7 @@ function generate(
           # Previous significant transmissions from this source of transmission
           else
             @logmsg LogLevel(-5000) "Event $i is a significant internal transmission" Source = source
-            source_prior_transmissions = findall(network.internal[source, :][:] .& (event_times[:, 1] .< event_time) .& significant_transmissions)
+            source_prior_transmissions = [child for child in children[source] if event_times[child, 1] < event_time && significant_transmissions[child]]
 
             # For when the source of transmission has yet to be detected...
             if isnan(event_times[source, 2]) || event_times[source, 2] > event_times[event_individual, 1]
@@ -219,9 +257,7 @@ function generate(
     # Infection observation event
     elseif event_type == 2
       # Determine if individual has had significant transmissions prior to being observed as infected
-      prior_transmissions = findall(network.internal[event_individual, :][:] .&
-                            (event_times[:, 1] .< event_time) .&
-                            significant_transmissions)
+      prior_transmissions = [child for child in children[event_individual] if event_times[child, 1] < event_time && significant_transmissions[child]]
 
       if length(prior_transmissions) > 0
         # Parent node will be the internal node associated with the final pre-observation transmission
@@ -236,7 +272,7 @@ function generate(
         branch_length = event_time - max(event_times[event_individual, 1], start_time)
       end
 
-      if any(network.internal[event_individual, :][:] .& (event_times[:, 1] .>= event_time) .& significant_transmissions)
+      if any(child -> event_times[child, 1] >= event_time && significant_transmissions[child], children[event_individual])
         # Individual goes on to have significant transmissions
         # Internal node for observation
         @logmsg LogLevel(-5000) "Individual $event_individual has significant future transmissions, add internal node for observation" ParentNode = parent_node BranchLength = branch_length
