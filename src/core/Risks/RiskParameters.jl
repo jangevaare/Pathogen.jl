@@ -7,16 +7,16 @@ struct RiskParameters{T <: DiseaseStateSequence, A, B, C, D, E, F} <: AbstractRi
   removal::F
 end
 
-RiskParameters{SEIR}(ϵ::AbstractVector, θs::AbstractVector, κ::AbstractVector, θt::AbstractVector, θl::AbstractVector, θr::AbstractVector) =
+RiskParameters{SEIR}(ϵ::Union{Nothing, AbstractVector}, θs::Union{Nothing, AbstractVector}, κ::Union{Nothing, AbstractVector}, θt::Union{Nothing, AbstractVector}, θl::Union{Nothing, AbstractVector}, θr::Union{Nothing, AbstractVector}) =
   RiskParameters{SEIR, typeof(ϵ), typeof(θs), typeof(κ), typeof(θt), typeof(θl), typeof(θr)}(ϵ, θs, κ, θt, θl, θr)
 
-RiskParameters{SEI}(ϵ::AbstractVector, θs::AbstractVector, κ::AbstractVector, θt::AbstractVector, θl::AbstractVector) =
+RiskParameters{SEI}(ϵ::Union{Nothing, AbstractVector}, θs::Union{Nothing, AbstractVector}, κ::Union{Nothing, AbstractVector}, θt::Union{Nothing, AbstractVector}, θl::Union{Nothing, AbstractVector}) =
   RiskParameters{SEI, typeof(ϵ), typeof(θs), typeof(κ), typeof(θt), typeof(θl), Nothing}(ϵ, θs, κ, θt, θl, nothing)
 
-RiskParameters{SIR}(ϵ::AbstractVector, θs::AbstractVector, κ::AbstractVector, θt::AbstractVector, θr::AbstractVector) =
+RiskParameters{SIR}(ϵ::Union{Nothing, AbstractVector}, θs::Union{Nothing, AbstractVector}, κ::Union{Nothing, AbstractVector}, θt::Union{Nothing, AbstractVector}, θr::Union{Nothing, AbstractVector}) =
   RiskParameters{SIR, typeof(ϵ), typeof(θs), typeof(κ), typeof(θt), Nothing, typeof(θr)}(ϵ, θs, κ, θt, nothing, θr)
 
-RiskParameters{SI}(ϵ::AbstractVector, θs::AbstractVector, κ::AbstractVector, θt::AbstractVector) =
+RiskParameters{SI}(ϵ::Union{Nothing, AbstractVector}, θs::Union{Nothing, AbstractVector}, κ::Union{Nothing, AbstractVector}, θt::Union{Nothing, AbstractVector}) =
   RiskParameters{SI, typeof(ϵ), typeof(θs), typeof(κ), typeof(θt), Nothing, Nothing}(ϵ, θs, κ, θt, nothing, nothing)
 
 function Base.show(io::IO, x::RiskParameters{T}) where T <: DiseaseStateSequence
@@ -29,7 +29,7 @@ function Base.convert(::Type{Vector{Float64}},
 end
 
 function Base.convert(::Type{Array{Float64, 2}},
-                      x::Vector{RiskParameters{T}}) where T <: DiseaseStateSequence
+                      x::Vector{<:RiskParameters{T}}) where T <: DiseaseStateSequence
   return [x[i][j] for i = 1:length(x), j = 1:length(x[1])]
 end
 

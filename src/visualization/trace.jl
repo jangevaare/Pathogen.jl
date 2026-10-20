@@ -7,7 +7,7 @@ function Base.getindex(x::NASM, i::Int64)
 end
 
 @recipe function f(iter,
-                   x::Vector{RiskParameters{T}}) where {T <: DiseaseStateSequence}
+                   x::Vector{<:RiskParameters{T}}) where {T <: DiseaseStateSequence}
   xguide --> "Iteration"
   yguide --> "Value"
   legend --> :none

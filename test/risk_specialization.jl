@@ -26,6 +26,11 @@ specialized_infectivity(rf, rp, pop, i, j) = rf.infectivity(rp.infectivity, pop,
     sim = Simulation(pop, [State_I, State_S], rf, rp)
     @test sim isa Simulation
     @test sim.transmission_rates.internal[1, 2] == 12.0
+    samples = [rp, rp]
+    expected = repeat(permutedims(convert(Vector{Float64}, rp)), 2, 1)
+    @test convert(Matrix{Float64}, samples) == expected
+    recipe = Pathogen.RecipesBase.apply_recipe(Dict{Symbol, Any}(), 1:2, samples)
+    @test recipe[1].args[2] == expected
   end
   @test all(isconcretetype, fieldtypes(typeof(pop)))
   @test Population(pop.risks).distances === nothing
@@ -33,4 +38,8 @@ specialized_infectivity(rf, rp, pop, i, j) = rf.infectivity(rp.infectivity, pop,
   rp = RiskParameters{SI}(@view(values[1:1]), [1.0], Float64[], Float64[])
   @test rp.sparks isa SubArray
   @test rp.sparks[1] == 0.2
+  parameter_free = RiskParameters{SI}(nothing, nothing, nothing, nothing)
+  rf = RiskFunctions{SI}(perf_one, perf_one, (p, pop, i, j) -> 0.0, perf_one)
+  sim = Simulation(pop, [State_I, State_S], rf, parameter_free)
+  @test sim.event_rates.infection == [0.0, 1.0]
 end
