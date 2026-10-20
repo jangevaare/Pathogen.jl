@@ -1,6 +1,6 @@
-struct Population
-  risks::AbstractDataFrame
-  distances::Union{Nothing, AbstractArray}
+struct Population{R <: AbstractDataFrame, D <: Union{Nothing, AbstractArray}}
+  risks::R
+  distances::D
 end
 
 Population(risks) = Population(risks, nothing)

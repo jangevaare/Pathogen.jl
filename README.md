@@ -105,3 +105,15 @@ continuous-time log-density contributions can be positive.
 Run `benchmark/likelihood.jl` in an environment containing this checkout to measure
 warmed likelihood time and allocations at increasing population sizes. These
 measurements exclude compilation and fixture construction.
+
+`RiskFunctions`, `RiskParameters`, and `Population` retain the concrete types of
+supplied functions, parameter vectors, and storage so Julia can specialize risk
+calculations. Custom risk functions can still introduce type uncertainty. For
+covariate calculations, capture a typed column once rather than indexing the
+heterogeneous DataFrame inside every pairwise call:
+
+```julia
+susceptibility = let values = pop.risks[!, :riskfactor1]
+    (params, pop, i) -> params[1] * values[i]
+end
+```

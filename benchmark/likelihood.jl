@@ -29,6 +29,8 @@ function measure_likelihood(n; reuse=true, cached=true)
 end
 
 for n in (isempty(ARGS) ? [200, 400, 800, 1600] : parse.(Int, ARGS))
-  measure_likelihood(n; reuse=false)
-  measure_likelihood(n)
+  for cached in (false, true)
+    measure_likelihood(n; reuse=false, cached=cached)
+    measure_likelihood(n; cached=cached)
+  end
 end
