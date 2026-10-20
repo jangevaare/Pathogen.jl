@@ -1,3 +1,7 @@
+# Partition without dropping the remainder when the event count is not divisible.
+_event_batch(n::Integer, batches::Integer, batch::Integer) =
+  (fld(n * (batch-1), batches)+1):fld(n * batch, batches)
+
 function update!(rng::AbstractRNG, mc::MarkovChain{T, M},
                  mcmc::MCMC{T, M},
                  Σ::Array{Float64, 2},
@@ -10,35 +14,31 @@ function update!(rng::AbstractRNG, mc::MarkovChain{T, M},
   # Initialize
   new_tr_cache = transmission_rate_cache
   new_events = mc.events[end]
-  new_events_array = new_events[convert(DiseaseStates, T)[2:end]]
   new_rp = mc.risk_parameters[end]
   new_network = mc.transmission_network[end]
   new_lposterior = mc.log_posterior[end]
   # Randomize event time augmentation
-  event_indices = findall(new_events_array[:] .> -Inf)
+  event_indices = findall(convert(Vector{Float64}, new_events) .> -Inf)
   aug_order = sample(rng, event_indices, length(event_indices), replace=false)
   @debug "$(length(aug_order)) events to augment"
   if event_batches < 0
-    @error "Cannot have negative amount of event batches"
+    throw(ArgumentError("Cannot have negative amount of event batches"))
   end
   if event_batches > length(aug_order)
     @warn "More event batches than there are events to augment ($(event_batches) > $(length(aug_order))), setting to maximum ($(length(aug_order)))"
     event_batches = length(aug_order)
   end
-  batch_size = fld(length(aug_order), event_batches)
-  @debug "Performing data augmentation in batches of $batch_size events at a time"
+  @debug "Performing data augmentation in $event_batches batches"
   for i = 1:(1 + event_batches)
     if i == 1
       # Propose new risk parameters
       proposed_events = new_events
-      proposed_events_array = new_events_array
       proposed_rp = generate(rng, RiskParameters{T}, new_rp, Σ)
       @debug "Generating new TransmissionRateCache for TN-ILM parameter proposal"
-      proposed_tr_cache = TransmissionRateCache(size(new_events_array, 1))
+      proposed_tr_cache = TransmissionRateCache(individuals(new_events))
     else
-      proposed_events_array = copy(new_events_array)
-      proposed_events = Events{T}(proposed_events_array)
-      for j = (batch_size*(i-2) + 1):min(batch_size*(i-1),length(aug_order))
+      proposed_events = copy(new_events)
+      for j in _event_batch(length(aug_order), event_batches, i-1)
         id, state_index = Tuple(CartesianIndices((individuals(new_events),
                                             length(convert(DiseaseStates, T)[2:end])))[aug_order[j]])
         new_state = convert(DiseaseStates, T)[state_index+1]
@@ -63,11 +63,7 @@ function update!(rng::AbstractRNG, mc::MarkovChain{T, M},
                                     mcmc.event_observations,
                                     proposed_events)
         end
-        proposed_events_array = reshape([proposed_events_array[1:(aug_order[j]-1)]
-                                         _time(proposed_event)
-                                         proposed_events_array[(aug_order[j]+1):end]],
-                                        size(new_events_array))
-        proposed_events = Events{T}(proposed_events_array)
+        update!(proposed_events, proposed_event)
       end
       proposed_rp = new_rp
       proposed_tr_cache = new_tr_cache
@@ -95,7 +91,6 @@ function update!(rng::AbstractRNG, mc::MarkovChain{T, M},
       new_rp = proposed_rp
       new_tr_cache = proposed_tr_cache
       new_events = proposed_events
-      new_events_array = proposed_events_array
       new_lposterior = proposed_lposterior
     else
       @debug "next!: MCMC proposal rejected (acceptance probability = $(round(min(1.0, exp(proposed_lposterior - new_lposterior)), digits=3)))"
@@ -132,39 +127,35 @@ function update!(rng::AbstractRNG, mc::MarkovChain{T, M},
   local tnr
   new_tr_cache = transmission_rate_cache
   new_events = mc.events[end]
-  new_events_array = convert(Array{Float64, 2}, new_events)
   new_rp = mc.risk_parameters[end]
   new_sm = mc.substitution_model[end]
   new_network = mc.transmission_network[end]
   new_lposterior = mc.log_posterior[end]
   # Randomize event time augmentation
-  event_indices = findall(new_events_array[:] .> -Inf)
+  event_indices = findall(convert(Vector{Float64}, new_events) .> -Inf)
   aug_order = sample(rng, event_indices, length(event_indices), replace=false)
   @debug "$(length(aug_order)) events to augment"
   if event_batches < 0
-    @error "Cannot have negative amount of event batches"
+    throw(ArgumentError("Cannot have negative amount of event batches"))
   end
   if event_batches > length(aug_order)
     @warn "More event batches than there are events to augment ($(event_batches) > $(length(aug_order))), setting to maximum ($(length(aug_order)))"
     event_batches = length(aug_order)
   end
-  batch_size = fld(length(aug_order), event_batches)
-  @debug "Performing data augmentation in batches of $batch_size events at a time"
+  @debug "Performing data augmentation in $event_batches batches"
   steps = DA_couple ? 1 + event_batches : 1 + event_batches + 1
   for i = 1:steps
     if i == 1
       # Propose new risk parameters
       proposed_events = new_events
-      proposed_events_array = new_events_array
       proposed_rp = generate(rng, RiskParameters{T}, new_rp, Σrp)
       proposed_sm = generate(rng, mcmc.substitution_model, new_sm, Σsm)
       @debug "Generating new TransmissionRateCache for TN-ILM parameter proposal"
-      proposed_tr_cache = TransmissionRateCache(size(new_events_array, 1))
+      proposed_tr_cache = TransmissionRateCache(individuals(new_events))
     elseif i < (event_batches + 2)
-      proposed_events_array = copy(new_events_array)
-      proposed_events = Events{T}(proposed_events_array)
+      proposed_events = copy(new_events)
       t_ids = Int64[]
-      for j = (batch_size*(i-2) + 1):min(batch_size*(i-1),length(aug_order))
+      for j in _event_batch(length(aug_order), event_batches, i-1)
         id, state_index = Tuple(CartesianIndices((individuals(new_events),
                                             length(convert(DiseaseStates, T)[2:end])))[aug_order[j]])
         # Generate new transmission source for transmission events
@@ -178,18 +169,13 @@ function update!(rng::AbstractRNG, mc::MarkovChain{T, M},
                                   mcmc.event_observations,
                                   proposed_events,
                                   new_network)
-        proposed_events_array = reshape([proposed_events_array[1:(aug_order[j]-1)]
-                                         _time(proposed_event)
-                                         proposed_events_array[(aug_order[j]+1):end]],
-                                        size(new_events_array))
-        proposed_events = Events{T}(proposed_events_array)
+        update!(proposed_events, proposed_event)
       end
       proposed_rp = new_rp
       proposed_sm = new_sm
       proposed_tr_cache = new_tr_cache
     elseif i == (event_batches + 2)
       proposed_events = new_events
-      proposed_events_array = new_events_array
       proposed_rp = new_rp
       proposed_sm = new_sm
       proposed_tr_cache = new_tr_cache
@@ -244,7 +230,6 @@ function update!(rng::AbstractRNG, mc::MarkovChain{T, M},
       new_sm = proposed_sm
       new_tr_cache = proposed_tr_cache
       new_events = proposed_events
-      new_events_array = proposed_events_array
       new_network = proposed_network
       new_lposterior = proposed_lposterior
     else

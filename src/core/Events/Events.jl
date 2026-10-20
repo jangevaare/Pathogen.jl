@@ -4,8 +4,8 @@ struct Events{T <: DiseaseStateSequence}
   removal::Union{Nothing, Vector{Float64}}
 
   function Events{T}(e::V, i::V, r::V) where {T <: SEIR, V <: Vector{Float64}}
-    if length(unique((length.([e; i; r])))) != 1
-      @error "Length of event time vectors must be equal"
+    if !(length(e) == length(i) == length(r))
+      throw(DimensionMismatch("Length of event time vectors must be equal"))
     end
     return new{T}(e, i, r)
   end
@@ -15,8 +15,8 @@ struct Events{T <: DiseaseStateSequence}
   end
 
   function Events{T}(e::V, i::V) where {T <: SEI, V <: Vector{Float64}}
-    if length(unique((length.([e; i])))) != 1
-      @error "Length of event time vectors must be equal"
+    if length(e) != length(i)
+      throw(DimensionMismatch("Length of event time vectors must be equal"))
     end
     return new{T}(e, i, nothing)
   end
@@ -26,8 +26,8 @@ struct Events{T <: DiseaseStateSequence}
   end
 
   function Events{T}(i::V, r::V) where {T <: SIR, V <: Vector{Float64}}
-    if length(unique((length.([i; r])))) != 1
-      @error "Length of event time vectors must be equal"
+    if length(i) != length(r)
+      throw(DimensionMismatch("Length of event time vectors must be equal"))
     end
     return new{T}(nothing, i, r)
   end
@@ -128,4 +128,9 @@ end
 
 function mean(x::Vector{Events{T}}) where T <: DiseaseStateSequence
   return Events{T}(mean([convert(Array{Float64, 2}, i) for i in x]))
+end
+
+# Proposal batches own their vectors; retained chain samples must never be edited.
+function Base.copy(x::Events{T}) where T <: DiseaseStateSequence
+  return Events{T}((copy(x[state]) for state in convert(DiseaseStates, T)[2:end])...)
 end

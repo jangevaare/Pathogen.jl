@@ -4,6 +4,27 @@ perf_one(p, pop, i) = 1.0
 perf_constant(p, pop, i) = p[1]
 perf_pair(p, pop, i, j) = p[1] * (1.0 + abs(i-j) / 10)
 
+@testset "Event proposals own their vectors and cover every event" begin
+  for S in (SI, SIR, SEI, SEIR)
+    states = convert(DiseaseStates, S)[2:end]
+    original = Events{S}((fill(Float64(i), 4) for i in eachindex(states))...)
+    proposal = copy(original)
+    Pathogen.update!(proposal, Pathogen.Event{S}(12.0, 2, states[1]))
+    @test original[states[1]][2] == 1.0
+    @test proposal[states[1]][2] == 12.0
+    for state in states
+      @test original[state] !== proposal[state]
+    end
+  end
+  for n in (1, 2, 7, 13), batches in 1:n
+    indices = reduce(vcat, [collect(Pathogen._event_batch(n, batches, b)) for b in 1:batches])
+    @test indices == collect(1:n)
+  end
+  @test_throws DimensionMismatch Events{SEIR}(zeros(2), zeros(3), zeros(2))
+  @test_throws DimensionMismatch Events{SEI}(zeros(2), zeros(3))
+  @test_throws DimensionMismatch Events{SIR}(zeros(2), zeros(3))
+end
+
 @testset "Sparse sampled networks" begin
   n = 1000
   small, large = TransmissionNetwork(n), TransmissionNetwork(2n)
