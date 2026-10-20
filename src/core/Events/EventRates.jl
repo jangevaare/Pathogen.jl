@@ -46,5 +46,8 @@ function Base.getindex(x::EventRates{T}, new_states::DiseaseStates) where T <: D
 end
 
 function Base.sum(x::EventRates{T}) where T <: DiseaseStateSequence
-  return sum([sum(x[i]) for i in convert(DiseaseStates, T)[2:end]])
+  total = sum(x.infection)
+  x.exposure === nothing || (total += sum(x.exposure))
+  x.removal === nothing || (total += sum(x.removal))
+  return total
 end

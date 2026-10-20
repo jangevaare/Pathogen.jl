@@ -11,8 +11,9 @@ end
 # Keep the caller's cache object, but retain the buffers belonging to the accepted
 # parameters. Rebinding a local variable in update! does not update iterate!'s cache.
 function _retain_cache!(destination::TransmissionRateCache, accepted::TransmissionRateCache)
-  destination.external = accepted.external
-  destination.internal = accepted.internal
+  destination === accepted && return destination
+  destination.external, accepted.external = accepted.external, destination.external
+  destination.internal, accepted.internal = accepted.internal, destination.internal
   return destination
 end
 _retain_cache!(::Nothing, accepted) = nothing

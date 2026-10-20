@@ -28,11 +28,8 @@ function update!(net::TransmissionNetwork,
 end
 
 function update!(tr::TransmissionRates,
-                 event::Event{T},
-                 states::DiseaseStates,
-                 pop::Population,
-                 rf::RiskFunctions{T},
-                 rp::RiskParameters{T};
+                 event::Event{T}, states::DiseaseStates, pop::Population,
+                 rf::RiskFunctions{T}, rp::RiskParameters{T};
                  xzero::Bool=false,
                  transmission_rate_cache::Union{Nothing, TransmissionRateCache}=nothing) where T <: DiseaseStateSequence
   id = event.individual
@@ -41,107 +38,107 @@ function update!(tr::TransmissionRates,
     tr.internal[:, id] .= 0.0
   end
   if event.new_state == State_I
-    if transmission_rate_cache == nothing
-      transmissibility = rf.transmissibility(rp.transmissibility, pop, id)
-      @simd for i in findall(states .== Ref(State_S))
-        tr.internal[id, i] = rf.susceptibility(rp.susceptibility, pop, i) *
-                             rf.infectivity(rp.infectivity, pop, i, id) *
-                             transmissibility
-      end
-    else
-      @simd for i in findall(states .== Ref(State_S))
-        if transmission_rate_cache.internal[id, i] == nothing
-          tr.internal[id, i] = rf.susceptibility(rp.susceptibility, pop, i) *
-                               rf.infectivity(rp.infectivity, pop, i, id) *
-                               rf.transmissibility(rp.transmissibility, pop, id)
-          transmission_rate_cache.internal[id, i] = tr.internal[id, i]
-        else
-          tr.internal[id, i] = transmission_rate_cache.internal[id, i]
+    transmissibility = nothing
+    for i in eachindex(states)
+      states[i] == State_S || continue
+      cached = transmission_rate_cache === nothing ? nothing : transmission_rate_cache.internal[id, i]
+      if cached === nothing
+        if transmissibility === nothing
+          transmissibility = rf.transmissibility(rp.transmissibility, pop, id)
         end
+        tr.internal[id, i] = rf.susceptibility(rp.susceptibility, pop, i) *
+                             rf.infectivity(rp.infectivity, pop, i, id) * transmissibility
+        if transmission_rate_cache !== nothing
+          transmission_rate_cache.internal[id, i] = tr.internal[id, i]
+        end
+      else
+        tr.internal[id, i] = cached
       end
     end
   elseif event.new_state == State_R
-    tr.internal[id, states .== Ref(State_S)] .= 0.0
+    for i in eachindex(states)
+      if states[i] == State_S
+        tr.internal[id, i] = 0.0
+      end
+    end
   end
   return tr
 end
 
-function update!(rates::EventRates{T},
-                 tr::TransmissionRates,
-                 event::Event{T},
-                 states::DiseaseStates,
-                 pop::Population,
-                 rf::RiskFunctions{T},
-                 rp::RiskParameters{T}) where T <: DiseaseStateSequence
+# Return the change in the global hazard while updating individual hazards.
+# Standalone calls retain the historical convention that tr is updated first.
+function _update_event_rates!(rates::EventRates{T}, tr::TransmissionRates,
+                              event::Event{T}, states::DiseaseStates,
+                              pop::Population, rf::RiskFunctions{T},
+                              rp::RiskParameters{T}) where T <: DiseaseStateSequence
   id = event.individual
+  delta = 0.0
   if event.new_state == State_E
+    delta -= rates.exposure[id]
     rates.exposure[id] = 0.0
     rates.infection[id] = rf.latency(rp.latency, pop, id)
-    @logmsg LogLevel(-5000) "Exposure rate total for i = $id updated"  λ = rates.exposure[id]
-    @logmsg LogLevel(-5000) "Infection rate for i = $id updated" λ = rates.infection[id]
+    delta += rates.infection[id]
   elseif event.new_state == State_I
+    delta -= rates.infection[id]
     rates.infection[id] = 0.0
-    @logmsg LogLevel(-5000) "Infection rate for i = $id updated" λ = rates.infection[id]
     if State_R ∈ T
       rates.removal[id] = rf.removal(rp.removal, pop, id)
-      @logmsg LogLevel(-5000) "Removal rate for i = $id updated" λ = rates.removal[id]
+      delta += rates.removal[id]
     end
-    if State_E ∈ T
-      @simd for i in findall(states .== Ref(State_S))
-        # This assumes `TransmissionRates` already updated!
-        rates.exposure[i] += tr.internal[id, i]
-        @logmsg LogLevel(-5000) "Exposure rate total for i = $id updated"  λ = rates.exposure[id]
-      end
-    elseif State_E ∉ T
-      @simd for i in findall(states .== Ref(State_S))
-        # This assumes `TransmissionRates` already updated!
-        rates.infection[i] += tr.internal[id, i]
-        @logmsg LogLevel(-5000) "Infection rate total for i = $id updated"  λ = rates.infection[id]
-      end
-    end
-  elseif event.new_state == State_R
-    rates.removal[id] = 0.0
-    @logmsg LogLevel(-5000) "Removal rate for i = $id updated" λ = rates.removal[id]
-    if T == SEIR
-      @simd for i in findall(states .== Ref(State_S))
-        # This assumes `TransmissionRates` already updated!
-        rates.exposure[i] = sum(tr, i)
-        @logmsg LogLevel(-5000) "Exposure rate total for i = $i updated"  λ = rates.exposure[i]
-      end
-    elseif T == SIR
-      @simd for i in findall(states .== Ref(State_S))
-        # This assumes `TransmissionRates` already updated!
-        rates.infection[i] = sum(tr, i)
-        @logmsg LogLevel(-5000) "Infection rate for i = $i updated" λ = rates.infection[i]
-      end
-    end
-  end
-  return rates
-end
-
-function update!(tr::TransmissionRates,
-                 rates::EventRates{T},
-                 event::Event{T},
-                 states::DiseaseStates,
-                 pop::Population,
-                 rf::RiskFunctions{T},
-                 rp::RiskParameters{T};
-                 xzero::Bool=false,
-                 transmission_rate_cache::Union{Nothing, TransmissionRateCache}=nothing) where {T <: DiseaseStateSequence}
-  if event.new_state == State_R
-    # Remove this source from current hazards before clearing its rates. Columns
-    # for already-infected recipients retain their historical transmission weights.
     target = State_E ∈ T ? rates.exposure : rates.infection
     for i in eachindex(states)
       if states[i] == State_S
-        target[i] = max(0.0, target[i] - tr.internal[event.individual, i])
+        target[i] += tr.internal[id, i]
+        delta += tr.internal[id, i]
+      end
+    end
+  elseif event.new_state == State_R
+    delta -= rates.removal[id]
+    rates.removal[id] = 0.0
+    target = State_E ∈ T ? rates.exposure : rates.infection
+    for i in eachindex(states)
+      if states[i] == State_S
+        updated = sum(tr, i)
+        delta += updated - target[i]
+        target[i] = updated
+      end
+    end
+  end
+  return delta
+end
+
+function update!(rates::EventRates{T}, tr::TransmissionRates,
+                 event::Event{T}, states::DiseaseStates, pop::Population,
+                 rf::RiskFunctions{T}, rp::RiskParameters{T}) where T <: DiseaseStateSequence
+  _update_event_rates!(rates, tr, event, states, pop, rf, rp)
+  return rates
+end
+
+function update!(tr::TransmissionRates, rates::EventRates{T},
+                 event::Event{T}, states::DiseaseStates, pop::Population,
+                 rf::RiskFunctions{T}, rp::RiskParameters{T};
+                 xzero::Bool=false,
+                 transmission_rate_cache::Union{Nothing, TransmissionRateCache}=nothing,
+                 rate_total::Union{Nothing, Base.RefValue{Float64}}=nothing) where T <: DiseaseStateSequence
+  if event.new_state == State_R
+    # Subtract before clearing; preserve historical columns for infected people.
+    target = State_E ∈ T ? rates.exposure : rates.infection
+    delta = -rates.removal[event.individual]
+    no_sources = !any(==(State_I), states)
+    for i in eachindex(states)
+      if states[i] == State_S
+        # Reset exactly when the final source leaves, avoiding residual hazard.
+        updated = no_sources ? tr.external[i] : max(tr.external[i], target[i] - tr.internal[event.individual, i])
+        delta += updated - target[i]
+        target[i] = updated
         tr.internal[event.individual, i] = 0.0
       end
     end
     rates.removal[event.individual] = 0.0
   else
-    update!(tr, event, states, pop, rf, rp; xzero = xzero, transmission_rate_cache=transmission_rate_cache)
-    update!(rates, tr, event, states, pop, rf, rp)
+    update!(tr, event, states, pop, rf, rp; xzero=xzero, transmission_rate_cache=transmission_rate_cache)
+    delta = _update_event_rates!(rates, tr, event, states, pop, rf, rp)
   end
+  rate_total === nothing || (rate_total[] += delta)
   return tr, rates
 end

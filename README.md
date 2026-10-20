@@ -80,3 +80,29 @@ streams on the workers. Results therefore do not depend on worker scheduling.
 A single chain uses the supplied RNG directly. Keep and reuse the RNG when
 continuing a run; chains do not store RNG state. Exact streams may differ across
 Julia and dependency versions, and between single-chain and multi-chain runs.
+
+## Inference performance
+
+Inference reuses a likelihood workspace and two transmission-rate cache buffers
+within each chain. Removal events subtract the departing infector's contribution
+from susceptible hazards, and parameter proposals reuse event ordering when the
+event times are unchanged. Dense pairwise risk functions still require quadratic
+work and rate storage; these changes do not assume a distance cutoff or discard
+small transmission risks.
+
+Sampled `TransmissionNetwork.internal` matrices now use Julia's sparse Boolean
+matrix storage. Matrix indexing and construction from dense Boolean matrices
+remain supported. Posterior network distributions remain dense because different
+samples can assign many possible parents to each individual.
+
+The internal `loglikelihood` function accepts a `workspace` keyword. Outputs that
+use its rate and transmission buffers are borrowed until the next evaluation
+with that workspace; calls without a workspace return independent buffers.
+Use a separate workspace for each concurrent evaluation. The legacy
+`early_decision_value` keyword is accepted but does not prune partial likelihoods:
+continuous-time log-density contributions can be positive.
+
+Run `benchmark/likelihood.jl` in an environment containing this checkout to measure
+warmed likelihood time and allocations at increasing population sizes. These
+measurements exclude compilation and fixture construction.
+

@@ -78,6 +78,72 @@ function perf_fixture(::Type{S}; n=8, phylo=false) where S
   return sim, mcmc
 end
 
+# Deliberately slow oracle: initialize all current hazards from scratch before
+# each event, independently of incremental updates and workspace reuse.
+function perf_reference_ll(sim)
+  S = typeof(sim.events).parameters[1]
+  states = [State_I; fill(State_S, Pathogen.individuals(sim.population)-1)]
+  times = convert(Vector{Float64}, sim.events)
+  kinds = convert(DiseaseStates, S)[2:end]
+  ll, last = 0.0, nothing
+  n = length(states)
+  for k in sortperm(times)
+    t = times[k]
+    t == -Inf && continue
+    isnan(t) && break
+    state, id = kinds[fld(k-1, n)+1], mod1(k, n)
+    tr = Pathogen.initialize(Pathogen.TransmissionRates, states, sim.population, sim.risk_functions, sim.risk_parameters)
+    rates = Pathogen.initialize(Pathogen.EventRates, tr, states, sim.population, sim.risk_functions, sim.risk_parameters)
+    total = sum(rates)
+    event_rate = rates[state][id]
+    ll += last === nothing ? log(event_rate / total) : log(event_rate) - total * (t-last)
+    states[id] = state
+    last = t
+  end
+  return ll
+end
+
+@testset "Reusable likelihood matches independent hazard replay" begin
+  for S in (SI, SIR, SEI, SEIR)
+    sim, _ = perf_fixture(S)
+    n = Pathogen.individuals(sim.population)
+    args = (sim.risk_parameters, sim.risk_functions, sim.events, sim.population, [State_I; fill(State_S, n-1)])
+    work = Pathogen.LikelihoodWorkspace(S, n)
+    expected = perf_reference_ll(sim)
+    ll, tr, tx = Pathogen.loglikelihood(args...; workspace=work)
+    @test ll ≈ expected
+    @test work.rate_total[] ≈ sum(work.event_rates) atol=1e-10
+    @test Pathogen.loglikelihood(args...)[1] ≈ expected
+    @test Pathogen.loglikelihood(args...; workspace=work)[1] ≈ expected
+    # In-place edits of an existing Events object must invalidate cached ordering.
+    for state in convert(DiseaseStates, S)[2:end], i in 1:n
+      t = sim.events[state][i]
+      isfinite(t) && (sim.events[state][i] += 0.1)
+    end
+    @test Pathogen.loglikelihood(args...; workspace=work)[1] ≈ perf_reference_ll(sim)
+    @test work.event_order == sortperm(convert(Vector{Float64}, sim.events))
+    @test Pathogen.loglikelihood(args...; workspace=work, loglikelihood_output=false,
+                               transmission_rates_output=false, transmissions_output=false) == (nothing, nothing, nothing)
+    @test tr === work.transmission_rates
+    @test_throws DimensionMismatch Pathogen.loglikelihood(args...; workspace=Pathogen.LikelihoodWorkspace(S, n+1))
+  end
+  events = Events{SIR}([0.0, 1.0], [2.0, 3.0])
+  work = Pathogen.LikelihoodWorkspace(SIR, 2)
+  before = copy(Pathogen._event_order!(work, events))
+  events.removal[1] = 0.5
+  @test Pathogen._event_order!(work, events) != before
+  @test work.event_order == sortperm(convert(Vector{Float64}, events))
+end
+
+@testset "Empty augmentation and explicit batch validation" begin
+  _, mcmc = perf_fixture(SI; n=1)
+  mc = mcmc.markov_chains[1]
+  Σ = Matrix{Float64}(I, length(mc.risk_parameters[end]), length(mc.risk_parameters[end])) * 0.0001
+  Pathogen.update!(MersenneTwister(1), mc, mcmc, Σ, 0.01; event_batches=0)
+  @test mc.iterations == 1
+  @test_throws ArgumentError Pathogen.update!(MersenneTwister(1), mc, mcmc, Σ, 0.01; event_batches=-1)
+end
+
 @testset "Incremental removals preserve hazards and historical weights" begin
   for S in (SIR, SEIR)
     sim, _ = perf_fixture(S)
@@ -125,15 +191,17 @@ end
     cached, fresh = deepcopy(mcmc.markov_chains[1]), deepcopy(mcmc.markov_chains[1])
     a, b = MersenneTwister(45), MersenneTwister(45)
     cache = Pathogen.TransmissionRateCache(Pathogen.individuals(mcmc.population))
+    work = Pathogen.LikelihoodWorkspace(SIR, Pathogen.individuals(mcmc.population))
     Σ = Matrix{Float64}(I, length(cached.risk_parameters[end]), length(cached.risk_parameters[end])) * 0.01
     for _ in 1:16
       if phylo
-        Pathogen.update!(a, cached, mcmc, Σ, fill(0.0001, 1, 1), 0.02; transmission_rate_cache=cache)
+        Pathogen.update!(a, cached, mcmc, Σ, fill(0.0001, 1, 1), 0.02; transmission_rate_cache=cache, likelihood_workspace=work)
         Pathogen.update!(b, fresh, mcmc, Σ, fill(0.0001, 1, 1), 0.02)
       else
-        Pathogen.update!(a, cached, mcmc, Σ, 0.02; transmission_rate_cache=cache)
+        Pathogen.update!(a, cached, mcmc, Σ, 0.02; transmission_rate_cache=cache, likelihood_workspace=work)
         Pathogen.update!(b, fresh, mcmc, Σ, 0.02)
       end
+      @test work.proposal_cache.internal !== cache.internal
       @test cached.log_posterior[end] ≈ fresh.log_posterior[end]
       @test convert(Vector{Float64}, cached.risk_parameters[end]) == convert(Vector{Float64}, fresh.risk_parameters[end])
       @test isequal(convert(Vector{Float64}, cached.events[end]), convert(Vector{Float64}, fresh.events[end]))

@@ -16,13 +16,22 @@ function initialize(::Type{TransmissionRates},
                     rp::RiskParameters{T}) where T <: DiseaseStateSequence
   n_ids = length(states)
   tr = TransmissionRates(n_ids)
-  for i in findall(states .== Ref(State_S))
+  return _initialize!(tr, states, pop, rf, rp)
+end
+
+function _initialize!(tr::TransmissionRates, states::DiseaseStates,
+                      pop::Population, rf::RiskFunctions{T}, rp::RiskParameters{T}) where T <: DiseaseStateSequence
+  fill!(tr.external, 0.0)
+  fill!(tr.internal, 0.0)
+  infectious = findall(==(State_I), states)
+  for i in eachindex(states)
+    states[i] == State_S || continue
     # External exposure
     #tr.external[i] = rf.susceptibility(rp.susceptibility, pop, i) * rf.sparks(rp.sparks, pop, i)
     tr.external[i] = rf.sparks(rp.sparks, pop, i)
     # Internal exposure
     susceptibility = rf.susceptibility(rp.susceptibility, pop, i)
-    for k in findall(states .== Ref(State_I))
+    for k in infectious
       tr.internal[k, i] = susceptibility *
                           rf.infectivity(rp.infectivity, pop, i, k) *
                           rf.transmissibility(rp.transmissibility, pop, k)
@@ -50,7 +59,16 @@ function initialize(::Type{EventRates},
                     rp::RiskParameters{T}) where T <: DiseaseStateSequence
   n_ids = length(states)
   rates = EventRates{T}(n_ids)
-  for i = 1:n_ids
+  return _initialize!(rates, tr, states, pop, rf, rp)
+end
+
+function _initialize!(rates::EventRates{T}, tr::TransmissionRates,
+                      states::DiseaseStates, pop::Population,
+                      rf::RiskFunctions{T}, rp::RiskParameters{T}) where T <: DiseaseStateSequence
+  fill!(rates.infection, 0.0)
+  rates.exposure === nothing || fill!(rates.exposure, 0.0)
+  rates.removal === nothing || fill!(rates.removal, 0.0)
+  for i in eachindex(states)
     if states[i] == State_S
       if State_E ∈ T
         rates.exposure[i] = sum(tr, i)

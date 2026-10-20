@@ -41,11 +41,12 @@ function iterate!(
     adapted_Σrp = OnlineStats.value(mc.Σrp) * 2.38^2 / length(mc.risk_parameters[1])
   end
   tr_cache = TransmissionRateCache(individuals(mcmc.population))
+  workspace = LikelihoodWorkspace(S, individuals(mcmc.population))
   for i = 1:n
     if use_adapted_Σrp
-      update!(rng, mc, mcmc, adapted_Σrp, σ, condition_on_network = condition_on_network, event_batches = event_batches, transmission_rate_cache=tr_cache)
+      update!(rng, mc, mcmc, adapted_Σrp, σ, condition_on_network = condition_on_network, event_batches = event_batches, transmission_rate_cache=tr_cache, likelihood_workspace=workspace)
     else
-      update!(rng, mc, mcmc, Σrp, σ, condition_on_network = condition_on_network, event_batches = event_batches, transmission_rate_cache=tr_cache)
+      update!(rng, mc, mcmc, Σrp, σ, condition_on_network = condition_on_network, event_batches = event_batches, transmission_rate_cache=tr_cache, likelihood_workspace=workspace)
     end
     next!(pmeter)
     @logmsg LogLevel(-5000) "MCMC progress" progress = i/n
@@ -98,15 +99,16 @@ function iterate!(
     end
   end
   tr_cache = TransmissionRateCache(individuals(mcmc.population))
+  workspace = LikelihoodWorkspace(S, individuals(mcmc.population))
   for i = 1:n
     if use_adapted_Σrp & use_adapted_Σsm
-      update!(rng, mc, mcmc, adapted_Σrp, adapted_Σsm, σ, event_batches = event_batches, transmission_rate_cache=tr_cache, DA_couple=DA_couple)
+      update!(rng, mc, mcmc, adapted_Σrp, adapted_Σsm, σ, event_batches = event_batches, transmission_rate_cache=tr_cache, likelihood_workspace=workspace, DA_couple=DA_couple)
     elseif use_adapted_Σrp & !use_adapted_Σsm
-      update!(rng, mc, mcmc, adapted_Σrp, Σsm, σ, event_batches = event_batches, transmission_rate_cache=tr_cache, DA_couple=DA_couple)
+      update!(rng, mc, mcmc, adapted_Σrp, Σsm, σ, event_batches = event_batches, transmission_rate_cache=tr_cache, likelihood_workspace=workspace, DA_couple=DA_couple)
     elseif !use_adapted_Σrp & use_adapted_Σsm
-      update!(rng, mc, mcmc, Σrp, adapted_Σsm, σ, event_batches = event_batches, transmission_rate_cache=tr_cache, DA_couple=DA_couple)
+      update!(rng, mc, mcmc, Σrp, adapted_Σsm, σ, event_batches = event_batches, transmission_rate_cache=tr_cache, likelihood_workspace=workspace, DA_couple=DA_couple)
     elseif !use_adapted_Σrp & !use_adapted_Σsm
-      update!(rng, mc, mcmc, Σrp, Σsm, σ, event_batches = event_batches, transmission_rate_cache=tr_cache, DA_couple=DA_couple)
+      update!(rng, mc, mcmc, Σrp, Σsm, σ, event_batches = event_batches, transmission_rate_cache=tr_cache, likelihood_workspace=workspace, DA_couple=DA_couple)
     end
     next!(pmeter)
     @logmsg LogLevel(-5000) "MCMC progress" progress = i/n
@@ -157,11 +159,12 @@ function iterate!(rng::AbstractRNG,
     adapted_Σrp = OnlineStats.value(mc.Σrp) * 2.38^2 / length(mc.risk_parameters[1])
   end
   tr_cache = TransmissionRateCache(individuals(mcmc.population))
+  workspace = LikelihoodWorkspace(S, individuals(mcmc.population))
   for i = 1:n
     if use_adapted_Σrp
-      update!(rng, mc, mcmc, adapted_Σrp, σ, condition_on_network = condition_on_network, event_batches = event_batches, transmission_rate_cache=tr_cache)
+      update!(rng, mc, mcmc, adapted_Σrp, σ, condition_on_network = condition_on_network, event_batches = event_batches, transmission_rate_cache=tr_cache, likelihood_workspace=workspace)
     else
-      update!(rng, mc, mcmc, Σrp, σ, condition_on_network = condition_on_network, event_batches = event_batches, transmission_rate_cache=tr_cache)
+      update!(rng, mc, mcmc, Σrp, σ, condition_on_network = condition_on_network, event_batches = event_batches, transmission_rate_cache=tr_cache, likelihood_workspace=workspace)
     end
     put!(progress_channel, true)
     @logmsg LogLevel(-5000) "MCMC progress" progress = i/n
@@ -214,15 +217,16 @@ function iterate!(
     end
   end
   tr_cache = TransmissionRateCache(individuals(mcmc.population))
+  workspace = LikelihoodWorkspace(S, individuals(mcmc.population))
   for i = 1:n
     if use_adapted_Σrp & use_adapted_Σsm
-      update!(rng, mc, mcmc, adapted_Σrp, adapted_Σsm, σ, event_batches = event_batches, transmission_rate_cache=tr_cache, DA_couple=DA_couple)
+      update!(rng, mc, mcmc, adapted_Σrp, adapted_Σsm, σ, event_batches = event_batches, transmission_rate_cache=tr_cache, likelihood_workspace=workspace, DA_couple=DA_couple)
     elseif use_adapted_Σrp & !use_adapted_Σsm
-      update!(rng, mc, mcmc, adapted_Σrp, Σsm, σ, event_batches = event_batches, transmission_rate_cache=tr_cache, DA_couple=DA_couple)
+      update!(rng, mc, mcmc, adapted_Σrp, Σsm, σ, event_batches = event_batches, transmission_rate_cache=tr_cache, likelihood_workspace=workspace, DA_couple=DA_couple)
     elseif !use_adapted_Σrp & use_adapted_Σsm
-      update!(rng, mc, mcmc, Σrp, adapted_Σsm, σ, event_batches = event_batches, transmission_rate_cache=tr_cache, DA_couple=DA_couple)
+      update!(rng, mc, mcmc, Σrp, adapted_Σsm, σ, event_batches = event_batches, transmission_rate_cache=tr_cache, likelihood_workspace=workspace, DA_couple=DA_couple)
     elseif !use_adapted_Σrp & !use_adapted_Σsm
-      update!(rng, mc, mcmc, Σrp, Σsm, σ, event_batches = event_batches, transmission_rate_cache=tr_cache, DA_couple=DA_couple)
+      update!(rng, mc, mcmc, Σrp, Σsm, σ, event_batches = event_batches, transmission_rate_cache=tr_cache, likelihood_workspace=workspace, DA_couple=DA_couple)
     end
     put!(progress_channel, true)
     @logmsg LogLevel(-5000) "MCMC progress" progress = i/n

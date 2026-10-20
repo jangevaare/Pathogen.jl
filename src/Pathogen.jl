@@ -60,6 +60,7 @@ module Pathogen
   include("inference/TransmissionNetworkDistribution.jl")
   include("inference/RiskPriors.jl")
   include("inference/EventExtents.jl")
+  include("inference/LikelihoodWorkspace.jl")
   include("inference/MarkovChain.jl")
   include("inference/MCMC.jl")
   include("inference/_accept.jl")

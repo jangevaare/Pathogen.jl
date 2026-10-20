@@ -8,10 +8,12 @@ function update!(rng::AbstractRNG, mc::MarkovChain{T, M},
                  σ::Float64;
                  condition_on_network::Bool=false,
                  event_batches::Int64=1,
-                 transmission_rate_cache::Union{Nothing, TransmissionRateCache}=nothing) where {
+                 transmission_rate_cache::Union{Nothing, TransmissionRateCache}=nothing,
+                 likelihood_workspace::Union{Nothing, LikelihoodWorkspace{T}}=nothing) where {
                  T <: DiseaseStateSequence,
                  M <: TNILM}
   # Initialize
+  work = likelihood_workspace === nothing ? LikelihoodWorkspace(T, individuals(mcmc.population)) : likelihood_workspace
   new_tr_cache = transmission_rate_cache
   new_events = mc.events[end]
   new_rp = mc.risk_parameters[end]
@@ -29,13 +31,16 @@ function update!(rng::AbstractRNG, mc::MarkovChain{T, M},
     event_batches = length(aug_order)
   end
   @debug "Performing data augmentation in $event_batches batches"
+  rates_match = false
+  local proposed_tnr, proposed_tx
   for i = 1:(1 + event_batches)
+    rates_match = false
     if i == 1
       # Propose new risk parameters
       proposed_events = new_events
       proposed_rp = generate(rng, RiskParameters{T}, new_rp, Σ)
       @debug "Generating new TransmissionRateCache for TN-ILM parameter proposal"
-      proposed_tr_cache = TransmissionRateCache(individuals(new_events))
+      proposed_tr_cache = _proposal_cache!(work, individuals(new_events))
     else
       proposed_events = copy(new_events)
       for j in _event_batch(length(aug_order), event_batches, i-1)
@@ -71,16 +76,15 @@ function update!(rng::AbstractRNG, mc::MarkovChain{T, M},
     proposed_lprior = logprior(proposed_rp, mcmc.risk_priors)
     # Draw the Metropolis decision once; evaluate the complete epidemic likelihood.
     ll_acceptance_threshold = log(rand(rng)) + new_lposterior - proposed_lprior
+    proposed_lposterior = -Inf
     if ll_acceptance_threshold < Inf
-      proposed_llikelihood = loglikelihood(proposed_rp,
+      proposed_llikelihood, proposed_tnr, proposed_tx = loglikelihood(proposed_rp,
                                            mcmc.risk_functions,
                                            proposed_events,
                                            mcmc.population,
                                            mcmc.starting_states,
-                                           transmission_rates_output = false,
-                                           transmissions_output = false,
                                            early_decision_value = ll_acceptance_threshold,
-                                           transmission_rate_cache = proposed_tr_cache)[1]
+                                           transmission_rate_cache = proposed_tr_cache, workspace = work)
       proposed_lposterior = proposed_lprior + proposed_llikelihood
     else
       proposed_llikelihood = -Inf
@@ -88,6 +92,7 @@ function update!(rng::AbstractRNG, mc::MarkovChain{T, M},
     end
     if proposed_llikelihood > -Inf && proposed_llikelihood >= ll_acceptance_threshold
       @debug "MCMC proposal accepted (acceptance probability = $(round(min(1.0, exp(proposed_lposterior - new_lposterior)), digits=3)))"
+      rates_match = true
       new_rp = proposed_rp
       new_tr_cache = proposed_tr_cache
       new_events = proposed_events
@@ -96,16 +101,17 @@ function update!(rng::AbstractRNG, mc::MarkovChain{T, M},
       @debug "next!: MCMC proposal rejected (acceptance probability = $(round(min(1.0, exp(proposed_lposterior - new_lposterior)), digits=3)))"
     end
   end
-  _retain_cache!(transmission_rate_cache, new_tr_cache)
   mc.iterations += 1
-  tnr, tx = loglikelihood(new_rp,
-                          mcmc.risk_functions,
-                          new_events,
-                          mcmc.population,
-                          mcmc.starting_states,
-                          loglikelihood_output = false,
-                          transmission_rate_cache = new_tr_cache)[[2; 3]]
+  if rates_match
+    tnr, tx = proposed_tnr, proposed_tx
+  else
+    _, tnr, tx = loglikelihood(new_rp, mcmc.risk_functions, new_events,
+                               mcmc.population, mcmc.starting_states;
+                               loglikelihood_output=false,
+                               transmission_rate_cache=new_tr_cache, workspace=work)
+  end
   new_network = generate(rng, TransmissionNetwork, tnr, mcmc, tx)
+  _retain_cache!(transmission_rate_cache, new_tr_cache)
   push!(mc.events, new_events)
   push!(mc.transmission_network, new_network)
   push!(mc.risk_parameters, new_rp)
@@ -120,10 +126,12 @@ function update!(rng::AbstractRNG, mc::MarkovChain{T, M},
                  σ::Float64;
                  event_batches::Int64=1,
                  transmission_rate_cache::Union{Nothing, TransmissionRateCache}=nothing,
-                 DA_couple::Bool=false) where {
+                 DA_couple::Bool=false,
+                 likelihood_workspace::Union{Nothing, LikelihoodWorkspace{T}}=nothing) where {
                  T <: DiseaseStateSequence,
                  M <: PhyloILM}
   # Initialize
+  work = likelihood_workspace === nothing ? LikelihoodWorkspace(T, individuals(mcmc.population)) : likelihood_workspace
   local tnr
   new_tr_cache = transmission_rate_cache
   new_events = mc.events[end]
@@ -151,7 +159,7 @@ function update!(rng::AbstractRNG, mc::MarkovChain{T, M},
       proposed_rp = generate(rng, RiskParameters{T}, new_rp, Σrp)
       proposed_sm = generate(rng, mcmc.substitution_model, new_sm, Σsm)
       @debug "Generating new TransmissionRateCache for TN-ILM parameter proposal"
-      proposed_tr_cache = TransmissionRateCache(individuals(new_events))
+      proposed_tr_cache = _proposal_cache!(work, individuals(new_events))
     elseif i < (event_batches + 2)
       proposed_events = copy(new_events)
       t_ids = Int64[]
@@ -184,6 +192,7 @@ function update!(rng::AbstractRNG, mc::MarkovChain{T, M},
     proposed_lprior += logprior(proposed_sm, mcmc.substitution_model_prior)
     # Draw the Metropolis decision once; evaluate the complete epidemic likelihood.
     ll_acceptance_threshold = log(rand(rng)) + new_lposterior - proposed_lprior
+    proposed_lposterior = -Inf
     if ll_acceptance_threshold < Inf
       proposed_llikelihood, tnr, tx = loglikelihood(proposed_rp,
                                                     mcmc.risk_functions,
@@ -192,7 +201,7 @@ function update!(rng::AbstractRNG, mc::MarkovChain{T, M},
                                                     mcmc.starting_states,
                                                     early_decision_value = ll_acceptance_threshold,
                                                     transmissions_output = true,
-                                                    transmission_rate_cache = proposed_tr_cache)
+                                                    transmission_rate_cache = proposed_tr_cache, workspace = work)
       if proposed_llikelihood > -Inf && proposed_llikelihood >= ll_acceptance_threshold
         if DA_couple
           if i == 1 || length(t_ids) == 0
@@ -205,7 +214,7 @@ function update!(rng::AbstractRNG, mc::MarkovChain{T, M},
           if i < event_batches + 2
             proposed_network = new_network
           elseif i == event_batches + 2
-            proposed_network = generate(rng, TransmissionNetwork, new_network, tnr, mcmc, sample(rng, tx))
+            proposed_network = isempty(tx) ? new_network : generate(rng, TransmissionNetwork, new_network, tnr, mcmc, sample(rng, tx))
             @debug "Generating a transmission network proposal" ProposedNetwork = proposed_network
           end
         end
