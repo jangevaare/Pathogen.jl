@@ -3,6 +3,33 @@
 perf_one(p, pop, i) = 1.0
 perf_constant(p, pop, i) = p[1]
 perf_pair(p, pop, i, j) = p[1] * (1.0 + abs(i-j) / 10)
+perf_distance_pair(p, pop, i, j) = pop.distances[j, i]
+perf_covariate_rate(p, pop, i) = pop.risks[i, :rate]
+
+@testset "Dominant-rate removal preserves small surviving hazards" begin
+  rf = RiskFunctions{SIR}(perf_constant, perf_one, perf_distance_pair, perf_one, perf_covariate_rate)
+  rp = RiskParameters{SIR}([0.0], Float64[], Float64[], Float64[], Float64[])
+  pop = Population(DataFrame(rate=ones(3)), [0.0 0.0 1e16; 0.0 0.0 1.0; 0.0 0.0 0.0])
+  states = [State_I, State_I, State_S]
+  tr = Pathogen.initialize(Pathogen.TransmissionRates, states, pop, rf, rp)
+  rates = Pathogen.initialize(Pathogen.EventRates, tr, states, pop, rf, rp)
+  total = Ref(sum(rates))
+  event = Pathogen.Event{SIR}(0.0, 1, State_R)
+  Pathogen.update!(states, event)
+  Pathogen.update!(tr, rates, event, states, pop, rf, rp; rate_total=total)
+  @test rates.infection[3] == 1.0
+  @test total[] == sum(rates) == 2.0
+  events = Events{SIR}([-Inf, -Inf, 0.01], [0.0, NaN, NaN])
+  ll = Pathogen.loglikelihood(rp, rf, events, pop, [State_I, State_I, State_S])[1]
+  @test ll ≈ log(1.0 / (1e16 + 2.0)) - 0.02
+
+  pop = Population(DataFrame(rate=[1e16, 1.0, 2.0]), zeros(3, 3))
+  events = Events{SIR}(fill(-Inf, 3), [0.0, 1.0, NaN])
+  work = Pathogen.LikelihoodWorkspace(SIR, 3)
+  ll = Pathogen.loglikelihood(rp, rf, events, pop, fill(State_I, 3); workspace=work)[1]
+  @test ll ≈ -3.0
+  @test work.rate_total[] == sum(work.event_rates) == 2.0
+end
 
 @testset "Child traversal and significant transmission propagation" begin
   for shape in (:chain, :star, :forest)

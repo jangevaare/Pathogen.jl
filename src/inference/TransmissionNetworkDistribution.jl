@@ -22,7 +22,9 @@ function TransmissionNetworkDistribution(x::Vector{TransmissionNetwork})
       internal[rows[k], cols[k]] += values[k]
     end
   end
-  return TransmissionNetworkDistribution(external ./ length(x), internal ./ length(x))
+  external ./= length(x)
+  internal ./= length(x)
+  return TransmissionNetworkDistribution(external, internal)
 end
 
 function TransmissionNetworkDistribution(x::Vector{TransmissionNetworkDistribution})

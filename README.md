@@ -105,4 +105,3 @@ continuous-time log-density contributions can be positive.
 Run `benchmark/likelihood.jl` in an environment containing this checkout to measure
 warmed likelihood time and allocations at increasing population sizes. These
 measurements exclude compilation and fixture construction.
-

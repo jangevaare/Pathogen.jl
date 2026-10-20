@@ -127,11 +127,18 @@ function update!(tr::TransmissionRates, rates::EventRates{T},
     no_sources = !any(==(State_I), states)
     for i in eachindex(states)
       if states[i] == State_S
-        # Reset exactly when the final source leaves, avoiding residual hazard.
-        updated = no_sources ? tr.external[i] : max(tr.external[i], target[i] - tr.internal[event.individual, i])
-        delta += updated - target[i]
-        target[i] = updated
+        previous = target[i]
+        departing = tr.internal[event.individual, i]
         tr.internal[event.individual, i] = 0.0
+        # Reset exactly when the final source leaves, avoiding residual hazard.
+        updated = no_sources ? tr.external[i] : max(tr.external[i], previous - departing)
+        if !no_sources && departing > 0.0 && updated <= sqrt(eps(Float64)) * previous
+          # Subtracting a dominant source can erase a much smaller surviving
+          # source. Rebuild only the affected column when cancellation is severe.
+          updated = sum(tr, i)
+        end
+        delta += updated - previous
+        target[i] = updated
       end
     end
     rates.removal[event.individual] = 0.0
@@ -139,6 +146,10 @@ function update!(tr::TransmissionRates, rates::EventRates{T},
     update!(tr, event, states, pop, rf, rp; xzero=xzero, transmission_rate_cache=transmission_rate_cache)
     delta = _update_event_rates!(rates, tr, event, states, pop, rf, rp)
   end
-  rate_total === nothing || (rate_total[] += delta)
+  if rate_total !== nothing
+    previous = rate_total[]
+    updated = previous + delta
+    rate_total[] = delta < 0.0 && updated <= sqrt(eps(Float64)) * previous ? sum(rates) : updated
+  end
   return tr, rates
 end
