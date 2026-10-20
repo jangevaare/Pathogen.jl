@@ -1,12 +1,12 @@
-function _initialization_attempt(mcmc::MCMC{S, M},
+function _initialization_attempt(rng::AbstractRNG, mcmc::MCMC{S, M},
                                  max_lposterior::Float64) where {
                                  S <: DiseaseStateSequence,
                                  M <: ILM}
-  events = generate(Events, mcmc)
-  rparams = generate(RiskParameters, mcmc)
+  events = generate(rng, Events, mcmc)
+  rparams = generate(rng, RiskParameters, mcmc)
   lprior = logprior(rparams, mcmc.risk_priors)
   if M <: PhyloILM
-    sm = generate(mcmc.substitution_model, mcmc.substitution_model_prior)
+    sm = generate(rng, mcmc.substitution_model, mcmc.substitution_model_prior)
     lprior += logprior(sm, mcmc.substitution_model_prior)
   end
   llikelihood, tr, tx = loglikelihood(rparams,
@@ -17,7 +17,7 @@ function _initialization_attempt(mcmc::MCMC{S, M},
                                       early_decision_value = max_lposterior - lprior)
   lposterior = llikelihood + lprior
   if lposterior > max_lposterior
-    network = generate(TransmissionNetwork, tr, mcmc, tx)
+    network = generate(rng, TransmissionNetwork, tr, mcmc, tx)
     if M <: PhyloILM
       tree, obs_nodes = generate(Tree, events, mcmc.event_observations, network)
       leaf_data = Dict{Int64, RNASeq}()
@@ -40,7 +40,7 @@ function _initialization_attempt(mcmc::MCMC{S, M},
   end
 end
 
-function initialize(::Type{MarkovChain},
+function initialize(rng::AbstractRNG, ::Type{MarkovChain},
                     mcmc::MCMC{S, M},
                     progress_channel::RemoteChannel;
                     attempts::Int64=1000) where {
@@ -52,7 +52,7 @@ function initialize(::Type{MarkovChain},
   local markov_chain
   max_lposterior = -Inf
   for i in 1:attempts
-    initialization = _initialization_attempt(mcmc, max_lposterior)
+    initialization = _initialization_attempt(rng, mcmc, max_lposterior)
     if initialization !== nothing
       markov_chain = initialization
       max_lposterior = markov_chain.log_posterior[1]
@@ -67,7 +67,7 @@ function initialize(::Type{MarkovChain},
 end
 
 
-function initialize(::Type{MarkovChain},
+function initialize(rng::AbstractRNG, ::Type{MarkovChain},
                     mcmc::MCMC{S, M};
                     attempts::Int64=1000) where {
                     S <: DiseaseStateSequence,
@@ -79,7 +79,7 @@ function initialize(::Type{MarkovChain},
   local markov_chain
   pmeter = Progress(attempts, "Initialization progress")
   for i in 1:attempts
-    initialization = _initialization_attempt(mcmc, max_lposterior)
+    initialization = _initialization_attempt(rng, mcmc, max_lposterior)
     if initialization !== nothing
       markov_chain = initialization
       max_lposterior = markov_chain.log_posterior[1]
@@ -93,3 +93,6 @@ function initialize(::Type{MarkovChain},
   end
   return markov_chain
 end
+
+initialize(::Type{MarkovChain}, args...; kwargs...) = initialize(_default_rng(), MarkovChain, args...; kwargs...)
+_initialization_attempt(mcmc::MCMC, max_lposterior::Float64) = _initialization_attempt(_default_rng(), mcmc, max_lposterior)

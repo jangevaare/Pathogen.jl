@@ -35,4 +35,4 @@ function simulate!(rng::AbstractRNG,
   return sim
 end
 
-simulate!(sim::Simulation; kwargs...) = simulate!(default_rng(), sim; kwargs...)
+simulate!(sim::Simulation; kwargs...) = simulate!(_default_rng(), sim; kwargs...)

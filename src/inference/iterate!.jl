@@ -18,6 +18,7 @@ function Base.convert(::Type{Array{Float64, 2}}, sm::Vector{NucleicAcidSubstitut
 end
 
 function iterate!(
+  rng::AbstractRNG,
   mc::MarkovChain{S, M},
   mcmc::MCMC{S, M},
   n::Int64,
@@ -42,9 +43,9 @@ function iterate!(
   tr_cache = TransmissionRateCache(individuals(mcmc.population))
   for i = 1:n
     if use_adapted_Σrp
-      update!(mc, mcmc, adapted_Σrp, σ, condition_on_network = condition_on_network, event_batches = event_batches, transmission_rate_cache=tr_cache)
+      update!(rng, mc, mcmc, adapted_Σrp, σ, condition_on_network = condition_on_network, event_batches = event_batches, transmission_rate_cache=tr_cache)
     else
-      update!(mc, mcmc, Σrp, σ, condition_on_network = condition_on_network, event_batches = event_batches, transmission_rate_cache=tr_cache)
+      update!(rng, mc, mcmc, Σrp, σ, condition_on_network = condition_on_network, event_batches = event_batches, transmission_rate_cache=tr_cache)
     end
     next!(pmeter)
     @logmsg LogLevel(-5000) "MCMC progress" progress = i/n
@@ -64,6 +65,7 @@ function iterate!(
 end
 
 function iterate!(
+  rng::AbstractRNG,
   mc::MarkovChain{S, M},
   mcmc::MCMC{S, M},
   n::Int64,
@@ -71,7 +73,8 @@ function iterate!(
   Σsm::Array{Float64, 2},
   σ::Float64;
   event_batches::Int64=1,
-  adapt_cov::Int64=100) where {
+  adapt_cov::Int64=100,
+  DA_couple::Bool=false) where {
     S <: DiseaseStateSequence,
     M <: PhyloILM}
   if adapt_cov < 0
@@ -97,13 +100,13 @@ function iterate!(
   tr_cache = TransmissionRateCache(individuals(mcmc.population))
   for i = 1:n
     if use_adapted_Σrp & use_adapted_Σsm
-      update!(mc, mcmc, adapted_Σrp, adapted_Σsm, σ, event_batches = event_batches, transmission_rate_cache=tr_cache)
+      update!(rng, mc, mcmc, adapted_Σrp, adapted_Σsm, σ, event_batches = event_batches, transmission_rate_cache=tr_cache, DA_couple=DA_couple)
     elseif use_adapted_Σrp & !use_adapted_Σsm
-      update!(mc, mcmc, adapted_Σrp, Σsm, σ, event_batches = event_batches, transmission_rate_cache=tr_cache)
+      update!(rng, mc, mcmc, adapted_Σrp, Σsm, σ, event_batches = event_batches, transmission_rate_cache=tr_cache, DA_couple=DA_couple)
     elseif !use_adapted_Σrp & use_adapted_Σsm
-      update!(mc, mcmc, Σrp, adapted_Σsm, σ, event_batches = event_batches, transmission_rate_cache=tr_cache)
+      update!(rng, mc, mcmc, Σrp, adapted_Σsm, σ, event_batches = event_batches, transmission_rate_cache=tr_cache, DA_couple=DA_couple)
     elseif !use_adapted_Σrp & !use_adapted_Σsm
-      update!(mc, mcmc, Σrp, Σsm, σ, event_batches = event_batches, transmission_rate_cache=tr_cache)
+      update!(rng, mc, mcmc, Σrp, Σsm, σ, event_batches = event_batches, transmission_rate_cache=tr_cache, DA_couple=DA_couple)
     end
     next!(pmeter)
     @logmsg LogLevel(-5000) "MCMC progress" progress = i/n
@@ -131,7 +134,8 @@ function iterate!(
   return mc
 end
 
-function iterate!(mc::MarkovChain{S, M},
+function iterate!(rng::AbstractRNG,
+  mc::MarkovChain{S, M},
                   mcmc::MCMC{S, M},
                   n::Int64,
                   Σrp::Array{Float64, 2},
@@ -155,9 +159,9 @@ function iterate!(mc::MarkovChain{S, M},
   tr_cache = TransmissionRateCache(individuals(mcmc.population))
   for i = 1:n
     if use_adapted_Σrp
-      update!(mc, mcmc, adapted_Σrp, σ, condition_on_network = condition_on_network, event_batches = event_batches, transmission_rate_cache=tr_cache)
+      update!(rng, mc, mcmc, adapted_Σrp, σ, condition_on_network = condition_on_network, event_batches = event_batches, transmission_rate_cache=tr_cache)
     else
-      update!(mc, mcmc, Σrp, σ, condition_on_network = condition_on_network, event_batches = event_batches, transmission_rate_cache=tr_cache)
+      update!(rng, mc, mcmc, Σrp, σ, condition_on_network = condition_on_network, event_batches = event_batches, transmission_rate_cache=tr_cache)
     end
     put!(progress_channel, true)
     @logmsg LogLevel(-5000) "MCMC progress" progress = i/n
@@ -177,6 +181,7 @@ function iterate!(mc::MarkovChain{S, M},
 end
 
 function iterate!(
+  rng::AbstractRNG,
   mc::MarkovChain{S, M},
   mcmc::MCMC{S, M},
   n::Int64,
@@ -185,7 +190,8 @@ function iterate!(
   σ::Float64,
   progress_channel::RemoteChannel;
   event_batches::Int64=1,
-  adapt_cov::Int64=100) where {
+  adapt_cov::Int64=100,
+  DA_couple::Bool=false) where {
     S <: DiseaseStateSequence,
     M <: PhyloILM}
   if adapt_cov < 0
@@ -210,13 +216,13 @@ function iterate!(
   tr_cache = TransmissionRateCache(individuals(mcmc.population))
   for i = 1:n
     if use_adapted_Σrp & use_adapted_Σsm
-      update!(mc, mcmc, adapted_Σrp, adapted_Σsm, σ, event_batches = event_batches, transmission_rate_cache=tr_cache)
+      update!(rng, mc, mcmc, adapted_Σrp, adapted_Σsm, σ, event_batches = event_batches, transmission_rate_cache=tr_cache, DA_couple=DA_couple)
     elseif use_adapted_Σrp & !use_adapted_Σsm
-      update!(mc, mcmc, adapted_Σrp, Σsm, σ, event_batches = event_batches, transmission_rate_cache=tr_cache)
+      update!(rng, mc, mcmc, adapted_Σrp, Σsm, σ, event_batches = event_batches, transmission_rate_cache=tr_cache, DA_couple=DA_couple)
     elseif !use_adapted_Σrp & use_adapted_Σsm
-      update!(mc, mcmc, Σrp, adapted_Σsm, σ, event_batches = event_batches, transmission_rate_cache=tr_cache)
+      update!(rng, mc, mcmc, Σrp, adapted_Σsm, σ, event_batches = event_batches, transmission_rate_cache=tr_cache, DA_couple=DA_couple)
     elseif !use_adapted_Σrp & !use_adapted_Σsm
-      update!(mc, mcmc, Σrp, Σsm, σ, event_batches = event_batches, transmission_rate_cache=tr_cache)
+      update!(rng, mc, mcmc, Σrp, Σsm, σ, event_batches = event_batches, transmission_rate_cache=tr_cache, DA_couple=DA_couple)
     end
     put!(progress_channel, true)
     @logmsg LogLevel(-5000) "MCMC progress" progress = i/n
@@ -245,6 +251,7 @@ function iterate!(
 end
 
 function iterate!(
+  rng::AbstractRNG,
   mcmc::MCMC{S, M},
   n::Int64,
   Σrp::Array{Float64, 2},
@@ -255,7 +262,7 @@ function iterate!(
     S <: DiseaseStateSequence,
     M <: TNILM}
   if length(mcmc.markov_chains) == 1
-    iterate!(mcmc.markov_chains[1], mcmc, n, Σrp, σ,
+    iterate!(rng, mcmc.markov_chains[1], mcmc, n, Σrp, σ,
              condition_on_network = condition_on_network,
              event_batches = event_batches,
              adapt_cov = adapt_cov)
@@ -270,11 +277,21 @@ function iterate!(
     mc_Futures = Future[]
     @debug "Starting MCMC..."
     for mc in mcmc.markov_chains
-      push!(mc_Futures, @spawn iterate!(mc, mcmc, n, Σrp, σ, pchannel, condition_on_network = condition_on_network, event_batches = event_batches, adapt_cov = adapt_cov))
+      chain_rng = MersenneTwister(rand(rng, UInt64))
+      push!(mc_Futures, @spawn try
+        iterate!(chain_rng, mc, mcmc, n, Σrp, σ, pchannel, condition_on_network = condition_on_network, event_batches = event_batches, adapt_cov = adapt_cov)
+      finally
+        put!(pchannel, false)
+      end)
     end
     @debug "MCMC in progress..."
-    while !all(isready.(mc_Futures))
-      take!(pchannel) && next!(pmeter)
+    completed = 0
+    while completed < length(mc_Futures)
+      if take!(pchannel)
+        next!(pmeter)
+      else
+        completed += 1
+      end
     end
     close(pchannel)
     finish!(pmeter)
@@ -286,6 +303,7 @@ end
 
 
 function iterate!(
+  rng::AbstractRNG,
   mcmc::MCMC{S, M},
   n::Int64,
   Σrp::Array{Float64, 2},
@@ -293,13 +311,14 @@ function iterate!(
   σ::Float64;
   condition_on_network::Bool=false,
   event_batches::Int64=1,
-  adapt_cov::Int64=100) where {
+  adapt_cov::Int64=100,
+  DA_couple::Bool=false) where {
     S <: DiseaseStateSequence,
     M <: PhyloILM}
   if length(mcmc.markov_chains) == 1
-    iterate!(mcmc.markov_chains[1], mcmc, n, Σrp, Σsm, σ,
+    iterate!(rng, mcmc.markov_chains[1], mcmc, n, Σrp, Σsm, σ,
              event_batches = event_batches,
-             adapt_cov = adapt_cov)
+             adapt_cov = adapt_cov, DA_couple=DA_couple)
     return mcmc
   else
     if adapt_cov < 0
@@ -311,11 +330,21 @@ function iterate!(
     mc_Futures = Future[]
     @debug "Starting MCMC..."
     for mc in mcmc.markov_chains
-      push!(mc_Futures, @spawn iterate!(mc, mcmc, n, Σrp, Σsm, σ, pchannel, event_batches = event_batches, adapt_cov = adapt_cov))
+      chain_rng = MersenneTwister(rand(rng, UInt64))
+      push!(mc_Futures, @spawn try
+        iterate!(chain_rng, mc, mcmc, n, Σrp, Σsm, σ, pchannel, event_batches = event_batches, adapt_cov = adapt_cov, DA_couple=DA_couple)
+      finally
+        put!(pchannel, false)
+      end)
     end
     @debug "MCMC in progress..."
-    while !all(isready.(mc_Futures))
-      take!(pchannel) && next!(pmeter)
+    completed = 0
+    while completed < length(mc_Futures)
+      if take!(pchannel)
+        next!(pmeter)
+      else
+        completed += 1
+      end
     end
     close(pchannel)
     finish!(pmeter)
@@ -326,6 +355,7 @@ function iterate!(
 end
 
 function iterate!(
+  rng::AbstractRNG,
   mc::MarkovChain{S, M},
   mcmc::MCMC{S, M},
   n::Int64,
@@ -336,6 +366,7 @@ function iterate!(
     S <: DiseaseStateSequence,
     M <: TNILM}
   return iterate!(
+    rng,
     mc,
     mcmc,
     n,
@@ -347,6 +378,7 @@ function iterate!(
 end
 
 function iterate!(
+  rng::AbstractRNG,
   mc::MarkovChain{S, M},
   mcmc::MCMC{S, M},
   n::Int64,
@@ -357,6 +389,7 @@ function iterate!(
     S <: DiseaseStateSequence,
     M <: PhyloILM}
   return iterate!(
+    rng,
     mc,
     mcmc,
     n,
@@ -364,11 +397,11 @@ function iterate!(
     _initial_Σsm(mcmc),
     σ,
     event_batches = event_batches,
-    adapt_cov = adapt_cov,
-    DA_couple = DA_couple)
+    adapt_cov = adapt_cov, DA_couple=DA_couple)
 end
 
 function iterate!(
+  rng::AbstractRNG,
   mcmc::MCMC{S, M},
   n::Int64,
   σ::Float64;
@@ -378,6 +411,7 @@ function iterate!(
     S <: DiseaseStateSequence,
     M <: TNILM}
   return iterate!(
+    rng,
     mcmc,
     n,
     _initial_Σrp(mcmc),
@@ -388,6 +422,7 @@ function iterate!(
 end
 
 function iterate!(
+  rng::AbstractRNG,
   mcmc::MCMC{S, M},
   n::Int64,
   σ::Float64;
@@ -397,11 +432,14 @@ function iterate!(
     S <: DiseaseStateSequence,
     M <: PhyloILM}
   return iterate!(
+    rng,
     mcmc,
     n,
     _initial_Σrp(mcmc),
     _initial_Σsm(mcmc),
     σ,
     event_batches = event_batches,
-    adapt_cov = adapt_cov)
+    adapt_cov = adapt_cov, DA_couple=DA_couple)
 end
+
+iterate!(mc::Union{MCMC, MarkovChain}, args...; kwargs...) = iterate!(_default_rng(), mc, args...; kwargs...)

@@ -640,3 +640,130 @@ end
   @test typeof(summary(mcmc)) == DataFrame
 end
 
+
+# Shared fixtures use the risk functions loaded on every worker by runtests.jl.
+function rng_fixture(::Type{S}, phylo) where S <: DiseaseStateSequence
+  n = 5
+  pop = Population(DataFrame(riskfactor1=ones(n)), ones(n, n))
+  funcs = Any[_zero, _constant, _powerlaw, _one]
+  params = [Float64[], [1.0], [2.0, 1.0], Float64[]]
+  priors = [UnivariateDistribution[], UnivariateDistribution[Uniform(0.5, 1.5)],
+            UnivariateDistribution[Uniform(1.0, 3.0), Uniform(0.5, 1.5)], UnivariateDistribution[]]
+  for state in (State_E, State_R)
+    if state ∈ S
+      push!(funcs, _constant)
+      push!(params, [0.5])
+      push!(priors, UnivariateDistribution[Uniform(0.3, 0.7)])
+    end
+  end
+  rf = RiskFunctions{S}(funcs...)
+  rp = RiskParameters{S}(params...)
+  states = [State_I; fill(State_S, n-1)]
+  sim = phylo ? Simulation(pop, states, rf, rp, JC69(0.05)) : Simulation(pop, states, rf, rp)
+  extents = S == SEIR ? EventExtents{S}(30.0, 0.2, 0.2) :
+            S == SEI ? EventExtents{S}(30.0, 0.2) :
+            S == SIR ? EventExtents{S}(0.2, 0.2) : EventExtents{S}(0.2)
+  return sim, RiskPriors{S}(priors...), extents, states
+end
+
+function rng_observe(rng, sim::Simulation{S}) where S
+  if State_R ∈ S
+    observe(rng, sim, Uniform(0.0, 0.1), Uniform(0.0, 0.1); seq_len=16, force=true)
+  else
+    observe(rng, sim, Uniform(0.0, 0.1); seq_len=16)
+  end
+end
+
+function rng_mcmc(obs, sim, priors, extents, states)
+  if sim.substitution_model === nothing
+    MCMC(obs, extents, sim.population, states, sim.risk_functions, priors)
+  else
+    MCMC(obs, extents, sim.population, states, sim.risk_functions, priors,
+         JC69abs, UnivariateDistribution[Uniform(0.01, 0.1)])
+  end
+end
+
+function rng_snapshot(mc)
+  (mc.iterations, [convert(Array{Float64, 2}, e) for e in mc.events],
+   [convert(Vector{Float64}, rp) for rp in mc.risk_parameters],
+   [(tn.external, tn.internal) for tn in mc.transmission_network],
+   mc.substitution_model === nothing ? nothing :
+     [Tuple(getproperty(sm, f) for f in propertynames(sm)) for sm in mc.substitution_model],
+   mc.log_posterior)
+end
+
+@testset "Explicit RNGs" begin
+  generators = (MersenneTwister, StableRNG)
+  for S in (SEIR, SEI, SIR, SI), phylo in (false, true), R in generators
+    @testset "$S phylo=$phylo $R" begin
+      sim, priors, extents, states = rng_fixture(S, phylo)
+      # Every simulation and observation draw must come from the supplied RNG.
+      Random.seed!(908)
+      expected_default = rand()
+      Random.seed!(908)
+      a, b = deepcopy(sim), deepcopy(sim)
+      ra, rb = R(42), R(42)
+      simulate!(ra, a; tmax=50.0)
+      simulate!(rb, b; tmax=50.0)
+      @test isequal(convert(Array{Float64, 2}, a.events), convert(Array{Float64, 2}, b.events))
+      oa, ob = rng_observe(ra, a), rng_observe(rb, b)
+      @test isequal(oa.infection, ob.infection)
+      @test isequal(oa.removal, ob.removal)
+      @test isequal(oa.seq, ob.seq)
+      @test rand() == expected_default
+      @test rand(ra) == rand(rb)
+      @test rand(copy(ra)) != rand(R(42))
+
+      ma = rng_mcmc(oa, a, priors, extents, states)
+      mb = deepcopy(ma)
+      # Exercise one-chain delegation, initialization, and MCMC proposals.
+      Random.seed!(908)
+      start!(ra, ma, 1; attempts=20)
+      start!(rb, mb; attempts=20)
+      @test length(ma.markov_chains) == length(mb.markov_chains) == 1
+      @test isequal(rng_snapshot(ma.markov_chains[1]), rng_snapshot(mb.markov_chains[1]))
+      iterate!(ra, ma, 4, 0.1; adapt_cov=0)
+      iterate!(rb, mb, 4, 0.1; adapt_cov=0)
+      @test isequal(rng_snapshot(ma.markov_chains[1]), rng_snapshot(mb.markov_chains[1]))
+      @test rand() == expected_default
+      @test rand(ra) == rand(rb)
+      # Cover conditional event proposals and coupled network augmentation.
+      opts = phylo ? (DA_couple=true,) : (condition_on_network=true,)
+      iterate!(ra, ma.markov_chains[1], ma, 2, 0.1; adapt_cov=0, opts...)
+      iterate!(rb, mb.markov_chains[1], mb, 2, 0.1; adapt_cov=0, opts...)
+      @test isequal(rng_snapshot(ma.markov_chains[1]), rng_snapshot(mb.markov_chains[1]))
+
+      # The default-RNG wrappers retain the same serial semantics.
+      mc = deepcopy(ma.markov_chains[1])
+      md = deepcopy(mc)
+      Random.seed!(123)
+      iterate!(mc, ma, 1, 0.1; adapt_cov=0)
+      Random.seed!(123)
+      iterate!(Pathogen._default_rng(), md, ma, 1, 0.1; adapt_cov=0)
+      @test isequal(rng_snapshot(mc), rng_snapshot(md))
+    end
+  end
+
+  @testset "Distributed streams" for phylo in (false, true)
+    sim, priors, extents, states = rng_fixture(SIR, phylo)
+    simulate!(MersenneTwister(42), sim; tmax=50.0)
+    obs = rng_observe(MersenneTwister(13), sim)
+    base = rng_mcmc(obs, sim, priors, extents, states)
+    a, b = deepcopy(base), deepcopy(base)
+    ra, rb = MersenneTwister(77), MersenneTwister(77)
+    Random.seed!(908)
+    expected_default = rand()
+    Random.seed!(908)
+    start!(ra, a, 2; attempts=20)
+    start!(rb, b, 2; attempts=20)
+    @test length(a.markov_chains) == length(b.markov_chains) == 2
+    @test isequal(rng_snapshot.(a.markov_chains), rng_snapshot.(b.markov_chains))
+    @test !isequal(rng_snapshot(a.markov_chains[1]), rng_snapshot(a.markov_chains[2]))
+    iterate!(ra, a, 4, 0.1; adapt_cov=0)
+    iterate!(rb, b, 4, 0.1; adapt_cov=0)
+    @test isequal(rng_snapshot.(a.markov_chains), rng_snapshot.(b.markov_chains))
+    @test rand(ra) == rand(rb)
+    @test rand() == expected_default
+  end
+end
+

@@ -54,3 +54,29 @@ This package is detailed in [Pathogen.jl: Infectious Disease Transmission Networ
       pages   = {1–30},
       url     = {https://www.jstatsoft.org/index.php/jss/article/view/v104i04},
       doi     = {10.18637/jss.v104.i04}}
+
+## Random number generators
+
+Random simulation and inference methods accept an optional first positional
+`rng::AbstractRNG`. Calls without it use Julia's default RNG. For example:
+
+```julia
+using Random
+rng = MersenneTwister(123)
+simulate!(rng, sim; tmax=100.0)
+obs = observe(rng, sim, Uniform(); seq_len=100) # SI/SEI example
+start!(rng, mcmc; attempts=100)
+iterate!(rng, mcmc, 100, 1.0)
+```
+
+The supplied RNG controls event simulation, observation delays, pathogen
+sequences, chain initialization, proposals, and acceptance decisions. The same
+RNG-first convention applies to stochastic `generate` methods and the internal
+`initialize`, `update!`, and `_accept` methods.
+
+For multiple chains, `start!` and `iterate!` draw one `UInt64` seed per chain
+from the supplied RNG in chain order and create independent `MersenneTwister`
+streams on the workers. Results therefore do not depend on worker scheduling.
+A single chain uses the supplied RNG directly. Keep and reuse the RNG when
+continuing a run; chains do not store RNG state. Exact streams may differ across
+Julia and dependency versions, and between single-chain and multi-chain runs.

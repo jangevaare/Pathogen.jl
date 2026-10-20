@@ -1,4 +1,4 @@
-function update!(mc::MarkovChain{T, M},
+function update!(rng::AbstractRNG, mc::MarkovChain{T, M},
                  mcmc::MCMC{T, M},
                  Σ::Array{Float64, 2},
                  σ::Float64;
@@ -16,7 +16,7 @@ function update!(mc::MarkovChain{T, M},
   new_lposterior = mc.log_posterior[end]
   # Randomize event time augmentation
   event_indices = findall(new_events_array[:] .> -Inf)
-  aug_order = sample(event_indices, length(event_indices), replace=false)
+  aug_order = sample(rng, event_indices, length(event_indices), replace=false)
   @debug "$(length(aug_order)) events to augment"
   if event_batches < 0
     @error "Cannot have negative amount of event batches"
@@ -32,7 +32,7 @@ function update!(mc::MarkovChain{T, M},
       # Propose new risk parameters
       proposed_events = new_events
       proposed_events_array = new_events_array
-      proposed_rp = generate(RiskParameters{T}, new_rp, Σ)
+      proposed_rp = generate(rng, RiskParameters{T}, new_rp, Σ)
       @debug "Generating new TransmissionRateCache for TN-ILM parameter proposal"
       proposed_tr_cache = TransmissionRateCache(size(new_events_array, 1))
     else
@@ -48,7 +48,7 @@ function update!(mc::MarkovChain{T, M},
         # This is useful for models which may have additional contributions to the posterior based on network,
         # and require more modest proposals (e.g. phylodynamic models).
         if condition_on_network
-          proposed_event = generate(Event,
+          proposed_event = generate(rng, Event,
                                     Event{T}(time, id, new_state),
                                     σ,
                                     mcmc.event_extents,
@@ -56,7 +56,7 @@ function update!(mc::MarkovChain{T, M},
                                     proposed_events,
                                     new_network)
         else
-          proposed_event = generate(Event,
+          proposed_event = generate(rng, Event,
                                     Event{T}(time, id, new_state),
                                     σ,
                                     mcmc.event_extents,
@@ -75,7 +75,7 @@ function update!(mc::MarkovChain{T, M},
     proposed_lprior = logprior(proposed_rp, mcmc.risk_priors)
     # Based on the logprior and competiting MCMC iteration, this loglikelihood is required for acceptance
     # Calculating this in advance allows us to cut loglikelihood calculation short if it goes below threshold
-    ll_acceptance_threshold = log(rand()) + new_lposterior - proposed_lprior
+    ll_acceptance_threshold = log(rand(rng)) + new_lposterior - proposed_lprior
     if ll_acceptance_threshold < Inf
       proposed_llikelihood = loglikelihood(proposed_rp,
                                            mcmc.risk_functions,
@@ -110,7 +110,7 @@ function update!(mc::MarkovChain{T, M},
                           mcmc.starting_states,
                           loglikelihood_output = false,
                           transmission_rate_cache = new_tr_cache)[[2; 3]]
-  new_network = generate(TransmissionNetwork, tnr, mcmc, tx)
+  new_network = generate(rng, TransmissionNetwork, tnr, mcmc, tx)
   push!(mc.events, new_events)
   push!(mc.transmission_network, new_network)
   push!(mc.risk_parameters, new_rp)
@@ -118,7 +118,7 @@ function update!(mc::MarkovChain{T, M},
   return mc
 end
 
-function update!(mc::MarkovChain{T, M},
+function update!(rng::AbstractRNG, mc::MarkovChain{T, M},
                  mcmc::MCMC{T, M},
                  Σrp::Array{Float64, 2},
                  Σsm::Array{Float64, 2},
@@ -139,7 +139,7 @@ function update!(mc::MarkovChain{T, M},
   new_lposterior = mc.log_posterior[end]
   # Randomize event time augmentation
   event_indices = findall(new_events_array[:] .> -Inf)
-  aug_order = sample(event_indices, length(event_indices), replace=false)
+  aug_order = sample(rng, event_indices, length(event_indices), replace=false)
   @debug "$(length(aug_order)) events to augment"
   if event_batches < 0
     @error "Cannot have negative amount of event batches"
@@ -156,8 +156,8 @@ function update!(mc::MarkovChain{T, M},
       # Propose new risk parameters
       proposed_events = new_events
       proposed_events_array = new_events_array
-      proposed_rp = generate(RiskParameters{T}, new_rp, Σrp)
-      proposed_sm = generate(mcmc.substitution_model, new_sm, Σsm)
+      proposed_rp = generate(rng, RiskParameters{T}, new_rp, Σrp)
+      proposed_sm = generate(rng, mcmc.substitution_model, new_sm, Σsm)
       @debug "Generating new TransmissionRateCache for TN-ILM parameter proposal"
       proposed_tr_cache = TransmissionRateCache(size(new_events_array, 1))
     elseif i < (event_batches + 2)
@@ -171,7 +171,7 @@ function update!(mc::MarkovChain{T, M},
         state_index == 1 && push!(t_ids, id)
         new_state = convert(DiseaseStates, T)[state_index+1]
         time = new_events[new_state][id]
-        proposed_event = generate(Event,
+        proposed_event = generate(rng, Event,
                                   Event{T}(time, id, new_state),
                                   σ,
                                   mcmc.event_extents,
@@ -198,7 +198,7 @@ function update!(mc::MarkovChain{T, M},
     proposed_lprior += logprior(proposed_sm, mcmc.substitution_model_prior)
     # Based on the logprior and competiting MCMC iteration, this loglikelihood is required for acceptance
     # Calculating this in advance allows us to cut loglikelihood calculation short if it goes below threshold
-    ll_acceptance_threshold = log(rand()) + new_lposterior - proposed_lprior
+    ll_acceptance_threshold = log(rand(rng)) + new_lposterior - proposed_lprior
     if ll_acceptance_threshold < Inf
       proposed_llikelihood, tnr, tx = loglikelihood(proposed_rp,
                                                     mcmc.risk_functions,
@@ -213,14 +213,14 @@ function update!(mc::MarkovChain{T, M},
           if i == 1 || length(t_ids) == 0
             proposed_network = new_network
           elseif 1 < i < event_batches + 2
-            proposed_network = generate(TransmissionNetwork, new_network, tnr, mcmc, t_ids)
+            proposed_network = generate(rng, TransmissionNetwork, new_network, tnr, mcmc, t_ids)
             @debug "Generating a Transmission Network proposal" ProposedNetwork = proposed_network
           end
         else
           if i < event_batches + 2
             proposed_network = new_network
           elseif i == event_batches + 2
-            proposed_network = generate(TransmissionNetwork, new_network, tnr, mcmc, sample(tx))
+            proposed_network = generate(rng, TransmissionNetwork, new_network, tnr, mcmc, sample(rng, tx))
             @debug "Generating a transmission network proposal" ProposedNetwork = proposed_network
           end
         end
@@ -260,3 +260,5 @@ function update!(mc::MarkovChain{T, M},
   push!(mc.log_posterior, new_lposterior)
   return mc
 end
+
+update!(mc::MarkovChain, args...; kwargs...) = update!(_default_rng(), mc, args...; kwargs...)

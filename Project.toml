@@ -22,11 +22,11 @@ SubstitutionModels = "8365b1bb-bd83-58ee-a267-f2965fc81c73"
 DataFrames = "^0.19, 0.20, 0.21, 0.22, 1.0"
 Distributions = "0.20, 0.21, 0.22, 0.23, 0.24, 0.25"
 OnlineStats = "^1.1"
-PhyloModels = "0.3"
+PhyloModels = "0.4"
 ProgressMeter = "^1.2"
 RecipesBase = "0.7, 0.8, 1"
 StatsBase = "0.32, 0.33"
-SubstitutionModels = "0.5"
+SubstitutionModels = "0.5, 0.6"
 julia = "^1.1"
 
 [extras]

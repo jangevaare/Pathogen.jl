@@ -19,6 +19,13 @@ module Pathogen
          StatsBase.mode,
          ProgressMeter.next!
 
+  # Use the runtime default RNG, retaining compatibility with older Julia.
+  @static if isdefined(Random, :default_rng)
+    _default_rng() = Random.default_rng()
+  else
+    _default_rng() = Random.GLOBAL_RNG
+  end
+
   # Core
   include("core/IndividualLevelModel.jl")
   include("core/DiseaseStateSequence.jl")

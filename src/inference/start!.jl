@@ -1,22 +1,33 @@
 function start!(
+  rng::AbstractRNG,
   mcmc::MCMC{S, M},
   n_chains::Int64;
   attempts::Int64=5000) where {
   S <: DiseaseStateSequence,
   M <: ILM}
   if n_chains == 1
-    return start!(mcmc, attempts)
+    return start!(rng, mcmc; attempts=attempts)
   else
     pmeter = Progress(n_chains * attempts, "Initialization progress")
     pchannel = RemoteChannel(()->Channel{Bool}(10), 1)
     mc_Futures = Future[]
     for i = 1:n_chains
       @logmsg LogLevel(-3000) "Creating Markov chain $i initialization Future"
-      push!(mc_Futures, @spawn initialize(MarkovChain, mcmc, pchannel, attempts=attempts))
+      chain_rng = MersenneTwister(rand(rng, UInt64))
+      push!(mc_Futures, @spawn try
+        initialize(chain_rng, MarkovChain, mcmc, pchannel, attempts=attempts)
+      finally
+        put!(pchannel, false)
+      end)
     end
     @logmsg LogLevel(-2000) "$n_chains Markov chain initialization Futures successfully created"
-    while !all(isready.(mc_Futures))
-      take!(pchannel) && next!(pmeter)
+    completed = 0
+    while completed < length(mc_Futures)
+      if take!(pchannel)
+        next!(pmeter)
+      else
+        completed += 1
+      end
     end
     close(pchannel)
     finish!(pmeter)
@@ -28,11 +39,12 @@ function start!(
 end
 
 function start!(
+  rng::AbstractRNG,
   mcmc::MCMC{S, M};
   attempts::Int64=5000) where {
   S <: DiseaseStateSequence,
   M <: ILM}
-  mc = initialize(MarkovChain, mcmc, attempts=attempts)
+  mc = initialize(rng, MarkovChain, mcmc, attempts=attempts)
   if mc !== nothing
     push!(mcmc.markov_chains, mc)
   else
@@ -40,3 +52,6 @@ function start!(
   end
   return mcmc
 end
+
+
+start!(mcmc::MCMC, args...; kwargs...) = start!(_default_rng(), mcmc, args...; kwargs...)

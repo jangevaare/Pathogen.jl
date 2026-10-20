@@ -62,7 +62,7 @@ function generate(rng::AbstractRNG,
                                 sim.events,
                                 infection,
                                 sim.transmission_network)
-    seq_full = simulate(RNASeq, tree, sim.substitution_model, seq_len)
+    seq_full = simulate(rng, RNASeq, tree, sim.substitution_model, seq_len)
     seq_obs = Union{Nothing, RNASeq}[isnothing(event_nodes[i]) ? nothing : seq_full[event_nodes[i]] for i = eachindex(infection)]
     return EventObservations{S}(infection, removal, seq_obs)
   elseif M == TNILM
@@ -93,7 +93,7 @@ function generate(rng::AbstractRNG,
                                 sim.events,
                                 infection,
                                 sim.transmission_network)
-    seq_full = simulate(RNASeq, tree, sim.substitution_model, seq_len)
+    seq_full = simulate(rng, RNASeq, tree, sim.substitution_model, seq_len)
     seq_obs = Union{Nothing, RNASeq}[isnothing(event_nodes[i]) ? nothing : seq_full[event_nodes[i]] for i = eachindex(infection)]
     return EventObservations{S}(infection, seq_obs)
   elseif M == TNILM
@@ -104,5 +104,6 @@ end
 observe(rng::AbstractRNG, x::Simulation, y::UnivariateDistribution, z::UnivariateDistribution; kwargs...) = generate(rng, EventObservations, x, y, z; kwargs...)
 observe(rng::AbstractRNG, x::Simulation, y::UnivariateDistribution; kwargs...) = generate(rng, EventObservations, x, y; kwargs...)
 
-observe(x::Simulation, y::UnivariateDistribution, z::UnivariateDistribution; kwargs...) = observe(default_rng(), x,y,z; kwargs...)
-observe(x::Simulation, y::UnivariateDistribution; kwargs...) = observe(default_rng(), x, y; kwargs...)
+observe(x::Simulation, y::UnivariateDistribution, z::UnivariateDistribution; kwargs...) = observe(_default_rng(), x,y,z; kwargs...)
+observe(x::Simulation, y::UnivariateDistribution; kwargs...) = observe(_default_rng(), x, y; kwargs...)
+generate(::Type{EventObservations}, args...; kwargs...) = generate(_default_rng(), EventObservations, args...; kwargs...)
