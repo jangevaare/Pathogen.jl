@@ -4,6 +4,32 @@ perf_one(p, pop, i) = 1.0
 perf_constant(p, pop, i) = p[1]
 perf_pair(p, pop, i, j) = p[1] * (1.0 + abs(i-j) / 10)
 
+@testset "Sparse sampled networks" begin
+  n = 1000
+  small, large = TransmissionNetwork(n), TransmissionNetwork(2n)
+  @test size(small.internal) == (n, n)
+  @test Base.summarysize(large) < 3 * Base.summarysize(small)
+  Pathogen.update!(small, ExogenousTransmission(1))
+  for i in 2:n
+    Pathogen.update!(small, EndogenousTransmission(i, i-1))
+  end
+  @test sum(small) == n
+  @test Pathogen.nnz(small.internal) == n-1
+  copied = copy(small)
+  copied.internal[1, 2] = false
+  @test small.internal[1, 2]
+  @test sum(innerjoin(small, small)) == n
+  @test sum(leftantijoin(small, small)) == 0
+  dense = TransmissionNetwork(copy(small.external), BitMatrix(small.internal))
+  @test dense.internal == small.internal
+  tnd = TNDistribution([small, dense])
+  @test sum(tnd) == n
+  @test mode(tnd).internal == small.internal
+  bad = falses(3, 3)
+  bad[1, 3] = bad[2, 3] = true
+  @test_throws ErrorException TransmissionNetwork(falses(3), bad)
+end
+
 function perf_fixture(::Type{S}; n=8, phylo=false) where S
   pop = Population(DataFrame(x=collect(1:n)))
   funcs = Any[perf_constant, perf_one, perf_pair, perf_one]

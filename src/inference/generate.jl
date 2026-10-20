@@ -53,6 +53,7 @@ function generate(
     tx = generate(rng, Transmission, tr, tnd, i)
     update!(tn, tx)
   end
+  dropzeros!(tn.internal)
   return tn
 end
 
@@ -75,10 +76,13 @@ function generate(
   tn = copy(lasttn)
   for i in ids
     tn.external[i] = 0
-    tn.internal[:, i] .= 0
+    for k in nzrange(tn.internal, i)
+      nonzeros(tn.internal)[k] = false
+    end
     tx = generate(rng, Transmission, tr, tnd, i)
     update!(tn, tx)
   end
+  dropzeros!(tn.internal)
   return tn
 end
 

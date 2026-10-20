@@ -1,7 +1,8 @@
 module Pathogen
 
   # Dependencies
-  using Distributed,
+  using SparseArrays,
+        Distributed,
         DataFrames,
         Distributions,
         RecipesBase,

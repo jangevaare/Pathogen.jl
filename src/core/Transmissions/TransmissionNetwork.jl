@@ -1,14 +1,13 @@
 struct TransmissionNetwork <: AbstractTN
   external::BitArray{1}
-  internal::BitArray{2}
+  internal::SparseMatrixCSC{Bool, Int}
 
   function TransmissionNetwork(individuals::Integer)
-    return new(fill(0, individuals),
-               fill(0, (individuals, individuals)))
+    return new(falses(individuals), spzeros(Bool, individuals, individuals))
   end
 
-  function TransmissionNetwork(external::BitArray{1},
-                               internal::BitArray{2})
+  function TransmissionNetwork(external::AbstractVector{Bool},
+                               internal::AbstractMatrix{Bool})
     if !(length(external) == size(internal, 1) == size(internal, 2))
       error("Mismatched BitArray sizes")
     end
@@ -16,11 +15,11 @@ struct TransmissionNetwork <: AbstractTN
     if length(multiple_exposures) > 0
       error("Multiple exposures detected for individual(s): $multiple_exposures")
     end
-    return new(external, internal)
+    return new(BitVector(external), sparse(internal))
   end
 
   function TransmissionNetwork(starting_states::DiseaseStates)
-    return new(starting_states .!= Ref(State_S), fill(0, (length(starting_states), length(starting_states))))
+    return new(starting_states .!= Ref(State_S), spzeros(Bool, length(starting_states), length(starting_states)))
   end
 end
 
@@ -29,5 +28,5 @@ function innerjoin(x::TN, y::TN) where {TN <: TransmissionNetwork}
 end
 
 function leftantijoin(x::TN, y::TN) where {TN <: TransmissionNetwork}
-  return TN(x.external .* .!y.external, x.internal .* .!y.internal)
+  return TN(x.external .* .!y.external, x.internal .- (x.internal .* y.internal) .> 0)
 end

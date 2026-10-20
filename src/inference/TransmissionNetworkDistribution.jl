@@ -11,7 +11,18 @@ struct TransmissionNetworkDistribution <: AbstractTN
   end
 end
 function TransmissionNetworkDistribution(x::Vector{TransmissionNetwork})
-  return @inbounds TransmissionNetworkDistribution(mean([y.external for y in x]), mean([y.internal for y in x]))
+  # Accumulate only recorded edges; the posterior distribution itself may be dense.
+  n = individuals(x[1])
+  external, internal = zeros(n), zeros(n, n)
+  for network in x
+    individuals(network) == n || throw(DimensionMismatch("Network sizes differ"))
+    external .+= network.external
+    rows, cols, values = findnz(network.internal)
+    for k in eachindex(values)
+      internal[rows[k], cols[k]] += values[k]
+    end
+  end
+  return TransmissionNetworkDistribution(external ./ length(x), internal ./ length(x))
 end
 
 function TransmissionNetworkDistribution(x::Vector{TransmissionNetworkDistribution})
