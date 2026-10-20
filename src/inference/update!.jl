@@ -73,8 +73,7 @@ function update!(rng::AbstractRNG, mc::MarkovChain{T, M},
       proposed_tr_cache = new_tr_cache
     end
     proposed_lprior = logprior(proposed_rp, mcmc.risk_priors)
-    # Based on the logprior and competiting MCMC iteration, this loglikelihood is required for acceptance
-    # Calculating this in advance allows us to cut loglikelihood calculation short if it goes below threshold
+    # Draw the Metropolis decision once; evaluate the complete epidemic likelihood.
     ll_acceptance_threshold = log(rand(rng)) + new_lposterior - proposed_lprior
     if ll_acceptance_threshold < Inf
       proposed_llikelihood = loglikelihood(proposed_rp,
@@ -91,7 +90,7 @@ function update!(rng::AbstractRNG, mc::MarkovChain{T, M},
       proposed_llikelihood = -Inf
       proposed_lposterior = -Inf
     end
-    if proposed_llikelihood >= ll_acceptance_threshold
+    if proposed_llikelihood > -Inf && proposed_llikelihood >= ll_acceptance_threshold
       @debug "MCMC proposal accepted (acceptance probability = $(round(min(1.0, exp(proposed_lposterior - new_lposterior)), digits=3)))"
       new_rp = proposed_rp
       new_tr_cache = proposed_tr_cache
@@ -102,6 +101,7 @@ function update!(rng::AbstractRNG, mc::MarkovChain{T, M},
       @debug "next!: MCMC proposal rejected (acceptance probability = $(round(min(1.0, exp(proposed_lposterior - new_lposterior)), digits=3)))"
     end
   end
+  _retain_cache!(transmission_rate_cache, new_tr_cache)
   mc.iterations += 1
   tnr, tx = loglikelihood(new_rp,
                           mcmc.risk_functions,
@@ -196,8 +196,7 @@ function update!(rng::AbstractRNG, mc::MarkovChain{T, M},
     end
     proposed_lprior = logprior(proposed_rp, mcmc.risk_priors)
     proposed_lprior += logprior(proposed_sm, mcmc.substitution_model_prior)
-    # Based on the logprior and competiting MCMC iteration, this loglikelihood is required for acceptance
-    # Calculating this in advance allows us to cut loglikelihood calculation short if it goes below threshold
+    # Draw the Metropolis decision once; evaluate the complete epidemic likelihood.
     ll_acceptance_threshold = log(rand(rng)) + new_lposterior - proposed_lprior
     if ll_acceptance_threshold < Inf
       proposed_llikelihood, tnr, tx = loglikelihood(proposed_rp,
@@ -208,7 +207,7 @@ function update!(rng::AbstractRNG, mc::MarkovChain{T, M},
                                                     early_decision_value = ll_acceptance_threshold,
                                                     transmissions_output = true,
                                                     transmission_rate_cache = proposed_tr_cache)
-      if proposed_llikelihood > ll_acceptance_threshold
+      if proposed_llikelihood > -Inf && proposed_llikelihood >= ll_acceptance_threshold
         if DA_couple
           if i == 1 || length(t_ids) == 0
             proposed_network = new_network
@@ -239,7 +238,7 @@ function update!(rng::AbstractRNG, mc::MarkovChain{T, M},
       proposed_llikelihood = -Inf
       proposed_lposterior = -Inf
     end
-    if proposed_llikelihood >= ll_acceptance_threshold
+    if proposed_llikelihood > -Inf && proposed_llikelihood >= ll_acceptance_threshold
       @debug "MCMC proposal accepted (acceptance probability = $(round(min(1.0, exp(proposed_lposterior - new_lposterior)), digits=3)))"
       new_rp = proposed_rp
       new_sm = proposed_sm
@@ -252,6 +251,7 @@ function update!(rng::AbstractRNG, mc::MarkovChain{T, M},
       @debug "MCMC proposal rejected (acceptance probability = $(round(min(1.0, exp(proposed_lposterior - new_lposterior)), digits=3)))"
     end
   end
+  _retain_cache!(transmission_rate_cache, new_tr_cache)
   mc.iterations += 1
   push!(mc.events, new_events)
   push!(mc.transmission_network, new_network)

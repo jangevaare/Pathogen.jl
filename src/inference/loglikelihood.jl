@@ -55,8 +55,10 @@ function loglikelihood(rp::RiskParameters{T},
         # Add event occurrence contribution to loglikelihood
         ll += log(rate_total) - rate_total * ΔT
       end
-      # Stop log likelihood calculation anytime the loglikelihood goes to -Inf
-      if ll <= early_decision_value
+      # A partial continuous-time log density is not an acceptance bound: later
+      # contributions may be positive. Keep the threshold keyword for compatibility.
+      # Only impossible histories can be rejected before completing the replay.
+      if ll == -Inf
         @debug "Loglikelihood calculation stopped early as loglikelihood <= decision value" loglikelihood = ll decision = early_decision_value
         if ll == -Inf
           @debug "Event $i resulted in a -Inf loglikelihood (transition of individual $id at t = $(round(time, digits=3)) to state $new_state)"
