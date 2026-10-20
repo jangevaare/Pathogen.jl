@@ -117,3 +117,10 @@ susceptibility = let values = pop.risks[!, :riskfactor1]
     (params, pop, i) -> params[1] * values[i]
 end
 ```
+
+Event-time acceptance includes the reverse-to-forward proposal density ratio.
+Each batch evaluates both densities in the same event order, recomputing bounds
+as times change. A batch with no reverse support is rejected. For coupled
+phylogenetic updates, the reverse bounds use the proposed transmission network.
+This correction affects acceptance decisions; stored posterior values contain
+only the model likelihood and prior.

@@ -34,6 +34,7 @@ function update!(rng::AbstractRNG, mc::MarkovChain{T, M},
   rates_match = false
   local proposed_tnr, proposed_tx
   for i = 1:(1 + event_batches)
+    log_proposal_ratio = 0.0
     rates_match = false
     if i == 1
       # Propose new risk parameters
@@ -42,34 +43,12 @@ function update!(rng::AbstractRNG, mc::MarkovChain{T, M},
       @debug "Generating new TransmissionRateCache for TN-ILM parameter proposal"
       proposed_tr_cache = _proposal_cache!(work, individuals(new_events))
     else
-      proposed_events = copy(new_events)
-      for j in _event_batch(length(aug_order), event_batches, i-1)
-        id, state_index = Tuple(CartesianIndices((individuals(new_events),
-                                            length(convert(DiseaseStates, T)[2:end])))[aug_order[j]])
-        new_state = convert(DiseaseStates, T)[state_index+1]
-        time = new_events[new_state][id]
-
-        # Conditioning on network means that only event times valid under current network will be proposed.
-        # This is useful for models which may have additional contributions to the posterior based on network,
-        # and require more modest proposals (e.g. phylodynamic models).
-        if condition_on_network
-          proposed_event = generate(rng, Event,
-                                    Event{T}(time, id, new_state),
-                                    σ,
-                                    mcmc.event_extents,
-                                    mcmc.event_observations,
-                                    proposed_events,
-                                    new_network)
-        else
-          proposed_event = generate(rng, Event,
-                                    Event{T}(time, id, new_state),
-                                    σ,
-                                    mcmc.event_extents,
-                                    mcmc.event_observations,
-                                    proposed_events)
-        end
-        update!(proposed_events, proposed_event)
-      end
+      batch_indices = aug_order[_event_batch(length(aug_order), event_batches, i-1)]
+      network = condition_on_network ? new_network : nothing
+      proposed_events, log_forward = _propose_events(rng, new_events, batch_indices,
+        σ, mcmc.event_extents, mcmc.event_observations, network)
+      log_proposal_ratio = _event_logproposal(new_events, proposed_events, batch_indices,
+        σ, mcmc.event_extents, mcmc.event_observations, network) - log_forward
       proposed_rp = new_rp
       proposed_tr_cache = new_tr_cache
     end
@@ -77,28 +56,27 @@ function update!(rng::AbstractRNG, mc::MarkovChain{T, M},
     # Draw the Metropolis decision once; evaluate the complete epidemic likelihood.
     ll_acceptance_threshold = log(rand(rng)) + new_lposterior - proposed_lprior
     proposed_lposterior = -Inf
-    if ll_acceptance_threshold < Inf
+    if ll_acceptance_threshold < Inf && isfinite(log_proposal_ratio)
       proposed_llikelihood, proposed_tnr, proposed_tx = loglikelihood(proposed_rp,
                                            mcmc.risk_functions,
                                            proposed_events,
                                            mcmc.population,
                                            mcmc.starting_states,
-                                           early_decision_value = ll_acceptance_threshold,
                                            transmission_rate_cache = proposed_tr_cache, workspace = work)
       proposed_lposterior = proposed_lprior + proposed_llikelihood
     else
       proposed_llikelihood = -Inf
       proposed_lposterior = -Inf
     end
-    if proposed_llikelihood > -Inf && proposed_llikelihood >= ll_acceptance_threshold
-      @debug "MCMC proposal accepted (acceptance probability = $(round(min(1.0, exp(proposed_lposterior - new_lposterior)), digits=3)))"
+    if isfinite(proposed_llikelihood) && isfinite(log_proposal_ratio) && proposed_llikelihood + log_proposal_ratio >= ll_acceptance_threshold
+      @debug "MCMC proposal accepted (acceptance probability = $(round(min(1.0, exp(proposed_lposterior - new_lposterior + log_proposal_ratio)), digits=3)))"
       rates_match = true
       new_rp = proposed_rp
       new_tr_cache = proposed_tr_cache
       new_events = proposed_events
       new_lposterior = proposed_lposterior
     else
-      @debug "next!: MCMC proposal rejected (acceptance probability = $(round(min(1.0, exp(proposed_lposterior - new_lposterior)), digits=3)))"
+      @debug "next!: MCMC proposal rejected (acceptance probability = $(round(min(1.0, exp(proposed_lposterior - new_lposterior + log_proposal_ratio)), digits=3)))"
     end
   end
   mc.iterations += 1
@@ -153,6 +131,7 @@ function update!(rng::AbstractRNG, mc::MarkovChain{T, M},
   @debug "Performing data augmentation in $event_batches batches"
   steps = DA_couple ? 1 + event_batches : 1 + event_batches + 1
   for i = 1:steps
+    log_proposal_ratio = 0.0
     if i == 1
       # Propose new risk parameters
       proposed_events = new_events
@@ -161,24 +140,11 @@ function update!(rng::AbstractRNG, mc::MarkovChain{T, M},
       @debug "Generating new TransmissionRateCache for TN-ILM parameter proposal"
       proposed_tr_cache = _proposal_cache!(work, individuals(new_events))
     elseif i < (event_batches + 2)
-      proposed_events = copy(new_events)
-      t_ids = Int64[]
-      for j in _event_batch(length(aug_order), event_batches, i-1)
-        id, state_index = Tuple(CartesianIndices((individuals(new_events),
-                                            length(convert(DiseaseStates, T)[2:end])))[aug_order[j]])
-        # Generate new transmission source for transmission events
-        state_index == 1 && push!(t_ids, id)
-        new_state = convert(DiseaseStates, T)[state_index+1]
-        time = new_events[new_state][id]
-        proposed_event = generate(rng, Event,
-                                  Event{T}(time, id, new_state),
-                                  σ,
-                                  mcmc.event_extents,
-                                  mcmc.event_observations,
-                                  proposed_events,
-                                  new_network)
-        update!(proposed_events, proposed_event)
-      end
+      batch_indices = aug_order[_event_batch(length(aug_order), event_batches, i-1)]
+      proposed_events, log_forward = _propose_events(rng, new_events, batch_indices,
+        σ, mcmc.event_extents, mcmc.event_observations, new_network)
+      n_ids = individuals(new_events)
+      t_ids = [index for index in batch_indices if index <= n_ids]
       proposed_rp = new_rp
       proposed_sm = new_sm
       proposed_tr_cache = new_tr_cache
@@ -193,16 +159,15 @@ function update!(rng::AbstractRNG, mc::MarkovChain{T, M},
     # Draw the Metropolis decision once; evaluate the complete epidemic likelihood.
     ll_acceptance_threshold = log(rand(rng)) + new_lposterior - proposed_lprior
     proposed_lposterior = -Inf
-    if ll_acceptance_threshold < Inf
+    if ll_acceptance_threshold < Inf && isfinite(log_proposal_ratio)
       proposed_llikelihood, tnr, tx = loglikelihood(proposed_rp,
                                                     mcmc.risk_functions,
                                                     proposed_events,
                                                     mcmc.population,
                                                     mcmc.starting_states,
-                                                    early_decision_value = ll_acceptance_threshold,
                                                     transmissions_output = true,
                                                     transmission_rate_cache = proposed_tr_cache, workspace = work)
-      if proposed_llikelihood > -Inf && proposed_llikelihood >= ll_acceptance_threshold
+      if isfinite(proposed_llikelihood)
         if DA_couple
           if i == 1 || length(t_ids) == 0
             proposed_network = new_network
@@ -218,23 +183,29 @@ function update!(rng::AbstractRNG, mc::MarkovChain{T, M},
             @debug "Generating a transmission network proposal" ProposedNetwork = proposed_network
           end
         end
-        @debug "Generating a Tree for proposed network and event times"
-        tree, obs_nodes = generate(Tree, proposed_events, mcmc.event_observations, proposed_network)
-        leaf_data = Dict{Int64, RNASeq}()
-        for k = eachindex(obs_nodes)
-          if !isnothing(obs_nodes[k])
-            leaf_data[obs_nodes[k]] = mcmc.event_observations.seq[k]
-          end
+        if 1 < i < event_batches + 2
+          log_proposal_ratio = _event_logproposal(new_events, proposed_events, batch_indices,
+            σ, mcmc.event_extents, mcmc.event_observations, proposed_network) - log_forward
         end
-        proposed_llikelihood += PhyloModels.loglikelihood(tree, proposed_sm, leaf_data)
-        proposed_lposterior = proposed_lprior + proposed_llikelihood
+        if isfinite(proposed_llikelihood) && isfinite(log_proposal_ratio) && proposed_llikelihood + log_proposal_ratio >= ll_acceptance_threshold
+          @debug "Generating a Tree for proposed network and event times"
+          tree, obs_nodes = generate(Tree, proposed_events, mcmc.event_observations, proposed_network)
+          leaf_data = Dict{Int64, RNASeq}()
+          for k = eachindex(obs_nodes)
+            if !isnothing(obs_nodes[k])
+              leaf_data[obs_nodes[k]] = mcmc.event_observations.seq[k]
+            end
+          end
+          proposed_llikelihood += PhyloModels.loglikelihood(tree, proposed_sm, leaf_data)
+          proposed_lposterior = proposed_lprior + proposed_llikelihood
+        end
       end
     else
       proposed_llikelihood = -Inf
       proposed_lposterior = -Inf
     end
-    if proposed_llikelihood > -Inf && proposed_llikelihood >= ll_acceptance_threshold
-      @debug "MCMC proposal accepted (acceptance probability = $(round(min(1.0, exp(proposed_lposterior - new_lposterior)), digits=3)))"
+    if isfinite(proposed_llikelihood) && isfinite(log_proposal_ratio) && proposed_llikelihood + log_proposal_ratio >= ll_acceptance_threshold
+      @debug "MCMC proposal accepted (acceptance probability = $(round(min(1.0, exp(proposed_lposterior - new_lposterior + log_proposal_ratio)), digits=3)))"
       new_rp = proposed_rp
       new_sm = proposed_sm
       new_tr_cache = proposed_tr_cache
@@ -242,7 +213,7 @@ function update!(rng::AbstractRNG, mc::MarkovChain{T, M},
       new_network = proposed_network
       new_lposterior = proposed_lposterior
     else
-      @debug "MCMC proposal rejected (acceptance probability = $(round(min(1.0, exp(proposed_lposterior - new_lposterior)), digits=3)))"
+      @debug "MCMC proposal rejected (acceptance probability = $(round(min(1.0, exp(proposed_lposterior - new_lposterior + log_proposal_ratio)), digits=3)))"
     end
   end
   _retain_cache!(transmission_rate_cache, new_tr_cache)

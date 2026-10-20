@@ -145,37 +145,68 @@ function generate(
   return generate(rng, Events, mcmc.event_observations, mcmc.event_extents)
 end
 
-function generate(
-  rng::AbstractRNG,
-  ::Type{Event},
-  last_event::Event{T},
-  σ::Float64,
-  extents::EventExtents{T},
-  obs::EventObservations,
-  events::Events{T}) where {
-  T <: DiseaseStateSequence}
-  lowerbound, upperbound = _bounds(last_event, extents, obs, events)
-  time = rand(rng, truncated(Normal(_time(last_event), σ),
-                        lowerbound,
-                        upperbound))
-  return Event(time, last_event)
+function _event_bounds(event, extents, obs, events, network)
+  return network === nothing ? _bounds(event, extents, obs, events) :
+                               _bounds(event, extents, obs, events, network)
 end
 
-function generate(
-  rng::AbstractRNG,
-  ::Type{Event},
-  last_event::Event{T},
-  σ::Float64,
-  extents::EventExtents{T},
-  obs::EventObservations,
-  events::Events{T},
-  network::TransmissionNetwork) where {
-  T <: DiseaseStateSequence}
-  lowerbound, upperbound = _bounds(last_event, extents, obs, events, network)
-  time = rand(rng, truncated(Normal(_time(last_event), σ),
-                        lowerbound,
-                        upperbound))
-  return Event(time, last_event)
+function _event_distribution(event, σ, extents, obs, events, network=nothing)
+  lower, upper = _event_bounds(event, extents, obs, events, network)
+  return truncated(Normal(_time(event), σ), lower, upper)
+end
+
+function generate(rng::AbstractRNG, ::Type{Event}, last_event::Event{T},
+                  σ::Float64, extents::EventExtents{T}, obs::EventObservations,
+                  events::Events{T}) where T <: DiseaseStateSequence
+  return Event(rand(rng, _event_distribution(last_event, σ, extents, obs, events)), last_event)
+end
+
+function generate(rng::AbstractRNG, ::Type{Event}, last_event::Event{T},
+                  σ::Float64, extents::EventExtents{T}, obs::EventObservations,
+                  events::Events{T}, network::TransmissionNetwork) where T <: DiseaseStateSequence
+  return Event(rand(rng, _event_distribution(last_event, σ, extents, obs, events, network)), last_event)
+end
+
+# A batch is a sequence of conditional proposals. Its reverse density uses the
+# same index order, starting at the proposed history and restoring the old times.
+function _propose_events(rng::AbstractRNG, current::Events{T}, indices,
+                         σ::Float64, extents, obs, network=nothing) where T
+  proposed = copy(current)
+  σ == 0.0 && return proposed, 0.0
+  states = convert(DiseaseStates, T)[2:end]
+  n = individuals(current)
+  log_forward = 0.0
+  for index in indices
+    id, state = mod1(index, n), states[fld(index-1, n)+1]
+    event = Event{T}(proposed[state][id], id, state)
+    distribution = _event_distribution(event, σ, extents, obs, proposed, network)
+    time = rand(rng, distribution)
+    log_forward += logpdf(distribution, time)
+    update!(proposed, Event(time, event))
+  end
+  return proposed, log_forward
+end
+
+function _event_logproposal(target::Events{T}, source::Events{T}, indices,
+                            σ::Float64, extents, obs, network=nothing) where T
+  intermediate = copy(source)
+  states = convert(DiseaseStates, T)[2:end]
+  n = individuals(source)
+  log_density = 0.0
+  for index in indices
+    id, state = mod1(index, n), states[fld(index-1, n)+1]
+    event = Event{T}(intermediate[state][id], id, state)
+    time = target[state][id]
+    if σ == 0.0
+      time == event.time || return -Inf
+      continue
+    end
+    lower, upper = _event_bounds(event, extents, obs, intermediate, network)
+    lower < upper && lower <= time <= upper || return -Inf
+    log_density += logpdf(truncated(Normal(event.time, σ), lower, upper), time)
+    update!(intermediate, Event(time, event))
+  end
+  return log_density
 end
 
 function generate(
