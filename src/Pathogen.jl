@@ -65,6 +65,7 @@ module Pathogen
   include("inference/MCMC.jl")
   include("inference/_accept.jl")
   include("inference/_bounds.jl")
+  include("inference/network_logprobability.jl")
   include("inference/generate.jl")
   include("inference/initialize.jl")
   include("inference/update!.jl")
